@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Staf - Qurban Manager</title>
+    <meta name="description" content="Pendaftaran Akun Baru">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/style.css">
+    <style>
+        .login-card { max-width: 500px; }
+    </style>
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h2 style="white-space: nowrap; margin-bottom: 0.5rem; font-size: 1.35rem;">Bergabung Jadi Bagian Kebaikan</h2>
+                <p>Harap isi data dengan lengkap. Langkah awal jadi pejuang qurban dimulai di sini.</p>
+            </div>
+            <form id="registerForm" class="login-form">
+                <div class="input-group">
+                    <label for="fullName">Nama Lengkap (Sesuai KTP)</label>
+                    <input type="text" id="fullName" required placeholder="Contoh: ahmad subarjo">
+                </div>
+                <div class="input-group">
+                    <label for="wa">Nomor WhatsApp Aktif</label>
+                    <input type="text" id="wa" required placeholder="Contoh: 08123456789">
+                </div>
+                <div class="input-group">
+                    <label for="email">Username atau Email</label>
+                    <input type="text" id="email" required placeholder="staf01 atau staf@qurban.com" autocapitalize="none">
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                
+                <div class="error-message" id="errorMessage"></div>
+                
+                <button type="submit" class="btn btn-primary btn-block" id="registerBtn">
+                    <span>Daftar Sekarang</span>
+                </button>
+            </form>
+            <div class="login-footer" style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
+                <div>Sudah mendaftar atau punya akun? <a href="index.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Kembali ke Login</a></div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="src/whatsapp.js"></script>
+    <script type="module">
+        import { supabase } from './src/supabase.js';
+
+        // Formatting Helpers
+        const toTitleCase = (str) => {
+            return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        };
+
+        const formatWA = (str) => {
+            let cleaned = str.replace(/\D/g, ''); // Ambil angka saja
+            if (cleaned.startsWith('0')) {
+                cleaned = '62' + cleaned.slice(1);
+            }
+            return cleaned;
+        };
+
+        const inpFullName = document.getElementById('fullName');
+        const inpWA = document.getElementById('wa');
+
+        inpFullName.addEventListener('blur', () => {
+            if (inpFullName.value) inpFullName.value = toTitleCase(inpFullName.value.trim());
+        });
+
+        inpWA.addEventListener('blur', () => {
+            if (inpWA.value) inpWA.value = formatWA(inpWA.value.trim());
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById('fullName').value.trim();
+            const wa = document.getElementById('wa').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if(!fullName || !wa || !email || !password) {
+                document.getElementById('errorMessage').textContent = 'Semua data wajib diisi.';
+                return;
+            }
+
+            const registerBtn = document.getElementById('registerBtn');
+            const btnSpan = registerBtn.querySelector('span');
+            btnSpan.textContent = 'Memproses...';
+            registerBtn.disabled = true;
+
+            try {
+                // 1. Sign up user in Supabase Auth
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: email.includes('@') ? email : `${email}@qurban.com`,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                            wa_number: wa
+                        }
+                    }
+                });
+
+                if (authError) throw authError;
+
+                if (authData.user) {
+                    // 2. Create Profile in public.profiles table
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .insert({
+                            id: authData.user.id,
+                            full_name: fullName,
+                            wa_number: wa,
+                            email: email,
+                            role: 'staff',
+                            status: 'pending'
+                        });
+
+                    if (profileError) throw profileError;
+
+                    // 3. WhatsApp Notification (Silent Fail - Don't block UI)
+                    try {
+                        if (window.sendWa && window.parseWaTemplate) {
+                            const config = window.getWaConfig ? await window.getWaConfig() : {};
+                            const template = config.templateDaftar || "*Pendaftaran Berhasil*\n==========================\n\nAssalamu’Alaikum, *[[NAMA]]*.\n\nTerima Kasih Telah Mendaftar Menjadi Bagian Pejuang Qurban.\n\nBerikut Adalah Data Yang Anda Entri:\n👤 Nama: [[NAMA]]\n📧 Username/Email: [[EMAIL]]\n🔑 Password: [[PASSWORD]]\n\n⚠️ *Penting:*\n1. Mohon Jangan Memberitahukan Username Dan Password Anda Kepada Siapapun.\n2. Saat Ini Anda *Belum Bisa Login*. Akun Anda Sedang Dalam Status *Pending*. Silakan Menunggu Konfirmasi (Approval) Dari Manajemen Sebelum Dapat Digunakan.\n\nTerima Kasih.";
+                            const waMessage = await window.parseWaTemplate(template, {
+                                nama: fullName,
+                                email: email,
+                                password: password
+                            });
+                            await window.sendWa(wa, waMessage);
+                        }
+                    } catch (waErr) {
+                        console.warn('WA Auth notification failed:', waErr);
+                    }
+
+                    const overlay = document.createElement('div');
+                    overlay.className = 'modal-overlay-custom';
+                    overlay.innerHTML = `
+                        <div class="modal-custom">
+                            <div class="modal-custom-icon" style="color:var(--success);">✅</div>
+                            <h3 class="modal-custom-title" style="margin-bottom:1rem; color:var(--text-main);">Pendaftaran Berhasil!</h3>
+                            <p class="modal-custom-body" style="margin-bottom:1.5rem; color:var(--text-muted);">Akun Anda sedang menunggu persetujuan admin. Silakan tunggu konfirmasi melalui WhatsApp.</p>
+                            <button class="btn btn-primary btn-block" id="btnCustomAlertOk">Lanjutkan ke Halaman Login</button>
+                        </div>
+                    `;
+                    document.body.appendChild(overlay);
+                    document.getElementById('btnCustomAlertOk').onclick = () => {
+                        window.location.href = 'index.html';
+                    };
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('errorMessage').textContent = 'Terjadi kesalahan: ' + err.message;
+                btnSpan.textContent = 'Daftar Sekarang';
+                registerBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+

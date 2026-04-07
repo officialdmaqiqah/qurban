@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Master Stock -  Qurban Manager</title>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="src/style.css">
+    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+</head>
+<body>
+        <div class="app-layout">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                        <div class="sidebar-header" id="sidebarHeaderWrapper">
+                                <h2 id="sidebarTitleGlobal">Qurban Manager</h2>
+                        </div>
+                        <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
+                <div class="nav-header">&#128188; DATA STOCK</div>
+                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
+                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
+                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                <a href="kambing_mati.html" class="nav-item">&bull; Kambing Mati</a>
+                <a href="kambing_sakit.html" class="nav-item">&bull; Kambing Sakit</a>
+                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
+                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
+                <div class="nav-header">&#128176; DATA FINANCE</div>
+                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
+                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
+                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                
+                                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:900; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+<div class="nav-header">&#9881;&#65039; DATA SETTING</div>
+                <a href="pengaturan.html" class="nav-item">&bull; Pengaturan</a>
+            </nav>
+                        <div style="padding: 1.5rem;">
+                                <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
+                                        Logout
+                                </button>
+                        </div>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="main-content">
+                        <header class="topbar">
+                                <div class="page-title">Manajemen Data Stok</div>
+                                <div class="user-menu">
+                                        <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
+                                </div>
+                        </header>
+
+                        <div class="content-area">
+                                <div class="card-box">
+                                        <div class="flex-between" style="margin-bottom: 1.5rem;">
+                                                <div>
+                                                        <h3 style="margin-bottom: 0.25rem;">Seluruh Data Stok</h3>
+                                                        <p style="font-size: 0.875rem; color: var(--text-muted);">Database permanen kambing. Untuk menambah stok baru, gunakan menu Data Masuk.</p>
+                                                </div>
+                                                <div style="display:flex; gap:0.5rem; align-items:center;">
+                                                        <button class="btn btn-primary" id="btnExportCsv" style="background:#10b981; border:none;">! Export Excel Komprehensif</button>
+                                                </div>
+                                        </div>
+
+                                        <div style="display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; background:rgba(0,0,0,0.15); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+                                                <div style="flex:2; min-width:200px;">
+                                                        <label class="form-label">Pencarian Universal</label>
+                                                        <input type="text" id="inpSearch" class="form-control" placeholder="Cari No Tali, ID Kambing, Supplier...">
+                                                </div>
+                                                <div style="flex:1; min-width:140px;">
+                                                        <label class="form-label">Min Harga (Kandang)</label>
+                                                        <input type="number" id="inpMinHarga" class="form-control" placeholder="Rp 0">
+                                                </div>
+                                                <div style="flex:1; min-width:140px;">
+                                                        <label class="form-label">Max Harga (Kandang)</label>
+                                                        <input type="number" id="inpMaxHarga" class="form-control" placeholder="Batas Atas">
+                                                </div>
+                                                <div style="flex:1; min-width:150px;">
+                                                        <label class="form-label">Status Transaksi</label>
+                                                        <select id="selStatusTransaksi" class="form-control">
+                                                                <option value="">Semua</option>
+                                                                <option value="Tersedia">Tersedia</option>
+                                                                <option value="Terjual">Terjual</option>
+                                                                <option value="Terdistribusi">Terdistribusi</option>
+                                                        </select>
+                                                </div>
+                                                <div style="flex:1; min-width:150px;">
+                                                        <label class="form-label">Status Kesehatan</label>
+                                                        <select id="selStatusKesehatan" class="form-control">
+                                                                <option value="">Semua</option>
+                                                                <option value="Sehat">Sehat</option>
+                                                                <option value="Sakit">Sakit</option>
+                                                                <option value="Mati">Mati</option>
+                                                                <option value="Disembelih">Disembelih</option>
+                                                        </select>
+                                                </div>
+                                                <div style="flex:1; min-width:150px;">
+                                                        <label class="form-label">Status Fisik</label>
+                                                        <select id="selStatusFisik" class="form-control">
+                                                                <option value="">Semua</option>
+                                                                <option value="Ada">Ada</option>
+                                                                <option value="Terdistribusi">Terdistribusi</option>
+                                                                <option value="Mati">Mati</option>
+                                                                <option value="Hilang">Hilang</option>
+                                                        </select>
+                                                </div>
+                                        </div>
+
+                                        <div class="table-responsive">
+                                                <table class="data-table">
+                                                        <thead>
+                                                                <tr>
+                                                                        <th style="cursor:pointer; display:none;" class="sort-header" data-column="batch">Batch ↕️</th>
+                                                                        <th style="cursor:pointer; display:none;" class="sort-header" data-column="tglMasuk">Tgl Masuk ↕️</th>
+                                                                        <th style="cursor:pointer; display:none;" class="sort-header" data-column="supplier">Supplier ↕️</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="noTali">No Tali ↕️</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="warnaTali">Warna ↕️</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="jenisKelamin">Sex ↕️</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="lokasi">Lokasi ↕️</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="berat">Berat ↕️</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="hargaKandang">Harga Kandang ↕️</th>
+                                                                        <th>Transaksi</th>
+                                                                        <th>Kesehatan</th>
+                                                                        <th>Status Fisik</th>
+                                                                        <th>Status Bayar</th>
+                                                                        <th>Foto</th>
+                                                                        <th>Aksi</th>
+                                                                </tr>
+                                                        </thead>
+                                                        <tbody id="tableBodyKambing">
+                                                                <!-- Data will be loaded here via JS -->
+                                                        </tbody>
+                                                </table>
+                                        </div>
+                                        
+                                        <div id="emptyState" style="text-align: center; padding: 3rem 0; display: none;">
+                                                <p style="color: var(--text-muted);">Belum ada data di Master Stock. Silakan input dari Data Masuk (Draft).</p>
+                                        </div>
+                                </div>
+                        </div>
+                </main>
+        </div>
+
+        <!-- Modal Form Edit Status/Data -->
+        <div class="modal-overlay" id="modalKambing">
+                <div class="modal-content" style="max-width: 800px;">
+                        <div class="modal-header">
+                                <h3 class="modal-title" id="modalTitle">Edit Master Stock</h3>
+                                <button class="modal-close" id="btnCloseModal">&times;</button>
+                        </div>
+                        <form id="formKambing">
+                                <div class="modal-body">
+                                        <input type="hidden" id="kambingIdOriginal" value="">
+                                        
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpBatch">Batch Code</label>
+                                                        <input type="text" id="inpBatch" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpTgl">Tanggal Masuk</label>
+                                                        <input type="date" id="inpTgl" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpSupplier">Nama Supplier</label>
+                                                        <select id="inpSupplier" class="form-control" required></select>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpNoTali">No Tali</label>
+                                                        <input type="text" id="inpNoTali" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpWarnaTali">Warna Tali</label>
+                                                        <input type="text" id="inpWarnaTali" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpSex">Sex (Kelamin)</label>
+                                                        <select id="inpSex" class="form-control" required>
+                                                                <option value="Jantan">Jantan</option>
+                                                                <option value="Betina">Betina</option>
+                                                        </select>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpLokasi">Lokasi (Opsional)</label>
+                                                        <select id="inpLokasi" class="form-control">
+                                                                <option value="">Belum diset</option>
+                                                        </select>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpBerat">Berat Badan (kg)</label>
+                                                        <input type="number" id="inpBerat" class="form-control" step="0.1" placeholder="Ex: 35.5">
+                                                </div>
+                                        </div>
+
+                                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.1);">
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                                                        <div class="form-group">
+                                                                <label class="form-label" for="inpHargaNota">Harga Nota (Rp)</label>
+                                                                <input type="number" id="inpHargaNota" class="form-control" required>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label class="form-label" for="inpSaving">Nilai Saving (Rp)</label>
+                                                                <input type="number" id="inpSaving" class="form-control" required>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label class="form-label" for="inpProfit">Est. Profit (Rp)</label>
+                                                                <input type="number" id="inpProfit" class="form-control" required>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dotted rgba(255,255,255,0.1);">
+                                            <div class="form-group mb-0">
+                                                <label class="form-label">📸 Foto Fisik (Opsional)</label>
+                                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                                    <input type="file" id="inpFotoFisik" class="form-control" accept="image/*" style="flex: 1;">
+                                                    <button type="button" id="btnOpenCamera" class="btn btn-sm" style="background:#4b5563; color:white; padding:8px 12px; height:40px; border-radius:8px; border:none; display:flex; align-items:center; gap:5px;" title="Ambil Foto Langsung dari Kamera">📸 Kamera</button>
+                                                    <div id="previewFotoFisik" style="width: 50px; height: 50px; border-radius: 4px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                                                        <span style="font-size: 0.8rem; color: var(--text-muted);">No Pic</span>
+                                                    </div>
+                                                    <button type="button" id="btnRemovePhoto" class="btn btn-sm" style="display:none; background:#ef4444; color:white; padding:4px 8px; font-size:0.75rem; border:none; border-radius:4px; height:max-content;" title="Hapus foto yang sudah ada">🗑️ Hapus</button>
+                                                </div>
+                                                <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">Foto akan otomatis dikompres & disimpan di cloud.</small>
+                                            </div>
+                                         </div>
+                                 </div>
+                                 <div class="modal-footer">
+                                        <button type="button" class="btn" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1);" id="btnCancelModal">Batal</button>
+                                        <button type="button" class="btn" id="btnResetDistribusi" style="background:var(--danger); color:white; display:none; flex:1;">Batal Distribusi (Reset)</button>
+                                        <button type="submit" class="btn btn-primary" id="btnSaveModal">Simpan Perubahan</button>
+                                </div>
+                        </form>
+                </div>
+        </div>
+
+        <div id="photoLightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; align-items:center; justify-content:center; cursor:zoom-out;" onclick="this.style.display='none'">
+            <div id="lightboxLoading" style="position:absolute; color:white; font-style:italic;">Memuat Foto...</div>
+            <img id="lightboxImg" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); position:relative; z-index:2; display:none;" onload="document.getElementById('lightboxLoading').style.display='none'; this.style.display='block';" onclick="event.stopPropagation()">
+            <div style="position:absolute; top:20px; right:20px; color:white; font-size:2rem; font-weight:bold; cursor:pointer;" onclick="this.parentElement.style.display='none'">&times;</div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <script type="module" src="src/layout.js"></script>
+        <script type="module" src="src/kambing.js"></script>
+</body>
+

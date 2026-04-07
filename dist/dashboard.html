@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard -  Qurban Manager</title>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+        <style>
+                .grid-cards {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                        gap: 1.5rem;
+                        margin-bottom: 2rem;
+                }
+
+                .stat-card {
+                        background-color: var(--bg-card);
+                        border-radius: var(--radius-lg);
+                        border: 1px solid rgba(255, 255, 255, 0.05);
+                        padding: 1.5rem;
+                        box-shadow: var(--shadow-md);
+                        position: relative;
+                        overflow: hidden;
+                }
+
+                .stat-card::before {
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 4px;
+                        height: 100%;
+                        background-color: var(--primary);
+                }
+
+                .stat-card.stat-profit::before {  background-color: var(--success); }
+                .stat-card.stat-loss::before {  background-color: var(--danger); }
+                .stat-card.stat-warning::before {  background-color: var(--warning); }
+                .stat-card.stat-neutral::before {  background-color: #3b82f6; }
+
+                .stat-title {
+                        color: var(--text-muted);
+                        font-size: 0.875rem;
+                        font-weight: 500;
+                        margin-bottom: 0.5rem;
+                }
+
+                .stat-value {
+                        font-size: 1.75rem;
+                        font-weight: 700;
+                        color: var(--text-main);
+                }
+                
+                .stat-value.profit {  color: var(--success); }
+                .stat-value.loss {  color: var(--danger); }
+                
+                .stat-subtitle {
+                        margin-top: 0.5rem;
+                        font-size: 0.75rem;
+                        color: var(--text-muted);
+                        display: flex;
+                        align-items: center;
+                        gap: 0.25rem;
+                }
+
+                .kambing-breakdown {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-top: 1rem;
+                        padding-top: 1rem;
+                        border-top: 1px dashed rgba(255,255,255,0.1);
+                }
+
+                .breakdown-item {
+                        text-align: center;
+                }
+
+                .breakdown-label {
+                        font-size: 0.75rem;
+                        color: var(--text-muted);
+                        margin-bottom: 0.25rem;
+                }
+
+                .breakdown-val {
+                        font-size: 1rem;
+                        font-weight: 600;
+                }
+                .text-success {  color: var(--success); }
+                .text-warning {  color: var(--warning); }
+                .text-danger {  color: var(--danger); }
+        </style>
+  <script type="module" crossorigin src="/assets/dashboard-CanI5jL2.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/supabase-CQA5XZYd.js">
+  <link rel="modulepreload" crossorigin href="/assets/layout-BhxwArZu.js">
+  <link rel="stylesheet" crossorigin href="/assets/supabase-DOA7jKZJ.css">
+</head>
+<body>
+        <div class="app-layout">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                        <div class="sidebar-header" id="sidebarHeaderWrapper">
+                                <!-- Injected via layout.js -->
+                                <h2 id="sidebarTitleGlobal">Qurban Manager</h2>
+                        </div>
+                        <nav class="sidebar-nav">
+                                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
+                                <div class="nav-header">&#128188; DATA STOCK</div>
+                                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
+                                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
+                                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                                <a href="kambing_mati.html" class="nav-item">&bull; Kambing Mati</a>
+                                <a href="kambing_sakit.html" class="nav-item">&bull; Kambing Sakit</a>
+                                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
+                                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
+                                <div class="nav-header">&#128176; DATA FINANCE</div>
+                                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
+                                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
+                                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:800; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+                                <div class="nav-header">&#9881;&#65039; DATA SETTING</div>
+                                <a href="pengaturan.html" class="nav-item">&bull; Pengaturan</a>
+                                
+                                <!-- Push Logout to Bottom -->
+                                <div style="margin-top: auto; padding-top: 2rem;">
+                                    <button id="logoutBtn" class="btn btn-sm btn-danger" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600;">
+                                        🚪 Logout
+                                    </button>
+                                </div>
+                        </nav>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="main-content">
+                        <header class="topbar">
+                                <div class="page-title">Ringkasan Bisnis (Real-Time)</div>
+                                <div class="user-menu">
+                                        <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
+                                </div>
+                        </header>        <div class="content-area fade-in">
+                <!-- EMERGENCY SHORTCUT (PREMIUM) -->
+                <div class="card-box btn-shimmer" style="background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.05)); border: 2px solid #a855f7; cursor:pointer; margin-bottom: 2rem; border-radius:15px;" onclick="window.location.href='laporan.html'">
+                    <div style="display:flex; align-items:center; gap:1.5rem; padding:0.5rem;">
+                        <div style="font-size:3rem; filter: drop-shadow(0 0 10px rgba(168,85,247,0.3));">📊</div>
+                        <div style="text-align:left;">
+                            <h3 style="margin:0; color:#a855f7; font-size:1.4rem; letter-spacing:-0.5px;">Pusat Laporan Strategis (Real-Time)</h3>
+                            <p style="margin:0.2rem 0 0; font-size:0.85rem; color:var(--text-muted);">Klik untuk melihat Laba Rugi, Arus Kas, & Neraca Bisnis.</p>
+                        </div>
+                        <div style="margin-left:auto; background:#a855f7; color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; box-shadow:0 8px 15px rgba(168,85,247,0.3);">➔</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 1.25rem; font-weight: 700; display:flex; align-items:center; gap:8px;">💎 Posisi Kas & Likuiditas</h3>
+                <div class="grid-cards">
+                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--primary);">
+                        <div style="font-size:2rem;">💵</div>
+                        <div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Total Saldo Kas</div>
+                            <div id="dashTotalSaldoKas" style="font-size:1.4rem; font-weight:700;">Rp 0</div>
+                        </div>
+                    </div>
+                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--warning);">
+                        <div style="font-size:2rem;">🤝</div>
+                        <div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Hutang Komisi Agen</div>
+                            <div id="dashHutangAgen" style="font-size:1.4rem; font-weight:700;">Rp 0</div>
+                        </div>
+                    </div>
+                    <div class="card-box btn-shimmer" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--success); background:rgba(16, 185, 129, 0.05);">
+                        <div style="font-size:2rem;">🏦</div>
+                        <div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Saldo Bersih Kandang</div>
+                            <div id="dashSaldoNetto" style="font-size:1.4rem; font-weight:700; color:var(--success);">Rp 0</div>
+                        </div>
+                    </div>
+                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid #34d399;">
+                        <div style="font-size:2rem;">🐏</div>
+                        <div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Nilai Aset Stok</div>
+                            <div id="dashNilaiAsetStok" style="font-size:1.4rem; font-weight:700;">Rp 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 1.25rem; font-weight: 700; margin-top: 2.5rem; display:flex; align-items:center; gap:8px;">📈 Performa & Profitabilitas</h3>
+                <div class="grid-cards">
+                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid #3b82f6;">
+                        <div style="font-size:2rem;">📥</div>
+                        <div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Pemasukan (Cash-In)</div>
+                            <div id="dashPemasukan" style="font-size:1.4rem; font-weight:700;">Rp 0</div>
+                        </div>
+                    </div>
+                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--danger);">
+                        <div style="font-size:2rem;">📤</div>
+                        <div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Pengeluaran (Cash-Out)</div>
+                            <div id="dashPengeluaran" style="font-size:1.4rem; font-weight:700;">Rp 0</div>
+                        </div>
+                    </div>
+                    <div class="card-box btn-shimmer" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--success); background:rgba(16, 185, 129, 0.1);">
+                        <div style="font-size:2rem;">✨</div>
+                        <div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Laba Bersih Aktual</div>
+                            <div id="dashProfitRealtime" style="font-size:1.4rem; font-weight:700; color:var(--success);">Rp 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 1.25rem; font-weight: 700; margin-top: 2.5rem; display:flex; align-items:center; gap:8px;">📊 Inventori & Status Kandang</h3>
+                <div class="card-box" style="max-width: 650px;">
+                    <div style="display:flex; align-items:center; gap:15px; margin-bottom:1.5rem;">
+                        <div style="font-size:2.5rem;">🐐</div>
+                        <div>
+                            <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">Total Populasi Kambing</div>
+                            <div id="dashTotalKambing" style="font-size:1.8rem; font-weight:800;">0 Ekor</div>
+                        </div>
+                    </div>
+                    
+                    <div class="kambing-breakdown" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:1.5rem;">
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">✅ Tersedia</div>
+                            <div class="breakdown-val text-success" id="dashTersedia" style="font-size:1.25rem;">0</div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">💰 Terjual</div>
+                            <div class="breakdown-val text-warning" id="dashTerjual" style="font-size:1.25rem;">0</div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">🚚 Distribusi</div>
+                            <div class="breakdown-val" id="dashDistribusi" style="color:#a855f7; font-size:1.25rem;">0</div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">🤕 Sakit</div>
+                            <div class="breakdown-val text-danger" id="dashSakit" style="font-size:1.25rem;">0</div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">☠️ Mati</div>
+                            <div class="breakdown-val text-danger" id="dashMati" style="font-size:1.25rem;">0</div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">🔍 Hilang</div>
+                            <div class="breakdown-val" id="dashHilang" style="color:#64748b; font-size:1.25rem;">0</div>
+                        </div>
+                    </div>
+                </div>
+</body>
+</html>

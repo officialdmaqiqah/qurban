@@ -1,0 +1,17 @@
+﻿const fs = require("fs");
+let s = fs.readFileSync("terima_pelunasan.html", "utf8");
+s = s.replace(/<div class="page-title">.*?Terima Pelunasan<\/div>/, `<div class="page-title">💳 Terima Pelunasan</div>`);
+s = s.replace(/<h3 style="margin-bottom:1.25rem;">.*?Input Pembayaran<\/h3>/, `<h3 style="margin-bottom:1.25rem;">💳 Input Pembayaran</h3>`);
+s = s.replace(/<div style="font-size:0.75rem; font-weight:700; color:var\(--text-muted\); margin-bottom:0.35rem;">.*?RIWAYAT BAYAR:<\/div>/, `<div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:0.35rem;">🕒 RIWAYAT BAYAR:</div>`);
+s = s.replace(/<option value="Tunai">.*?Tunai<\/option>/, `<option value="Tunai">💵 Tunai</option>`);
+s = s.replace(/<option value="Transfer Bank">.*?Transfer Bank<\/option>/, `<option value="Transfer Bank">🏦 Transfer Bank</option>`);
+s = s.replace(/<option value="QRIS">.*?QRIS<\/option>/, `<option value="QRIS">📱 QRIS</option>`);
+s = s.replace(/<option value="Dompet Digital">.*?Dompet Digital<\/option>/, `<option value="Dompet Digital">👛 Dompet Digital</option>`);
+s = s.replace(/<label class="form-label" style="font-size:0.7rem; color:var\(--primary\);">.*?Rekening Tujuan<\/label>/, `<label class="form-label" style="font-size:0.7rem; color:var(--primary);">💳 Rekening Tujuan</label>`);
+s = s.replace(/<button id="btnSimpanBayar" class="btn btn-primary" style="width:100%; font-size:1rem; padding:0.75rem;">\s*.*?Simpan Pembayaran\s*<\/button>/, `<button id="btnSimpanBayar" class="btn btn-primary" style="width:100%; font-size:1rem; padding:0.75rem;">\n                                💾 Simpan Pembayaran\n                            </button>`);
+s = s.replace(/<h3 style="margin:0;">.*?Order Belum Lunas<\/h3>/, `<h3 style="margin:0;">📋 Order Belum Lunas</h3>`);
+s = s.replace(/<div class="nav-header".*?>.*DATA STOCK<\/div>/, `<div class="nav-header" style="padding: 1.5rem 1rem 0.5rem; font-size: 1rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px;">💼 DATA STOCK</div>`);
+s = s.replace(/<div class="nav-header".*?>.*DATA FINANCE<\/div>/, `<div class="nav-header" style="padding: 1.5rem 1rem 0.5rem; font-size: 1rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px;">💰 DATA FINANCE</div>`);
+s = s.replace(/<div class="nav-header".*?>.*DATA SETTING<\/div>/, `<div class="nav-header" style="padding: 1.5rem 1rem 0.5rem; font-size: 1rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px;">⚙️ DATA SETTING</div>`);
+fs.writeFileSync("terima_pelunasan.html", s, "utf8");
+console.log("Done");

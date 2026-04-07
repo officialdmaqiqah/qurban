@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terima Pelunasan - Qurban Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/style.css">
+    <style>
+        .order-info-box {
+            background: var(--primary-transparent);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+        }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1.5rem; font-size: 0.875rem; }
+        .info-label { color: var(--text-muted); }
+        .info-val { font-weight: 700; }
+        .sisa-big { font-size: 1.5rem; font-weight: 800; color: var(--warning); }
+        .history-item {
+            display: 

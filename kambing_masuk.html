@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Kambing Masuk -  Qurban Manager</title>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="src/style.css">
+        <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+</head>
+<body>
+        <div class="app-layout">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                        <div class="sidebar-header" id="sidebarHeaderWrapper">
+                                <h2 id="sidebarTitleGlobal">Qurban Manager</h2>
+                        </div>
+                        <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
+                <div class="nav-header">&#128188; DATA STOCK</div>
+                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
+                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
+                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                <a href="kambing_mati.html" class="nav-item">&bull; Kambing Mati</a>
+                <a href="kambing_sakit.html" class="nav-item">&bull; Kambing Sakit</a>
+                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
+                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
+                <div class="nav-header">&#128176; DATA FINANCE</div>
+                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
+                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
+                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                
+                                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                                <a href="laporan.html" class="nav-item">📊 Pusat Laporan</a>
+<div class="nav-header">&#9881;&#65039; DATA SETTING</div>
+                <a href="pengaturan.html" class="nav-item">&bull; Pengaturan</a>
+            </nav>
+                        <div style="padding: 1.5rem;">
+                                <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
+                                        Logout
+                                </button>
+                        </div>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="main-content">
+                        <header class="topbar">
+                                <div class="page-title">Draft Data Masuk</div>
+                                <div class="user-menu">
+                                        <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
+                                </div>
+                        </header>
+
+                        <div class="content-area">
+                                <div class="card-box" style="margin-bottom: 2rem;">
+                                        <div class="flex-between" style="align-items: flex-start;">
+                                                <div>
+                                                        <h3 style="margin-bottom: 0.5rem;">Buat Draft Baru</h3>
+                                                        <p style="font-size: 0.875rem; color: var(--text-muted); max-width: 600px;">
+                                                                Data kambing di sini tersimpan sementara sebelum di-permanen-kan ke Data Stok sesungguhnya. Anda bisa menginput manual satu per satu atau mengunggah data Excel/CSV masal (*Bulk Upload*).
+                                                        </p>
+                                                </div>
+                                                <div style="display: flex; gap: 0.5rem; flex-direction: column; align-items: flex-end;">
+                                                        <button class="btn btn-primary" id="btnInputManual">+ Input Manual</button>
+                                                        <div style="display: flex; gap: 0.5rem;">
+                                                                <button class="btn btn-sm" style="background: transparent; border: 1px solid var(--primary); color: var(--primary);" id="btnDownloadTemplate">   Download Template</button>
+                                                                <button class="btn btn-sm" style="background: transparent; border: 1px dashed var(--primary); color: var(--primary);" id="btnTriggerUpload">   Upload CSV/Excel</button>
+                                                                <input type="file" id="fileCsv" accept=".csv" style="display: none;">
+                                                        </div>
+                                                </div>
+                                        </div>
+                                </div>
+
+                                <div class="card-box">
+                                        <div class="flex-between" style="margin-bottom: 1.5rem;">
+                                                <h3 style="margin-bottom: 0;">Keranjang Draft (<span id="draftCount">0</span>)</h3>
+                                                <div>
+                                                        <button class="btn btn-sm" id="btnHapusSemuaDraft" style="background-color: transparent; border: 1px solid var(--danger); color: var(--danger); margin-right: 0.5rem;">Hapus Semua</button>
+                                                        <button class="btn btn-primary" id="btnApproveDraft" style="background-color: var(--success); box-shadow: none;">S  Masukkan Semua ke Data Stok</button>
+                                                </div>
+                                        </div>
+
+                                        <div class="table-responsive">
+                                                <table class="data-table">
+                                                        <thead>
+                                                                <tr>
+                                                                        <th>Batch</th>
+                                                                        <th>Tgl Masuk</th>
+                                                                        <th data-supp>Supplier</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="noTali">No Tali ↕️</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="warnaTali">Warna ↕️</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="sex">Sex ↕️</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="berat">Berat ↕️</th>
+                                                                        <th>Lokasi</th>
+                                                                        <th data-nota>Harga Nota</th>
+                                                                        <th data-saving>Saving</th>
+                                                                        <th data-profit>Profit</th>
+                                                                        <th style="cursor:pointer;" class="sort-header" data-column="hargaKandang">Harga Kandang ↕️</th>
+                                                                        <th>Aksi</th>
+                                                                </tr>
+                                                        </thead>
+                                                        <tbody id="tableBodyDraft">
+                                                                <!-- Data will be loaded here via JS -->
+                                                        </tbody>
+                                                </table>
+                                        </div>
+                                        
+                                        <div id="emptyState" style="text-align: center; padding: 3rem 0; display: none;">
+                                                <p style="color: var(--text-muted);">Keranjang draft kosong. Silakan input manual atau upload bulk CSV.</p>
+                                        </div>
+                                </div>
+                        </div>
+                </main>
+        </div>
+
+        <!-- Modal Form Tambah/Edit Manual -->
+        <div class="modal-overlay" id="modalInput">
+                <div class="modal-content" style="max-width: 650px;">
+                        <div class="modal-header">
+                                <h3 class="modal-title" id="modalTitle">Input Kambing (Draft)</h3>
+                                <button class="modal-close" id="btnCloseModal">&times;</button>
+                        </div>
+                        <form id="formInput">
+                                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                        <input type="hidden" id="draftId" value="">
+                                        
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpBatch">Batch (Otomatis)</label>
+                                                        <input type="text" id="inpBatch" class="form-control" readonly style="background: rgba(255,255,255,0.05);">
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpTgl">Tanggal Masuk</label>
+                                                        <input type="date" id="inpTgl" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpSupplier">Nama Supplier</label>
+                                                        <select id="inpSupplier" class="form-control" required></select>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpNoTali">No Tali</label>
+                                                        <input type="text" id="inpNoTali" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpWarnaTali">Warna Tali</label>
+                                                        <input type="text" id="inpWarnaTali" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpSex">Sex (Kelamin)</label>
+                                                        <select id="inpSex" class="form-control" required>
+                                                                <option value="Jantan">Jantan</option>
+                                                                <option value="Betina">Betina</option>
+                                                        </select>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpBerat">Berat (kg)</label>
+                                                        <input type="number" id="inpBerat" class="form-control" step="0.1" required>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label class="form-label" for="inpLokasi">Lokasi Kandang (Opsional)</label>
+                                                        <select id="inpLokasi" class="form-control">
+                                                                <option value="">Belum diset</option>
+                                                        </select>
+                                                </div>
+                                        </div>
+
+                                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.1);">
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                                                        <div class="form-group">
+                                                                <label class="form-label" for="inpHargaNota">Harga Nota (Rp)</label>
+                                                                <input type="number" id="inpHargaNota" class="form-control" required>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label class="form-label" for="inpSaving">Nilai Saving (Rp)</label>
+                                                                <input type="number" id="inpSaving" class="form-control" required>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label class="form-label" for="inpProfit">Est. Profit (Rp)</label>
+                                                                <input type="number" id="inpProfit" class="form-control" required>
+                                                        </div>
+                                                </div>
+                                                <div class="form-group" style="margin-bottom:0.5rem;">
+                                                        <label class="form-label">Total Harga Kandang (Kalkulasi Otomatis)</label>
+                                                        <input type="text" id="inpHargaKandang" class="form-control" readonly style="background: rgba(34, 197, 94, 0.1); color: var(--success); font-weight: bold; border-color: var(--success);">
+                                                </div>
+                                                <div class="form-group" style="margin-top:1rem; border-top:1px dotted rgba(255,255,255,0.1); padding-top:1rem;">
+                                                        <label class="form-label">📸 Foto Nota (Opsional)</label>
+                                                        <div style="display:flex; gap:10px; align-items:center;">
+                                                            <input type="file" id="inpFotoNota" class="form-control" accept="image/*" style="font-size:0.8rem; flex:1;">
+                                                            <button type="button" id="btnOpenCameraMasuk" class="btn btn-sm" style="background:#4b5563; color:white; padding:8px 12px; height:40px; border-radius:8px; border:none; display:flex; align-items:center; gap:5px;" title="Ambil Foto Langsung dari Kamera">📸 Kamera</button>
+                                                            <div id="previewFotoNota" style="display:none; align-items:center; gap:8px;">
+                                                                <div style="width:40px; height:40px; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+                                                                    <img src="" style="width:100%; height:100%; object-fit:cover;">
+                                                                </div>
+                                                                <button type="button" id="btnRemoveMasukPhoto" class="btn btn-sm" style="background:#ef4444; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:0.7rem;" title="Hapus Foto">🗑️</button>
+                                                            </div>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                </div>
+                                <div class="modal-footer">
+                                        <button type="button" class="btn" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1);" id="btnCancelModal">Batal</button>
+                                        <button type="submit" class="btn btn-primary" id="btnSaveModal">Simpan Draft</button>
+                                </div>
+                        </form>
+                </div>
+        </div>
+
+        <div id="photoLightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; align-items:center; justify-content:center; cursor:zoom-out;" onclick="this.style.display='none'">
+        <div id="lightboxLoading" style="position:absolute; color:white; font-style:italic;">Memuat Foto...</div>
+        <img id="lightboxImg" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); position:relative; z-index:2; display:none;" onload="document.getElementById('lightboxLoading').style.display='none'; this.style.display='block';" onclick="event.stopPropagation()">
+        <div style="position:absolute; top:20px; right:20px; color:white; font-size:2rem; font-weight:bold; cursor:pointer;" onclick="this.parentElement.style.display='none'">&times;</div>
+    </div>
+
+    <script type="module" src="src/layout.js"></script>
+        <script type="module" src="src/kambing_masuk.js"></script>
+</body>
+
+
+
+
+

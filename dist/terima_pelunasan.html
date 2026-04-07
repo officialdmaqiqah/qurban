@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terima Pelunasan - Qurban Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+    <style>
+        .order-info-box {
+            background: var(--primary-transparent);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+        }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1.5rem; font-size: 0.875rem; }
+        .info-label { color: var(--text-muted); }
+        .info-val { font-weight: 700; }
+        .sisa-big { font-size: 1.5rem; font-weight: 800; color: var(--warning); }
+        .history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.82rem;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .history-channel { background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem; color: var(--text-muted); }
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 1rem 1.25rem; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+        .stat-val { font-size: 1.2rem; font-weight: 800; }
+    </style>
+  <script type="module" crossorigin src="/assets/terima_pelunasan-DsAB2Oyl.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/supabase-CQA5XZYd.js">
+  <link rel="modulepreload" crossorigin href="/assets/layout-BhxwArZu.js">
+  <link rel="stylesheet" crossorigin href="/assets/supabase-DOA7jKZJ.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header" id="sidebarHeaderWrapper">
+                <h2 id="sidebarTitleGlobal">Qurban Manager</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
+                <div class="nav-header">&#128188; DATA STOCK</div>
+                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
+                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
+                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                <a href="kambing_mati.html" class="nav-item">&bull; Kambing Mati</a>
+                <a href="kambing_sakit.html" class="nav-item">&bull; Kambing Sakit</a>
+                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
+                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
+                <div class="nav-header">&#128176; DATA FINANCE</div>
+                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
+                <a href="terima_pelunasan.html" class="nav-item active">&bull; Pelunasan Order</a>
+                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                
+                                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                                <a href="laporan.html" class="nav-item">📊 Pusat Laporan</a>
+<div class="nav-header">&#9881;&#65039; DATA SETTING</div>
+                <a href="pengaturan.html" class="nav-item">&bull; Pengaturan</a>
+            </nav>
+            <div style="padding: 1.5rem;">
+                <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">💳 Terima Pelunasan</div>
+                <div class="user-menu">
+                    <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
+                </div>
+            </header>
+
+            <div class="content-area">
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Order Belum Lunas</div>
+                        <div class="stat-val" id="statJmlBelumLunas" style="color:var(--warning);">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Sisa Tagihan</div>
+                        <div class="stat-val" id="statTotalSisa" style="color:var(--danger);">Rp 0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Sudah Dibayar</div>
+                        <div class="stat-val" id="statTotalPaid" style="color:var(--success);">Rp 0</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: start;">
+                    <!-- Kiri: Form Terima Bayar -->
+                    <div class="card-box">
+                        <h3 style="margin-bottom:1.25rem;">💳 Input Pembayaran</h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Pilih Order (Kari ID / Nama)</label>
+                            <input type="search" id="selOrder" class="form-control" list="listOrders" placeholder="Cari ID atau Nama Konsumen..." style="font-size:0.9rem;" onclick="this.select()">
+                            <datalist id="listOrders"></datalist>
+                        </div>
+
+                        <div id="boxInfoOrder" class="order-info-box" style="display:none;">
+                            <div class="info-grid" id="gridInfoOrder"></div>
+                            <div id="infoUangLebih" style="display:none; margin-top:1rem; padding:0.75rem; border-radius:8px;"></div>
+
+                            <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.07);">
+                                <span class="info-label" style="font-size:0.78rem;">SISA TAGIHAN:</span>
+                                <div class="sisa-big" id="displaySisa">Rp 0</div>
+                            </div>
+                            <div id="boxHistoriPay" style="margin-top:0.75rem; display:none;">
+                                <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:0.35rem;">🕒 RIWAYAT BAYAR:</div>
+                                <div id="listHistoriPay"></div>
+                            </div>
+                        </div>
+
+                        <div id="formBayar" style="display:none;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                                <div class="form-group" style="margin-bottom:0">
+                                    <label class="form-label">Nominal Dibayar (Rp)</label>
+                                    <input type="text" id="inpNominalBayar" class="form-control" placeholder="0"
+                                        style="font-size:1.1rem; font-weight:700; color:var(--success);">
+                                </div>
+                                <div class="form-group" style="margin-bottom:0">
+                                    <label class="form-label">Channel</label>
+                                    <select id="inpChannelBayar" class="form-control">
+                                        <option value="Tunai">💵 Tunai</option>
+                                        <option value="Transfer Bank">🏦 Transfer Bank</option>
+                                        <option value="QRIS">📱 QRIS</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                    <div id="containerRekBayar" style="display:none; margin-top:0.5rem;">
+                                        <label class="form-label" style="font-size:0.7rem; color:var(--primary);">💳 Rekening Tujuan</label>
+                                        <select id="inpRekIdBayar" class="form-control" style="font-size:0.8rem;"></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Pembayaran</label>
+                                <input type="date" id="inpTglBayar" class="form-control">
+                            </div>
+                            <div class="form-group" style="margin-top: 1rem; border-top: 1px dotted rgba(255,255,255,0.1); padding-top: 1rem;">
+                                <label class="form-label">📸 Bukti Bayar (Opsional)</label>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <input type="file" id="inpBuktiBayar" class="form-control" accept="image/*" style="font-size:0.8rem; flex:1;">
+                            <button type="button" id="btnOpenCameraTP" class="btn btn-sm" style="background:#4b5563; color:white; padding:8px 12px; height:40px; border-radius:8px; border:none; display:flex; align-items:center; gap:5px;" title="Ambil Foto Langsung dari Kamera">📸 Kamera</button>
+                            <div id="previewBuktiBayar" style="display:none; align-items:center; gap:8px;">
+                                <div style="width:40px; height:40px; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+                                    <img src="" style="width:100%; height:100%; object-fit:cover;">
+                                </div>
+                                <button type="button" id="btnRemoveTPPhoto" class="btn btn-sm" style="background:#ef4444; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:0.7rem;" title="Hapus Foto">🗑️</button>
+                            </div>
+                        </div>
+                            <button id="btnSimpanBayar" class="btn btn-primary" style="width:100%; font-size:1rem; padding:0.75rem;">
+                                💾 Simpan Pembayaran
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Kanan: Daftar Order Belum Lunas & Kelebihan Bayar -->
+                    <div class="card-box" style="display:flex; flex-direction:column; max-height:800px;">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <h3 style="margin:0;">📋 Order Belum Lunas</h3>
+                                <input type="text" id="inpSearchOrder" class="form-control" placeholder="Cari..." style="width:150px; font-size:0.8rem;">
+                            </div>
+                            <div style="max-height: 350px; overflow-y: auto; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:1rem;">
+                                <div id="listOrderBelumLunas"></div>
+                            </div>
+                        </div>
+
+                        <div style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+                            <h3 style="margin-bottom:1rem; color:var(--warning); display:flex; align-items:center; gap:0.5rem;">
+                                ⚠️ Kelebihan Bayar 
+                                <span id="badgeOverpaidCount" style="background:var(--warning); color:var(--bg-dark); font-size:0.7rem; padding:2px 6px; border-radius:10px; display:none;">0</span>
+                            </h3>
+                            <div id="listOrderOverpaid" style="overflow-y: auto; flex:1;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+    <!-- MODAL KEMBALIKAN KELEBIHAN BAYAR -->
+    <div class="modal-overlay" id="modalRefundKelebihan">
+        <div class="modal-content" style="max-width:480px;">
+            <div class="modal-header">
+                <h3 class="modal-title">&#x21A9;&#xFE0F; Catat Pengembalian Dana</h3>
+                <button class="modal-close" id="btnCloseRefund">&times;</button>
+            </div>
+            <div class="modal-body" style="display:block; padding:1.25rem;">
+                <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:1rem; margin-bottom:1rem; font-size:0.85rem;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
+                        <span style="color:var(--text-muted);">ID Order:</span><span id="refundTrxId" style="font-weight:700;"></span>
+                        <span style="color:var(--text-muted);">Konsumen:</span><span id="refundKonsumen" style="font-weight:700;"></span>
+                        <span style="color:var(--text-muted);">Kelebihan Bayar:</span><span id="refundNominal" style="font-weight:700; color:var(--warning);"></span>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="font-weight:700;">Tgl Pengembalian</label>
+                        <input type="date" id="inpTglRefund" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="font-weight:700; color:var(--warning);">Nominal Dikembalikan</label>
+                        <input type="text" id="inpNominalRefund" class="form-control" style="font-weight:700; color:var(--warning);">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:0.75rem;">
+                    <label class="form-label" style="font-weight:700; color:var(--primary);">Channel Pengembalian Dana</label>
+                    <select id="inpChannelRefund" class="form-control">
+                        <option value="Tunai">💵 Tunai</option>
+                        <option value="Transfer Bank">🏦 Transfer Bank</option>
+                        <option value="Lainnya">🧩 Lainnya</option>
+                    </select>
+                    <div id="containerRekRefund" style="display:none; margin-top:0.4rem;">
+                        <label class="form-label" style="font-size:0.7rem;">&#x1F4B3; Rekening Sumber</label>
+                        <select id="inpRekIdRefund" class="form-control" style="font-size:0.8rem;"></select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" id="btnCancelRefund" style="background:transparent; border:1px solid rgba(255,255,255,0.1);">Batal</button>
+                <button type="button" class="btn btn-primary" id="btnSimpanRefund" style="background:#f59e0b; color:#000; font-weight:700;">&#x21A9; Catat Pengembalian</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+
+
+

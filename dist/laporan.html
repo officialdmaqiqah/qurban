@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pusat Laporan - Qurban Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+    <style>
+        .report-section { display: none; }
+        .report-section.active { display: block; }
+        .tab-menu { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; }
+        .tab-item { cursor: pointer; padding: 0.5rem 1rem; border-radius: 4px; color: var(--text-muted); transition: 0.3s; }
+        .tab-item.active { background: var(--primary); color: white; }
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+        .report-table th, .report-table td { padding: 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .report-table th { background: rgba(255,255,255,0.02); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+        .report-table tr:hover { background: rgba(255,255,255,0.01); }
+        .row-total { font-weight: 700; background: rgba(16, 185, 129, 0.05) !important; color: var(--primary); }
+        .row-grand-total { font-weight: 800; background: rgba(16, 185, 129, 0.1) !important; font-size: 1rem; border-top: 2px solid var(--primary); }
+        .negative { color: #ef4444; }
+        .filter-bar { display: flex; gap: 1rem; align-items: center; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    </style>
+  <script type="module" crossorigin src="/assets/laporan-6sbmmNVz.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/supabase-CQA5XZYd.js">
+  <link rel="modulepreload" crossorigin href="/assets/layout-BhxwArZu.js">
+  <link rel="stylesheet" crossorigin href="/assets/supabase-DOA7jKZJ.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header" id="sidebarHeaderWrapper">
+                <h2 id="sidebarTitleGlobal">Qurban Manager</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
+                <div class="nav-header">&#128188; DATA STOCK</div>
+                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
+                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
+                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                <a href="kambing_mati.html" class="nav-item">&bull; Kambing Mati</a>
+                <a href="kambing_sakit.html" class="nav-item">&bull; Kambing Sakit</a>
+                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
+                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
+                <div class="nav-header">&#128176; DATA FINANCE</div>
+                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
+                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
+                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                <a href="laporan.html" class="nav-item active" style="color:#a855f7 !important; font-weight:900; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+                
+                <div class="nav-header">&#9881;&#65039; DATA SETTING</div>
+                <a href="pengaturan.html" class="nav-item">&bull; Pengaturan</a>
+            </nav>
+            <div style="padding: 1.5rem;">
+                <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">Pusat Laporan Strategis</div>
+                <div class="user-menu">
+                    <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
+                </div>
+            </header>
+
+            <div class="content-area fade-in">
+                <!-- RAMPED DIAGNOSTIC CONSOLE (PREMIUM) -->
+                <div id="debugBanner" style="background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2); padding:0.75rem 1.25rem; border-radius:12px; margin-bottom:1.5rem; font-size:0.85rem; color: #f59e0b; display:flex !important; align-items:center; gap:12px; backdrop-filter:blur(5px);">
+                    <div style="background:#f59e0b; width:10px; height:10px; border-radius:50%; animation: pulse 2s infinite;"></div>
+                    <div id="debugText" style="font-weight:600; font-family: 'Open Sans', sans-serif;">Pusat Data Terhubung Internal...</div>
+                    <div id="debugDetails" style="font-size:0.75rem; opacity:0.7; margin-left:auto;"></div>
+                </div>
+
+                <!-- Filter Bar (GLASS) -->
+                <div class="filter-bar" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); backdrop-filter:blur(10px);">
+                    <div style="flex:1; min-width:150px;">
+                        <label class="form-label" style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">RENTANG PERIODE</label>
+                        <select id="selRange" class="form-control" style="background:rgba(255,255,255,0.05)">
+                            <option value="thisMonth">Bulan Ini</option>
+                            <option value="thisYear">Tahun Ini (Musim 2026)</option>
+                            <option value="all" selected>Semua Data</option>
+                            <option value="custom">Custom Range...</option>
+                        </select>
+                    </div>
+                    <div id="customDateContainer" style="display:none; gap:0.5rem; align-items:center;">
+                        <div>
+                            <label class="form-label" style="font-size:0.7rem; color:var(--text-muted);">DARI</label>
+                            <input type="date" id="inpStartDate" class="form-control">
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size:0.7rem; color:var(--text-muted);">SAMPAI</label>
+                            <input type="date" id="inpEndDate" class="form-control">
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:flex-end; gap:0.75rem;">
+                        <button class="btn btn-primary btn-shimmer" id="btnRender" style="height:42px; min-width:160px; font-weight:600;">
+                            🔍 Proses Data
+                        </button>
+                        <button class="btn btn-shimmer" id="btnExportExcel" style="background:#10b981; border:none; height:42px; color:white; font-weight:600;">
+                            📥 Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Menu -->
+                <div class="tab-menu">
+                    <div class="tab-item active" data-target="secLR">1. Laba Rugi</div>
+                    <div class="tab-item" data-target="secAK">2. Arus Kas</div>
+                    <div class="tab-item" data-target="sectionDist">3. Laporan Distribusi</div>
+                    <div class="tab-item" data-target="sectionNR">Neraca Keuangan</div>
+                    <div class="tab-item" data-target="sectionOP">Operasional & Kesehatan</div>
+                    <div class="tab-item" data-target="sectionBagiHasil" id="tabBagiHasilItem">Bagi Hasil Partner</div>
+                    <div class="tab-item" data-target="sectionAnalytics" id="tabAnalyticsItem" style="color:var(--warning) !important; font-weight:700;">📊 Analisa & KPI</div>
+                </div>
+
+                <div class="card-box">
+                    <!-- LABA RUGI -->
+                    <div id="secLR" class="report-section active">
+                        <h3>Laporan Laba Rugi (Profit & Loss)</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Menampilkan profitabilitas berdasarkan pengakuan pendapatan & beban.</p>
+                        <table class="report-table" id="tableLR">
+                            <thead>
+                                <tr><th>KETERANGAN</th><th style="text-align:right">NOMINAL (IDR)</th></tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- ARUS KAS -->
+                    <div id="secAK" class="report-section">
+                        <h3>Laporan Arus Kas (Cash Flow)</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Aliran uang masuk dan keluar pada channel Kas/Bank.</p>
+                        <table class="report-table" id="tableAK">
+                            <thead>
+                                <tr><th>KETERANGAN</th><th style="text-align:right">MASUK</th><th style="text-align:right">KELUAR</th><th style="text-align:right">SALDO AKHIR</th></tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- DISTRIBUSI -->
+                    <div id="sectionDist" class="report-section">
+                        <h3>Monitoring Distribusi & Pengiriman</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Daftar pengiriman kambing per trip, kurir, dan bukti foto serah terima.</p>
+                        <table class="report-table" id="tableDist">
+                            <thead>
+                                <tr>
+                                    <th>ID TRIP</th>
+                                    <th>TANGGAL</th>
+                                    <th>SOPIR / KURIR</th>
+                                    <th>ITEM (NO TALI)</th>
+                                    <th>KONSUMEN & ALAMAT</th>
+                                    <th>STATUS</th>
+                                    <th style="text-align:center">FOTO BUKTI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- NERACA -->
+                    <div id="sectionNR" class="report-section">
+                        <h3>Neraca (Balance Sheet)</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Posisi aset, kewajiban, dan modal perusahaan saat ini.</p>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
+                            <div>
+                                <h5>AKTIVA (HARTA)</h5>
+                                <table class="report-table" id="tableNR_Aktiva">
+                                    <thead><tr><th>ASET</th><th style="text-align:right">NOMINAL</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div>
+                                <h5>PASIVA (KEWAJIBAN + MODAL)</h5>
+                                <table class="report-table" id="tableNR_Pasiva">
+                                    <thead><tr><th>SUMBER</th><th style="text-align:right">NOMINAL</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- BAGI HASIL -->
+                    <div class="report-section" id="sectionBagiHasil">
+                        <div class="card-box">
+                            <div class="flex-between" style="margin-bottom: 1.5rem;">
+                                <h3 style="margin-bottom:0;">Kalkulasi Bagi Hasil (Partner)</h3>
+                                <div style="background:var(--primary-transparent); color:var(--primary); padding:4px 12px; border-radius:30px; font-size:0.75rem; font-weight:600;">Otomatis dari Laba Bersih</div>
+                            </div>
+                            <p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:1.5rem;">
+                                Perhitungan ini mengambil <b>Laba Bersih</b> periode terpilih, dikurangi pengeluaran kategori <b>"Bagi Hasil (Investor)"</b>, 
+                                kemudian hasilnya dibagi sesuai persentase yang diatur di menu Pengaturan: <b>Owner</b> dan <b>Team Hijrah</b>.
+                            </p>
+                            
+                            <div class="table-responsive">
+                                <table class="data-table" id="tableBagiHasil">
+                                    <thead style="background: rgba(255,255,255,0.02);">
+                                        <tr>
+                                            <th>Keterangan Komponen</th>
+                                            <th style="text-align:right">Nilai (Rp)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="margin-top:2rem; display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+                                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; text-align:center;">
+                                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">Porsi Owner</div>
+                                    <div style="font-size:1.5rem; font-weight:700; color:var(--primary);" id="valPorsiHusni">Rp 0</div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
+                                        Persentase: <input type="number" id="inpPersenOwner" value="45" min="0" max="100" style="width:70px; background:var(--bg-input); border:1px solid var(--text-muted); color:var(--text-main); text-align:center; border-radius:4px; font-weight:700; padding:2px;"> %
+                                    </div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; text-align:center;">
+                                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">Porsi Team Hijrah</div>
+                                    <div style="font-size:1.5rem; font-weight:700; color:var(--success);" id="valPorsiTeam">Rp 0</div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
+                                        Persentase: <input type="number" id="inpPersenTeam" value="55" min="0" max="100" style="width:70px; background:var(--bg-input); border:1px solid var(--text-muted); color:var(--text-main); text-align:center; border-radius:4px; font-weight:700; padding:2px;"> %
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OPERASIONAL -->
+                    <div id="sectionOP" class="report-section">
+                        <h3>Laporan Performa Operasional</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Metrik kinerja lapangan dan efisiensi penagihan.</p>
+                        
+                        <h5>📊 Kesehatan Kandang (Mortalitas per Batch)</h5>
+                        <table class="report-table" id="tableOPE_Health" style="margin-bottom:2rem;">
+                            <thead><tr><th>BATCH</th><th>STOK AWAL</th><th>MATI/HILANG</th><th>HEALTH RATE</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+
+                        <h5>💳 Efektivitas Penagihan (Aging Piutang)</h5>
+                        <table class="report-table" id="tableOPE_Aging" style="margin-bottom:2rem;">
+                            <thead><tr><th>UMUR PIUTANG</th><th>JUMLAH ORDER</th><th>TOTAL NILAI PIUTANG</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <!-- ANALISA & KPI -->
+                    <div id="sectionAnalytics" class="report-section">
+                        <h3>Analisa Strategis & KPI Kandang</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Parameter keberhasilan operasional dan efisiensi bisnis.</p>
+                        
+                        <!-- KPI Scorecards -->
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:2rem;">
+                            <div class="card-box" style="padding:1rem; text-align:center;">
+                                <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Biaya Per Ekor (CPH)</div>
+                                <div id="kpiCPH" style="font-size:1.25rem; font-weight:700; color:var(--text-main); margin-top:5px;">Rp 0</div>
+                            </div>
+                            <div class="card-box" style="padding:1rem; text-align:center;">
+                                <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Mortality Rate</div>
+                                <div id="kpiMortality" style="font-size:1.25rem; font-weight:700; color:var(--danger); margin-top:5px;">0%</div>
+                            </div>
+                            <div class="card-box" style="padding:1rem; text-align:center;">
+                                <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Avg. Profit / Closing</div>
+                                <div id="kpiAvgProfit" style="font-size:1.25rem; font-weight:700; color:var(--success); margin-top:5px;">Rp 0</div>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
+                            <!-- Expense breakdown -->
+                            <div>
+                                <h5 style="margin-bottom:1rem;">📂 Distribusi Pengeluaran (By Kategori)</h5>
+                                <table class="report-table" id="tableAnalisisKategori">
+                                    <thead><tr><th>KATEGORI</th><th style="text-align:right">NOMINAL</th><th style="text-align:right">%</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <!-- Weekly Spending -->
+                            <div>
+                                <h5 style="margin-bottom:1rem;">📉 Tren Pengeluaran Mingguan</h5>
+                                <table class="report-table" id="tableAnalisisMingguan">
+                                    <thead><tr><th>PEKAN KE- (ISO)</th><th style="text-align:right">TOTAL BIAYA</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:2rem;">
+                            <h5 style="margin-bottom:1rem;">🏆 Top Performance: Sales & Agen</h5>
+                            <table class="report-table" id="tableAnalisisAgen">
+                                <thead><tr><th>NAMA AGEN</th><th>TIPE</th><th style="text-align:right">EKOR</th><th style="text-align:right">VALUASI DEAL</th><th style="text-align:right">AVG PROFIT</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

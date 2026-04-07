@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keuangan - Qurban Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+    <style>
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .summary-card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .summary-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .icon-in { background-color: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .icon-out { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .summary-info h4 { margin: 0; color: var(--text-muted); font-size: 0.875rem; font-weight: 500;}
+        .summary-info p { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-top: 0.25rem;}
+        
+        /* Premium Balance Cards */
+        .balance-card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 220px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+        .balance-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-transparent);
+        }
+        .balance-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            background: rgba(255,255,255,0.05);
+        }
+        .balance-info { flex: 1; }
+        .balance-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+        .balance-value {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+    </style>
+  <script type="module" crossorigin src="/assets/keuangan-etBscKab.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/supabase-CQA5XZYd.js">
+  <link rel="modulepreload" crossorigin href="/assets/layout-BhxwArZu.js">
+  <link rel="stylesheet" crossorigin href="/assets/supabase-DOA7jKZJ.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header" id="sidebarHeaderWrapper">
+                <h2 id="sidebarTitleGlobal">Qurban Manager</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
+                <div class="nav-header">&#128188; DATA STOCK</div>
+                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
+                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
+                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                <a href="kambing_mati.html" class="nav-item">&bull; Kambing Mati</a>
+                <a href="kambing_sakit.html" class="nav-item">&bull; Kambing Sakit</a>
+                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
+                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
+                <div class="nav-header">&#128176; DATA FINANCE</div>
+                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
+                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
+                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                
+                                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:900; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+<div class="nav-header">&#9881;&#65039; DATA SETTING</div>
+                <a href="pengaturan.html" class="nav-item">&bull; Pengaturan</a>
+            </nav>
+            <div style="padding: 1.5rem;">
+                <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">Pencatatan Keuangan</div>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <div class="user-menu" style="margin-left: 1rem;">
+                        <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-icon icon-in"> 📈 </div>
+                        <div class="summary-info">
+                            <h4>Total Pemasukan</h4>
+                            <p id="totalPemasukan">Rp 0</p>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon icon-out"> 📉 </div>
+                        <div class="summary-info">
+                            <h4>Total Pengeluaran</h4>
+                            <p id="totalPengeluaran">Rp 0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="containerRealtimeBalance" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                </div>
+
+                <div class="card-box">
+                    <div class="flex-between" style="margin-bottom: 1.5rem;">
+                        <div>
+                            <h3 style="margin-bottom: 0.25rem;">Riwayat Transaksi</h3>
+                            <p style="font-size: 0.875rem; color: var(--text-muted);">Catatan keluar masuk dana kandang.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items:center;">
+                            <button class="btn btn-primary" id="btnTambahPemasukan">+ Pemasukan</button>
+                            <button class="btn" style="background-color: transparent; border: 1px solid var(--danger); color: var(--danger);" id="btnTambahPengeluaran">- Pengeluaran</button>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; background:rgba(0,0,0,0.15); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+                        <div style="flex:1; min-width:200px;">
+                            <label class="form-label">Cari Transaksi</label>
+                            <input type="text" id="inpSearchKeuangan" class="form-control" placeholder="Cari ID, Kategori, Keterangan, atau Channel...">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="cursor:pointer;" class="sort-header" data-column="id">ID ↕️</th>
+                                    <th style="cursor:pointer;" class="sort-header" data-column="tanggal">Tanggal ↕️</th>
+                                    <th style="cursor:pointer;" class="sort-header" data-column="kategori">Kategori ↕️</th>
+                                    <th style="cursor:pointer;" class="sort-header" data-column="keterangan">Keterangan ↕️</th>
+                                    <th style="cursor:pointer;" class="sort-header" data-column="nominal">Nominal ↕️</th>
+                                    <th style="cursor:pointer;" class="sort-header" data-column="tipe">Tipe ↕️</th>
+                                    <th style="cursor:pointer;" class="sort-header" data-column="channel">Channel ↕️</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyKeuangan">
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="emptyState" style="text-align: center; padding: 3rem 0; display: none;">
+                        <p style="color: var(--text-muted);">Belum ada riwayat transaksi.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form Tambah Pemasukan / Pengeluaran -->
+    <div class="modal-overlay" id="modalKeuangan">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Tambah Transaksi</h3>
+                <button class="modal-close" id="btnCloseModal">&times;</button>
+            </div>
+            <form id="formKeuangan">
+                <div class="modal-body">
+                    <input type="hidden" id="transaksiIdOriginal" value="">
+                    <input type="hidden" id="transaksiTipe" value="pemasukan">
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Tanggal</label>
+                            <input type="date" id="transaksiTanggal" class="form-control" required>
+                        </div>
+                        <div class="form-group" id="containerChannel">
+                            <label class="form-label" id="labelChannel">Sumber Modal</label>
+                            <select id="transaksiChannel" class="form-control">
+                                <option value="Tunai">Tunai</option>
+                                <option value="Transfer Bank">Transfer Bank</option>
+                                <option value="QRIS">QRIS</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="containerTransaksiRek" style="display:none;">
+                        <label class="form-label">Pilih Rekening Tujuan / Asal Dana</label>
+                        <select id="transaksiRekId" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kategori</label>
+                        <select id="transaksiKategori" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nominal (Rp)</label>
+                        <input type="number" id="transaksiNominal" class="form-control" required min="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Keterangan Tambahan</label>
+                        <input type="text" id="transaksiKeterangan" class="form-control" placeholder="..." required>
+                    </div>
+                    <div class="form-group" style="margin-top: 1rem; border-top: 1px dotted rgba(255,255,255,0.1); padding-top: 1rem;">
+                        <label class="form-label">📸 Bukti Transaksi (Opsional)</label>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <input type="file" id="inpBuktiKeuangan" class="form-control" accept="image/*" style="font-size:0.8rem; flex:1;">
+                            <button type="button" id="btnOpenCameraKeu" class="btn btn-sm" style="background:#4b5563; color:white; padding:8px 12px; height:40px; border-radius:8px; border:none; display:flex; align-items:center; gap:5px;" title="Ambil Foto Langsung dari Kamera">📸 Kamera</button>
+                            <div id="previewBuktiKeuangan" style="display:none; align-items:center; gap:8px;">
+                                <div style="width:40px; height:40px; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+                                    <img src="" style="width:100%; height:100%; object-fit:cover;">
+                                </div>
+                                <button type="button" id="btnRemoveKeuPhoto" class="btn btn-sm" style="background:#ef4444; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:0.7rem;" title="Hapus Foto">🗑️</button>
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1);" id="btnCancelModal">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveModal">Simpan Transaksi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Form Pelunasan Order -->
+    <div class="modal-overlay" id="modalPelunasan">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Terima Pelunasan / Cicilan Order</h3>
+                <button class="modal-close" id="btnCloseModalPelunasan">&times;</button>
+            </div>
+            <form id="formPelunasan">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Pilih Order (Penjualan Belum Lunas)</label>
+                        <select id="pelunasanOrderId" class="form-control" required>
+                            <option value="">-- Pilih Order --</option>
+                        </select>
+                    </div>
+                    <div id="infoPelunasan" style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:8px; margin-bottom:1rem; display:none; font-size:0.9rem;">
+                        <div class="flex-between"><span>Total Deal:</span> <span id="infoTotalDeal" style="font-weight:700"></span></div>
+                        <div class="flex-between"><span>Sudah Bayar:</span> <span id="infoTotalPaid" style="color:var(--success)"></span></div>
+                        <div class="flex-between" style="border-top:1px dashed #444; margin-top:5px; padding-top:5px;">
+                            <span>Sisa Tagihan:</span> <span id="infoBalance" style="color:var(--warning); font-weight:700; font-size:1.1rem;"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nominal Bayar Sekarang (Rp)</label>
+                        <input type="number" id="pelunasanNominal" class="form-control" required min="1" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sumber Modal</label>
+                        <select id="pelunasanChannel" class="form-control" required>
+                            <option value="Tunai">Tunai</option>
+                            <option value="Transfer Bank">Transfer Bank</option>
+                            <option value="QRIS">QRIS</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="containerPelunasanRek" style="display:none;">
+                        <label class="form-label">Pilih Rekening Tujuan</label>
+                        <select id="pelunasanRekId" class="form-control"></select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1);" id="btnCancelModalPelunasan">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Pelunasan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="photoLightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; align-items:center; justify-content:center; cursor:zoom-out;" onclick="this.style.display='none'">
+        <div id="lightboxLoading" style="position:absolute; color:white; font-style:italic;">Memuat Foto...</div>
+        <img id="lightboxImg" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); position:relative; z-index:2; display:none;" onload="document.getElementById('lightboxLoading').style.display='none'; this.style.display='block';" onclick="event.stopPropagation()">
+        <div style="position:absolute; top:20px; right:20px; color:white; font-size:2rem; font-weight:bold; cursor:pointer;" onclick="this.parentElement.style.display='none'">&times;</div>
+    </div>
+
+
+</body>
+</html>
+
+
+

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Qurban Manager</title>
+    <meta name="description" content="Aplikasi Manajemen Kandang Qurban - Login">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/style.css">
+    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo">
+                    <div style="width: 100px; height: 100px; margin: 0 auto 1.5rem; position: relative;">
+                        <img id="loginLogo" src="src/assets/logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3222/3222718.png'" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 3px solid var(--primary); box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);">
+                    </div>
+                    <h1 id="loginTitle">Qurban<span>Manager</span></h1>
+                </div>
+                <p>Menunaikan Qurban, Menyempurnakan Cinta.</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="input-group">
+                    <label for="email">Username atau Email</label>
+                    <input type="text" id="email" name="email" placeholder="admin atau admin@qurban.com" required autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="⬢⬢⬢⬢⬢⬢⬢⬢" required autocomplete="current-password">
+                </div>
+                
+                <div class="error-message" id="errorMessage"></div>
+                
+                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+                    <span>Masuk</span>
+                    <div class="spinner" id="loginSpinner" style="display: none;"></div>
+                </button>
+            </form>
+            
+            <div id="devQuickLogin" style="display: none; flex-direction: column; gap: 0.75rem; margin-top: 1rem; padding: 1rem; border: 1px dashed var(--primary); border-radius: 8px; background: rgba(16, 185, 129, 0.05);">
+                <p style="font-size: 0.75rem; color: var(--primary); font-weight: 600; margin: 0; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">Developer Mode</p>
+                <button type="button" class="btn btn-block" id="quickLoginBtn" style="background: var(--primary); color: white; border: none; padding: 0.6rem; font-size: 0.85rem;">
+                    🚀 Quick Login (Local Admin)
+                </button>
+            </div>
+
+            <div class="login-footer" style="text-align: center; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;">
+                <a href="forgot_password.html" style="color: var(--primary); text-decoration: none;">Lupa Password?</a>
+                <div>Belum punya akun? <a href="register.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Daftar Disini</a></div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="src/login.js"></script>
+    <script>
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            document.getElementById('devQuickLogin').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
+
+
+

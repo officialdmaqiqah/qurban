@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Data Sakit -  Qurban Manager</title>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+        <div class="app-layout">
+                <aside class="sidebar">
+                        <div class="sidebar-header" id="sidebarHeaderWrapper">
+                                <h2 id="sidebarTitleGlobal">Mengambil profil...</h2>
+                        </div>
+                        <nav class="sidebar-nav">
+
+                                <a href="dashboard.html" class="nav-item">&bull; Dashboard Keuangan</a>
+                                <div class="nav-header" style="padding: 1.5rem 1rem 0.5rem; font-size: 0.85rem; text-transform: uppercase; color: var(--text-mute
