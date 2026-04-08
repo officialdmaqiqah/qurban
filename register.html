@@ -30,8 +30,8 @@
                     <input type="text" id="wa" required placeholder="Contoh: 08123456789">
                 </div>
                 <div class="input-group">
-                    <label for="email">Username atau Email</label>
-                    <input type="text" id="email" required placeholder="staf01 atau staf@qurban.com" autocapitalize="none">
+                    <label for="email">Username</label>
+                    <input type="text" id="email" required placeholder="Contoh: staf01" autocapitalize="none">
                 </div>
                 <div class="input-group">
                     <label for="password">Password</label>
@@ -52,9 +52,11 @@
     <script type="module" src="src/whatsapp.js"></script>
     <script type="module">
         import { supabase } from './src/supabase.js';
+        import { getWaConfig, parseWaTemplate, sendWa } from './src/whatsapp.js';
 
         // Formatting Helpers
         const toTitleCase = (str) => {
+            if (!str) return '';
             return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
         };
 
@@ -124,17 +126,27 @@
 
                     if (profileError) throw profileError;
 
-                    // 3. WhatsApp Notification (Silent Fail - Don't block UI)
+                    // 3. WhatsApp Notification (Direct Import System)
                     try {
-                        if (window.sendWa && window.parseWaTemplate) {
-                            const config = window.getWaConfig ? await window.getWaConfig() : {};
-                            const template = config.templateDaftar || "*Pendaftaran Berhasil*\n==========================\n\nAssalamu’Alaikum, *[[NAMA]]*.\n\nTerima Kasih Telah Mendaftar Menjadi Bagian Pejuang Qurban.\n\nBerikut Adalah Data Yang Anda Entri:\n👤 Nama: [[NAMA]]\n📧 Username/Email: [[EMAIL]]\n🔑 Password: [[PASSWORD]]\n\n⚠️ *Penting:*\n1. Mohon Jangan Memberitahukan Username Dan Password Anda Kepada Siapapun.\n2. Saat Ini Anda *Belum Bisa Login*. Akun Anda Sedang Dalam Status *Pending*. Silakan Menunggu Konfirmasi (Approval) Dari Manajemen Sebelum Dapat Digunakan.\n\nTerima Kasih.";
-                            const waMessage = await window.parseWaTemplate(template, {
-                                nama: fullName,
-                                email: email,
-                                password: password
-                            });
-                            await window.sendWa(wa, waMessage);
+                        const config = await getWaConfig();
+                        const template = config.templateDaftar || "*Pendaftaran Berhasil*\n==========================\n\nAssalamu’Alaikum, *[[NAMA]]*.\n\nTerima Kasih Telah Mendaftar Menjadi Bagian Pejuang Qurban.\n\nBerikut Adalah Data Yang Anda Entri:\n👤 Nama: [[NAMA]]\n📧 Username/Email: [[EMAIL]]\n🔑 Password: [[PASSWORD]]\n\n⚠️ *Penting:*\n1. Mohon Jangan Memberitahukan Username Dan Password Anda Kepada Siapapun.\n2. Saat Ini Anda *Belum Bisa Login*. Akun Anda Sedang Dalam Status *Pending*. Silakan Menunggu Konfirmasi (Approval) Dari Manajemen Sebelum Dapat Digunakan.\n\nTerima Kasih.";
+                        
+                        const waMessage = await parseWaTemplate(template, {
+                            nama: fullName,
+                            email: email,
+                            password: password
+                        });
+
+                        // 3a. Send to User
+                        console.log('[Register] Menyiapkan notifikasi untuk User:', wa);
+                        const resUser = await sendWa(wa, waMessage);
+                        console.log('[Register] Status User WA:', resUser);
+
+                        // 3b. Send to Admin (Backup/Audit)
+                        if (config.sender) {
+                            const adminMsg = `*NOTIF PENDAFTAR BARU* 🔔\n==========================\n\nBismillah\nHalo Manajemen,\n\nAda Staf/Agen baru yang mendaftar di sistem dan membutuhkan Persetujuan (Approval):\n\n👤 Nama: ${fullName}\n📞 WA: ${wa}\n📧 Email: ${email}\n\nSilakan cek Dashboard Manajemen untuk melakukan aktivasi akun.\n\nTerima Kasih.`;
+                            console.log('[Register] Menyiapkan notifikasi untuk Admin:', config.sender);
+                            await sendWa(config.sender, adminMsg);
                         }
                     } catch (waErr) {
                         console.warn('WA Auth notification failed:', waErr);

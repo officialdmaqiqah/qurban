@@ -24,7 +24,7 @@ const WA_DEFAULT_CONFIG = {
 /**
  * Mendapatkan konfigurasi WA dari Supabase (Cloud Synced)
  */
-window.getWaConfig = async () => {
+export const getWaConfig = async () => {
     // Try to get from Supabase first
     const { data, error } = await supabase
         .from('master_data')
@@ -63,11 +63,12 @@ window.getWaConfig = async () => {
 
     return config;
 };
+window.getWaConfig = getWaConfig;
 
 /**
  * Menyimpan konfigurasi WA ke Supabase (Cloud Synced)
  */
-window.saveWaConfig = async (config) => {
+export const saveWaConfig = async (config) => {
     const { error } = await supabase
         .from('master_data')
         .upsert({ key: 'WA_CONFIG', val: config }, { onConflict: 'key' });
@@ -77,11 +78,12 @@ window.saveWaConfig = async (config) => {
     }
     return { success: !error, error };
 };
+window.saveWaConfig = saveWaConfig;
 
 /**
  * Mengganti variabel dalam template dengan data asli
  */
-window.parseWaTemplate = async (template, data = {}) => {
+export const parseWaTemplate = async (template, data = {}) => {
     const config = await window.getWaConfig();
     let msg = template || '';
     
@@ -122,11 +124,12 @@ window.parseWaTemplate = async (template, data = {}) => {
 
     return msg;
 };
+window.parseWaTemplate = parseWaTemplate;
 
 /**
  * Fungsi Inti Pengiriman WA via XSender API
  */
-window.sendWa = async (number, message) => {
+export const sendWa = async (number, message) => {
     const config = await window.getWaConfig();
     
     // Normalisasi nomor (pastikan 62xxx)
@@ -174,3 +177,4 @@ window.sendWa = async (number, message) => {
         };
     }
 };
+window.sendWa = sendWa;

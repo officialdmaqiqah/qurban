@@ -24,5 +24,9 @@ export default defineConfig({
         forgot_password: resolve(__dirname, 'forgot_password.html')
       }
     }
+  },
+  server: {
+    host: true,
+    allowedHosts: true
   }
 });

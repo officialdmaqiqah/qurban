@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         filtered.forEach(item => {
             const hasPending = (activeEditReqs || []).find(r => r.status === 'pending' && (r.goat_id === item.id || r.trx_id === item.transaction_id));
             const pendingBadge = hasPending 
-                ? `<div style="margin-top:4px;"><span class="badge" style="background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.2); font-size:0.65rem;">Menunggu Persetujuan</span></div>` 
+                ? `<span class="badge" style="background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.2); font-size:0.6rem; display:block; margin-top:2px; width:max-content; padding:0.1rem 0.3rem !important;">Menunggu Persetujuan</span>` 
                 : '';
             const tr = document.createElement('tr');
             let displayBatch = (item.batch || '').replace('BT-', 'BT');
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td style="font-weight:600; display:none;">${displayBatch}</td>
                 <td style="white-space:nowrap; display:none;">${formatTgl(item.tgl_masuk)}</td>
-                <td style="font-weight:600;">${item.no_tali}</td>
+                <td class="sticky-col" style="font-weight:600;">${item.no_tali}</td>
                 <td>${item.warna_tali || '-'}</td>
                 <td>${item.sex || '-'}</td>
                 <td><span class="badge" style="background:rgba(255,255,255,0.1);">${item.lokasi || '-'}</span></td>

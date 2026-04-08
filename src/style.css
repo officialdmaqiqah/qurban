@@ -510,6 +510,68 @@ html { background-color: var(--bg-dark); }
   background-color: rgba(255, 255, 255, 0.02);
 }
 
+/* === OPTIMASI TABEL (GLOBAL) === */
+
+/* Spasi Baris Rapat */
+.data-table th, .data-table td {
+  padding: 0.75rem 0.625rem !important;
+  font-size: 0.875rem;
+}
+
+/* Tombol Aksi Sejajar */
+.action-btns {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 0.5rem !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Sticky Column System (No Tali) */
+.data-table {
+  position: relative !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+/* Target kolom ke-3 (No Tali) dan class .sticky-col */
+.sticky-col,
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 20 !important;
+  background-color: var(--bg-card) !important;
+  border-right: 2px solid var(--primary) !important;
+  box-shadow: 4px 0 10px rgba(0,0,0,0.3) !important;
+}
+
+body.light-mode .sticky-col,
+body.light-mode .data-table th:nth-child(3),
+body.light-mode .data-table td:nth-child(3) {
+  background-color: #ffffff !important;
+  box-shadow: 4px 0 10px rgba(0,0,0,0.05) !important;
+}
+
+.data-table th:nth-child(3), .data-table th.sticky-col {
+    z-index: 21 !important;
+}
+
+/* Zebra Striping */
+.data-table tbody tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.015) !important;
+}
+.data-table tbody tr:nth-child(even) td:nth-child(3),
+.data-table tbody tr:nth-child(even) td.sticky-col {
+  background-color: #243046 !important; 
+}
+body.light-mode .data-table tbody tr:nth-child(even) td {
+  background-color: #f8fafc !important;
+}
+body.light-mode .data-table tbody tr:nth-child(even) td:nth-child(3),
+body.light-mode .data-table tbody tr:nth-child(even) td.sticky-col {
+  background-color: #f1f5f9 !important;
+}
+
 .badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -1041,11 +1103,7 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         min-width: 800px; /* Force scroll hint */
     }
 
-    /* Action Buttons in Table */
-    .action-btns {
-        flex-direction: column;
-        gap: 0.4rem;
-    }
+    /* Spasi Baris & Sticky sudah dipindah ke global di atas line 512 */
 
     /* Typography & Spacing */
     .content-area {
