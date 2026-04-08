@@ -188,6 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(inpBuktiDP) inpBuktiDP.value = '';
         if(previewBuktiDP) previewBuktiDP.style.display = 'none';
         if(imgPreviewDP) imgPreviewDP.src = '';
+        window.existingBuktiUrl = null;
         
         renderCart();
     };
@@ -228,6 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(inpBuktiDP) inpBuktiDP.value = '';
             if(previewBuktiDP) previewBuktiDP.style.display = 'none';
             if(imgPreviewDP) imgPreviewDP.src = '';
+            window.existingBuktiUrl = null;
         });
     }
 
@@ -395,7 +397,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             if (window.editingTrxId && userRole !== 'agen') await silentRollback(window.editingTrxId, true);
-            let buktiUrl = null; if (inpBuktiDP?.files.length > 0) { const b64 = await compressImage(inpBuktiDP.files[0]); buktiUrl = await uploadToGDrive(b64, 'FOTO_BUKTI_DP'); }
+            
+            let buktiUrl = window.existingBuktiUrl || null; 
+            if (inpBuktiDP?.files.length > 0) { 
+                const b64 = await compressImage(inpBuktiDP.files[0]); 
+                buktiUrl = await uploadToGDrive(b64, 'FOTO_BUKTI_DP'); 
+            }
             
             const newTrx = {
                 id: trxId, tgl_trx: inpTglOrder.value || window.getLocalDate(),
@@ -553,13 +560,40 @@ document.addEventListener('DOMContentLoaded', async () => {
              // legacy handle
         }
         
-        const dpRecord = (trx.history_bayar || []).find(h => h.channel && !h.payId.includes('LUNAS')); // Asumsi DP tidak ada 'LUNAS' di payId-nya atau record pertama
-        // Sebenarnya cari yang kategori 'Jual Kambing' di Keuangan
         const { data: dpFin } = await supabase.from('keuangan').select('nominal').eq('related_trx_id', trx.id).eq('kategori', 'Jual Kambing').single();
         
         if (inpTotalBayarAwal) {
             inpTotalBayarAwal.value = dpFin ? formatNum(dpFin.nominal) : '';
             inpTotalBayarAwal.disabled = !isAdmin; // Hanya Admin yang bisa edit DP yang sudah masuk
+        }
+
+        // Restore Payment Channel & Photo
+        const dpRecord = (trx.history_bayar || []).find(h => !h.payId?.includes('LUNAS'));
+        if (dpRecord) {
+            const rawChan = dpRecord.channel || 'Tunai';
+            if (rawChan.startsWith('TF ')) {
+                inpChannelDP.value = 'Transfer Bank';
+                await handleChannelChangeLocal('Transfer Bank', containerRekDP, inpRekIdDP);
+                const rekSearch = rawChan.replace('TF ', '').trim();
+                for (let i = 0; i < inpRekIdDP.options.length; i++) {
+                    if (inpRekIdDP.options[i].textContent.includes(rekSearch)) {
+                        inpRekIdDP.selectedIndex = i;
+                        break;
+                    }
+                }
+            } else {
+                inpChannelDP.value = (rawChan === 'Cash' || rawChan === 'Tunai / Cash') ? 'Tunai' : rawChan;
+                containerRekDP.style.display = 'none';
+            }
+
+            if (dpRecord.buktiUrl) {
+                window.existingBuktiUrl = dpRecord.buktiUrl;
+                if (imgPreviewDP) {
+                    imgPreviewDP.src = dpRecord.buktiUrl;
+                    imgPreviewDP.style.display = 'block';
+                }
+                if (previewBuktiDP) previewBuktiDP.style.display = 'flex';
+            }
         }
         
         modalKeluar.classList.add('active');
