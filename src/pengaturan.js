@@ -52,6 +52,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return str.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     };
 
+    // Alias agar bisa dipanggil sebagai toTitleCase()
+    const toTitleCase = smartToTitleCase;
+
     const cleanWhatsApp = (num) => {
         let c = String(num).replace(/\D/g, '');
         if (c.startsWith('0')) c = '62' + c.substring(1);
@@ -448,7 +451,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                    const { data: prof } = await supabase.from('profiles').select('full_name, wa, email').eq('id', id).single();
                    if (prof && prof.wa) {
                        const waNum = cleanWhatsApp(prof.wa);
-                       const msg = `*AKSES DITERIMA!* 🚀\n\nAssalamu'alaikum *${prof.full_name}*,\n\nAkun Anda dengan email *${prof.email}* telah AKTIF dan disetujui oleh Admin sebagai *${role.toUpperCase()}*.\n\nSilakan login kembali untuk mulai bekerja di sistem Qurban.\n\nKlik di sini: https://courageous-manatee-20ddb2.netlify.app`;
+                       const msg = `*AKSES DITERIMA!* 🚀\n\nAssalamu'alaikum *${prof.full_name}*,\n\nAkun Anda dengan email *${prof.email}* telah AKTIF dan disetujui oleh Admin sebagai *${role.toUpperCase()}*.\n\nSilakan login kembali untuk mulai bekerja di sistem Qurban.\n\nKlik di sini: https://qurban-blond.vercel.app`;
                        await window.sendWa(waNum, msg);
                        showToast('Notifikasi WA terkirim ke user!');
                    }
