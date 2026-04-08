@@ -97,9 +97,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const renderStats = async () => {
         const trxs = await getTrxData();
-        const userRole = localStorage.getItem('userRole');
-        const linkedAgenId = localStorage.getItem('linkedAgenId');
-        let filtered = userRole === 'admin' ? trxs : trxs.filter(t => t.agen.id === linkedAgenId);
+        const isAdmin = profile?.role === 'admin';
+        const linkedAgenId = profile?.linked_agen_id;
+        let filtered = isAdmin ? trxs : trxs.filter(t => t.agen?.id === linkedAgenId);
 
         const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0);
         const totalSisa = belumLunas.reduce((s, t) => s + (t.total_deal - t.total_paid), 0);
@@ -113,11 +113,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderList = async () => {
         const trxs = await getTrxData();
         const keyword = (inpSearchOrder.value || '').toLowerCase();
-        const userRole = localStorage.getItem('userRole');
-        const linkedAgenId = localStorage.getItem('linkedAgenId');
+        const isAdmin = profile?.role === 'admin';
+        const linkedAgenId = profile?.linked_agen_id;
 
-        let filtered = userRole === 'admin' ? trxs : trxs.filter(t => t.agen.id === linkedAgenId);
-        if (keyword) filtered = filtered.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer.nama || '').toLowerCase().includes(keyword));
+        let filtered = isAdmin ? trxs : trxs.filter(t => t.agen?.id === linkedAgenId);
+        if (keyword) filtered = filtered.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer?.nama || '').toLowerCase().includes(keyword));
 
         const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
         const overpaid = filtered.filter(t => (t.total_overpaid || 0) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
@@ -132,8 +132,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const createOrderCard = (t, type) => {
-        const sisa = t.totalDeal - t.totalPaid;
-        const pct = Math.round((t.totalPaid / t.totalDeal) * 100);
+        const sisa = (t.total_deal || 0) - (t.total_paid || 0);
+        const pct = Math.round(((t.total_paid || 0) / (t.total_deal || 1)) * 100);
         const card = document.createElement('div');
         card.className = 'order-card';
         card.style.cssText = 'border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.85rem 1rem; margin-bottom:0.6rem; cursor:pointer; background:rgba(255,255,255,0.02);';
