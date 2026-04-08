@@ -479,6 +479,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Target the action buttons container next to +Pemasukan
         const actionContainer = document.querySelector('.card-box .flex-between div:last-child');
         if (actionContainer && !document.getElementById('btnSyncKeuangan')) {
+            const btnRepair = document.createElement('button');
+            btnRepair.id = 'btnOpenRepair';
+            btnRepair.className = 'btn';
+            btnRepair.style.cssText = 'background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.2); margin-right: 0.5rem;';
+            btnRepair.innerHTML = '🔧 Reparasi Data';
+            btnRepair.onclick = () => document.getElementById('modalRepair').classList.add('active');
+            actionContainer.prepend(btnRepair);
+
             const btnSync = document.createElement('button');
             btnSync.id = 'btnSyncKeuangan';
             btnSync.className = 'btn';
@@ -528,6 +536,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('inpSearchKeuangan')?.addEventListener('input', renderApp);
     document.getElementById('btnCloseModal')?.addEventListener('click', () => modalKeuangan.classList.remove('active'));
     document.getElementById('btnCancelModal')?.addEventListener('click', () => modalKeuangan.classList.remove('active'));
+
+    // Repair Handlers
+    const modalRepair = document.getElementById('modalRepair');
+    document.getElementById('btnCloseModalRepair')?.addEventListener('click', () => modalRepair.classList.remove('active'));
+    document.getElementById('btnCancelModalRepair')?.addEventListener('click', () => modalRepair.classList.remove('active'));
+    document.getElementById('btnExecuteRepair')?.addEventListener('click', async () => {
+        const trxId = document.getElementById('repairTrxId').value.trim();
+        const talis = document.getElementById('repairNoTali').value.split(',').map(s => s.trim()).filter(s => s);
+        const customerName = document.getElementById('repairCustomer').value.trim();
+        const totalDeal = parseFloat(document.getElementById('repairTotalDeal').value) || 0;
+
+        if(!trxId || talis.length === 0) return window.showAlert('ID TRX dan Nomor Tali wajib diisi!', 'danger');
+
+        window.showConfirm(`Pulihkan ${trxId} dengan kambing tali ${talis.join(', ')}?`, async () => {
+            window.showToast('Memulai pemulihan...', 'info');
+            
+            // 1. Cari Kambing
+            const { data: goatsData } = await supabase.from('stok_kambing').select('*').in('no_tali', talis);
+            if(!goatsData || goatsData.length === 0) return window.showAlert('Kambing tidak ditemukan!', 'danger');
+
+            // 2. Buat Items
+            const items = goatsData.map(g => ({
+                goatId: g.id,
+                noTali: g.no_tali,
+                price: parseFloat(g.harga_kandang || 0),
+                saving: parseFloat(g.saving || 0)
+            }));
+
+            // 3. Upsert Transaksi
+            const trxPayload = {
+                id: trxId,
+                tgl_trx: window.getLocalDate(),
+                customer: { nama: customerName, wa1: '', alamat: '' },
+                items: items,
+                total_deal: totalDeal,
+                total_paid: 0,
+                history_bayar: []
+            };
+
+            const { error: trxErr } = await supabase.from('transaksi').upsert([trxPayload]);
+            if(trxErr) return window.showAlert('Gagal buat TRX: ' + trxErr.message, 'danger');
+
+            // 4. Update status kambing
+            for (const g of goatsData) {
+                await supabase.from('stok_kambing').update({ status_transaksi: 'Terjual', transaction_id: trxId }).eq('id', g.id);
+            }
+
+            // 5. Sinkron Saldo
+            await handleSyncAll();
+
+            modalRepair.classList.remove('active');
+            window.showAlert('✅ TRX Berhasil Dipulihkan!', 'success');
+        }, null, 'Konfirmasi Pemulihan', 'Proses Sekarang', 'btn-primary');
+    });
 
     async function populateKategori(tipe) {
         if(!kategoriInput) return;
