@@ -155,13 +155,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modalBodyGeneral = document.getElementById('modalBodyGeneral');
     const formGeneral = document.getElementById('formGeneral');
 
+    // Peta key untuk konsistensi dengan file-file lain yang membaca master_data
+    const keyMap = {
+        'supplier': 'SUPPLIERS',
+        'agen':     'AGENS',
+        'lokasi':   'LOKASI',
+        'sopir':    'SOPIR',
+        'rekening': 'REKENING',
+    };
+    const getKey = (tipe) => keyMap[tipe.toLowerCase()] || tipe.toUpperCase();
+
     const getData = async (tipe) => {
-        const { data } = await supabase.from('master_data').select('val').eq('key', tipe.toUpperCase()).single();
+        const key = getKey(tipe);
+        const { data } = await supabase.from('master_data').select('val').eq('key', key).single();
         return data?.val || [];
     };
 
     const saveData = async (tipe, dataJson) => {
-        const key = tipe.toUpperCase();
+        const key = getKey(tipe);
         const { error } = await supabase.from('master_data').upsert({ id: 'ID-' + key, key: key, val: dataJson }, { onConflict: 'key' });
         return { error };
     };
