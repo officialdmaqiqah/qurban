@@ -260,9 +260,16 @@ window.openCameraUI = function(callback) {
                 <div id="cameraLoading" style="position: absolute; color: white;">Memulai Kamera...</div>
             </div>
             <canvas id="cameraCanvas" style="display: none;"></canvas>
-            <div class="modal-custom-footer" style="background: var(--bg-card); padding: 1rem; display: flex; gap: 0.75rem;">
-                <button class="btn" id="btnCancelCamera" style="flex: 1; background: transparent; border: 1px solid rgba(255,255,255,0.1);">Batal</button>
-                <button class="btn btn-primary" id="btnCaptureCamera" style="flex: 2;">📸 Ambil Foto</button>
+            <div class="modal-custom-footer" style="background: var(--bg-card); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; gap: 0.75rem; width: 100%;">
+                    <button class="btn" id="btnCancelCamera" style="flex: 1; background: transparent; border: 1px solid rgba(255,255,255,0.1);">Batal</button>
+                    <button class="btn btn-primary" id="btnCaptureCamera" style="flex: 2;">📸 Ambil Foto (Live)</button>
+                </div>
+                <!-- Tombol Cadangan untuk Android/Samsung yang Izinnya Terblokir -->
+                <button class="btn" id="btnFallbackCamera" style="width: 100%; background: #4f46e5; color: white; border: none; padding: 0.75rem;">
+                    📷 Gunakan Kamera HP Standar / Galeri
+                </button>
+                <input type="file" id="inpFallbackCamera" accept="image/*" capture="environment" style="display: none;">
             </div>
         </div>
     `;
@@ -299,6 +306,19 @@ window.openCameraUI = function(callback) {
     document.getElementById('btnCancelCamera').onclick = () => {
         stopStream();
         overlay.remove();
+    };
+
+    document.getElementById('btnFallbackCamera').onclick = () => {
+        document.getElementById('inpFallbackCamera').click();
+    };
+
+    document.getElementById('inpFallbackCamera').onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            callback(file);
+            stopStream();
+            overlay.remove();
+        }
     };
 
     document.getElementById('btnCaptureCamera').onclick = () => {
