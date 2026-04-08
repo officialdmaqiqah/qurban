@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const total = currentCart.reduce((sum, i) => sum + (parseFloat(i.hargaDeal) || 0), 0);
         const paidNow = parseNum(inpTotalBayarAwal.value);
         let finalChannelDP = inpChannelDP.value; if(finalChannelDP === 'Transfer Bank' && inpRekIdDP.value) finalChannelDP = `TF ${inpRekIdDP.options[inpRekIdDP.selectedIndex].textContent}`;
-        const userRole = localStorage.getItem('userRole');
+        const userRole = (profile.role || '').toLowerCase(); // Use profile.role from upper scope
 
         try {
             if (window.editingTrxId && userRole !== 'agen') await silentRollback(window.editingTrxId, true);
@@ -360,57 +360,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
 
             if (window.editingTrxId && userRole === 'agen') {
-                await supabase.from('edit_requests').insert([{ trx_id: window.editingTrxId, new_data: newTrx, requester_email: email, status: 'pending' }]);
-                showToast('✅ Permintaan edit dikirim ke Admin!');
+                const { error: reqError } = await supabase.from('edit_requests').insert([{ trx_id: window.editingTrxId, new_data: newTrx, requester_email: email, status: 'pending' }]);
+                if(reqError) throw reqError;
                 showAlert('Permintaan Perubahan Terkirim!', 'success', () => { modalKeluar.classList.remove('active'); window.editingTrxId = null; }); return;
             }
 
-            // Save to DB
             const { error: insertError } = await supabase.from('transaksi').insert([newTrx]);
             if (insertError) throw insertError;
 
-            // Update Stock
             for (const it of currentCart) await supabase.from('stok_kambing').update({ status_transaksi: 'Terjual', transaction_id: trxId, tgl_keluar: newTrx.tglTrx, harga_deal: it.hargaDeal }).eq('id', it.goatId);
-            
-            // Insert Finance
             if(paidNow > 0) await supabase.from('keuangan').insert([{ id: 'PAY-'+Date.now(), tipe: 'pemasukan', tanggal: newTrx.tglTrx, kategori: 'Jual Kambing', nominal: paidNow, channel: finalChannelDP, related_trx_id: trxId, bukti_url: buktiUrl }]);
 
-            // WhatsApp Notification (Optional/Safe call)
-            if (sendWA) {
-                try {
-                    const getWaConfig = window.getWaConfig || (await import('./whatsapp.js')).getWaConfig;
-                    const parseWaTemplate = window.parseWaTemplate || (await import('./whatsapp.js')).parseWaTemplate;
-                    const sendWa = window.sendWa || (await import('./whatsapp.js')).sendWa;
-
-                    if (typeof getWaConfig === 'function') {
-                        const config = await getWaConfig();
-                        const itemsStr = currentCart.map(it => `• No.${it.noTali} (${it.batch})`).join('\n');
-                        const sohibulStr = currentCart.map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
-                        
-                        const commonData = {
-                            nama: newTrx.customer.nama, id: trxId, tgl: formatTgl(newTrx.tglTrx), total: formatRp(total),
-                            dp: formatRp(paidNow), sisa: formatRp(total - newTrx.totalPaid),
-                            items: itemsStr, sohibul: sohibulStr, alamat: newTrx.customer.alamat.jalan + ', ' + newTrx.customer.alamat.kec,
-                            wa_konsumen: newTrx.customer.wa1, nama_agen: newTrx.agen.nama, jadwal: formatTgl(newTrx.delivery.tgl)
-                        };
-
-                        const templateCust = newTrx.agen.tipe.toUpperCase().includes('DM') ? config.templateOrderDM : config.templateOrderNormal;
-                        const msgCust = await parseWaTemplate(templateCust, commonData);
-                        if (newTrx.customer.wa1) await sendWa(newTrx.customer.wa1, msgCust);
-
-                        const allAgens = await getAgenDb();
-                        const agenData = allAgens.find(a => a.id === newTrx.agen.id || a.nama === newTrx.agen.nama);
-                        const templateAgen = newTrx.agen.tipe.toUpperCase().includes('DM') ? config.templateAgentDM : config.templateAgentNormal;
-                        const msgAgen = await parseWaTemplate(templateAgen, commonData);
-                        if (agenData && agenData.wa) await sendWa(agenData.wa, msgAgen);
-                    }
-                } catch (waErr) {
-                    console.error('WhatsApp notification failed, but transaction saved:', waErr);
-                }
+            if (sendWA && typeof window.sendWa === 'function') {
+                window.getWaConfig().then(async config => {
+                    const itemsStr = currentCart.map(it => `• No.${it.noTali} (${it.batch})`).join('\n');
+                    const sohibulStr = currentCart.map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
+                    const commonData = { nama: newTrx.customer.nama, id: trxId, tgl: formatTgl(newTrx.tglTrx), total: formatRp(total), dp: formatRp(paidNow), sisa: formatRp(total - newTrx.totalPaid), items: itemsStr, sohibul: sohibulStr, alamat: newTrx.customer.alamat.jalan + ', ' + newTrx.customer.alamat.kec, wa_konsumen: newTrx.customer.wa1, nama_agen: newTrx.agen.nama, jadwal: formatTgl(newTrx.delivery.tgl) };
+                    const templateCust = newTrx.agen.tipe.toUpperCase().includes('DM') ? config.templateOrderDM : config.templateOrderNormal;
+                    const msgCust = await window.parseWaTemplate(templateCust, commonData);
+                    if (newTrx.customer.wa1) window.sendWa(newTrx.customer.wa1, msgCust);
+                    const allAgens = await getAgenDb();
+                    const agenData = allAgens.find(a => a.id === newTrx.agen.id || a.nama === newTrx.agen.nama);
+                    const templateAgen = newTrx.agen.tipe.toUpperCase().includes('DM') ? config.templateAgentDM : config.templateAgentNormal;
+                    const msgAgen = await window.parseWaTemplate(templateAgen, commonData);
+                    if (agenData && agenData.wa) window.sendWa(agenData.wa, msgAgen);
+                }).catch(e => console.error('WA Err:', e));
             }
             
             showAlert('Berhasil Disimpan!', 'success', () => { modalKeluar.classList.remove('active'); renderTable(); window.editingTrxId = null; });
-
         } catch (err) {
             console.error('Save failed:', err);
             showAlert('Gagal Menyimpan: ' + err.message, 'danger');
@@ -497,8 +474,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnSimpanLunas.addEventListener('click', () => { performSaveLunas(parseNum(inpNominalLunas.value), selOrderLunas.value, inpChannelLunas.value, inpTglLunas.value, true); });
 
     document.getElementById('btnTambahTerjual').addEventListener('click', () => { window.editingTrxId = null; initForm(); modalKeluar.classList.add('active'); });
-    document.getElementById('btnCloseModal').addEventListener('click', () => modalKeluar.classList.remove('active'));
+    
+    // Fix: Handle both btnCloseModal and btnCancelModal
+    const closeMainModal = () => modalKeluar.classList.remove('active');
+    const closeBtn = document.getElementById('btnCloseModal') || document.getElementById('btnCancelModal');
+    if (closeBtn) closeBtn.addEventListener('click', closeMainModal);
+    
     document.getElementById('btnCloseLunasModal').addEventListener('click', () => modalLunas.classList.remove('active'));
+    
+    const btnBatalLunas = document.getElementById('btnBatalLunas');
+    if (btnBatalLunas) btnBatalLunas.addEventListener('click', () => modalLunas.classList.remove('active'));
     
     inpSearchKambing.addEventListener('change', async () => { await addKambingToCart(); });
     btnAddKambing.addEventListener('click', async () => { await addKambingToCart(); });
