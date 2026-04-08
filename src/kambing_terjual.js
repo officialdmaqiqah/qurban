@@ -374,7 +374,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { error: insertError } = await supabase.from('transaksi').insert([newTrx]);
             if (insertError) throw insertError;
 
-            for (const it of currentCart) await supabase.from('stok_kambing').update({ status_transaksi: 'Terjual', transaction_id: trxId, tgl_keluar: newTrx.tgl_trx, harga_deal: it.hargaDeal }).eq('id', it.goatId);
+            for (const it of currentCart) {
+                const { error: stokErr } = await supabase.from('stok_kambing').update({ status_transaksi: 'Terjual', transaction_id: trxId, tgl_keluar: newTrx.tgl_trx, harga_deal: it.hargaDeal }).eq('id', it.goatId);
+                if (stokErr) console.error('Gagal update stok kambing ID:', it.goatId, stokErr);
+            }
             if(paidNow > 0) await supabase.from('keuangan').insert([{ id: 'PAY-'+Date.now(), tipe: 'pemasukan', tanggal: newTrx.tgl_trx, kategori: 'Jual Kambing', nominal: paidNow, channel: finalChannelDP, related_trx_id: trxId, bukti_url: buktiUrl }]);
 
             if (sendWA && typeof window.sendWa === 'function') {

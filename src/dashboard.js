@@ -30,7 +30,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const reksData = (reNew?.data?.val && reNew.data.val.length > 0) ? reNew.data : (reOld?.data || null);
         const rekeningDb = reksData?.val || [];
-        const userRole = profile.role || 'staff';
+        const userRole = (profile.role || 'staff').toLowerCase().trim();
+        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const permissions = profile.permissions || {};
         const agenLinkedId = profile.permissions?.linkedAgenId || '';
 
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isStrict = permissions.strictAgen;
 
         // Filter by Agency if needed
-        if (userRole !== 'admin' || isStrict) {
+        if (!isAdmin || isStrict) {
             if (agenLinkedId) {
                 trxDb = trxDb.filter(t => t.agen && t.agen.id === agenLinkedId);
             } else if (userRole === 'agen') {
