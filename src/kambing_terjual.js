@@ -280,6 +280,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             div.innerHTML = `
                 <div style="line-height: 1.2;"><strong style="font-size:1rem; color:var(--text-main);"># ${item.noTali}</strong><br><small style="color:var(--text-muted); font-size:0.75rem;">${item.warnaTali || ''} | ${item.batch}</small></div>
                 <div><label style="color:var(--text-muted); font-size:0.65rem;">Sohibul Qurban</label><input type="text" class="form-control inp-sohibul" data-index="${index}" value="${item.namaSohibul || ''}" placeholder="Nama pendaftar..."></div>
+                <div><label style="color:var(--text-muted); font-size:0.65rem;">Hrg Kandang</label><input type="text" class="form-control" style="background:rgba(0,0,0,0.15); color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);" value="${formatNum(item.hargaKandang)}" readonly></div>
                 <div><label style="color:var(--text-muted); font-size:0.65rem;">Hrg Deal</label><input type="text" class="form-control inp-deal money-input" data-index="${index}" value="${formatNum(item.hargaDeal)}"></div>
                 <div style="display:flex; justify-content:center;"><button type="button" class="btn btn-remove" data-index="${index}">&times;</button></div>
             `;
