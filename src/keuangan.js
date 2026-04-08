@@ -429,6 +429,20 @@ document.addEventListener('DOMContentLoaded', async () => {
              reader.readAsDataURL(file);
          }
      });
+
+    async function recalculateTrxBalance(trxId) {
+        if(!trxId) return;
+        const { data: fins } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId);
+        const total = (fins || []).reduce((s, f) => s + (parseFloat(f.nominal) || 0), 0);
+        const history = (fins || []).map(f => ({
+            payId: f.id,
+            tgl: f.tanggal,
+            nominal: parseFloat(f.nominal),
+            channel: f.channel,
+            buktiUrl: f.bukti_url
+        }));
+        await supabase.from('transaksi').update({ total_paid: Math.max(0, total), history_bayar: history }).eq('id', trxId);
+    }
  
      btnRemoveKeuPhoto?.addEventListener('click', () => {
          if(inpBuktiKeuangan) inpBuktiKeuangan.value = '';
@@ -550,44 +564,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!trxId || talis.length === 0) return window.showAlert('ID TRX dan Nomor Tali wajib diisi!', 'danger');
 
         window.showConfirm(`Pulihkan ${trxId} dengan kambing tali ${talis.join(', ')}?`, async () => {
+            const btn = document.getElementById('btnExecuteRepair');
+            btn.disabled = true; btn.textContent = 'Memproses...';
             window.showToast('Memulai pemulihan...', 'info');
             
-            // 1. Cari Kambing
-            const { data: goatsData } = await supabase.from('stok_kambing').select('*').in('no_tali', talis);
-            if(!goatsData || goatsData.length === 0) return window.showAlert('Kambing tidak ditemukan!', 'danger');
+            try {
+                // 1. Cari Kambing
+                const { data: goatsData } = await supabase.from('stok_kambing').select('*').in('no_tali', talis);
+                if(!goatsData || goatsData.length === 0) {
+                    window.showAlert('Kambing tidak ditemukan! Cek nomor tali.', 'danger');
+                    return;
+                }
 
-            // 2. Buat Items
-            const items = goatsData.map(g => ({
-                goatId: g.id,
-                noTali: g.no_tali,
-                price: parseFloat(g.harga_kandang || 0),
-                saving: parseFloat(g.saving || 0)
-            }));
+                // 2. Buat Items
+                const items = goatsData.map(g => ({
+                    goatId: g.id,
+                    noTali: g.no_tali,
+                    price: parseFloat(g.harga_kandang || 0),
+                    saving: parseFloat(g.saving || 0)
+                }));
 
-            // 3. Upsert Transaksi
-            const trxPayload = {
-                id: trxId,
-                tgl_trx: window.getLocalDate(),
-                customer: { nama: customerName, wa1: '', alamat: '' },
-                items: items,
-                total_deal: totalDeal,
-                total_paid: 0,
-                history_bayar: []
-            };
+                // 3. Upsert Transaksi
+                const trxPayload = {
+                    id: trxId,
+                    tgl_trx: window.getLocalDate(),
+                    customer: { nama: customerName, wa1: '', alamat: '' },
+                    items: items,
+                    total_deal: totalDeal,
+                    total_paid: 0,
+                    history_bayar: []
+                };
 
-            const { error: trxErr } = await supabase.from('transaksi').upsert([trxPayload]);
-            if(trxErr) return window.showAlert('Gagal buat TRX: ' + trxErr.message, 'danger');
+                const { error: trxErr } = await supabase.from('transaksi').upsert([trxPayload]);
+                if(trxErr) throw new Error(trxErr.message);
 
-            // 4. Update status kambing
-            for (const g of goatsData) {
-                await supabase.from('stok_kambing').update({ status_transaksi: 'Terjual', transaction_id: trxId }).eq('id', g.id);
+                // 4. Update status kambing
+                for (const g of goatsData) {
+                    await supabase.from('stok_kambing').update({ status_transaksi: 'Terjual', transaction_id: trxId }).eq('id', g.id);
+                }
+
+                // 5. Sinkron Saldo HANYA TRX ini saja (cepat & anti-hang)
+                await recalculateTrxBalance(trxId);
+
+                modalRepair.classList.remove('active');
+                window.showAlert('✅ Transaksi Berhasil Dipulihkan!', 'success', () => window.location.reload());
+            } catch (err) {
+                window.showAlert('Gagal pemulihan: ' + err.message, 'danger');
+            } finally {
+                btn.disabled = false; btn.textContent = '🚀 Pulihkan Data';
             }
-
-            // 5. Sinkron Saldo
-            await handleSyncAll();
-
-            modalRepair.classList.remove('active');
-            window.showAlert('✅ TRX Berhasil Dipulihkan!', 'success');
         }, null, 'Konfirmasi Pemulihan', 'Proses Sekarang', 'btn-primary');
     });
 
