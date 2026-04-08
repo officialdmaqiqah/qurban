@@ -449,6 +449,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if(!file) return;
+
+        const parseDateString = (str) => {
+            if (!str) return new Date().toISOString().split('T')[0];
+            const p = str.split('/');
+            if (p.length === 3) {
+                let y = p[2].trim();
+                let m = p[1].trim().padStart(2, '0');
+                let d = p[0].trim().padStart(2, '0');
+                if (y.length === 2) y = '20' + y;
+                return `${y}-${m}-${d}`;
+            }
+            return str; // Fallback
+        };
+
         const reader = new FileReader();
         reader.onload = async (ev) => {
             const lines = ev.target.result.split('\n');
@@ -458,7 +472,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if(cols.length < 5) continue;
                 draftData.push({
                     id: makeCustomId(batch, cols[1], cols[3], cols[2], cols[4]),
-                    batch, tglMasuk: cols[0], supplier: cols[1], noTali: cols[2], warnaTali: cols[3], sex: cols[4],
+                    batch, tglMasuk: parseDateString(cols[0]), supplier: cols[1], noTali: cols[2], warnaTali: cols[3], sex: cols[4],
                     berat: cols[9] || '',
                     hargaNota: parseFloat(cols[5])||0, saving: parseFloat(cols[6])||0, profit: parseFloat(cols[7])||0,
                     lokasi: cols[8]||'', hargaKandang: (parseFloat(cols[5])||0)+(parseFloat(cols[6])||0)+(parseFloat(cols[7])||0),
