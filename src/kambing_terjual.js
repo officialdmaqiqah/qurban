@@ -137,13 +137,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         return 'TRX' + (maxNum + 1).toString().padStart(5, '0');
     };
 
-    const initForm = async () => {
-        const userRole = localStorage.getItem('userRole');
-        const linkedAgenId = localStorage.getItem('linkedAgenId');
+    // RBAC: Hide "New Order" button immediately for marketing roles
+    const btnTambah = document.getElementById('btnTambahTerjual');
+    if (isMarketingRole && btnTambah) {
+        btnTambah.remove(); // Completely remove from DOM for marketing roles
+    }
 
-        // RBAC: Hide "New Sale" button for marketing roles
-        const btnTambah = document.getElementById('btnTambahTerjual');
-        if (isMarketingRole && btnTambah) btnTambah.style.display = 'none';
+    const initForm = async () => {
+        const userRole = (profile.role || '').toLowerCase();
+        const isAdmin = userRole === 'admin';
+        const linkedAgenId = profile.linked_agen_id;
 
         const agens = await getAgenDb();
         inpAgenId.innerHTML = '<option value="">-- Pilih Agen --</option>';
