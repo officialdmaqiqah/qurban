@@ -242,6 +242,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderTabel(list);
     };
 
+    // Modal Close Listeners
+    document.getElementById('btnCloseBayarModal')?.addEventListener('click', () => document.getElementById('modalBayarKomisi').classList.remove('active'));
+    document.getElementById('btnBatalBayar')?.addEventListener('click', () => document.getElementById('modalBayarKomisi').classList.remove('active'));
+
+    // Channel Payment Listener
+    document.getElementById('inpChannelBayarKomisi')?.addEventListener('change', async () => {
+        const chan = document.getElementById('inpChannelBayarKomisi').value;
+        const container = document.getElementById('containerRekKomisi');
+        const sel = document.getElementById('inpRekIdKomisi');
+        
+        if (chan === 'Transfer Bank') {
+            const reks = await getBankAccounts();
+            container.style.display = 'block';
+            sel.innerHTML = '<option value="">-- Pilih Rekening --</option>';
+            reks.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.textContent = `${r.bank} - ${r.norek} (${r.an})`;
+                sel.appendChild(opt);
+            });
+        } else {
+            container.style.display = 'none';
+        }
+    });
+
     document.getElementById('inpSearchKomisi')?.addEventListener('input', async () => renderTabel(await getTrxData()));
     document.getElementById('filterStatusKomisi')?.addEventListener('change', async () => renderTabel(await getTrxData()));
     

@@ -33,25 +33,28 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Stats Cards */
-        .stats-grid {
+        /* Stats Cards - Horizontal Grid */
+        .grid-cards {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 1rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
         .stat-card {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 10px;
-            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            padding: 1.25rem;
             display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
+            align-items: center;
+            gap: 1rem;
+            transition: var(--transition);
         }
-        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-value { font-size: 1.5rem; font-weight: 700; }
-        .stat-sub { font-size: 0.75rem; color: var(--text-muted); }
+        .stat-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.05); }
+        .stat-card-icon { font-size: 2rem; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 10px; }
+        .stat-info { flex: 1; }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 2px; }
+        .stat-value { font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
 
         /* Table Enhancements */
         .status-badge {
@@ -148,33 +151,33 @@
                 </div>
 
                 <!-- STATS CARDS (KOMISI) -->
-                <div class="grid-cards" style="margin-bottom: 2rem;">
-                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--primary);">
-                        <div style="font-size:2rem;">📊</div>
-                        <div>
-                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Total Komisi</div>
-                            <div id="statTotalKomisi" style="font-size:1.4rem; font-weight:700;">Rp 0</div>
+                <div class="grid-cards">
+                    <div class="stat-card" style="border-left: 4px solid var(--primary);">
+                        <div class="stat-card-icon">📊</div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Komisi</div>
+                            <div id="statTotalKomisi" class="stat-value">Rp 0</div>
                         </div>
                     </div>
-                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--success);">
-                        <div style="font-size:2rem;">✅</div>
-                        <div>
-                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Sudah Dibayar</div>
-                            <div id="statKomisiLunas" style="font-size:1.4rem; font-weight:700; color:var(--success);">Rp 0</div>
+                    <div class="stat-card" style="border-left: 4px solid var(--success);">
+                        <div class="stat-card-icon">✅</div>
+                        <div class="stat-info">
+                            <div class="stat-label">Sudah Dibayar</div>
+                            <div id="statKomisiLunas" class="stat-value" style="color: var(--success);">Rp 0</div>
                         </div>
                     </div>
-                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--danger);">
-                        <div style="font-size:2rem;">⚠️</div>
-                        <div>
-                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Hutang Belum Bayar</div>
-                            <div id="statKomisiBelum" style="font-size:1.4rem; font-weight:700; color:var(--danger);">Rp 0</div>
+                    <div class="stat-card" style="border-left: 4px solid var(--danger);">
+                        <div class="stat-card-icon">⚠️</div>
+                        <div class="stat-info">
+                            <div class="stat-label">Hutang Komisi</div>
+                            <div id="statKomisiBelum" class="stat-value" style="color: var(--danger);">Rp 0</div>
                         </div>
                     </div>
-                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid #3b82f6;">
-                        <div style="font-size:2rem;">👥</div>
-                        <div>
-                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Total Agen Aktif</div>
-                            <div id="statJmlAgen" style="font-size:1.4rem; font-weight:700;">0</div>
+                    <div class="stat-card" style="border-left: 4px solid #3b82f6;">
+                        <div class="stat-card-icon">👥</div>
+                        <div class="stat-info">
+                            <div class="stat-label">Agen Aktif</div>
+                            <div id="statJmlAgen" class="stat-value">0</div>
                         </div>
                     </div>
                 </div>
