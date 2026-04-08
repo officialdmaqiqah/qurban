@@ -321,7 +321,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         trx.forEach(t => {
             const hasPendingEdit = editReqs?.find(r => r.trx_id === t.id);
             const sisa = (t.total_deal || 0) - (t.total_paid || 0);
-            const itemsHtml = (t.items || []).map(item => { const kMeta = kambingDb.find(k => k.id === item.goatId); return `• No ${item.noTali} (${kMeta?.warna_tali || '-'})`; }).join('<br>');
+            const itemsHtml = (t.items || []).map(item => { 
+                const kMeta = kambingDb.find(k => k.id === item.goatId); 
+                return `<div style="display:flex; align-items:center; gap:5px; margin-bottom:2px;">
+                    <span style="cursor:pointer; color:var(--primary); text-decoration:underline;" onclick="window.viewGoatPhoto('${item.goatId}')">• No ${item.noTali}</span>
+                    <small>(${kMeta?.warna_tali || '-'})</small>
+                </div>`; 
+            }).join('');
+            
             const tr = document.createElement('tr');
             const isOwner = (agenLinkedId && t.agen?.id === agenLinkedId) || (agenLinkedName && (t.agen?.nama || '').toLowerCase() === agenLinkedName);
             const canEdit = isAdmin || (isMarketingRole && isOwner);
@@ -332,7 +339,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><strong>${t.customer?.nama || '-'}</strong><br><small>WA: ${t.customer?.wa1 || '-'}</small></td>
                 <td><small>${t.delivery?.alamat?.kec || '-'}, ${t.delivery?.alamat?.kab || '-'}</small></td>
                 <td><strong>${formatTgl(t.delivery?.tgl)}</strong><br><small>${t.delivery?.tipe || '-'}</small></td>
-                <td><small>${itemsHtml}</small></td>
+                <td>${itemsHtml}</td>
                 <td style="font-weight:700;">${formatRp(t.total_deal)}</td>
                 <td style="font-weight:700; color:var(--success);">${formatRp(t.total_paid || 0)}</td>
                 <td style="font-weight:700; color:${sisa > 0 ? 'var(--warning)' : 'var(--success)'}">${formatRp(sisa)}</td>
@@ -340,6 +347,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
             tableBody.appendChild(tr);
         });
+    };
+
+    window.viewGoatPhoto = async (id) => {
+        const { data: k } = await supabase.from('stok_kambing').select('foto_fisik, no_tali').eq('id', id).single();
+        if(!k || !k.foto_fisik) return window.showToast('Foto tidak tersedia.', 'warning');
+        
+        const lb = document.getElementById('photoLightbox');
+        const img = document.getElementById('lightboxImg');
+        if(lb && img) {
+            img.src = k.foto_fisik;
+            lb.style.display = 'flex';
+        }
     };
 
     const performSave = async (sendWA) => {
@@ -410,7 +429,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
         if(!trx) return;
         for (const it of trx.items) await supabase.from('stok_kambing').update({ status_transaksi: 'Tersedia', transaction_id: null }).eq('id', it.goatId);
-        if (!keepInstallments) await supabase.from('keuangan').delete().eq('related_trx_id', trxId); else { const { data: fin } = await supabase.from('keuangan').select('nominal').eq('related_trx_id', trxId); window.existingInstallmentsTotal = fin?.reduce((s,f) => s + f.nominal, 0) || 0; await supabase.from('keuangan').delete().eq('related_trx_id', trxId).in('kategori', ['Jual Kambing']); }
+        
+        if (!keepInstallments) {
+            await supabase.from('keuangan').delete().eq('related_trx_id', trxId);
+            window.existingInstallmentsTotal = 0;
+        } else {
+            // Hanya ambil nominal cicilan (Pelunasan Order), abaikan DP (Jual Kambing) karena DP akan diinput ulang/diedit
+            const { data: fin } = await supabase.from('keuangan').select('nominal').eq('related_trx_id', trxId).neq('kategori', 'Jual Kambing');
+            window.existingInstallmentsTotal = fin?.reduce((s,f) => s + f.nominal, 0) || 0;
+            // Hapus record DP lama dari keuangan
+            await supabase.from('keuangan').delete().eq('related_trx_id', trxId).eq('kategori', 'Jual Kambing');
+        }
         await supabase.from('transaksi').delete().eq('id', trxId);
     };
 
@@ -501,8 +530,14 @@ document.addEventListener('DOMContentLoaded', async () => {
              // legacy handle
         }
         
-        inpTotalBayarAwal.value = ''; // Reset DP input for edit to prevent double charge unless intentionally added
-        inpTotalBayarAwal.disabled = true; // Disable DP edit for now to avoid complexity with keuangan history
+        const dpRecord = (trx.history_bayar || []).find(h => h.channel && !h.payId.includes('LUNAS')); // Asumsi DP tidak ada 'LUNAS' di payId-nya atau record pertama
+        // Sebenarnya cari yang kategori 'Jual Kambing' di Keuangan
+        const { data: dpFin } = await supabase.from('keuangan').select('nominal').eq('related_trx_id', trx.id).eq('kategori', 'Jual Kambing').single();
+        
+        if (inpTotalBayarAwal) {
+            inpTotalBayarAwal.value = dpFin ? formatNum(dpFin.nominal) : '';
+            inpTotalBayarAwal.disabled = !isAdmin; // Hanya Admin yang bisa edit DP yang sudah masuk
+        }
         
         modalKeluar.classList.add('active');
     };
@@ -557,6 +592,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         const goat = db.find(k => k.status_transaksi === 'Tersedia' && k.no_tali === inpSearchKambing.value.split('|')[0].trim());
         if(goat) { currentCart.push({ goatId: goat.id, noTali: goat.no_tali, batch: goat.batch, hargaKandang: goat.harga_kandang, hargaDeal: goat.harga_kandang }); renderCart(); await refreshKambingDropdown(); inpSearchKambing.value = ''; }
     };
+
+    const btnExport = document.getElementById('btnExportCsv');
+    if (btnExport) {
+        btnExport.addEventListener('click', async () => {
+            const { data: trxs } = await supabase.from('transaksi').select('*');
+            if (!trxs) return;
+
+            const exportData = trxs.map(t => {
+                const itemNames = (t.items || []).map(it => `No.${it.noTali}`).join(', ');
+                const sisa = (t.total_deal || 0) - (t.total_paid || 0);
+                return {
+                    'ID Transaksi': t.id,
+                    'Tgl Transaksi': t.tgl_trx,
+                    'Agen': t.agen?.nama || '-',
+                    'Customer': t.customer?.nama || '-',
+                    'WA Customer': t.customer?.wa1 || '-',
+                    'Alamat Deli': `${t.delivery?.alamat?.kec || ''}, ${t.delivery?.alamat?.kab || ''}`,
+                    'Tgl Deli': t.delivery?.tgl || '-',
+                    'Tipe Deli': t.delivery?.tipe || '-',
+                    'Items': itemNames,
+                    'Total Deal': t.total_deal || 0,
+                    'Total Paid': t.total_paid || 0,
+                    'Sisa Tagihan': sisa,
+                    'Status Komisi': t.komisi?.status || '-'
+                };
+            });
+
+            if (typeof XLSX !== 'undefined') {
+                const ws = XLSX.utils.json_to_sheet(exportData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Histori Penjualan");
+                XLSX.writeFile(wb, `Histori_Penjualan_${new Date().getTime()}.xlsx`);
+            } else {
+                window.showAlert("Library Export gagal dimuat.", 'danger');
+            }
+        });
+    }
 
     renderTable();
 });
