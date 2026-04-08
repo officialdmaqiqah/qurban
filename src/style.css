@@ -541,43 +541,20 @@ html { background-color: var(--bg-dark); }
   left: 0 !important;
   z-index: 20 !important;
   background-color: var(--bg-card) !important;
-  border-right: 2px solid var(--primary) !important;
-  box-shadow: 4px 0 10px rgba(0,0,0,0.2) !important;
+  border-right: 1px solid rgba(255,255,255,0.1) !important;
 }
 
-/* Override background untuk header saja agar tidak transparan */
+/* Header tetap di atas */
 .data-table.sticky-enabled th:nth-child(3) {
-  background-color: var(--bg-card) !important;
-  z-index: 21 !important;
+  z-index: 22 !important;
 }
 
+/* PERBAIKAN: Mode Terang (Light Mode) */
 body.light-mode .data-table.sticky-enabled th:nth-child(3),
 body.light-mode .data-table.sticky-enabled td:nth-child(3),
 body.light-mode .sticky-col {
   background-color: #ffffff !important;
-  box-shadow: 4px 0 10px rgba(0,0,0,0.05) !important;
-}
-
-.data-table.sticky-enabled th:nth-child(3) {
-    z-index: 21 !important;
-}
-
-/* Zebra Striping */
-.data-table.sticky-enabled tbody tr:nth-child(even) td {
-  background-color: rgba(255, 255, 255, 0.015) !important;
-}
-.data-table.sticky-enabled tbody tr:nth-child(even) td:nth-child(3),
-.data-table.sticky-enabled tbody tr:nth-child(even) td.sticky-col {
-  background-color: #243046 !important; 
-}
-
-/* PERBAIKAN: Mode Terang (Light Mode) harus pakai background terang di zebra striping */
-body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td:nth-child(3),
-body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td.sticky-col {
-  background-color: #f1f5f9 !important; /* Abu-abu muda agar teks hitam tetap kelihatan */
-}
-body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td {
-  background-color: #f8fafc !important;
+  border-right: 1px solid #e2e8f0 !important;
 }
 body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td:nth-child(3),
 body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td.sticky-col {
