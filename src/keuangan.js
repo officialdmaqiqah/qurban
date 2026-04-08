@@ -476,15 +476,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const isAuthorized = ['admin', 'office', 'staf', 'operator'].includes((window.CURRENT_USER?.role || '').toLowerCase().trim());
     if (isAuthorized) {
-        const headerActions = document.querySelector('.header-actions-group');
-        if (headerActions && !document.getElementById('btnSyncKeuangan')) {
+        // Target the action buttons container next to +Pemasukan
+        const actionContainer = document.querySelector('.card-box .flex-between div:last-child');
+        if (actionContainer && !document.getElementById('btnSyncKeuangan')) {
             const btnSync = document.createElement('button');
             btnSync.id = 'btnSyncKeuangan';
-            btnSync.className = 'btn btn-secondary';
-            btnSync.style.cssText = 'background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);';
-            btnSync.innerHTML = '🔄 Sinkron Semua Data';
+            btnSync.className = 'btn';
+            btnSync.style.cssText = 'background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); margin-right: 0.5rem;';
+            btnSync.innerHTML = '🔄 Sinkron Data';
             btnSync.onclick = handleSyncAll;
-            headerActions.prepend(btnSync);
+            actionContainer.prepend(btnSync);
         }
     }
 
