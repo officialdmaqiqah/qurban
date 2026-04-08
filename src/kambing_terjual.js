@@ -686,17 +686,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const sisa = (t.total_deal || 0) - (t.total_paid || 0);
                 // Pecah data per item (kambing)
                 (t.items || []).forEach(it => {
+                    const addr = t.customer?.alamat || {};
+                    const fullAddress = `${addr.jalan || ''}, ${addr.desa || ''}, ${addr.kec || ''}, ${addr.kab || ''}`.replace(/^, |, $/g, '').replace(/, , /g, ', ');
+                    
                     exportData.push({
                         'ID Transaksi': t.id,
                         'Tgl Transaksi': t.tgl_trx,
                         'Agen': t.agen?.nama || '-',
                         'Customer': t.customer?.nama || '-',
-                        'WA Customer': t.customer?.wa1 || '-',
-                        'Alamat Deli': `${t.delivery?.alamat?.kec || ''}, ${t.delivery?.alamat?.kab || ''}`,
+                        'WA 1': t.customer?.wa1 || '-',
+                        'WA 2': t.customer?.wa2 || '-',
+                        'Alamat Lengkap': fullAddress,
                         'Tgl Deli': t.delivery?.tgl || '-',
                         'Tipe Deli': t.delivery?.tipe || '-',
                         'No Tali': it.noTali || '-',
                         'Batch': it.batch || '-',
+                        'Nama Sohibul': it.namaSohibul || '-',
                         'Harga Deal Item': it.hargaDeal || 0,
                         'Total Nota': t.total_deal || 0,
                         'Total DP/Bayar': t.total_paid || 0,

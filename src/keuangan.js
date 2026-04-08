@@ -239,18 +239,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.querySelectorAll('.btn-delete-action').forEach(btn => btn.onclick = () => handleDelete(btn.dataset.id));
          
-         document.querySelectorAll('.btn-view-photo').forEach(btn => {
-             btn.onclick = (e) => {
-                 e.stopPropagation();
-                 const url = btn.dataset.url;
-                 const modal = document.getElementById('photoLightbox');
-                 const img = document.getElementById('lightboxImg');
-                 if(modal && img) {
+        document.querySelectorAll('.btn-view-photo').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const url = window.getDirectDriveLink(btn.dataset.url);
+                const modal = document.getElementById('photoLightbox');
+                const img = document.getElementById('lightboxImg');
+                const loader = document.getElementById('lightboxLoading');
+
+                if(modal && img) {
+                    img.style.display = 'none';
+                    if(loader) {
+                        loader.style.display = 'block';
+                        loader.textContent = 'Memuat Foto...';
+                    }
                     img.src = url;
                     modal.style.display = 'flex';
-                 }
-             };
-         });
+                    
+                    img.onerror = () => {
+                        if(loader) loader.textContent = 'Gagal memuat foto. Periksa izin di Google Drive.';
+                    };
+                }
+            };
+        });
     }
 
     async function handleDelete(id) {

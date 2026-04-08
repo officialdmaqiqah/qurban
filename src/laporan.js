@@ -81,7 +81,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${it.konsumen}<br><small>${it.alamat || '-'}</small></td>
                     <td><span class="badge" style="background:rgba(255,255,255,0.05); color:${statusColor}">${it.status}</span></td>
                     <td align="center">
-                        ${it.buktiUrl ? `<a href="${it.buktiUrl}" target="_blank" class="btn btn-sm" style="padding:2px 8px; font-size:0.7rem;">🖼️ Lihat Foto</a>` : '<span style="opacity:0.3">No Photo</span>'}
+                        ${it.buktiUrl ? `
+                            <button class="btn btn-sm btn-shimmer" onclick="window.viewDistPhoto('${it.buktiUrl}')" style="padding:2px 8px; font-size:0.75rem; border:none; background:var(--primary);">
+                                🖼️ Lihat Foto
+                            </button>
+                        ` : '<span style="opacity:0.3">No Photo</span>'}
                     </td>
                 `;
                 body.appendChild(tr);
@@ -164,6 +168,91 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         body.innerHTML += `<tr><td>Porsi Owner (${currentConfig.owner}%)</td><td align="right"><b>${formatRp(pOwner)}</b></td></tr>`;
         body.innerHTML += `<tr><td>Porsi Tim (${currentConfig.team}%)</td><td align="right"><b>${formatRp(pTeam)}</b></td></tr>`;
+    };
+
+    const renderAK = (fin, start, end) => {
+        const body = document.querySelector('#tableAK tbody');
+        if(!body) return;
+        body.innerHTML = '';
+
+        const channels = {};
+        fin.forEach(f => {
+            const dt = new Date(f.tanggal);
+            const chan = f.channel || 'Tunai';
+            if(!channels[chan]) channels[chan] = { in: 0, out: 0, saldo: 0, show: false };
+            
+            // Saldo Kumulatif (untuk Baris "Saldo Akhir")
+            if(f.tipe === 'pemasukan') channels[chan].saldo += f.nominal;
+            else channels[chan].saldo -= f.nominal;
+
+            // Filter Periode untuk In/Out
+            if(dt >= start && dt <= end) {
+                if(f.tipe === 'pemasukan') channels[chan].in += f.nominal;
+                else channels[chan].out += f.nominal;
+                channels[chan].show = true;
+            }
+        });
+
+        Object.keys(channels).forEach(k => {
+            if(!channels[k].show) return;
+            body.innerHTML += `
+                <tr>
+                    <td><strong>${k}</strong></td>
+                    <td align="right" class="text-success">${formatRp(channels[k].in)}</td>
+                    <td align="right" class="text-danger">(${formatRp(channels[k].out)})</td>
+                    <td align="right" style="font-weight:700;">${formatRp(channels[k].saldo)}</td>
+                </tr>
+            `;
+        });
+    };
+
+    const renderNeraca = (fin, goats, trxs) => {
+        const bodyAktiva = document.querySelector('#tableNR_Aktiva tbody');
+        const bodyPasiva = document.querySelector('#tableNR_Pasiva tbody');
+        if(!bodyAktiva || !bodyPasiva) return;
+        bodyAktiva.innerHTML = ''; bodyPasiva.innerHTML = '';
+
+        // 1. AKTIVA
+        // A. KAS & BANK
+        let totalCash = 0;
+        const chans = {};
+        fin.forEach(f => {
+            const c = f.channel || 'Tunai';
+            const nom = f.nominal || 0;
+            if(!chans[c]) chans[c] = 0;
+            chans[c] += (f.tipe === 'pemasukan' ? 1 : -1) * nom;
+        });
+        Object.keys(chans).forEach(k => {
+            if(chans[k] === 0) return;
+            bodyAktiva.innerHTML += `<tr><td>Kas/Bank: ${k}</td><td align="right">${formatRp(chans[k])}</td></tr>`;
+            totalCash += chans[k];
+        });
+
+        // B. STOK (HPP)
+        const totalStokHPP = goats.filter(g => g.status_transaksi === 'Tersedia').reduce((s,g) => s + (g.harga_nota || 0), 0);
+        bodyAktiva.innerHTML += `<tr><td>Persediaan Kambing (HPP)</td><td align="right">${formatRp(totalStokHPP)}</td></tr>`;
+
+        // C. PIUTANG KONSUMEN
+        const totalPiutang = trxs.reduce((s,t) => s + ((t.total_deal || 0) - (t.total_paid || 0)), 0);
+        bodyAktiva.innerHTML += `<tr><td>Piutang Konsumen</td><td align="right">${formatRp(totalPiutang)}</td></tr>`;
+
+        const grandAktiva = totalCash + totalStokHPP + totalPiutang;
+        bodyAktiva.innerHTML += `<tr class="row-grand-total"><td>TOTAL AKTIVA</td><td align="right">${formatRp(grandAktiva)}</td></tr>`;
+
+        // 2. PASIVA
+        // A. HUTANG SUPPLIER
+        const totalTagihanSupplier = goats.reduce((s,g) => s + (g.harga_nota || 0), 0);
+        const totalSudahBayarSupplier = fin.filter(f => f.kategori === 'Bayar Supplier' || f.kategori === 'Pelunasan Supplier').reduce((s,f) => s + f.nominal, 0);
+        const totalKompensasiSupplier = fin.filter(f => f.kategori === 'Kompensasi Supplier').reduce((s,f) => s + f.nominal, 0);
+        const sisaHutangSupplier = totalTagihanSupplier - totalSudahBayarSupplier - totalKompensasiSupplier;
+        
+        bodyPasiva.innerHTML += `<tr><td>Hutang Supplier</td><td align="right">${formatRp(sisaHutangSupplier)}</td></tr>`;
+
+        // B. MODAL & LABA DITAHAN (BALANCING)
+        const modalLaba = grandAktiva - sisaHutangSupplier;
+        bodyPasiva.innerHTML += `<tr><td>Modal & Laba Ditahan</td><td align="right">${formatRp(modalLaba)}</td></tr>`;
+
+        bodyPasiva.innerHTML += `<tr class="row-grand-total"><td>TOTAL PASIVA</td><td align="right">${formatRp(grandAktiva)}</td></tr>`;
     };
 
 
@@ -319,6 +408,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const net = renderLR(trxs, goats, fin, start, end);
+            renderAK(fin, start, end);
+            renderNeraca(fin, goats, trxs);
             renderDistribusi(trips, start, end);
             renderBagiHasil(net, config);
             renderOperasional(goats, trxs);
@@ -367,5 +458,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(!document.getElementById('inpEndDate').value) {
         document.getElementById('inpEndDate').value = today.toISOString().split('T')[0];
     }
+    // Global Photo Viewer for Distribusi
+    window.viewDistPhoto = (url) => {
+        const directUrl = window.getDirectDriveLink(url);
+        window.showAlert(`
+            <div style="width:100%; text-align:center;">
+                <img src="${directUrl}" style="max-width:100%; border-radius:8px; box-shadow:0 5px 15px rgba(0,0,0,0.5);">
+            </div>
+        `, 'info');
+    };
+
     init();
 });
