@@ -23,6 +23,43 @@ window.getDirectDriveLink = function(url) {
     return url;
 };
 
+// --- GLOBAL PHOTO VIEWER ---
+window.viewPhoto = function(url) {
+    if(!url) return window.showToast('Foto tidak tersedia.', 'warning');
+    
+    let lb = document.getElementById('globalPhotoLightbox');
+    if(!lb) {
+        lb = document.createElement('div');
+        lb.id = 'globalPhotoLightbox';
+        lb.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:999999; display:none; align-items:center; justify-content:center; cursor:zoom-out; flex-direction:column; padding:20px;';
+        lb.innerHTML = `
+            <div id="globalPhotoLoading" style="color:white; font-size:0.9rem; margin-bottom:10px;">Memuat Foto...</div>
+            <img id="globalPhotoImg" style="max-width:95%; max-height:85%; object-fit:contain; border-radius:8px; display:none; box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+            <button style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.1); color:white; border:none; border-radius:50%; width:40px; height:40px; cursor:pointer; font-size:20px;">&times;</button>
+        `;
+        document.body.appendChild(lb);
+        lb.onclick = () => lb.style.display = 'none';
+        lb.querySelector('button').onclick = (e) => { e.stopPropagation(); lb.style.display = 'none'; };
+    }
+
+    const img = document.getElementById('globalPhotoImg');
+    const loading = document.getElementById('globalPhotoLoading');
+    
+    img.style.display = 'none';
+    loading.style.display = 'block';
+    loading.textContent = 'Memuat Foto...';
+    
+    lb.style.display = 'flex';
+    img.src = window.getDirectDriveLink(url);
+    img.onload = () => {
+        loading.style.display = 'none';
+        img.style.display = 'block';
+    };
+    img.onerror = () => {
+        loading.textContent = 'Gagal memuat foto. Cek izin akses GDrive.';
+    };
+};
+
 // --- GLOBAL WA FORMATTING ---
 window.cleanWhatsApp = (num) => {
     let c = String(num || '').replace(/\D/g, ''); // Hapus semua karakter non-angka

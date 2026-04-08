@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td style="font-size:0.8rem; color:var(--text-muted)">${item.channel || '-'}</td>
                      <td style="text-align:center;">
                          ${item.bukti_url ? `
-                             <button class="btn btn-sm btn-view-photo" data-url="${item.bukti_url}" style="width:30px; height:30px; border-radius:4px; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
+                             <button class="btn btn-sm" onclick="window.viewPhoto('${item.bukti_url}')" style="width:30px; height:30px; border-radius:4px; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
                                  <img src="${window.getDirectDriveLink(item.bukti_url)}" style="width:100%; height:100%; object-fit:cover; pointer-events:none;">
                              </button>
                          ` : '<span style="opacity:0.2">🚫</span>'}
@@ -244,25 +244,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.btn-view-photo').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
-                console.log('Lihat Foto clicked:', btn.dataset.url);
-                const url = window.getDirectDriveLink(btn.dataset.url);
-                const modal = document.getElementById('photoLightbox');
-                const img = document.getElementById('lightboxImg');
-                const loader = document.getElementById('lightboxLoading');
-
-                if(modal && img) {
-                    img.style.display = 'none';
-                    if(loader) {
-                        loader.style.display = 'block';
-                        loader.textContent = 'Memuat Foto...';
-                    }
-                    img.src = url;
-                    modal.style.display = 'flex';
-                    
-                    img.onerror = () => {
-                        if(loader) loader.textContent = 'Gagal memuat foto. Periksa izin di Google Drive.';
-                    };
-                }
+                window.viewPhoto(btn.dataset.url);
             };
         });
     }
@@ -491,6 +473,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         populateKategori('pengeluaran');
         modalKeuangan.classList.add('active');
     });
+
+    const isAuthorized = ['admin', 'office', 'staf', 'operator'].includes((window.CURRENT_USER?.role || '').toLowerCase().trim());
+    if (isAuthorized) {
+        const headerActions = document.querySelector('.header-actions-group');
+        if (headerActions && !document.getElementById('btnSyncKeuangan')) {
+            const btnSync = document.createElement('button');
+            btnSync.id = 'btnSyncKeuangan';
+            btnSync.className = 'btn btn-secondary';
+            btnSync.style.cssText = 'background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);';
+            btnSync.innerHTML = '🔄 Sinkron Semua Data';
+            btnSync.onclick = handleSyncAll;
+            headerActions.prepend(btnSync);
+        }
+    }
+
+    async function handleSyncAll() {
+        window.showConfirm('Sinkronkan seluruh saldo transaksi dengan catatan keuangan? Ini akan memperbaiki data yang tidak sinkron seperti TRX00001.', async () => {
+            window.showToast('Memulai sinkronisasi...', 'info');
+            const { data: trxs } = await supabase.from('transaksi').select('id');
+            const { data: fins } = await supabase.from('keuangan').select('*');
+            
+            let fixedCount = 0;
+            for (const trx of (trxs || [])) {
+                const related = (fins || []).filter(f => f.related_trx_id === trx.id);
+                const total = related.reduce((s, f) => s + (parseFloat(f.nominal) || 0), 0);
+                const history = related.map(f => ({
+                    payId: f.id,
+                    tgl: f.tanggal,
+                    nominal: parseFloat(f.nominal),
+                    channel: f.channel,
+                    buktiUrl: f.bukti_url
+                }));
+                
+                await supabase.from('transaksi').update({ 
+                    total_paid: total, 
+                    history_bayar: history 
+                }).eq('id', trx.id);
+                fixedCount++;
+            }
+            window.showAlert(`Sinkronisasi Selesai!<br>${fixedCount} transaksi telah diperbarui.`, 'success', () => window.location.reload());
+        }, null, 'Sinkron Data', 'Mulai Sinkron', 'btn-primary');
+    }
 
     document.querySelectorAll('.sort-header').forEach(h => {
         h.addEventListener('click', () => {

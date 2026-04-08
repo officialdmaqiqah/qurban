@@ -121,7 +121,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let filtered = isAdmin ? trxs : trxs.filter(t => t.agen?.id === linkedAgenId);
         if (keyword) filtered = filtered.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer?.nama || '').toLowerCase().includes(keyword));
 
-        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
+        // Let search results show ALL if keyword matches ID exactly
+        const exactMatch = trxs.find(t => t.id.toLowerCase() === keyword);
+        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0 || t.id.toLowerCase() === keyword).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
         const overpaid = filtered.filter(t => (t.total_overpaid || 0) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
 
         listOrderBelumLunas.innerHTML = belumLunas.length === 0 ? '<div style="text-align:center; padding:1.5rem; font-size:0.8rem;">Semua lunas!</div>' : '';
@@ -252,9 +254,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Populate Datalist
-    const trxs = await getTrxData();
+    const trxsAll = await getTrxData();
     const listOrders = document.getElementById('listOrders');
-    trxs.filter(t => t.total_deal > t.total_paid).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = `${t.id} - ${t.customer.nama}`; listOrders.appendChild(o); });
+    if(listOrders) {
+        listOrders.innerHTML = '';
+        trxsAll.forEach(t => { 
+            const o = document.createElement('option'); 
+            o.value = t.id; 
+            o.textContent = `${t.id} - ${t.customer?.nama || ''} | Sisa: ${formatRp(t.total_deal - t.total_paid)}`; 
+            listOrders.appendChild(o); 
+        });
+    }
 
     renderStats(); renderList();
 });
