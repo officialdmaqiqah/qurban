@@ -15,7 +15,9 @@
                         border-bottom: 1px solid rgba(255,255,255,0.05);
                         padding-bottom: 0;
                         overflow-x: auto;
+                        scrollbar-width: none; /* Hide for Firefox */
                 }
+                .tabs-header::-webkit-scrollbar { display: none; } /* Hide for Chrome/Safari */
                 .tab-btn {
                         background: transparent;
                         border: none;
@@ -32,6 +34,7 @@
                 .tab-btn.active {
                         color: var(--primary);
                         border-bottom-color: var(--primary);
+                        background: rgba(16, 185, 129, 0.05);
                 }
                 .tab-content {
                         display: none;
@@ -92,6 +95,20 @@
                         border-bottom: 1px solid rgba(255,255,255,0.05);
                         padding-bottom: 2rem;
                     }
+                    .settings-header-flex {
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                        gap: 1rem;
+                    }
+                    .settings-header-flex div:last-child {
+                        text-align: left !important;
+                        width: 100%;
+                    }
+                }
+                .status-indicator {
+                    white-space: nowrap;
+                    display: inline-flex;
+                    align-items: center;
                 }
                 .profile-preview {
                         width: 100%;
@@ -345,7 +362,7 @@
                                 <!-- TAB: WHATSAPP GATEWAY -->
                                 <div id="tabWA" class="tab-content">
                                         <div class="card-box">
-                                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:1rem;">
+                                                <div class="settings-header-flex" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:1rem;">
                                                         <div>
                                                                 <h3 style="margin-bottom:0.25rem;">Konfigurasi WhatsApp Gateway (XSender)</h3>
                                                                 <p style="font-size:0.875rem; color:var(--text-muted);">Hubungkan sistem dengan layanan XSender untuk mengirim notifikasi otomatis.</p>
