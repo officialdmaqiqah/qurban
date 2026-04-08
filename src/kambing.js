@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return 0;
         });
 
-        const isReseller = (loggedUser.jenisAgen || '').toLowerCase().includes('reseller');
+        const isReseller = (profile.jenis_agen || '').toLowerCase().includes('reseller');
 
         filtered.forEach(item => {
             const hasPending = (activeEditReqs || []).find(r => r.status === 'pending' && (r.goat_id === item.id || r.trx_id === item.transaction_id));
