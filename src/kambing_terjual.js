@@ -314,26 +314,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) return;
         let trx = [...trxData];
         const keyword = (inpGlobalSearch ? inpGlobalSearch.value : '').toLowerCase();
-        if (userRole !== 'admin') { trx = trx.filter(t => (agenLinkedId && t.agen.id === agenLinkedId) || (agenLinkedName && (t.agen.nama || '').toLowerCase() === agenLinkedName)); }
-        if (keyword) { trx = trx.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer.nama || '').toLowerCase().includes(keyword) || (t.agen.nama || '').toLowerCase().includes(keyword) || (t.customer.wa1 || '').toLowerCase().includes(keyword)); }
-        trx.sort((a, b) => { let vA = a[currentSort.column], vB = b[currentSort.column]; if (currentSort.column === 'sisa') { vA = a.totalDeal - a.totalPaid; vB = b.totalDeal - b.totalPaid; } return currentSort.direction === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1); });
+        if (userRole !== 'admin') { trx = trx.filter(t => (agenLinkedId && t.agen?.id === agenLinkedId) || (agenLinkedName && (t.agen?.nama || '').toLowerCase() === agenLinkedName)); }
+        if (keyword) { trx = trx.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer?.nama || '').toLowerCase().includes(keyword) || (t.agen?.nama || '').toLowerCase().includes(keyword) || (t.customer?.wa1 || '').toLowerCase().includes(keyword)); }
+        trx.sort((a, b) => { let vA = a[currentSort.column], vB = b[currentSort.column]; if (currentSort.column === 'sisa') { vA = (a.total_deal || 0) - (a.total_paid || 0); vB = (b.total_deal || 0) - (b.total_paid || 0); } return currentSort.direction === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1); });
         const { data: editReqs } = await supabase.from('edit_requests').select('*').eq('status', 'pending');
         const kambingDb = await getKambingDb();
         tableBody.innerHTML = '';
         trx.forEach(t => {
             const hasPendingEdit = editReqs?.find(r => r.trx_id === t.id);
             const sisa = (t.total_deal || 0) - (t.total_paid || 0);
-            const itemsHtml = t.items.map(item => { const kMeta = kambingDb.find(k => k.id === item.goatId); return `• No ${item.noTali} (${kMeta?.warna_tali || '-'})`; }).join('<br>');
+            const itemsHtml = (t.items || []).map(item => { const kMeta = kambingDb.find(k => k.id === item.goatId); return `• No ${item.noTali} (${kMeta?.warna_tali || '-'})`; }).join('<br>');
             const tr = document.createElement('tr');
-            const isOwner = (agenLinkedId && t.agen.id === agenLinkedId) || (agenLinkedName && (t.agen.nama || '').toLowerCase() === agenLinkedName);
+            const isOwner = (agenLinkedId && t.agen?.id === agenLinkedId) || (agenLinkedName && (t.agen?.nama || '').toLowerCase() === agenLinkedName);
             const canEdit = isAdmin || (isMarketingRole && isOwner);
 
             tr.innerHTML = `
                 <td><div style="font-weight:700;">${t.id}</div><div style="font-size:0.75rem;">${formatTgl(t.tgl_trx)}</div>${hasPendingEdit ? '<span class="badge" style="background:#f59e0b22; color:#f59e0b;">⏳ Review</span>' : ''}</td>
-                <td>${t.agen.nama}<br><small>${t.agen.tipe || 'Agen'}</small></td>
-                <td><strong>${t.customer.nama || '-'}</strong><br><small>WA: ${t.customer.wa1 || '-'}</small></td>
-                <td><small>${t.delivery.alamat.kec || '-'}, ${t.delivery.alamat.kab || '-'}</small></td>
-                <td><strong>${formatTgl(t.delivery.tgl)}</strong><br><small>${t.delivery.tipe || '-'}</small></td>
+                <td>${t.agen?.nama || '-'}<br><small>${t.agen?.tipe || 'Agen'}</small></td>
+                <td><strong>${t.customer?.nama || '-'}</strong><br><small>WA: ${t.customer?.wa1 || '-'}</small></td>
+                <td><small>${t.delivery?.alamat?.kec || '-'}, ${t.delivery?.alamat?.kab || '-'}</small></td>
+                <td><strong>${formatTgl(t.delivery?.tgl)}</strong><br><small>${t.delivery?.tipe || '-'}</small></td>
                 <td><small>${itemsHtml}</small></td>
                 <td style="font-weight:700;">${formatRp(t.total_deal)}</td>
                 <td style="font-weight:700; color:var(--success);">${formatRp(t.total_paid || 0)}</td>
@@ -376,20 +376,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { error: insertError } = await supabase.from('transaksi').insert([newTrx]);
             if (insertError) throw insertError;
 
-            for (const it of currentCart) await supabase.from('stok_kambing').update({ status_transaksi: 'Terjual', transaction_id: trxId, tgl_keluar: newTrx.tglTrx, harga_deal: it.hargaDeal }).eq('id', it.goatId);
-            if(paidNow > 0) await supabase.from('keuangan').insert([{ id: 'PAY-'+Date.now(), tipe: 'pemasukan', tanggal: newTrx.tglTrx, kategori: 'Jual Kambing', nominal: paidNow, channel: finalChannelDP, related_trx_id: trxId, bukti_url: buktiUrl }]);
+            for (const it of currentCart) await supabase.from('stok_kambing').update({ status_transaksi: 'Terjual', transaction_id: trxId, tgl_keluar: newTrx.tgl_trx, harga_deal: it.hargaDeal }).eq('id', it.goatId);
+            if(paidNow > 0) await supabase.from('keuangan').insert([{ id: 'PAY-'+Date.now(), tipe: 'pemasukan', tanggal: newTrx.tgl_trx, kategori: 'Jual Kambing', nominal: paidNow, channel: finalChannelDP, related_trx_id: trxId, bukti_url: buktiUrl }]);
 
             if (sendWA && typeof window.sendWa === 'function') {
                 window.getWaConfig().then(async config => {
                     const itemsStr = currentCart.map(it => `• No.${it.noTali} (${it.batch})`).join('\n');
                     const sohibulStr = currentCart.map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
-                    const commonData = { nama: newTrx.customer.nama, id: trxId, tgl: formatTgl(newTrx.tgl_trx), total: formatRp(total), dp: formatRp(paidNow), sisa: formatRp(total - newTrx.total_paid), items: itemsStr, sohibul: sohibulStr, alamat: newTrx.customer.alamat.jalan + ', ' + newTrx.customer.alamat.kec, wa_konsumen: newTrx.customer.wa1, nama_agen: newTrx.agen.nama, jadwal: formatTgl(newTrx.delivery.tgl) };
-                    const templateCust = newTrx.agen.tipe.toUpperCase().includes('DM') ? config.templateOrderDM : config.templateOrderNormal;
+                    const commonData = { nama: newTrx.customer?.nama || '-', id: trxId, tgl: formatTgl(newTrx.tgl_trx), total: formatRp(total), dp: formatRp(paidNow), sisa: formatRp(total - newTrx.total_paid), items: itemsStr, sohibul: sohibulStr, alamat: (newTrx.customer?.alamat?.jalan || '') + ', ' + (newTrx.customer?.alamat?.kec || ''), wa_konsumen: newTrx.customer?.wa1 || '-', nama_agen: newTrx.agen?.nama || '-', jadwal: formatTgl(newTrx.delivery?.tgl) };
+                    const templateCust = (newTrx.agen?.tipe || '').toUpperCase().includes('DM') ? config.templateOrderDM : config.templateOrderNormal;
                     const msgCust = await window.parseWaTemplate(templateCust, commonData);
-                    if (newTrx.customer.wa1) window.sendWa(newTrx.customer.wa1, msgCust);
-                    const allAgens = await getAgenDb();
-                    const agenData = allAgens.find(a => a.id === newTrx.agen.id || a.nama === newTrx.agen.nama);
-                    const templateAgen = newTrx.agen.tipe.toUpperCase().includes('DM') ? config.templateAgentDM : config.templateAgentNormal;
+                    if (newTrx.customer?.wa1) window.sendWa(newTrx.customer.wa1, msgCust);
+                    
+                    const agenData = matchedAgen; // Reuse the perfectly matched agent from validation
+                    const templateAgen = (newTrx.agen?.tipe || '').toUpperCase().includes('DM') ? config.templateAgentDM : config.templateAgentNormal;
                     const msgAgen = await window.parseWaTemplate(templateAgen, commonData);
                     if (agenData && agenData.wa) window.sendWa(agenData.wa, msgAgen);
                 }).catch(e => console.error('WA Err:', e));
