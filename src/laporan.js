@@ -99,6 +99,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         body.innerHTML = '';
 
         let omzet = 0, hpp = 0, komisi = 0, saving = 0;
+        const savingDetails = [];
+
         trxs.filter(t => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
             return dt >= start && dt <= end;
@@ -106,8 +108,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             omzet += (t.total_deal || t.totalDeal || 0);
             (t.items || []).forEach(it => {
                 const g = goats.find(x => x.id === it.goatId);
+                const sVal = parseFloat(g?.saving || 0);
                 hpp += parseFloat(g?.harga_nota || 0);
-                saving += parseFloat(g?.saving || 0);
+                saving += sVal;
+                if(sVal > 0) {
+                    savingDetails.push({ trxId: t.id, noTali: it.noTali, customer: t.customer?.nama || '-', val: sVal });
+                }
             });
             komisi += parseFloat(t.komisi?.nominal || 0);
         });
@@ -140,6 +146,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).length} transaksi dalam periode ini.</small>` : '';
         addRow(`(-) Dana Saving (Titipan)${savingStr}`, -saving, 'text-warning');
         
+        // Populate Saving Audit Table
+        const auditContainer = document.getElementById('containerSavingAudit');
+        const auditBody = document.querySelector('#tableSavingAudit tbody');
+        if(auditContainer && auditBody) {
+            if(savingDetails.length > 0) {
+                auditContainer.style.display = 'block';
+                auditBody.innerHTML = '';
+                savingDetails.forEach(sd => {
+                    auditBody.innerHTML += `
+                        <tr>
+                            <td>${sd.trxId}</td>
+                            <td><strong>${sd.noTali}</strong></td>
+                            <td>${sd.customer}</td>
+                            <td align="right">${formatRp(sd.val)}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                auditContainer.style.display = 'none';
+            }
+        }
+
         const netProfit = omzet - hpp - komisi - opex - deadLoss - saving;
         addRow('LABA BERSIH', netProfit, 'row-grand-total');
         return netProfit;
