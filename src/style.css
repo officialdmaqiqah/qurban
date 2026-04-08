@@ -338,6 +338,34 @@ html { background-color: var(--bg-dark); }
   color: var(--primary);
 }
 
+/* --- SIDEBAR LOGO STYLING --- */
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.sidebar-logo img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: white; /* Contrast for logos with transparent backgrounds */
+    padding: 2px;
+    flex-shrink: 0;
+}
+
+.sidebar-logo span {
+    font-size: 1.1rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-main);
+}
+
 .sidebar-nav {
   padding: 1.5rem 1rem;
   flex: 1;
