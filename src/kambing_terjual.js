@@ -375,7 +375,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (insertError) throw insertError;
 
             for (const it of currentCart) {
-                const { error: stokErr } = await supabase.from('stok_kambing').update({ status_transaksi: 'Terjual', transaction_id: trxId, tgl_keluar: newTrx.tgl_trx, harga_deal: it.hargaDeal }).eq('id', it.goatId);
+                const { error: stokErr } = await supabase
+                    .from('stok_kambing')
+                    .update({ status_transaksi: 'Terjual', transaction_id: trxId })
+                    .eq('id', it.goatId);
                 if (stokErr) console.error('Gagal update stok kambing ID:', it.goatId, stokErr);
             }
             if(paidNow > 0) await supabase.from('keuangan').insert([{ id: 'PAY-'+Date.now(), tipe: 'pemasukan', tanggal: newTrx.tgl_trx, kategori: 'Jual Kambing', nominal: paidNow, channel: finalChannelDP, related_trx_id: trxId, bukti_url: buktiUrl }]);
@@ -406,7 +409,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const silentRollback = async (trxId, keepInstallments = false) => {
         const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
         if(!trx) return;
-        for (const it of trx.items) await supabase.from('stok_kambing').update({ status_transaksi: 'Tersedia', transaction_id: null, tgl_keluar: null, harga_deal: null }).eq('id', it.goatId);
+        for (const it of trx.items) await supabase.from('stok_kambing').update({ status_transaksi: 'Tersedia', transaction_id: null }).eq('id', it.goatId);
         if (!keepInstallments) await supabase.from('keuangan').delete().eq('related_trx_id', trxId); else { const { data: fin } = await supabase.from('keuangan').select('nominal').eq('related_trx_id', trxId); window.existingInstallmentsTotal = fin?.reduce((s,f) => s + f.nominal, 0) || 0; await supabase.from('keuangan').delete().eq('related_trx_id', trxId).in('kategori', ['Jual Kambing']); }
         await supabase.from('transaksi').delete().eq('id', trxId);
     };
