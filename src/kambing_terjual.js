@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!profile) return;
 
     const email = profile.email;
-    if (email) document.getElementById('userEmailDisplay').textContent = email;
+    const userEmailDisplay = document.getElementById('userEmailDisplay');
+    if (email && userEmailDisplay) userEmailDisplay.textContent = email;
 
     const isAdmin = profile.role === 'admin';
     const userRole = (profile.role || '').toLowerCase().replace(/_/g, ' ').trim();

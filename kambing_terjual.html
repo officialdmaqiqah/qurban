@@ -297,5 +297,56 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
     <script type="module" src="src/layout.js"></script>
     <script type="module" src="src/kambing_terjual.js"></script>
-</body>
- <!-- MODAL TERIMA PELUNASAN --> <div class="modal-overlay" id="modalLunas"> <div class="modal-content" style="max-width:520px;"> <div class="modal-header"> <h3 class="modal-title">💳 Terima Pembayaran</h3> <button class="modal-close" id="btnCloseLunasModal">&times;</button> </div> <div class="modal-body" style="display:block;"> <!-- Pilih Order --> <div class="form-group"> <label class="form-label">Pilih Order (Penjualan Belum Lunas)</label> <select id="selOrderLunas" class="form-control"> <option value="">-- Pilih Order --</option> </select> </div> <!-- Info Order Terpilih --> <div id="infoOrderLunas" style="display:none; background:rgba(0,0,0,0.25); border-radius:8px; padding:1rem; margin-bottom:1rem; font-size:0.85rem;"> <div id="detailOrderLunas"></div> <div id="historiPayLunas" style="margin-top:0.75rem;"></div> </div> <!-- Form Input Bayar --> <div id="formInputLunas" style="display:none;"> <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;"> <div class="form-group" style="margin-bottom:0"> <label class="form-label">Nominal Dibayar (Rp)</label> <input type="text" id="inpNominalLunas" class="form-control money-input" placeholder="0" style="font-weight:700; font-size:1rem;"> </div> <div class="form-group" style="margin-bottom:0"> <label class="form-label">Channel</label> <select id="inpChannelLunas" class="form-control"> <option value="Tunai">💵 Tunai</option> <option value="Transfer Bank">🏦 Transfer Bank</option> <option value="QRIS">📱 QRIS</option> <option value="Lainnya">Lainnya</option> </select> <div id="containerRekLunas" style="display:none; margin-top:0.5rem;"> <label class="form-label" style="font-size:0.7rem; color:var(--primary);">💳 Rekening Tujuan</label> <select id="inpRekIdLunas" class="form-control" style="font-size:0.8rem;"></select> </div> </div> </div> <div class="form-group" style="margin-bottom:0"> <label class="form-label">Tanggal Pembayaran</label> <input type="date" id="inpTglLunas" class="form-control"> </div> </div> </div> <div class="modal-footer"> <button type="button" class="btn" style="background:transparent; border:1px solid rgba(255,255,255,0.1);" id="btnBatalLunas">Batal</button> <button type="button" class="btn btn-primary" id="btnSimpanLunas" disabled>Simpan Pembayaran</button> </div> </div> </div> </body> </html>
+
+    <!-- MODAL TERIMA PELUNASAN --> 
+    <div class="modal-overlay" id="modalLunas"> 
+        <div class="modal-content" style="max-width:520px;"> 
+            <div class="modal-header"> 
+                <h3 class="modal-title">💳 Terima Pembayaran</h3> 
+                <button class="modal-close" id="btnCloseLunasModal">&times;</button> 
+            </div> 
+            <div class="modal-body" style="display:block;"> 
+                <div class="form-group"> 
+                    <label class="form-label">Pilih Order (Penjualan Belum Lunas)</label> 
+                    <select id="selOrderLunas" class="form-control"> 
+                        <option value="">-- Pilih Order --</option> 
+                    </select> 
+                </div> 
+                <div id="infoOrderLunas" style="display:none; background:rgba(0,0,0,0.25); border-radius:8px; padding:1rem; margin-bottom:1rem; font-size:0.85rem;"> 
+                    <div id="detailOrderLunas"></div> 
+                    <div id="historiPayLunas" style="margin-top:0.75rem;"></div> 
+                </div> 
+                <div id="formInputLunas" style="display:none;"> 
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;"> 
+                        <div class="form-group" style="margin-bottom:0"> 
+                            <label class="form-label">Nominal Dibayar (Rp)</label> 
+                            <input type="text" id="inpNominalLunas" class="form-control money-input" placeholder="0" style="font-weight:700; font-size:1rem;"> 
+                        </div> 
+                        <div class="form-group" style="margin-bottom:0"> 
+                            <label class="form-label">Channel</label> 
+                            <select id="inpChannelLunas" class="form-control"> 
+                                <option value="Tunai">💵 Tunai</option> 
+                                <option value="Transfer Bank">🏦 Transfer Bank</option> 
+                                <option value="QRIS">📱 QRIS</option> 
+                                <option value="Lainnya">Lainnya</option> 
+                            </select> 
+                            <div id="containerRekLunas" style="display:none; margin-top:0.5rem;"> 
+                                <label class="form-label" style="font-size:0.7rem; color:var(--primary);">💳 Rekening Tujuan</label> 
+                                <select id="inpRekIdLunas" class="form-control" style="font-size:0.8rem;"></select> 
+                            </div> 
+                        </div> 
+                    </div> 
+                    <div class="form-group" style="margin-bottom:0"> 
+                        <label class="form-label">Tanggal Pembayaran</label> 
+                        <input type="date" id="inpTglLunas" class="form-control"> 
+                    </div> 
+                </div> 
+            </div> 
+            <div class="modal-footer"> 
+                <button type="button" class="btn" style="background:transparent; border:1px solid rgba(255,255,255,0.1);" id="btnBatalLunas">Batal</button> 
+                <button type="button" class="btn btn-primary" id="btnSimpanLunas" disabled>Simpan Pembayaran</button> 
+            </div> 
+        </div> 
+    </div> 
+</body> 
+</html>
