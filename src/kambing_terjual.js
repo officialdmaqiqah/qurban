@@ -22,8 +22,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (email) document.getElementById('userEmailDisplay').textContent = email;
 
     const isAdmin = profile.role === 'admin';
-    const userRole = (profile.role || '').toLowerCase();
-    const isMarketingRole = ['reseller', 'marketing_dm', 'marketing_ext', 'marketing_kandang'].includes(userRole);
+    const userRole = (profile.role || '').toLowerCase().replace(/_/g, ' ').trim();
+    const marketingRoles = [
+        'reseller', 
+        'marketing dm', 
+        'marketing ext', 
+        'marketing kandang', 
+        'emarketing kandang',
+        'marketing luar',
+        'marketing'
+    ];
+    const isMarketingRole = marketingRoles.includes(userRole);
 
     // GOOGLE DRIVE INTEGRATION
     const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
