@@ -133,10 +133,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         profileData.alamat = alamatKandangInput.value.trim();
         
         const payload = { key: 'PROFILE', val: profileData };
-        if (profileData.db_id) payload.id = profileData.db_id; // Include ID if updating existing row
-        else payload.id = 'ID-PROFILE'; // Set fixed ID for profile if it's new
+        if (profileData.db_id) payload.id = profileData.db_id;
+        else payload.id = 'ID-PROFILE';
 
-        const { error } = await supabase.from('master_data').upsert(payload);
+        const { error } = await supabase.from('master_data').upsert(payload, { onConflict: 'key' });
         
         if (error) {
             console.error('Save Profil Error:', error);
@@ -159,7 +159,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const saveData = async (tipe, dataJson) => {
-        const { error } = await supabase.from('master_data').upsert({ key: tipe.toUpperCase(), val: dataJson });
+        const key = tipe.toUpperCase();
+        const { error } = await supabase.from('master_data').upsert({ id: 'ID-' + key, key: key, val: dataJson }, { onConflict: 'key' });
         return { error };
     };
 
