@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const hKandangGroup = document.getElementById('inpHargaKandang')?.closest('.form-group');
             if (hKandangGroup) hKandangGroup.style.display = isRestricted('hideHargaKandang') ? 'none' : 'block';
 
-            if(isDistributed || isRestricted('readonlyMaster')) {
+            if((isDistributed || isRestricted('readonlyMaster')) && !isAdmin) {
                 document.getElementById('btnSaveModal').style.display = 'none';
                 const btnReset = document.getElementById('btnResetDistribusi');
                 if(btnReset) {
