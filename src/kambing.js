@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td style="font-weight:600; display:none;">${displayBatch}</td>
                 <td style="white-space:nowrap; display:none;">${formatTgl(item.tgl_masuk)}</td>
-                <td style="display:none;">${item.supplier}</td>
+                <td style="display:${isRestrictedSupplier ? 'none' : ''};">${item.supplier}</td>
                 <td style="font-weight:600;">${item.no_tali}</td>
                 <td>${item.warna_tali || '-'}</td>
                 <td>${item.sex || '-'}</td>
