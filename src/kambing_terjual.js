@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="font-weight:700;">${formatRp(t.total_deal)}</td>
                 <td style="font-weight:700; color:var(--success);">${formatRp(t.total_paid || 0)}</td>
                 <td style="font-weight:700; color:${sisa > 0 ? 'var(--warning)' : 'var(--success)'}">${formatRp(sisa)}</td>
-                <td style="text-align:right;"><div class="action-btns">${t.needsAdminApproval && isAdmin ? `<button class="btn btn-sm" onclick="approveTrx('${t.id}')">✅</button>` : ''}${canEdit ? `<button class="btn btn-sm" onclick="editFullTrx('${t.id}')">✏️</button>` : ''}${isAdmin ? `<button class="btn btn-sm" onclick="rollbackTrx('${t.id}')">🗑️</button>` : ''}</div></td>
+                <td style="text-align:right;"><div class="action-btns">${t.komisi?.needs_approval && isAdmin ? `<button class="btn btn-sm" onclick="approveTrx('${t.id}')">✅</button>` : ''}${canEdit ? `<button class="btn btn-sm" onclick="editFullTrx('${t.id}')">✏️</button>` : ''}${isAdmin ? `<button class="btn btn-sm" onclick="rollbackTrx('${t.id}')">🗑️</button>` : ''}</div></td>
             `;
             tableBody.appendChild(tr);
         });
@@ -364,8 +364,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 delivery: { tipe: document.getElementById('inpDeliveryTipe').value, tgl: document.getElementById('inpDeliveryTgl').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 items: currentCart, total_deal: total, total_paid: paidNow + (window.existingInstallmentsTotal || 0),
                 history_bayar: paidNow > 0 ? [{ payId: 'PAY-'+Date.now(), tgl: inpTglOrder.value || window.getLocalDate(), nominal: paidNow, channel: finalChannelDP, buktiUrl }] : [],
-                komisi: { berhak: currentAgenTipeKomisi, nominal: parseNum(inpKomisiNominal?.value), status: 'belum_bayar' },
-                needsAdminApproval: userRole === 'agen'
+                komisi: { berhak: currentAgenTipeKomisi, nominal: parseNum(inpKomisiNominal?.value), status: 'belum_bayar', needs_approval: userRole === 'agen' }
             };
 
             if (window.editingTrxId && userRole === 'agen') {
@@ -412,7 +411,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     window.rollbackTrx = async (trxId) => { showConfirm('Batalkan transaksi?', async () => { await silentRollback(trxId); showToast('Dibatalkan'); await renderTable(); }); };
-    window.approveTrx = async (trxId) => { await supabase.from('transaksi').update({ needsAdminApproval: false }).eq('id', trxId); await renderTable(); };
+    window.approveTrx = async (trxId) => { 
+        const { data: trx } = await supabase.from('transaksi').select('komisi').eq('id', trxId).single();
+        if (trx) {
+            const upKomisi = { ...trx.komisi, needs_approval: false };
+            await supabase.from('transaksi').update({ komisi: upKomisi }).eq('id', trxId); 
+            await renderTable(); 
+        }
+    };
 
     window.deleteHistoryItem = async (trxId, payId, payNominal) => {
         showConfirm('Hapus riwayat bayar?', async () => {
