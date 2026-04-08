@@ -17,11 +17,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.isRestricted = function(perm) {
         if (isAdmin) return false;
-        if (isAgen) {
+        
+        const isMarketing = ['marketing_dm', 'marketing_ext', 'marketing_kandang'].includes(userRole);
+        const isResellerSelf = userRole === 'reseller';
+
+        if (isAgen || isMarketing || isResellerSelf) {
             if (perm === 'hideSupplierInfo') return true;
             if (perm === 'hideHargaNota') return true;
             if (perm === 'hideProfit') return true;
             if (perm === 'noExportMaster') return true;
+            if (perm === 'readonlyMaster') return true; // Melarang edit/hapus master
         }
         return false;
     };
@@ -267,7 +272,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
                 <td>
                     <div class="action-btns">
-                        ${isReadonly ? `<span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">Read-only</span>` : `
+                        ${isReadonly ? `<span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">🔒 Non-Edit</span>` : `
                             ${(item.status_transaksi !== 'Terjual' && item.status_transaksi !== 'Terdistribusi' || isAdmin) ? `<button class="btn btn-sm btn-edit-action" data-id="${item.id}" title="Edit Data" style="background:var(--primary-transparent); color:var(--primary)">✏️</button>` : `<span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">🔒</span>`}
                             ${((item.status_transaksi !== 'Terdistribusi' || isAdmin) && !isAgen) ? `<button class="btn btn-sm btn-danger btn-delete-action" data-id="${item.id}" title="Hapus Data">🗑️</button>` : ''}
                         `}
