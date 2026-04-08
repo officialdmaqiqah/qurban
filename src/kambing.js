@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formKambing = document.getElementById('formKambing');
     const inpLokasi = document.getElementById('inpLokasi');
 
-    let currentSort = { column: 'batch', direction: 'asc' };
+    let currentSort = { column: 'no_tali', direction: 'asc' };
 
 
     const formatTgl = (iso) => {
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             let valA = a[currentSort.column];
             let valB = b[currentSort.column];
 
-            if (currentSort.column === 'harga_kandang' || currentSort.column === 'harga_nota' || currentSort.column === 'saving' || currentSort.column === 'profit' || currentSort.column === 'berat') {
+            if (['harga_kandang', 'harga_nota', 'saving', 'profit', 'berat', 'no_tali'].includes(currentSort.column)) {
                 valA = parseFloat(valA) || 0;
                 valB = parseFloat(valB) || 0;
             } else if (currentSort.column === 'tgl_masuk') {
@@ -506,6 +506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(inpLokasi) inpLokasi.value = item.lokasi || '';
             if(document.getElementById('inpBerat')) document.getElementById('inpBerat').value = item.berat || '';
             document.getElementById('inpHargaNota').value = item.harga_nota;
+            document.getElementById('inpHargaKandang').value = item.harga_kandang;
             document.getElementById('inpSaving').value = item.saving;
             document.getElementById('inpProfit').value = item.profit;
 
@@ -875,13 +876,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Nilai Saving (Rp)': parseFloat(k.saving) || 0,
                         'Est Profit (Rp)': parseFloat(k.profit) || 0 
                     }),
-                    'Harga Jual Kandang (Rp)': isRestricted('hideHargaKandang') ? 0 : (parseFloat(k.hargaKandang) || 0),
-                    'Status Transaksi': k.statusTransaksi || '-',
-                    'Status Kesehatan': k.statusKesehatan || '-',
-                    'Status Fisik': k.statusFisik || '-',
+                    'Harga Jual Kandang (Rp)': isRestricted('hideHargaKandang') ? 0 : (parseFloat(k.harga_kandang) || 0),
+                    'Status Transaksi': k.status_transaksi || '-',
+                    'Status Kesehatan': k.status_kesehatan || '-',
+                    'Status Fisik': k.status_fisik || '-',
                     'Status Bayar': statBayar,
                     ...(isRestricted('hideProfit') ? {} : { 'Profit Net / Ekor (Rp)': profitNetRow }),
-                    'Catatan Histori / Keluar': k.catatanKeluar || '-',
+                    'Catatan Histori / Keluar': '-',
                     ...trxInfo
                 });
             });
