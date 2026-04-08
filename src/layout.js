@@ -263,10 +263,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Permissions & Menu Filtering
-        const userRole = profile.role || 'staff';
+        const userRole = (profile.role || 'staff').toLowerCase().trim();
+        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const allowedMenus = profile.allowed_menus || [];
         
-        if (userRole !== 'admin') {
+        if (!isAdmin) {
             document.querySelectorAll('.nav-item').forEach(item => {
                 const href = item.getAttribute('href');
                 if (href && !allowedMenus.includes(href)) {
@@ -279,7 +280,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Notif Bell Badge (Admin)
-        if (userRole === 'admin') {
+        if (isAdmin) {
             const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'pending');
             if (count > 0) {
                 const badge = document.createElement('span');
