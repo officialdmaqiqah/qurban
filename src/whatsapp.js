@@ -142,6 +142,12 @@ export const sendWa = async (number, message) => {
 
     console.log('[WA] Menyiapkan pengiriman ke:', cleanNumber);
     
+    // Validasi Konfigurasi
+    if (!config || !config.apiKey || !config.sender) {
+        console.error('[WA] Konfigurasi WA Tidak Lengkap!', config);
+        return { success: false, msg: 'Konfigurasi WA (API Key/Sender) belum diset di Pengaturan.' };
+    }
+
     // Gunakan URL GET dengan query parameters untuk kompatibilitas browser yang lebih baik (CORS Bypass)
     const url = new URL('https://xsender.id/api/send-message');
     url.searchParams.append('api_key', config.apiKey);
