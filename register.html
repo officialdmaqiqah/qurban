@@ -60,14 +60,6 @@
             return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
         };
 
-        const formatWA = (str) => {
-            let cleaned = str.replace(/\D/g, ''); // Ambil angka saja
-            if (cleaned.startsWith('0')) {
-                cleaned = '62' + cleaned.slice(1);
-            }
-            return cleaned;
-        };
-
         const inpFullName = document.getElementById('fullName');
         const inpWA = document.getElementById('wa');
 
@@ -76,7 +68,9 @@
         });
 
         inpWA.addEventListener('blur', () => {
-            if (inpWA.value) inpWA.value = formatWA(inpWA.value.trim());
+            if (inpWA.value && window.cleanWhatsApp) {
+                inpWA.value = window.cleanWhatsApp(inpWA.value.trim());
+            }
         });
 
         document.getElementById('registerForm').addEventListener('submit', async (e) => {

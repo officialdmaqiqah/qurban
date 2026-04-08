@@ -55,21 +55,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Alias agar bisa dipanggil sebagai toTitleCase()
     const toTitleCase = smartToTitleCase;
 
-    const cleanWhatsApp = (num) => {
-        let c = String(num).replace(/\D/g, ''); // Hapus semua karakter non-angka
-        if (c.startsWith('62')) return c;        // Sudah format internasional
-        if (c.startsWith('0')) c = '62' + c.substring(1); // 08xx → 628xx
-        else if (c.startsWith('8')) c = '62' + c; // 8xx → 628xx
-        return c;
-    };
-
     // Fungsi otomatis merapikan saat pindah kolom (onblur)
     const setupAutoClean = (id, type) => {
         const el = document.getElementById(id);
         if (!el) return;
         el.addEventListener('blur', () => {
             if (type === 'name' || type === 'address') el.value = smartToTitleCase(el.value.trim());
-            if (type === 'wa') el.value = cleanWhatsApp(el.value.trim());
+            if (type === 'wa' && window.cleanWhatsApp) el.value = window.cleanWhatsApp(el.value.trim());
         });
     };
 
@@ -243,13 +235,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Pasang auto-format listener pada field yang baru saja dirender
         const dynWa = document.getElementById('inpWa');
-        if (dynWa) dynWa.addEventListener('blur', () => { dynWa.value = cleanWhatsApp(dynWa.value.trim()); });
+        if (dynWa && window.setupAutoCleanWA) window.setupAutoCleanWA(dynWa);
 
         const dynNama = document.getElementById('inpNama');
         if (dynNama) dynNama.addEventListener('blur', () => { dynNama.value = toTitleCase(dynNama.value.trim()); });
 
         const dynUserWa = document.getElementById('inpUserWa');
-        if (dynUserWa) dynUserWa.addEventListener('blur', () => { dynUserWa.value = cleanWhatsApp(dynUserWa.value.trim()); });
+        if (dynUserWa && window.setupAutoCleanWA) window.setupAutoCleanWA(dynUserWa);
 
         const dynUserNama = document.getElementById('inpUserNama');
         if (dynUserNama) dynUserNama.addEventListener('blur', () => { dynUserNama.value = toTitleCase(dynUserNama.value.trim()); });
@@ -489,12 +481,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (status === 'approved') {
                    // Ambil data profil untuk nomor WA
                    const { data: prof } = await supabase.from('profiles').select('full_name, wa, email').eq('id', id).single();
-                   if (prof && prof.wa) {
-                       const waNum = cleanWhatsApp(prof.wa);
-                       const msg = `*AKSES DITERIMA!* 🚀\n\nAssalamu'alaikum *${prof.full_name}*,\n\nAkun Anda dengan email *${prof.email}* telah AKTIF dan disetujui oleh Admin sebagai *${role.toUpperCase()}*.\n\nSilakan login kembali untuk mulai bekerja di sistem Qurban.\n\nKlik di sini: https://qurban-blond.vercel.app`;
-                       await window.sendWa(waNum, msg);
-                       showToast('Notifikasi WA terkirim ke user!');
-                   }
+                    if (prof && prof.wa) {
+                        const waNum = window.cleanWhatsApp(prof.wa);
+                        const msg = `*AKSES DITERIMA!* 🚀\n\nAssalamu'alaikum *${prof.full_name}*,\n\nAkun Anda dengan email *${prof.email}* telah AKTIF dan disetujui oleh Admin sebagai *${role.toUpperCase()}*.\n\nSilakan login kembali untuk mulai bekerja di sistem Qurban.\n\nKlik di sini: https://qurban-blond.vercel.app`;
+                        await window.sendWa(waNum, msg);
+                        showToast('Notifikasi WA terkirim ke user!');
+                    }
                 }
                 
                 formGeneral.onsubmit = null; 
@@ -584,7 +576,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnSaveWA?.addEventListener('click', async () => {
         currentWAConfig.apiKey = inpWAKey.value.trim();
-        currentWAConfig.sender = cleanWhatsApp(inpWASender.value);
+        currentWAConfig.sender = window.cleanWhatsApp(inpWASender.value);
         currentWAConfig.footer = inpWAFooter.value.trim();
         
         const { success, error } = await window.saveWaConfig(currentWAConfig);

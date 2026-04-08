@@ -23,6 +23,23 @@ window.getDirectDriveLink = function(url) {
     return url;
 };
 
+// --- GLOBAL WA FORMATTING ---
+window.cleanWhatsApp = (num) => {
+    let c = String(num || '').replace(/\D/g, ''); // Hapus semua karakter non-angka
+    if (c.startsWith('62')) return c;        // Sudah format internasional
+    if (c.startsWith('0')) c = '62' + c.substring(1); // 08xx → 628xx
+    else if (c.startsWith('8')) c = '62' + c; // 8xx → 628xx
+    return c;
+};
+
+window.setupAutoCleanWA = (selectorOrEl) => {
+    const el = typeof selectorOrEl === 'string' ? document.getElementById(selectorOrEl) : selectorOrEl;
+    if (!el) return;
+    el.addEventListener('blur', () => {
+        if (el.value.trim()) el.value = window.cleanWhatsApp(el.value.trim());
+    });
+};
+
 // --- GLOBAL NOTIFICATION SYSTEM ---
 let toastContainer = null;
 window.showToast = function(message, type = 'info', duration = 3000) {

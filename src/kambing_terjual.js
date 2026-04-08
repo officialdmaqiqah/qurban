@@ -178,6 +178,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(inpTglOrder) inpTglOrder.value = window.getLocalDate();
         if(inpTotalBayarAwal) inpTotalBayarAwal.value = '';
         
+        // Auto-clean WA
+        if (window.setupAutoCleanWA) {
+            window.setupAutoCleanWA('inpCustWA1');
+            window.setupAutoCleanWA('inpCustWA2');
+        }
+
         // Reset Photo
         if(inpBuktiDP) inpBuktiDP.value = '';
         if(previewBuktiDP) previewBuktiDP.style.display = 'none';
@@ -225,16 +231,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    const refreshKambingDropdown = async () => {
+    const refreshKambingDropdown = async (filterText = '') => {
         const db = await getKambingDb();
-        const available = db.filter(k => k.status_transaksi === 'Tersedia' && !k.transaction_id);
+        const search = (filterText || '').toLowerCase().trim();
+        
+        let available = db.filter(k => k.status_transaksi === 'Tersedia' && !k.transaction_id);
+        
+        // Filter by No Tali ONLY
+        if (search) {
+            available = available.filter(k => String(k.no_tali).toLowerCase().includes(search));
+        }
+
         listKambing.innerHTML = '';
-        available.forEach(k => {
+        available.slice(0, 50).forEach(k => { // Limit to 50 for performance
             if(currentCart.find(c => c.goatId === k.id)) return;
             const opt = document.createElement('option');
             let extraStat = k.status_kesehatan === 'Sakit' ? ' [SAKIT]' : (k.status_kesehatan === 'Mati' ? ' [MATI]' : '');
-            opt.value = `${k.no_tali} | ${k.batch}`;
-            opt.textContent = `No.${k.no_tali} | ${k.batch} - ${k.warna_tali}${extraStat} - ${formatNum(k.harga_kandang)}`;
+            
+            // Signature unik No Tali + Batch agar tidak tertukar
+            const signature = `No.${k.no_tali} | ${k.batch}`;
+            opt.value = signature;
+            opt.textContent = `${signature} - ${k.warna_tali}${extraStat} - ${formatNum(k.harga_kandang)}`;
             listKambing.appendChild(opt);
         });
     };
@@ -595,9 +612,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const addKambingToCart = async () => {
         const db = await getKambingDb();
-        const goat = db.find(k => k.status_transaksi === 'Tersedia' && k.no_tali === inpSearchKambing.value.split('|')[0].trim());
-        if(goat) { currentCart.push({ goatId: goat.id, noTali: goat.no_tali, batch: goat.batch, hargaKandang: goat.harga_kandang, hargaDeal: goat.harga_kandang }); renderCart(); await refreshKambingDropdown(); inpSearchKambing.value = ''; }
+        const searchVal = inpSearchKambing.value.trim();
+        
+        // Cari kambing yang Tersedia dan cocok dengan signature (No.XX | Batch YY) 
+        // ATAU cocok persis dengan No Tali jika hanya diketik angkanya
+        const goat = db.find(k => {
+            if (k.status_transaksi !== 'Tersedia') return false;
+            const signature = `No.${k.no_tali} | ${k.batch}`;
+            return signature === searchVal || String(k.no_tali) === searchVal;
+        });
+
+        if(goat) { 
+            currentCart.push({ goatId: goat.id, noTali: goat.no_tali, batch: goat.batch, hargaKandang: goat.harga_kandang, hargaDeal: goat.harga_kandang, warnaTali: goat.warna_tali }); 
+            renderCart(); 
+            await refreshKambingDropdown(); 
+            inpSearchKambing.value = ''; 
+        } else if (searchVal) {
+            window.showToast('Kambing tidak ditemukan atau sudah terjual.', 'warning');
+        }
     };
+
+    // Listener Pencarian Dinamis (Hanya Filter No Tali)
+    inpSearchKambing?.addEventListener('input', (e) => {
+        const val = e.target.value;
+        // Hanya trigger refresh jika belum berupa pilihan lengkap (signature)
+        if (!val.includes('|')) {
+            refreshKambingDropdown(val);
+        }
+    });
 
     const btnExport = document.getElementById('btnExportCsv');
     if (btnExport) {
@@ -646,12 +688,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const kab = inpCustKab.value;
             inpCustKec.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
             if (kab && BB_REGIONS[kab]) {
+                inpCustKec.disabled = false;
                 BB_REGIONS[kab].forEach(kec => {
                     const opt = document.createElement('option');
                     opt.value = kec;
                     opt.textContent = kec;
                     inpCustKec.appendChild(opt);
                 });
+            } else {
+                inpCustKec.disabled = true;
             }
         });
     }

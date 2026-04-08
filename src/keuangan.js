@@ -43,6 +43,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const containerTransaksiRek = document.getElementById('containerTransaksiRek');
     const transaksiRekId = document.getElementById('transaksiRekId');
     const inpBuktiKeuangan = document.getElementById('inpBuktiKeuangan');
+    const previewBuktiKeuangan = document.getElementById('previewBuktiKeuangan');
+    const imgPreviewKeu = previewBuktiKeuangan ? previewBuktiKeuangan.querySelector('img') : null;
+    const btnRemoveKeuPhoto = document.getElementById('btnRemoveKeuPhoto');
+    const btnOpenCameraKeu = document.getElementById('btnOpenCameraKeu');
 
     // DB Helpers
     const getKeuanganData = async () => {
@@ -108,6 +112,53 @@ document.addEventListener('DOMContentLoaded', async () => {
             return currentSort.direction === 'asc' ? (valA < valB ? -1 : 1) : (valA > valB ? -1 : 1);
         });
 
+        // --- PHOTO UTILITIES (Reuse from kambing.js) ---
+        const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
+
+        async function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        let width = img.width;
+                        let height = img.height;
+                        const max = 800;
+                        if (width > height) { if (width > max) { height *= max / width; width = max; } } 
+                        else { if (height > max) { width *= max / height; height = max; } }
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
+                    };
+                };
+            });
+        }
+
+        async function uploadToGDrive(base64, folderName) {
+            try {
+                const response = await fetch(GDRIVE_PROXY_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        base64: base64,
+                        mimeType: "image/jpeg",
+                        fileName: "keuangan_" + Date.now() + ".jpg",
+                        folderName: folderName || "BUKTI_KEUANGAN"
+                    })
+                });
+                const result = await response.json();
+                if(result.success) return window.getDirectDriveLink(result.url);
+                return null;
+            } catch (error) {
+                console.error('GDrive Upload failed:', error);
+                return null;
+            }
+        }
+
         const isVisible = processed.length > 0;
         if(tableBody) {
             tableBody.closest('table').style.display = isVisible ? 'table' : 'none';
@@ -148,7 +199,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </td>
                     <td style="font-size:0.8rem; text-transform:capitalize;">${item.tipe}</td>
                     <td style="font-size:0.8rem; color:var(--text-muted)">${item.channel || '-'}</td>
-                    <td style="white-space:nowrap;">
+                     <td style="text-align:center;">
+                         ${item.bukti_url ? `
+                             <button class="btn btn-sm btn-view-photo" data-url="${item.bukti_url}" style="width:30px; height:30px; border-radius:4px; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+                                 <img src="${item.bukti_url}" style="width:100%; height:100%; object-fit:cover;">
+                             </button>
+                         ` : '<span style="opacity:0.2">🚫</span>'}
+                     </td>
+                     <td style="white-space:nowrap;">
                         <button class="btn btn-sm btn-delete-action" data-id="${item.id}" title="Hapus" style="background:rgba(239,68,68,0.1); color:var(--danger);">🗑️</button>
                     </td>
                 `;
@@ -180,6 +238,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(totalPengeluaranEl) totalPengeluaranEl.textContent = isRestrictedFinance ? '********' : formatRp(outTotal);
 
         document.querySelectorAll('.btn-delete-action').forEach(btn => btn.onclick = () => handleDelete(btn.dataset.id));
+         
+         document.querySelectorAll('.btn-view-photo').forEach(btn => {
+             btn.onclick = (e) => {
+                 e.stopPropagation();
+                 const url = btn.dataset.url;
+                 const modal = document.getElementById('photoLightbox');
+                 const img = document.getElementById('lightboxImg');
+                 if(modal && img) {
+                    img.src = url;
+                    modal.style.display = 'flex';
+                 }
+             };
+         });
     }
 
     async function handleDelete(id) {
@@ -220,9 +291,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(!await checkSaldoCukup(finalChannel, nominal, finalChannel)) return;
         }
 
+        let buktiUrl = null;
+        if(inpBuktiKeuangan && inpBuktiKeuangan.files.length > 0) {
+            window.showToast('Mengompres & Mengunggah bukti...', 'info');
+            const b64 = await compressImage(inpBuktiKeuangan.files[0]);
+            buktiUrl = await uploadToGDrive(b64, "BUKTI_KEUANGAN");
+        }
+
         const id = 'FIN-' + Date.now().toString().slice(-6);
         const { error } = await supabase.from('keuangan').insert([{
-            id, tipe, tanggal: tgl, kategori: kat, nominal, keterangan: ket, channel: finalChannel
+            id, tipe, tanggal: tgl, kategori: kat, nominal, keterangan: ket, channel: finalChannel, bukti_url: buktiUrl
         }]);
 
         if(!error) {
@@ -248,6 +326,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         } else { containerTransaksiRek.style.display = 'none'; }
     });
+
+    // Photo Listeners
+     inpBuktiKeuangan?.addEventListener('change', (e) => {
+         const file = e.target.files[0];
+         if(file) {
+             const reader = new FileReader();
+             reader.onload = (ev) => {
+                 if(imgPreviewKeu) imgPreviewKeu.src = ev.target.result;
+                 if(previewBuktiKeuangan) previewBuktiKeuangan.style.display = 'flex';
+             };
+             reader.readAsDataURL(file);
+         }
+     });
+ 
+     btnRemoveKeuPhoto?.addEventListener('click', () => {
+         if(inpBuktiKeuangan) inpBuktiKeuangan.value = '';
+         if(previewBuktiKeuangan) previewBuktiKeuangan.style.display = 'none';
+     });
+ 
+     btnOpenCameraKeu?.addEventListener('click', () => {
+         if(window.openCameraUI) {
+             window.openCameraUI((file) => {
+                 const dt = new DataTransfer();
+                 dt.items.add(file);
+                 if(inpBuktiKeuangan) {
+                     inpBuktiKeuangan.files = dt.files;
+                     inpBuktiKeuangan.dispatchEvent(new Event('change'));
+                 }
+             });
+         }
+     });
 
     document.getElementById('btnTambahPemasukan')?.addEventListener('click', () => {
         formKeuangan.reset();
