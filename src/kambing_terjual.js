@@ -322,21 +322,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         tableBody.innerHTML = '';
         trx.forEach(t => {
             const hasPendingEdit = editReqs?.find(r => r.trx_id === t.id);
-            const sisa = (t.totalDeal || 0) - (t.totalPaid || 0);
+            const sisa = (t.total_deal || 0) - (t.total_paid || 0);
             const itemsHtml = t.items.map(item => { const kMeta = kambingDb.find(k => k.id === item.goatId); return `• No ${item.noTali} (${kMeta?.warna_tali || '-'})`; }).join('<br>');
             const tr = document.createElement('tr');
             const isOwner = (agenLinkedId && t.agen.id === agenLinkedId) || (agenLinkedName && (t.agen.nama || '').toLowerCase() === agenLinkedName);
             const canEdit = isAdmin || (isMarketingRole && isOwner);
 
             tr.innerHTML = `
-                <td><div style="font-weight:700;">${t.id}</div><div style="font-size:0.75rem;">${formatTgl(t.tglTrx)}</div>${hasPendingEdit ? '<span class="badge" style="background:#f59e0b22; color:#f59e0b;">⏳ Review</span>' : ''}</td>
+                <td><div style="font-weight:700;">${t.id}</div><div style="font-size:0.75rem;">${formatTgl(t.tgl_trx)}</div>${hasPendingEdit ? '<span class="badge" style="background:#f59e0b22; color:#f59e0b;">⏳ Review</span>' : ''}</td>
                 <td>${t.agen.nama}<br><small>${t.agen.tipe || 'Agen'}</small></td>
                 <td><strong>${t.customer.nama || '-'}</strong><br><small>WA: ${t.customer.wa1 || '-'}</small></td>
                 <td><small>${t.delivery.alamat.kec || '-'}, ${t.delivery.alamat.kab || '-'}</small></td>
                 <td><strong>${formatTgl(t.delivery.tgl)}</strong><br><small>${t.delivery.tipe || '-'}</small></td>
                 <td><small>${itemsHtml}</small></td>
-                <td style="font-weight:700;">${formatRp(t.totalDeal)}</td>
-                <td style="font-weight:700; color:var(--success);">${formatRp(t.totalPaid || 0)}</td>
+                <td style="font-weight:700;">${formatRp(t.total_deal)}</td>
+                <td style="font-weight:700; color:var(--success);">${formatRp(t.total_paid || 0)}</td>
                 <td style="font-weight:700; color:${sisa > 0 ? 'var(--warning)' : 'var(--success)'}">${formatRp(sisa)}</td>
                 <td style="text-align:right;"><div class="action-btns">${t.needsAdminApproval && isAdmin ? `<button class="btn btn-sm" onclick="approveTrx('${t.id}')">✅</button>` : ''}${canEdit ? `<button class="btn btn-sm" onclick="editFullTrx('${t.id}')">✏️</button>` : ''}${isAdmin ? `<button class="btn btn-sm" onclick="rollbackTrx('${t.id}')">🗑️</button>` : ''}</div></td>
             `;
@@ -358,12 +358,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             let buktiUrl = null; if (inpBuktiDP?.files.length > 0) { const b64 = await compressImage(inpBuktiDP.files[0]); buktiUrl = await uploadToGDrive(b64, 'FOTO_BUKTI_DP'); }
             
             const newTrx = {
-                id: trxId, tglTrx: inpTglOrder.value || window.getLocalDate(),
+                id: trxId, tgl_trx: inpTglOrder.value || window.getLocalDate(),
                 agen: { id: matchedAgen?.id || '', nama: matchedAgen?.nama || inpAgenId.value, tipe: matchedAgen?.jenis || 'Agen' },
                 customer: { nama: document.getElementById('inpCustNama').value, wa1: document.getElementById('inpCustWA1').value, wa2: document.getElementById('inpCustWA2').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 delivery: { tipe: document.getElementById('inpDeliveryTipe').value, tgl: document.getElementById('inpDeliveryTgl').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
-                items: currentCart, totalDeal: total, totalPaid: paidNow + (window.existingInstallmentsTotal || 0),
-                historyBayar: paidNow > 0 ? [{ payId: 'PAY-'+Date.now(), tgl: inpTglOrder.value || window.getLocalDate(), nominal: paidNow, channel: finalChannelDP, buktiUrl }] : [],
+                items: currentCart, total_deal: total, total_paid: paidNow + (window.existingInstallmentsTotal || 0),
+                history_bayar: paidNow > 0 ? [{ payId: 'PAY-'+Date.now(), tgl: inpTglOrder.value || window.getLocalDate(), nominal: paidNow, channel: finalChannelDP, buktiUrl }] : [],
                 komisi: { berhak: currentAgenTipeKomisi, nominal: parseNum(inpKomisiNominal?.value), status: 'belum_bayar' },
                 needsAdminApproval: userRole === 'agen'
             };
@@ -384,7 +384,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 window.getWaConfig().then(async config => {
                     const itemsStr = currentCart.map(it => `• No.${it.noTali} (${it.batch})`).join('\n');
                     const sohibulStr = currentCart.map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
-                    const commonData = { nama: newTrx.customer.nama, id: trxId, tgl: formatTgl(newTrx.tglTrx), total: formatRp(total), dp: formatRp(paidNow), sisa: formatRp(total - newTrx.totalPaid), items: itemsStr, sohibul: sohibulStr, alamat: newTrx.customer.alamat.jalan + ', ' + newTrx.customer.alamat.kec, wa_konsumen: newTrx.customer.wa1, nama_agen: newTrx.agen.nama, jadwal: formatTgl(newTrx.delivery.tgl) };
+                    const commonData = { nama: newTrx.customer.nama, id: trxId, tgl: formatTgl(newTrx.tgl_trx), total: formatRp(total), dp: formatRp(paidNow), sisa: formatRp(total - newTrx.total_paid), items: itemsStr, sohibul: sohibulStr, alamat: newTrx.customer.alamat.jalan + ', ' + newTrx.customer.alamat.kec, wa_konsumen: newTrx.customer.wa1, nama_agen: newTrx.agen.nama, jadwal: formatTgl(newTrx.delivery.tgl) };
                     const templateCust = newTrx.agen.tipe.toUpperCase().includes('DM') ? config.templateOrderDM : config.templateOrderNormal;
                     const msgCust = await window.parseWaTemplate(templateCust, commonData);
                     if (newTrx.customer.wa1) window.sendWa(newTrx.customer.wa1, msgCust);
@@ -417,8 +417,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.deleteHistoryItem = async (trxId, payId, payNominal) => {
         showConfirm('Hapus riwayat bayar?', async () => {
             const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
-            const updatedHistory = trx.historyBayar.filter(h => h.payId !== payId);
-            await supabase.from('transaksi').update({ totalPaid: trx.totalPaid - payNominal, historyBayar: updatedHistory }).eq('id', trxId);
+            const updatedHistory = trx.history_bayar.filter(h => h.payId !== payId);
+            await supabase.from('transaksi').update({ total_paid: trx.total_paid - payNominal, history_bayar: updatedHistory }).eq('id', trxId);
             await supabase.from('keuangan').delete().eq('id', payId);
             await renderTable(); modalLunas.classList.remove('active');
         });
@@ -427,10 +427,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const performSaveLunas = async (nominal, trxId, channel, tgl, kirimWA) => {
         const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
         const payId = 'PAY-' + Date.now();
-        const updatedHistory = [...(trx.historyBayar || []), { payId, tgl, nominal, channel }];
-        const totalPaidNew = (trx.totalPaid || 0) + nominal;
+        const updatedHistory = [...(trx.history_bayar || []), { payId, tgl, nominal, channel }];
+        const totalPaidNew = (trx.total_paid || 0) + nominal;
         
-        await supabase.from('transaksi').update({ totalPaid: totalPaidNew, historyBayar: updatedHistory }).eq('id', trxId);
+        await supabase.from('transaksi').update({ total_paid: totalPaidNew, history_bayar: updatedHistory }).eq('id', trxId);
         await supabase.from('keuangan').insert([{ id: payId, tipe: 'pemasukan', tanggal: tgl, kategori: 'Pelunasan Order', nominal, channel, related_trx_id: trxId }]);
         
         if (kirimWA && typeof window.sendWa === 'function') {
@@ -440,7 +440,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 id: trx.id,
                 tgl: formatTgl(tgl),
                 nominal: formatRp(nominal),
-                sisa: formatRp(trx.totalDeal - totalPaidNew),
+                sisa: formatRp(trx.total_deal - totalPaidNew),
                 nama_agen: trx.agen.nama
             };
 
@@ -463,7 +463,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.editingTrxId = trx.id;
         await initForm();
         
-        if (inpTglOrder) inpTglOrder.value = trx.tglTrx || window.getLocalDate();
+        if (inpTglOrder) inpTglOrder.value = trx.tgl_trx || window.getLocalDate();
         document.getElementById('inpCustNama').value = trx.customer.nama || '';
         document.getElementById('inpCustWA1').value = trx.customer.wa1 || '';
         document.getElementById('inpCustWA2').value = trx.customer.wa2 || '';
@@ -486,8 +486,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentCart = [...trx.items];
         renderCart();
         
-        const firstPay = trx.historyBayar?.find(h => h.payId && h.payId.startsWith('PAY-'));
-        if (firstPay && !trx.totalPaid) {
+        const firstPay = trx.history_bayar?.find(h => h.payId && h.payId.startsWith('PAY-'));
+        if (firstPay && !trx.total_paid) {
              // legacy handle
         }
         
@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.terimaLunas = (trxId) => {
         selOrderLunas.innerHTML = '<option value="">-- Pilih Order --</option>';
         supabase.from('transaksi').select('*').then(({data}) => {
-            data.filter(t => t.totalDeal > t.totalPaid).forEach(t => { const opt = document.createElement('option'); opt.value = t.id; opt.textContent = `${t.id} - ${t.customer.nama} | Sisa: ${formatRp(t.totalDeal-t.totalPaid)}`; selOrderLunas.appendChild(opt); });
+            data.filter(t => t.total_deal > t.total_paid).forEach(t => { const opt = document.createElement('option'); opt.value = t.id; opt.textContent = `${t.id} - ${t.customer.nama} | Sisa: ${formatRp(t.total_deal-t.total_paid)}`; selOrderLunas.appendChild(opt); });
             if(trxId) { selOrderLunas.value = trxId; selOrderLunas.dispatchEvent(new Event('change')); }
         });
         modalLunas.classList.add('active');
@@ -513,10 +513,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     selOrderLunas.addEventListener('change', async () => {
         const { data: trx } = await supabase.from('transaksi').select('*').eq('id', selOrderLunas.value).single();
         if(!trx) return;
-        detailOrderLunas.innerHTML = `ID: ${trx.id} | Sisa: ${formatRp(trx.totalDeal-trx.totalPaid)}`;
-        let hist = ''; (trx.historyBayar || []).forEach(h => { hist += `<div>${formatTgl(h.tgl)} - ${formatRp(h.nominal)} <button onclick="deleteHistoryItem('${trx.id}','${h.payId}',${h.nominal})">🗑️</button></div>`; });
+        detailOrderLunas.innerHTML = `ID: ${trx.id} | Sisa: ${formatRp(trx.total_deal-trx.total_paid)}`;
+        let hist = ''; (trx.history_bayar || []).forEach(h => { hist += `<div>${formatTgl(h.tgl)} - ${formatRp(h.nominal)} <button onclick="deleteHistoryItem('${trx.id}','${h.payId}',${h.nominal})">🗑️</button></div>`; });
         historiPayLunas.innerHTML = hist;
-        inpNominalLunas.value = formatNum(trx.totalDeal - trx.totalPaid);
+        inpNominalLunas.value = formatNum(trx.total_deal - trx.total_paid);
         infoOrderLunas.style.display = 'block'; formInputLunas.style.display = 'block'; btnSimpanLunas.disabled = false;
     });
 

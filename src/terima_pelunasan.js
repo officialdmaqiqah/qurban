@@ -101,9 +101,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const linkedAgenId = localStorage.getItem('linkedAgenId');
         let filtered = userRole === 'admin' ? trxs : trxs.filter(t => t.agen.id === linkedAgenId);
 
-        const belumLunas = filtered.filter(t => (t.totalDeal - t.totalPaid) > 0);
-        const totalSisa = belumLunas.reduce((s, t) => s + (t.totalDeal - t.totalPaid), 0);
-        const totalPaid = filtered.reduce((s, t) => s + (t.totalPaid || 0), 0);
+        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0);
+        const totalSisa = belumLunas.reduce((s, t) => s + (t.total_deal - t.total_paid), 0);
+        const totalPaid = filtered.reduce((s, t) => s + (t.total_paid || 0), 0);
 
         document.getElementById('statJmlBelumLunas').textContent = belumLunas.length + ' Order';
         document.getElementById('statTotalSisa').textContent = formatRp(totalSisa);
@@ -119,8 +119,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         let filtered = userRole === 'admin' ? trxs : trxs.filter(t => t.agen.id === linkedAgenId);
         if (keyword) filtered = filtered.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer.nama || '').toLowerCase().includes(keyword));
 
-        const belumLunas = filtered.filter(t => (t.totalDeal - t.totalPaid) > 0).sort((a,b) => new Date(b.tglTrx) - new Date(a.tglTrx));
-        const overpaid = filtered.filter(t => (t.totalOverpaid || 0) > 0).sort((a,b) => new Date(b.tglTrx) - new Date(a.tglTrx));
+        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
+        const overpaid = filtered.filter(t => (t.total_overpaid || 0) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
 
         listOrderBelumLunas.innerHTML = belumLunas.length === 0 ? '<div style="text-align:center; padding:1.5rem; font-size:0.8rem;">Semua lunas!</div>' : '';
         belumLunas.forEach(t => listOrderBelumLunas.appendChild(createOrderCard(t, 'belum')));
@@ -139,8 +139,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         card.style.cssText = 'border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.85rem 1rem; margin-bottom:0.6rem; cursor:pointer; background:rgba(255,255,255,0.02);';
         card.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem;">
-                <div><span style="font-weight:700; color:var(--primary);">${t.id}</span> <span style="font-size:0.75rem; color:var(--text-muted);">${formatTgl(t.tglTrx)}</span></div>
-                <span style="font-size:0.78rem; font-weight:700; color:${type==='overpaid'?'var(--warning)':'var(--warning)'}">${type==='overpaid' ? 'Over: '+formatRp(t.totalOverpaid) : 'Sisa: '+formatRp(sisa)}</span>
+                <div><span style="font-weight:700; color:var(--primary);">${t.id}</span> <span style="font-size:0.75rem; color:var(--text-muted);">${formatTgl(t.tgl_trx)}</span></div>
+                <span style="font-size:0.78rem; font-weight:700; color:${type==='overpaid'?'var(--warning)':'var(--warning)'}">${type==='overpaid' ? 'Over: '+formatRp(t.total_overpaid) : 'Sisa: '+formatRp(sisa)}</span>
             </div>
             <div style="font-size:0.82rem; margin-bottom:0.5rem;">${t.customer.nama || '-'}</div>
             <div style="background:rgba(255,255,255,0.06); height:5px; border-radius:4px;"><div style="width:${Math.min(100, pct)}%; height:100%; background:var(--success); border-radius:4px;"></div></div>
@@ -152,20 +152,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     selOrder.addEventListener('input', async () => {
         const { data: trx } = await supabase.from('transaksi').select('*').eq('id', selOrder.value).single();
         if(!trx) { boxInfoOrder.style.display = 'none'; formBayar.style.display = 'none'; return; }
-        const sisa = trx.totalDeal - trx.totalPaid;
+        const sisa = trx.total_deal - trx.total_paid;
         gridInfoOrder.innerHTML = `
             <div class="info-card"><div class="label">Konsumen</div><div class="value">${trx.customer.nama}</div></div>
-            <div class="info-card"><div class="label">Total Deal</div><div class="value">${formatRp(trx.totalDeal)}</div></div>
-            <div class="info-card"><div class="label">Pernah Bayar</div><div class="value">${formatRp(trx.totalPaid)}</div></div>
+            <div class="info-card"><div class="label">Total Deal</div><div class="value">${formatRp(trx.total_deal)}</div></div>
+            <div class="info-card"><div class="label">Pernah Bayar</div><div class="value">${formatRp(trx.total_paid)}</div></div>
         `;
         displaySisa.textContent = formatRp(sisa);
         listHistoriPay.innerHTML = '';
-        (trx.historyBayar || []).forEach(h => {
+        (trx.history_bayar || []).forEach(h => {
              const div = document.createElement('div'); div.className = 'history-item';
              div.innerHTML = `<div><strong>${formatRp(h.nominal)}</strong> via ${h.channel}<br><small>${formatTgl(h.tgl)}</small></div> <button class="btn-sm" onclick="window.deleteHistoryItem('${trx.id}', '${h.payId}', ${h.nominal})">🗑️</button>`;
              listHistoriPay.appendChild(div);
         });
-        boxHistoriPay.style.display = (trx.historyBayar?.length > 0) ? 'block' : 'none';
+        boxHistoriPay.style.display = (trx.history_bayar?.length > 0) ? 'block' : 'none';
         inpNominalBayar.value = formatNum(sisa);
         boxInfoOrder.style.display = 'block'; formBayar.style.display = 'block';
     });
@@ -173,8 +173,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.deleteHistoryItem = async (trxId, payId, nominal) => {
         showConfirm('Hapus riwayat?', async () => {
             const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
-            const updatedHistory = trx.historyBayar.filter(h => h.payId !== payId);
-            await supabase.from('transaksi').update({ totalPaid: trx.totalPaid - nominal, historyBayar: updatedHistory }).eq('id', trxId);
+            const updatedHistory = trx.history_bayar.filter(h => h.payId !== payId);
+            await supabase.from('transaksi').update({ total_paid: trx.total_paid - nominal, history_bayar: updatedHistory }).eq('id', trxId);
             await supabase.from('keuangan').delete().eq('id', payId);
             selOrder.dispatchEvent(new Event('input')); renderStats(); renderList();
         });
@@ -194,12 +194,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(inpBuktiBayar?.files.length > 0) { const b64 = await compressImage(inpBuktiBayar.files[0]); buktiUrl = await uploadToGDrive(b64, 'BUKTI_PAY'); }
 
         const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
-        const sisa = trx.totalDeal - trx.totalPaid;
+        const sisa = trx.total_deal - trx.total_paid;
         const realPay = Math.min(nominal, sisa);
         const over = Math.max(0, nominal - sisa);
 
-        const updatedHistory = [...(trx.historyBayar || []), { payId, tgl, nominal, channel: finalChannel, buktiUrl }];
-        await supabase.from('transaksi').update({ totalPaid: trx.totalPaid + realPay, totalOverpaid: (trx.totalOverpaid || 0) + over, historyBayar: updatedHistory }).eq('id', trxId);
+        const updatedHistory = [...(trx.history_bayar || []), { payId, tgl, nominal, channel: finalChannel, buktiUrl }];
+        await supabase.from('transaksi').update({ total_paid: trx.total_paid + realPay, total_overpaid: (trx.total_overpaid || 0) + over, history_bayar: updatedHistory }).eq('id', trxId);
         await supabase.from('keuangan').insert([{ id: payId, tipe: 'pemasukan', tanggal: tgl, kategori: 'Pelunasan Order', nominal, channel: finalChannel, related_trx_id: trxId, bukti_url: buktiUrl }]);
 
         if (sendWA) {
@@ -229,8 +229,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const modal = document.getElementById('modalRefundKelebihan');
         document.getElementById('refundTrxId').textContent = trx.id;
         document.getElementById('refundKonsumen').textContent = trx.customer.nama;
-        document.getElementById('refundNominal').textContent = formatRp(trx.totalOverpaid);
-        document.getElementById('inpNominalRefund').value = formatNum(trx.totalOverpaid);
+        document.getElementById('refundNominal').textContent = formatRp(trx.total_overpaid);
+        document.getElementById('inpNominalRefund').value = formatNum(trx.total_overpaid);
         modal._trx = trx; modal.classList.add('active');
     };
 
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const chan = document.getElementById('inpChannelRefund').value;
         const refId = 'REF-' + Date.now().toString().slice(-6);
 
-        await supabase.from('transaksi').update({ totalOverpaid: trx.totalOverpaid - nominal }).eq('id', trx.id);
+        await supabase.from('transaksi').update({ total_overpaid: trx.total_overpaid - nominal }).eq('id', trx.id);
         await supabase.from('keuangan').insert([{ id: refId, tipe: 'pengeluaran', tanggal: tgl, kategori: 'Pengembalian Dana', nominal, channel: chan, related_trx_id: trx.id, keterangan: 'Refund kelebihan '+trx.id }]);
         
         modal.classList.remove('active');
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Populate Datalist
     const trxs = await getTrxData();
     const listOrders = document.getElementById('listOrders');
-    trxs.filter(t => t.totalDeal > t.totalPaid).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = `${t.id} - ${t.customer.nama}`; listOrders.appendChild(o); });
+    trxs.filter(t => t.total_deal > t.total_paid).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = `${t.id} - ${t.customer.nama}`; listOrders.appendChild(o); });
 
     renderStats(); renderList();
 });
