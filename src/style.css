@@ -526,17 +526,17 @@ html { background-color: var(--bg-dark); }
   flex-wrap: nowrap !important;
 }
 
-/* Sticky Column System (No Tali) */
-.data-table {
+/* Sticky Column System (Hanya untuk Tabel Stok / Kambing) */
+.data-table.sticky-enabled {
   position: relative !important;
   border-collapse: separate !important;
   border-spacing: 0 !important;
 }
 
-/* Target kolom ke-3 (No Tali) dan class .sticky-col */
-.sticky-col,
-.data-table th:nth-child(3),
-.data-table td:nth-child(3) {
+/* Target kolom ke-3 (No Tali) HANYA pada tabel yang diaktifkan fiturnya */
+.data-table.sticky-enabled th:nth-child(3),
+.data-table.sticky-enabled td:nth-child(3),
+.data-table .sticky-col {
   position: sticky !important;
   left: 0 !important;
   z-index: 20 !important;
@@ -545,14 +545,14 @@ html { background-color: var(--bg-dark); }
   box-shadow: 4px 0 10px rgba(0,0,0,0.3) !important;
 }
 
-body.light-mode .sticky-col,
-body.light-mode .data-table th:nth-child(3),
-body.light-mode .data-table td:nth-child(3) {
+body.light-mode .data-table.sticky-enabled th:nth-child(3),
+body.light-mode .data-table.sticky-enabled td:nth-child(3),
+body.light-mode .sticky-col {
   background-color: #ffffff !important;
   box-shadow: 4px 0 10px rgba(0,0,0,0.05) !important;
 }
 
-.data-table th:nth-child(3), .data-table th.sticky-col {
+.data-table.sticky-enabled th:nth-child(3) {
     z-index: 21 !important;
 }
 
