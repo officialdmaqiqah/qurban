@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('tableBodyTransaksi');
     const modalKeluar = document.getElementById('modalKeluar');
     const formTerjual = document.getElementById('formTerjual');
+    const inpTglOrder = document.getElementById('inpTglOrder');
     const inpAgenId = document.getElementById('inpAgenId');
     const inpCustKab = document.getElementById('inpCustKab');
     const inpCustKec = document.getElementById('inpCustKec');
@@ -183,6 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentCart = []; currentAgenTipeKomisi = false;
         sectionKomisi?.classList.remove('active');
         if(inpKomisiNominal) inpKomisiNominal.value = '0';
+        if(inpTglOrder) inpTglOrder.value = window.getLocalDate();
         if(inpTotalBayarAwal) inpTotalBayarAwal.value = '';
         
         // Reset Photo
@@ -356,12 +358,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             let buktiUrl = null; if (inpBuktiDP?.files.length > 0) { const b64 = await compressImage(inpBuktiDP.files[0]); buktiUrl = await uploadToGDrive(b64, 'FOTO_BUKTI_DP'); }
             
             const newTrx = {
-                id: trxId, tglTrx: window.getLocalDate(),
+                id: trxId, tglTrx: inpTglOrder.value || window.getLocalDate(),
                 agen: { id: matchedAgen?.id || '', nama: matchedAgen?.nama || inpAgenId.value, tipe: matchedAgen?.jenis || 'Agen' },
                 customer: { nama: document.getElementById('inpCustNama').value, wa1: document.getElementById('inpCustWA1').value, wa2: document.getElementById('inpCustWA2').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 delivery: { tipe: document.getElementById('inpDeliveryTipe').value, tgl: document.getElementById('inpDeliveryTgl').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 items: currentCart, totalDeal: total, totalPaid: paidNow + (window.existingInstallmentsTotal || 0),
-                historyBayar: paidNow > 0 ? [{ payId: 'PAY-'+Date.now(), tgl: window.getLocalDate(), nominal: paidNow, channel: finalChannelDP, buktiUrl }] : [],
+                historyBayar: paidNow > 0 ? [{ payId: 'PAY-'+Date.now(), tgl: inpTglOrder.value || window.getLocalDate(), nominal: paidNow, channel: finalChannelDP, buktiUrl }] : [],
                 komisi: { berhak: currentAgenTipeKomisi, nominal: parseNum(inpKomisiNominal?.value), status: 'belum_bayar' },
                 needsAdminApproval: userRole === 'agen'
             };
@@ -453,6 +455,46 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (agenData && agenData.wa) await window.sendWa(agenData.wa, msgAgen);
         }
         showAlert('Pembayaran Berhasil!', 'success', () => { modalLunas.classList.remove('active'); renderTable(); });
+    };
+
+    window.editFullTrx = async (trxId) => {
+        const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
+        if(!trx) return;
+        window.editingTrxId = trx.id;
+        await initForm();
+        
+        if (inpTglOrder) inpTglOrder.value = trx.tglTrx || window.getLocalDate();
+        document.getElementById('inpCustNama').value = trx.customer.nama || '';
+        document.getElementById('inpCustWA1').value = trx.customer.wa1 || '';
+        document.getElementById('inpCustWA2').value = trx.customer.wa2 || '';
+        
+        inpCustKab.value = trx.customer.alamat.kab || '';
+        inpCustKab.dispatchEvent(new Event('change'));
+        setTimeout(() => {
+            inpCustKec.value = trx.customer.alamat.kec || '';
+            document.getElementById('inpCustDesa').value = trx.customer.alamat.desa || '';
+            document.getElementById('inpCustAlamatJalan').value = trx.customer.alamat.jalan || '';
+            document.getElementById('inpMapsLink').value = trx.customer.alamat.maps || '';
+        }, 500);
+
+        document.getElementById('inpDeliveryTipe').value = trx.delivery.tipe || 'diantar';
+        document.getElementById('inpDeliveryTgl').value = trx.delivery.tgl || '';
+        
+        inpAgenId.value = `${trx.agen.nama} - ${trx.agen.tipe || 'Agen'}`;
+        await handleAgenChange();
+        
+        currentCart = [...trx.items];
+        renderCart();
+        
+        const firstPay = trx.historyBayar?.find(h => h.payId && h.payId.startsWith('PAY-'));
+        if (firstPay && !trx.totalPaid) {
+             // legacy handle
+        }
+        
+        inpTotalBayarAwal.value = ''; // Reset DP input for edit to prevent double charge unless intentionally added
+        inpTotalBayarAwal.disabled = true; // Disable DP edit for now to avoid complexity with keuangan history
+        
+        modalKeluar.classList.add('active');
     };
 
 
