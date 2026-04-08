@@ -135,20 +135,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         filtered.forEach(t => {
             const tr = document.createElement('tr');
             const isLunas = t.komisi.status === 'lunas';
-            const sisa = (parseFloat(t.totalDeal) || 0) - (parseFloat(t.totalPaid) || 0);
+            const totalDeal = parseFloat(t.total_deal || t.totalDeal || 0);
+            const totalPaid = parseFloat(t.total_paid || t.totalPaid || 0);
+            const sisa = totalDeal - totalPaid;
+            const canPay = sisa <= 1000; // Allow 1000 tolerance for rounding
             
             tr.innerHTML = `
-                <td><div style="font-weight:700; color:var(--primary);">${t.id}</div><div style="font-size:0.7rem; color:var(--text-muted);">${formatTgl(t.tglTrx)}</div></td>
+                <td><div style="font-weight:700; color:var(--primary);">${t.id}</div><div style="font-size:0.7rem; color:var(--text-muted);">${formatTgl(t.tgl_trx || t.tglTrx)}</div></td>
                 <td><div style="font-weight:600;">${t.agen?.nama || '-'}</div><div style="font-size:0.7rem; color:var(--text-muted);">${t.agen?.tipe || ''}</div></td>
                 <td>${t.customer?.nama || '-'}</td>
-                <td>${formatRp(t.totalDeal)}</td>
+                <td>${formatRp(totalDeal)}</td>
                 <td style="color:#f59e0b; font-weight:800;">${formatRp(t.komisi.nominal)}</td>
                 <td><div style="font-size:0.8rem;">${t.komisi.metodePembayaran || 'Akhir'}</div></td>
                 <td><span class="badge ${isLunas ? 'badge-success' : 'badge-warning'}" style="font-size:0.7rem; padding:4px 8px;">${isLunas ? 'LUNAS' : 'OUTSTANDING'}</span></td>
                 <td style="text-align:right;">
                     ${isLunas ? 
                         `<button class="btn btn-sm btn-shimmer" style="background:rgba(244,63,94,0.1); color:var(--danger); border:1px solid rgba(244,63,94,0.2);" onclick="window.rollbackKomisi('${t.id}')">↩️</button>` : 
-                        `<button class="btn btn-sm btn-shimmer" ${sisa > 1000 ? 'disabled' : ''} onclick="window.openBayarKomisi('${t.id}')" style="background:var(--primary); font-size:0.75rem; border:none; padding:4px 10px;">💸 Cairkan</button>`
+                        `<button class="btn btn-sm btn-shimmer" ${!canPay ? 'disabled style="background:rgba(255,255,255,0.05); color:var(--text-muted);"' : 'style="background:var(--primary); font-size:0.75rem; border:none; padding:4px 10px;"'} onclick="window.openBayarKomisi('${t.id}')">
+                            ${canPay ? '💸 Cairkan' : '⌛ Tunggu Lunas'}
+                        </button>`
                     }
                 </td>
             `;
