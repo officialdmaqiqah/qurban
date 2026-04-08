@@ -440,7 +440,7 @@ html { background-color: var(--bg-dark); }
   color: #ffffff; /* Putih di Dark Mode */
 }
 
-body.light-mode .logout-icon {
+.light-mode .logout-icon {
   color: #ef4444 !important; /* Merah di Light Mode */
 }
 
