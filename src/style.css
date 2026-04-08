@@ -1091,7 +1091,7 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         flex-shrink: 0;
     }
 
-    /* Table Improvements */
+    /* Table Improvements for Mobile */
     .table-responsive {
         margin: 0 -1rem;
         padding: 0 1rem;
@@ -1100,13 +1100,27 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
     }
 
     .data-table {
-        min-width: 600px; /* Lebih fit di HP agar tidak terlalu banyak geser */
+        min-width: 100%; /* Default fit screen untuk tabel simpel */
     }
 
-    /* Padding Super Rapat untuk HP */
+    .data-table.sticky-enabled {
+        min-width: 800px !important; /* Stok tetap butuh lebar agar terbaca */
+    }
+
+    /* Padding Super Rapat untuk SEMUA tabel di HP */
     .data-table th, .data-table td {
         padding: 0.6rem 0.4rem !important;
-        font-size: 0.8rem !important;
+        font-size: 0.75rem !important; /* Sedikit lebih kecil agar muat */
+        white-space: normal !important; /* Izinkan bungkus teks jika kolom sempit */
+    }
+
+    .data-table th {
+        white-space: nowrap !important; /* Header tetap 1 baris */
+    }
+
+    .data-table .btn-sm {
+        padding: 4px 6px !important;
+        font-size: 0.7rem !important;
     }
 
     /* Spasi Baris & Sticky sudah dipindah ke global di atas line 512 */
