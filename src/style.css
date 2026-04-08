@@ -1100,18 +1100,18 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
     }
 
     .data-table {
-        min-width: 100%; /* Default fit screen untuk tabel simpel */
+        min-width: 450px; /* Kembali ke posisi aman */
     }
 
     .data-table.sticky-enabled {
-        min-width: 800px !important; /* Stok tetap butuh lebar agar terbaca */
+        min-width: 800px !important;
     }
 
     /* Padding Super Rapat untuk SEMUA tabel di HP */
     .data-table th, .data-table td {
         padding: 0.6rem 0.4rem !important;
-        font-size: 0.75rem !important; /* Sedikit lebih kecil agar muat */
-        white-space: normal !important; /* Izinkan bungkus teks jika kolom sempit */
+        font-size: 0.8rem !important; /* Kembali ke ukuran yang lebih nyaman dibaca */
+        white-space: nowrap !important; /* Kembalikan ke normal agar tidak berantakan */
     }
 
     .data-table th {

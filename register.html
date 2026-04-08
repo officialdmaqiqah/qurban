@@ -146,7 +146,10 @@
 
                     // 3. WhatsApp Notification (Direct Import System)
                     try {
+                        console.log('[Register] Mengambil konfigurasi WA...');
                         const config = await getWaConfig();
+                        console.log('[Register] Konfigurasi WA ditemukan:', config ? 'Ya' : 'Tidak');
+
                         const template = config.templateDaftar || "*Pendaftaran Berhasil*\n==========================\n\nAssalamu’Alaikum, *[[NAMA]]*.\n\nTerima Kasih Telah Mendaftar Menjadi Bagian Pejuang Qurban.\n\nBerikut Adalah Data Yang Anda Entri:\n👤 Nama: [[NAMA]]\n📧 Username/Email: [[EMAIL]]\n🔑 Password: [[PASSWORD]]\n\n⚠️ *Penting:*\n1. Mohon Jangan Memberitahukan Username Dan Password Anda Kepada Siapapun.\n2. Saat Ini Anda *Belum Bisa Login*. Akun Anda Sedang Dalam Status *Pending*. Silakan Menunggu Konfirmasi (Approval) Dari Manajemen Sebelum Dapat Digunakan.\n\nTerima Kasih.";
                         
                         const waMessage = await parseWaTemplate(template, {
@@ -156,18 +159,19 @@
                         });
 
                         // 3a. Send to User
-                        console.log('[Register] Menyiapkan notifikasi untuk User:', wa);
+                        console.log('[Register] Mengirim WA ke User:', wa);
                         const resUser = await sendWa(wa, waMessage);
-                        console.log('[Register] Status User WA:', resUser);
+                        console.log('[Register] Respon WA User:', resUser);
 
                         // 3b. Send to Admin (Backup/Audit)
                         if (config.sender) {
                             const adminMsg = `*NOTIF PENDAFTAR BARU* 🔔\n==========================\n\nBismillah\nHalo Manajemen,\n\nAda Staf/Agen baru yang mendaftar di sistem dan membutuhkan Persetujuan (Approval):\n\n👤 Nama: ${fullName}\n📞 WA: ${wa}\n📧 Email: ${email}\n\nSilakan cek Dashboard Manajemen untuk melakukan aktivasi akun.\n\nTerima Kasih.`;
-                            console.log('[Register] Menyiapkan notifikasi untuk Admin:', config.sender);
-                            await sendWa(config.sender, adminMsg);
+                            console.log('[Register] Mengirim WA ke Admin:', config.sender);
+                            const resAdmin = await sendWa(config.sender, adminMsg);
+                            console.log('[Register] Respon WA Admin:', resAdmin);
                         }
                     } catch (waErr) {
-                        console.warn('WA Auth notification failed:', waErr);
+                        console.error('[Register] WA Error Fatal:', waErr);
                     }
 
                     const overlay = document.createElement('div');
