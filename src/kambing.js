@@ -247,7 +247,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td style="font-weight:600; display:none;">${displayBatch}</td>
                 <td style="white-space:nowrap; display:none;">${formatTgl(item.tgl_masuk)}</td>
-                <td style="display:${isRestrictedSupplier ? 'none' : ''};">${item.supplier}</td>
                 <td style="font-weight:600;">${item.no_tali}</td>
                 <td>${item.warna_tali || '-'}</td>
                 <td>${item.sex || '-'}</td>
@@ -687,6 +686,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(btnCancelModal) {
         btnCancelModal.addEventListener('click', () => {
             modalKambing.classList.remove('active');
+        });
+    }
+
+    // Filter Panel Toggle
+    const btnToggleFilter = document.getElementById('btnToggleFilter');
+    const filterPanel = document.getElementById('filterPanel');
+    const filterArrow = document.getElementById('filterArrow');
+    if (btnToggleFilter && filterPanel) {
+        btnToggleFilter.addEventListener('click', () => {
+            const isOpen = filterPanel.style.display !== 'none';
+            filterPanel.style.display = isOpen ? 'none' : 'flex';
+            if (filterArrow) filterArrow.style.transform = isOpen ? '' : 'rotate(180deg)';
         });
     }
 

@@ -63,10 +63,16 @@
                                                 </div>
                                         </div>
 
-                                        <div style="display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; background:rgba(0,0,0,0.15); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+                                        <div style="margin-bottom:1rem;">
+                                                <button id="btnToggleFilter" class="btn btn-sm" style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); color:var(--text-secondary); display:flex; align-items:center; gap:0.5rem; font-weight:500;">
+                                                        🔍 Filter &amp; Pencarian <span id="filterArrow" style="transition:transform 0.3s;">▼</span>
+                                                </button>
+                                        </div>
+
+                                        <div id="filterPanel" style="display:none; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; background:rgba(0,0,0,0.15); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
                                                 <div style="flex:2; min-width:200px;">
                                                         <label class="form-label">Pencarian Universal</label>
-                                                        <input type="text" id="inpSearch" class="form-control" placeholder="Cari No Tali, ID Kambing, Supplier...">
+                                                        <input type="text" id="inpSearch" class="form-control" placeholder="Cari No Tali, ID Kambing...">
                                                 </div>
                                                 <div style="flex:1; min-width:140px;">
                                                         <label class="form-label">Min Harga (Kandang)</label>
@@ -113,7 +119,6 @@
                                                                 <tr>
                                                                         <th style="cursor:pointer; display:none;" class="sort-header" data-column="batch">Batch ↕️</th>
                                                                         <th style="cursor:pointer; display:none;" class="sort-header" data-column="tglMasuk">Tgl Masuk ↕️</th>
-                                                                        <th style="cursor:pointer; display:none;" class="sort-header" data-column="supplier">Supplier ↕️</th>
                                                                         <th style="cursor:pointer;" class="sort-header" data-column="noTali">No Tali ↕️</th>
                                                                         <th style="cursor:pointer;" class="sort-header" data-column="warnaTali">Warna ↕️</th>
                                                                         <th style="cursor:pointer;" class="sort-header" data-column="jenisKelamin">Sex ↕️</th>
