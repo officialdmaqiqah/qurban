@@ -130,17 +130,18 @@
                 }
 
                 if (authData.user) {
-                    // 2. Create Profile in public.profiles table
+                    // 2. Create or Update Profile in public.profiles table (Using upsert to avoid duplicate key errors)
                     const { error: profileError } = await supabase
                         .from('profiles')
-                        .insert({
+                        .upsert({
                             id: authData.user.id,
                             full_name: fullName,
                             wa_number: wa,
                             email: email,
                             role: 'staff',
-                            status: 'pending'
-                        });
+                            status: 'pending',
+                            updated_at: new Date().toISOString()
+                        }, { onConflict: 'id' });
 
                     if (profileError) throw profileError;
 
