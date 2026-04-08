@@ -181,10 +181,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // 3. Logout Button in Header
         const logoutHeader = document.createElement('div');
-        logoutHeader.className = 'action-icon';
-        logoutHeader.innerHTML = '⏻';
+        logoutHeader.className = 'action-icon logout-icon';
+        logoutHeader.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                <line x1="12" y1="2" x2="12" y2="12"></line>
+            </svg>
+        `;
         logoutHeader.title = 'Logout';
-        logoutHeader.style.color = '#ef4444'; // Beri warna merah sedikit agar kontras
         logoutHeader.onclick = async () => {
             window.showConfirm('Yakin ingin keluar?', async () => {
                 await supabase.auth.signOut();
