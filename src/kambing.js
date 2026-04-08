@@ -15,6 +15,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isAdmin = userRole === 'admin';
     const isAgen = userRole === 'agen';
 
+    window.isRestricted = function(perm) {
+        if (isAdmin) return false;
+        if (isAgen) {
+            if (perm === 'hideSupplierInfo') return true;
+            if (perm === 'hideHargaNota') return true;
+            if (perm === 'hideProfit') return true;
+            if (perm === 'noExportMaster') return true;
+        }
+        return false;
+    };
+    const isRestricted = window.isRestricted;
+
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
         await supabase.auth.signOut();
         window.location.href = 'index.html';
