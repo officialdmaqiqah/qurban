@@ -146,10 +146,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return 'TRX' + (maxNum + 1).toString().padStart(5, '0');
     };
 
-    // RBAC: Hide "New Order" button immediately for marketing roles
+    // RBAC: Show "Order Baru" button ONLY for Admin/Office
     const btnTambah = document.getElementById('btnTambahTerjual');
-    if (isMarketingRole && btnTambah) {
-        btnTambah.remove(); // Completely remove from DOM for marketing roles
+    const isAuthorizedToOrder = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+    
+    if (isAuthorizedToOrder && btnTambah) {
+        btnTambah.style.display = 'block'; // Show if authorized
+    } else if (btnTambah) {
+        btnTambah.remove(); // Force remove for everyone else
     }
 
     const initForm = async () => {
