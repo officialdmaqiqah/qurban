@@ -1222,3 +1222,43 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         font-size: 0.8rem !important;
     }
 }
+
+/* --- WHATSAPP STATUS INDICATOR DOT --- */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 0 10px currentColor;
+}
+
+.status-dot::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0.4;
+    animation: statusPulse 2s infinite;
+}
+
+@keyframes statusPulse {
+    0% { transform: scale(1); opacity: 0.4; }
+    50% { transform: scale(1.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 0; }
+}
+
+.status-dot.active { background-color: var(--success); color: var(--success); }
+.status-dot.inactive { background-color: var(--danger); color: var(--danger); }

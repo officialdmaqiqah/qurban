@@ -71,7 +71,7 @@ window.getWaConfig = getWaConfig;
 export const saveWaConfig = async (config) => {
     const { error } = await supabase
         .from('master_data')
-        .upsert({ key: 'WA_CONFIG', val: config }, { onConflict: 'key' });
+        .upsert({ id: 'ID-WA_CONFIG', key: 'WA_CONFIG', val: config }, { onConflict: 'key' });
     
     if (!error) {
         localStorage.setItem('QURBAN_WA_CONFIG', JSON.stringify(config)); // Keep local cache

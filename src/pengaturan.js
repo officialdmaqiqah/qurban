@@ -530,7 +530,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const edWATemplate = document.getElementById('waTemplateEditor');
     const btnSaveWA = document.getElementById('btnSaveWAConfig');
     const btnTestWA = document.getElementById('btnTestWA');
-    const badgeWASatus = document.getElementById('waStatusBadge');
+    const badgeWASatus = document.getElementById('waStatusDot');
+    const textWAStatus = document.getElementById('waStatusText');
 
     let currentWAConfig = {};
 
@@ -548,14 +549,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Test status (Quick check if key exists)
-        if (currentWAConfig.apiKey && currentWAConfig.sender) {
-            badgeWASatus.textContent = 'Status: Terhubung';
-            badgeWASatus.style.background = 'rgba(16,185,129,0.1)';
-            badgeWASatus.style.color = 'var(--success)';
-        } else {
-            badgeWASatus.textContent = 'Status: Disconnect';
-            badgeWASatus.style.background = 'rgba(239,68,68,0.1)';
-            badgeWASatus.style.color = 'var(--danger)';
+        if (badgeWASatus && textWAStatus) {
+            if (currentWAConfig.apiKey && currentWAConfig.sender) {
+                badgeWASatus.className = 'status-dot active';
+                textWAStatus.textContent = 'Terhubung';
+                textWAStatus.style.color = 'var(--success)';
+            } else {
+                badgeWASatus.className = 'status-dot inactive';
+                textWAStatus.textContent = 'Terputus';
+                textWAStatus.style.color = 'var(--danger)';
+            }
         }
     }
     loadWAConfig();
