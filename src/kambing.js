@@ -506,11 +506,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(inpLokasi) inpLokasi.value = item.lokasi || '';
             if(document.getElementById('inpBerat')) document.getElementById('inpBerat').value = item.berat || '';
             document.getElementById('inpHargaNota').value = item.harga_nota;
-            document.getElementById('inpHargaKandang').value = item.harga_kandang;
             document.getElementById('inpSaving').value = item.saving;
             document.getElementById('inpProfit').value = item.profit;
+            
+            const inpHK = document.getElementById('inpHargaKandang');
+            if (inpHK) inpHK.value = item.harga_kandang;
 
-            const hKandangGroup = document.getElementById('inpHargaKandang')?.closest('.form-group');
+            const hKandangGroup = inpHK?.closest('.form-group');
             if (hKandangGroup) hKandangGroup.style.display = isRestricted('hideHargaKandang') ? 'none' : 'block';
 
             if((isDistributed || isRestricted('readonlyMaster')) && !isAdmin) {
