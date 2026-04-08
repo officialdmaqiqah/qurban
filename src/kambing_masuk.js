@@ -322,6 +322,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const modal = document.getElementById('photoLightbox');
                 const img = document.getElementById('lightboxImg');
                 const loader = document.getElementById('lightboxLoading');
+                const btnDownload = document.getElementById('btnDownloadLightbox');
                 
                 if(modal && img) {
                     img.style.display = 'none';
@@ -332,6 +333,58 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     img.src = url;
                     modal.style.display = 'flex';
+
+                    // Setup Download Button
+                    if (btnDownload) {
+                        btnDownload.onclick = async (ev) => {
+                            ev.stopPropagation();
+                            try {
+                                const originalText = btnDownload.innerHTML;
+                                btnDownload.innerHTML = '⏳ Menyiapkan File...';
+                                btnDownload.style.opacity = '0.7';
+                                btnDownload.style.pointerEvents = 'none';
+
+                                // Create a proxy image to handle CORS
+                                const tempImg = new Image();
+                                tempImg.crossOrigin = "anonymous";
+                                tempImg.src = url;
+
+                                await new Promise((resolve, reject) => {
+                                    tempImg.onload = resolve;
+                                    tempImg.onerror = () => reject(new Error("Gagal memuat gambar untuk diunduh."));
+                                });
+
+                                // Draw to canvas
+                                const canvas = document.createElement('canvas');
+                                canvas.width = tempImg.naturalWidth;
+                                canvas.height = tempImg.naturalHeight;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(tempImg, 0, 0);
+
+                                // Convert to dataURL
+                                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+                                // Trigger Download
+                                const a = document.createElement('a');
+                                a.href = dataUrl;
+                                a.download = `nota_${item.noTali || Date.now()}.jpg`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+
+                                if(window.showToast) window.showToast('Foto Berhasil Diunduh!');
+                                
+                                btnDownload.innerHTML = originalText;
+                            } catch (error) {
+                                console.error('Download failed:', error);
+                                if(window.showAlert) window.showAlert('Gagal mengunduh foto. Mengalihkan ke link langsung...', 'warning');
+                                window.open(url, '_blank');
+                            } finally {
+                                btnDownload.style.opacity = '1';
+                                btnDownload.style.pointerEvents = 'auto';
+                            }
+                        };
+                    }
 
                     img.onload = () => {
                         loader.style.display = 'none';

@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${statusBayarBadge}</td>
                 <td style="text-align:center; vertical-align:middle;">
                     ${(item.foto_thumb || item.foto_fisik) 
-                        ? `<button class="btn btn-sm btn-view-photo" data-url="${getDirectDriveLink(item.foto_fisik)}" title="Klik untuk Perbesar" style="width:32px; height:32px; border-radius:50%; padding:0; overflow:hidden; border:2px solid var(--primary-transparent); background:rgba(255,255,255,0.05);">
+                        ? `<button class="btn btn-sm btn-view-photo" data-url="${getDirectDriveLink(item.foto_fisik)}" data-notali="${item.no_tali}" title="Klik untuk Perbesar" style="width:32px; height:32px; border-radius:50%; padding:0; overflow:hidden; border:2px solid var(--primary-transparent); background:rgba(255,255,255,0.05);">
                              <img src="${getDirectDriveLink(item.foto_thumb || item.foto_fisik)}" style="width:100%; height:100%; object-fit:cover;">
                            </button>`
                         : `<span style="opacity:0.1; font-size:1rem;" title="Tanpa foto">🚫</span>`
@@ -303,9 +303,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 e.preventDefault();
                 e.stopPropagation(); 
                 const url = e.currentTarget.getAttribute('data-url');
+                const noTali = e.currentTarget.getAttribute('data-notali') || 'foto';
                 const modal = document.getElementById('photoLightbox');
                 const img = document.getElementById('lightboxImg');
                 const loader = document.getElementById('lightboxLoading');
+                const btnDownload = document.getElementById('btnDownloadLightbox');
                 
                 if(modal && img) {
                     img.style.display = 'none'; 
@@ -316,6 +318,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     img.src = url;
                     modal.style.display = 'flex';
+
+                    // Setup Download Button
+                    if (btnDownload) {
+                        btnDownload.onclick = async (ev) => {
+                            ev.stopPropagation();
+                            try {
+                                const originalText = btnDownload.innerHTML;
+                                btnDownload.innerHTML = '⏳ Menyiapkan...';
+                                btnDownload.style.opacity = '0.7';
+                                btnDownload.style.pointerEvents = 'none';
+                                
+                                const tempImg = new Image();
+                                tempImg.crossOrigin = "anonymous"; 
+                                tempImg.src = url;
+                                await new Promise((res, rej) => { tempImg.onload = res; tempImg.onerror = rej; });
+
+                                const canvas = document.createElement('canvas');
+                                canvas.width = tempImg.naturalWidth;
+                                canvas.height = tempImg.naturalHeight;
+                                canvas.getContext('2d').drawImage(tempImg, 0, 0);
+                                
+                                const a = document.createElement('a');
+                                a.href = canvas.toDataURL('image/jpeg', 0.9);
+                                a.download = `kambing_${noTali}.jpg`;
+                                a.click();
+                                
+                                if(window.showToast) window.showToast('Foto Berhasil Diunduh!');
+                                btnDownload.innerHTML = originalText;
+                            } catch (error) {
+                                console.error('Download failed:', error);
+                                window.open(url, '_blank');
+                            } finally {
+                                btnDownload.style.opacity = '1';
+                                btnDownload.style.pointerEvents = 'auto';
+                            }
+                        };
+                    }
 
                     img.onerror = () => {
                         if(loader) {
@@ -381,8 +420,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(previewFotoFisik) {
             const previewUrl = item.foto_thumb || item.foto_fisik;
             if(previewUrl) {
-                previewFotoFisik.innerHTML = `<img src="${previewUrl}" style="width:100%; height:100%; object-fit:cover;">`;
+                previewFotoFisik.innerHTML = `
+                    <div style="position:relative; width:100%; height:100%;">
+                        <img src="${previewUrl}" style="width:100%; height:100%; object-fit:cover;">
+                        <button type="button" id="btnDownloadFromEdit" style="position:absolute; bottom:2px; right:2px; background:var(--primary); color:white; border:none; border-radius:4px; padding:4px 6px; font-size:0.65rem; cursor:pointer; opacity:0.9;" title="Download Foto">📥 Unduh</button>
+                    </div>
+                `;
                 if(btnRemovePhoto) btnRemovePhoto.style.display = 'inline-block';
+                
+                document.getElementById('btnDownloadFromEdit').onclick = async (e) => {
+                   e.stopPropagation();
+                   const btn = e.currentTarget;
+                   try {
+                       btn.textContent = '⏳';
+                       const tImg = new Image(); tImg.crossOrigin = 'anonymous'; tImg.src = previewUrl;
+                       await new Promise((res, rej) => { tImg.onload = res; tImg.onerror = rej; });
+                       const cv = document.createElement('canvas'); cv.width = tImg.naturalWidth; cv.height = tImg.naturalHeight;
+                       cv.getContext('2d').drawImage(tImg, 0, 0);
+                       const a = document.createElement('a'); a.href = cv.toDataURL('image/jpeg', 0.9); a.download = `kambing_${item.no_tali}.jpg`; a.click();
+                       if(window.showToast) window.showToast('Berhasil Diunduh!');
+                   } catch (err) { window.open(previewUrl, '_blank'); }
+                   finally { btn.textContent = '📥 Unduh'; }
+                };
             } else {
                 previewFotoFisik.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted);">No Pic</span>`;
             }

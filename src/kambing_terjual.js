@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (email) document.getElementById('userEmailDisplay').textContent = email;
 
     const isAdmin = profile.role === 'admin';
+    const userRole = (profile.role || '').toLowerCase();
+    const isMarketingRole = ['reseller', 'marketing_dm', 'marketing_ext', 'marketing_kandang'].includes(userRole);
 
     // GOOGLE DRIVE INTEGRATION
     const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
@@ -138,6 +140,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const initForm = async () => {
         const userRole = localStorage.getItem('userRole');
         const linkedAgenId = localStorage.getItem('linkedAgenId');
+
+        // RBAC: Hide "New Sale" button for marketing roles
+        const btnTambah = document.getElementById('btnTambahTerjual');
+        if (isMarketingRole && btnTambah) btnTambah.style.display = 'none';
+
         const agens = await getAgenDb();
         inpAgenId.innerHTML = '<option value="">-- Pilih Agen --</option>';
         agens.forEach(a => {
@@ -292,6 +299,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sisa = (t.totalDeal || 0) - (t.totalPaid || 0);
             const itemsHtml = t.items.map(item => { const kMeta = kambingDb.find(k => k.id === item.goatId); return `• No ${item.noTali} (${kMeta?.warna_tali || '-'})`; }).join('<br>');
             const tr = document.createElement('tr');
+            const isOwner = (agenLinkedId && t.agen.id === agenLinkedId) || (agenLinkedName && (t.agen.nama || '').toLowerCase() === agenLinkedName);
+            const canEdit = isAdmin || (isMarketingRole && isOwner);
+
             tr.innerHTML = `
                 <td><div style="font-weight:700;">${t.id}</div><div style="font-size:0.75rem;">${formatTgl(t.tglTrx)}</div>${hasPendingEdit ? '<span class="badge" style="background:#f59e0b22; color:#f59e0b;">⏳ Review</span>' : ''}</td>
                 <td>${t.agen.nama}<br><small>${t.agen.tipe || 'Agen'}</small></td>
@@ -302,7 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="font-weight:700;">${formatRp(t.totalDeal)}</td>
                 <td style="font-weight:700; color:var(--success);">${formatRp(t.totalPaid || 0)}</td>
                 <td style="font-weight:700; color:${sisa > 0 ? 'var(--warning)' : 'var(--success)'}">${formatRp(sisa)}</td>
-                <td style="text-align:right;"><div class="action-btns">${t.needsAdminApproval && isAdmin ? `<button class="btn btn-sm" onclick="approveTrx('${t.id}')">✅</button>` : ''}<button class="btn btn-sm" onclick="editFullTrx('${t.id}')">✏️</button>${isAdmin ? `<button class="btn btn-sm" onclick="rollbackTrx('${t.id}')">🗑️</button>` : ''}</div></td>
+                <td style="text-align:right;"><div class="action-btns">${t.needsAdminApproval && isAdmin ? `<button class="btn btn-sm" onclick="approveTrx('${t.id}')">✅</button>` : ''}${canEdit ? `<button class="btn btn-sm" onclick="editFullTrx('${t.id}')">✏️</button>` : ''}${isAdmin ? `<button class="btn btn-sm" onclick="rollbackTrx('${t.id}')">🗑️</button>` : ''}</div></td>
             `;
             tableBody.appendChild(tr);
         });
