@@ -381,7 +381,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><strong>${u.full_name}</strong><br><small>${u.email}</small></td>
                 <td>${u.role}</td>
                 <td>${u.status}</td>
-                <td><button class="btn btn-sm" onclick="window.editUserAkses('${u.id}')">Akses</button></td>
+                <td style="display:flex; gap:0.5rem; flex-wrap:nowrap;">
+                    <button class="btn btn-sm" onclick="window.editUserAkses('${u.id}')">Akses</button>
+                    <button class="btn btn-sm" style="background:var(--danger); color:white; border:none;" onclick="window.deleteUser('${u.id}', '${u.full_name}')">Hapus</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
@@ -669,4 +672,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             reader.readAsText(file);
         });
     });
+
+    window.deleteUser = async (id, name) => {
+        showConfirm(`Hapus user "${name}" secara permanen?\nTindakan ini tidak bisa dibatalkan.`, async () => {
+            // Kita gunakan profil ID saja karena login dihandle Auth (tapi ini cukup untuk hapus akses)
+            try {
+                const { error } = await supabase.from('profiles').delete().eq('id', id);
+                if (error) throw error;
+                
+                showToast('User berhasil dihapus');
+                renderUserTable();
+            } catch (err) {
+                console.error(err);
+                showAlert('Gagal menghapus user: ' + err.message, 'danger');
+            }
+        });
+    };
 });

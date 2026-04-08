@@ -487,7 +487,7 @@ html { background-color: var(--bg-dark); }
 }
 
 .data-table th, .data-table td {
-  padding: 1rem;
+  padding: 0.875rem 0.75rem;
   text-align: left;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   vertical-align: middle;
@@ -557,18 +557,18 @@ body.light-mode .sticky-col {
 }
 
 /* Zebra Striping */
-.data-table tbody tr:nth-child(even) td {
+.data-table.sticky-enabled tbody tr:nth-child(even) td {
   background-color: rgba(255, 255, 255, 0.015) !important;
 }
-.data-table tbody tr:nth-child(even) td:nth-child(3),
-.data-table tbody tr:nth-child(even) td.sticky-col {
+.data-table.sticky-enabled tbody tr:nth-child(even) td:nth-child(3),
+.data-table.sticky-enabled tbody tr:nth-child(even) td.sticky-col {
   background-color: #243046 !important; 
 }
-body.light-mode .data-table tbody tr:nth-child(even) td {
+body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td {
   background-color: #f8fafc !important;
 }
-body.light-mode .data-table tbody tr:nth-child(even) td:nth-child(3),
-body.light-mode .data-table tbody tr:nth-child(even) td.sticky-col {
+body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td:nth-child(3),
+body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td.sticky-col {
   background-color: #f1f5f9 !important;
 }
 
@@ -1100,7 +1100,13 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
     }
 
     .data-table {
-        min-width: 800px; /* Force scroll hint */
+        min-width: 600px; /* Lebih fit di HP agar tidak terlalu banyak geser */
+    }
+
+    /* Padding Super Rapat untuk HP */
+    .data-table th, .data-table td {
+        padding: 0.6rem 0.4rem !important;
+        font-size: 0.8rem !important;
     }
 
     /* Spasi Baris & Sticky sudah dipindah ke global di atas line 512 */
