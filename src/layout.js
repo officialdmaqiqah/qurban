@@ -155,13 +155,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'header-actions';
 
-        // Notification Bell
+        // 1. Notification Bell
         const bell = document.createElement('div');
         bell.className = 'action-icon';
         bell.innerHTML = '🔔';
         bell.onclick = () => window.location.href = 'pengaturan.html';
         
-        // Theme Toggle
+        // 2. Theme Toggle
         const themeBtn = document.createElement('div');
         themeBtn.className = 'action-icon';
         const t = localStorage.getItem('QURBAN_THEME') || 'dark';
@@ -179,8 +179,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
+        // 3. Logout Button in Header
+        const logoutHeader = document.createElement('div');
+        logoutHeader.className = 'action-icon';
+        logoutHeader.innerHTML = '🚪';
+        logoutHeader.title = 'Logout';
+        logoutHeader.onclick = async () => {
+            window.showConfirm('Yakin ingin keluar?', async () => {
+                await supabase.auth.signOut();
+                localStorage.clear();
+                window.location.href = 'index.html';
+            });
+        };
+
         actionsDiv.appendChild(bell);
         actionsDiv.appendChild(themeBtn);
+        actionsDiv.appendChild(logoutHeader);
         topbar.querySelector('.user-menu')?.prepend(actionsDiv);
     }
 
@@ -229,17 +243,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Logout
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.onclick = async () => {
-            window.showConfirm('Yakin ingin keluar?', async () => {
-                await supabase.auth.signOut();
-                localStorage.clear();
-                window.location.href = 'index.html';
-            });
-        };
-    }
+    // Cleanup legacy sidebar logout button if exists
+    document.getElementById('logoutBtn')?.closest('div')?.remove();
 });
 
 // --- UNIVERSAL CAMERA UI (Webcam & Mobile) ---
