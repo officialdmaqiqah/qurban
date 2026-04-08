@@ -119,7 +119,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const linkedAgenId = profile?.linked_agen_id;
 
         let filtered = isAdmin ? trxs : trxs.filter(t => t.agen?.id === linkedAgenId);
-        if (keyword) filtered = filtered.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer?.nama || '').toLowerCase().includes(keyword));
+        if (keyword) {
+            filtered = filtered.filter(t => 
+                t.id.toLowerCase().includes(keyword) || 
+                (t.customer?.nama || '').toLowerCase().includes(keyword) ||
+                (t.agen?.nama || '').toLowerCase().includes(keyword)
+            );
+        }
 
         // Let search results show ALL if keyword matches ID exactly
         const exactMatch = trxs.find(t => t.id.toLowerCase() === keyword);
@@ -261,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         trxsAll.forEach(t => { 
             const o = document.createElement('option'); 
             o.value = t.id; 
-            o.textContent = `${t.id} - ${t.customer?.nama || ''} | Sisa: ${formatRp(t.total_deal - t.total_paid)}`; 
+            o.textContent = `${t.id} - ${t.customer?.nama || ''} [Agen: ${t.agen?.nama || '-'}] | Sisa: ${formatRp(t.total_deal - t.total_paid)}`; 
             listOrders.appendChild(o); 
         });
     }

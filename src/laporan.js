@@ -133,7 +133,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         addRow('(-) Komisi Agen', -komisi);
         addRow('(-) Biaya Operasional', -opex);
         addRow('(-) Kerugian Kematian', -deadLoss);
-        addRow('(-) Dana Saving (Titipan)', -saving, 'text-warning');
+        // Detailed Saving Breakdown for Audit
+        const savingStr = saving > 0 ? `<br><small style="font-weight:normal; opacity:0.7">Audit Kalkulasi: Terhitung dari ${trxs.filter(t => {
+            const dt = new Date(t.tgl_trx || t.tglTrx);
+            return dt >= start && dt <= end;
+        }).length} transaksi dalam periode ini.</small>` : '';
+        addRow(`(-) Dana Saving (Titipan)${savingStr}`, -saving, 'text-warning');
         
         const netProfit = omzet - hpp - komisi - opex - deadLoss - saving;
         addRow('LABA BERSIH', netProfit, 'row-grand-total');
