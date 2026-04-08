@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (emailDisplay) emailDisplay.textContent = profile.email;
 
         // Branding
-        const { data: qProfil } = await supabase.from('master_data').select('val').eq('key', 'QURBAN_PROFIL').single();
+        const { data: qProfil } = await supabase.from('master_data').select('val').eq('key', 'PROFILE').single();
         const sideHeader = document.getElementById('sidebarHeaderWrapper');
         if (sideHeader && qProfil?.val) {
             sideHeader.innerHTML = `

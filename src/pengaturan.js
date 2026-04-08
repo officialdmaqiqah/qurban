@@ -167,7 +167,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const getData = async (tipe) => {
         const key = getKey(tipe);
-        const { data } = await supabase.from('master_data').select('val').eq('key', key).single();
+        const { data, error } = await supabase.from('master_data').select('val').eq('key', key).single();
+        
+        // JIKA 'REKENING' KOSONG, COBA CEK 'BANK_ACCOUNTS' (FALLBACK)
+        if ((!data || !data.val || data.val.length === 0) && key === 'REKENING') {
+            console.log('[Migration] Mencoba mengambil dari kunci lama: BANK_ACCOUNTS');
+            const { data: oldData } = await supabase.from('master_data').select('val').eq('key', 'BANK_ACCOUNTS').single();
+            if (oldData && oldData.val) return oldData.val;
+        }
+
+        if (error && error.code !== 'PGRST116') console.error(`Error getData (${key}):`, error);
         return data?.val || [];
     };
 
@@ -691,4 +700,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     };
+    // --- AUTO-MIGRATION: BANK_ACCOUNTS -> REKENING ---
+    const migrateBankData = async () => {
+        const { data: oldData } = await supabase.from('master_data').select('val').eq('key', 'BANK_ACCOUNTS').single();
+        const { data: newData } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single();
+
+        if (oldData?.val && oldData.val.length > 0 && (!newData?.val || newData.val.length === 0)) {
+            console.log('[Migration] Migrating bank data to NEW key...');
+            const { error } = await supabase.from('master_data').upsert({ id: 'ID-REKENING', key: 'REKENING', val: oldData.val }, { onConflict: 'key' });
+            if (!error) {
+                showToast('✅ Migrasi Rekening Berhasil!');
+                // Optional: Delete old key if you want to be clean, 
+                // but safer to keep it as backup for now.
+            }
+        }
+    };
+    if (isAdmin) migrateBankData();
 });

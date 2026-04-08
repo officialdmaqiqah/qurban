@@ -14,19 +14,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka || 0);
 
     const updateDashboard = async () => {
-        // Fetch All Data from Supabase
         const [
             { data: goatsDb },
             { data: trxDbAll },
             { data: keuanganDb },
-            { data: reksData }
+            reNew,
+            reOld
         ] = await Promise.all([
             supabase.from('stok_kambing').select('*'),
             supabase.from('transaksi').select('*'),
             supabase.from('keuangan').select('*'),
+            supabase.from('master_data').select('val').eq('key', 'REKENING').single(),
             supabase.from('master_data').select('val').eq('key', 'BANK_ACCOUNTS').single()
         ]);
 
+        const reksData = (reNew?.data?.val && reNew.data.val.length > 0) ? reNew.data : (reOld?.data || null);
         const rekeningDb = reksData?.val || [];
         const userRole = profile.role || 'staff';
         const permissions = profile.permissions || {};

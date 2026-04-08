@@ -52,8 +52,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const getBankAccounts = async () => {
-        const { data } = await supabase.from('master_data').select('val').eq('key', 'BANK_ACCOUNTS').single();
-        return data?.val || [];
+        const { data } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single();
+        if (data && data.val && data.val.length > 0) return data.val;
+        
+        const { data: oldData } = await supabase.from('master_data').select('val').eq('key', 'BANK_ACCOUNTS').single();
+        return oldData?.val || [];
     };
 
     async function checkSaldoCukup(channel, nominal, label) {

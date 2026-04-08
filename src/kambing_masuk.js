@@ -457,18 +457,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 harga_nota: d.hargaNota,
                 saving: d.saving,
                 profit: d.profit,
-                harga_kandnag: d.hargaKandang, // Note: fixing typo from schema if exists or using new name
+                harga_kandang: d.hargaKandang,
                 status_transaksi: 'Tersedia',
                 status_kesehatan: 'Sehat',
                 status_fisik: 'Ada',
                 foto_nota_url: d.fotoNotaUrl
             }));
-
-            // Fix typo in my mapping if necessary based on schema.sql I added earlier (harga_kandang)
-            cloudData.forEach(item => {
-                item.harga_kandang = item.harga_kandnag;
-                delete item.harga_kandnag;
-            });
 
             const { error } = await supabase
                 .from('stok_kambing')
