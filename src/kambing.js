@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const email = profile.email;
     if (email) document.getElementById('userEmailDisplay').textContent = email;
 
-    const userRole = (profile.role || 'staff').toLowerCase();
-    const isAdmin = userRole === 'admin';
+    const userRole = (profile.role || 'staff').toLowerCase().trim();
+    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
     const isAgen = userRole === 'agen';
 
     window.isRestricted = function(perm) {
