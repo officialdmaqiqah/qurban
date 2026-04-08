@@ -218,6 +218,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }
         modalBodyGeneral.innerHTML = fields;
+
+        // Pasang auto-format listener pada field yang baru saja dirender
+        const dynWa = document.getElementById('inpWa');
+        if (dynWa) dynWa.addEventListener('blur', () => { dynWa.value = cleanWhatsApp(dynWa.value.trim()); });
+
+        const dynNama = document.getElementById('inpNama');
+        if (dynNama) dynNama.addEventListener('blur', () => { dynNama.value = toTitleCase(dynNama.value.trim()); });
+
+        const dynUserWa = document.getElementById('inpUserWa');
+        if (dynUserWa) dynUserWa.addEventListener('blur', () => { dynUserWa.value = cleanWhatsApp(dynUserWa.value.trim()); });
+
+        const dynUserNama = document.getElementById('inpUserNama');
+        if (dynUserNama) dynUserNama.addEventListener('blur', () => { dynUserNama.value = toTitleCase(dynUserNama.value.trim()); });
+
         modalGeneral.classList.add('active');
     };
 
