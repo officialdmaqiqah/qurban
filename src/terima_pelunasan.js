@@ -97,7 +97,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const renderStats = async () => {
         const trxs = await getTrxData();
-        const isAdmin = profile?.role === 'admin';
+        const userRole = (profile?.role || '').toLowerCase().replace(/_/g, ' ').trim();
+        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const linkedAgenId = profile?.linked_agen_id;
         let filtered = isAdmin ? trxs : trxs.filter(t => t.agen?.id === linkedAgenId);
 
@@ -113,7 +114,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderList = async () => {
         const trxs = await getTrxData();
         const keyword = (inpSearchOrder.value || '').toLowerCase();
-        const isAdmin = profile?.role === 'admin';
+        const userRole = (profile?.role || '').toLowerCase().replace(/_/g, ' ').trim();
+        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const linkedAgenId = profile?.linked_agen_id;
 
         let filtered = isAdmin ? trxs : trxs.filter(t => t.agen?.id === linkedAgenId);

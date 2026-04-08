@@ -22,8 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userEmailDisplay = document.getElementById('userEmailDisplay');
     if (email && userEmailDisplay) userEmailDisplay.textContent = email;
 
-    const isAdmin = profile.role === 'admin';
     const userRole = (profile.role || '').toLowerCase().replace(/_/g, ' ').trim();
+    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
     const marketingRoles = [
         'reseller', 
         'marketing dm', 
@@ -304,17 +304,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const renderTable = async () => {
-        const userRole = localStorage.getItem('userRole');
-        const loggedUser = JSON.parse(localStorage.getItem('LOGGED_IN_USER')) || {};
-        const agenLinkedId = localStorage.getItem('linkedAgenId') || loggedUser.linkedAgenId || '';
-        const agenLinkedName = (localStorage.getItem('agenName') || loggedUser.agenName || loggedUser.fullName || '').toLowerCase();
+        const agenLinkedId = profile?.linked_agen_id || '';
+        const agenLinkedName = (profile?.full_name || '').toLowerCase();
         let query = supabase.from('transaksi').select('*');
-        if (userRole !== 'admin') { if (!agenLinkedId && !agenLinkedName) { tableBody.innerHTML = '<tr><td colspan="10">Data tidak ditemukan.</td></tr>'; return; } }
+        if (!isAdmin) { if (!agenLinkedId && !agenLinkedName) { tableBody.innerHTML = '<tr><td colspan="10">Data tidak ditemukan.</td></tr>'; return; } }
         const { data: trxData, error } = await query;
         if (error) return;
         let trx = [...trxData];
         const keyword = (inpGlobalSearch ? inpGlobalSearch.value : '').toLowerCase();
-        if (userRole !== 'admin') { trx = trx.filter(t => (agenLinkedId && t.agen?.id === agenLinkedId) || (agenLinkedName && (t.agen?.nama || '').toLowerCase() === agenLinkedName)); }
+        if (!isAdmin) { trx = trx.filter(t => (agenLinkedId && t.agen?.id === agenLinkedId) || (agenLinkedName && (t.agen?.nama || '').toLowerCase() === agenLinkedName)); }
         if (keyword) { trx = trx.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer?.nama || '').toLowerCase().includes(keyword) || (t.agen?.nama || '').toLowerCase().includes(keyword) || (t.customer?.wa1 || '').toLowerCase().includes(keyword)); }
         trx.sort((a, b) => { let vA = a[currentSort.column], vB = b[currentSort.column]; if (currentSort.column === 'sisa') { vA = (a.total_deal || 0) - (a.total_paid || 0); vB = (b.total_deal || 0) - (b.total_paid || 0); } return currentSort.direction === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1); });
         const { data: editReqs } = await supabase.from('edit_requests').select('*').eq('status', 'pending');
