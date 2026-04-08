@@ -526,8 +526,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Fix: Handle both btnCloseModal and btnCancelModal
     const closeMainModal = () => modalKeluar.classList.remove('active');
-    const closeBtn = document.getElementById('btnCloseModal') || document.getElementById('btnCancelModal');
-    if (closeBtn) closeBtn.addEventListener('click', closeMainModal);
+    const closeBtn1 = document.getElementById('btnCloseModal');
+    const closeBtn2 = document.getElementById('btnCancelModal');
+    if (closeBtn1) closeBtn1.addEventListener('click', closeMainModal);
+    if (closeBtn2) closeBtn2.addEventListener('click', closeMainModal);
     
     document.getElementById('btnCloseLunasModal').addEventListener('click', () => modalLunas.classList.remove('active'));
     
