@@ -56,8 +56,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const toTitleCase = smartToTitleCase;
 
     const cleanWhatsApp = (num) => {
-        let c = String(num).replace(/\D/g, '');
-        if (c.startsWith('0')) c = '62' + c.substring(1);
+        let c = String(num).replace(/\D/g, ''); // Hapus semua karakter non-angka
+        if (c.startsWith('62')) return c;        // Sudah format internasional
+        if (c.startsWith('0')) c = '62' + c.substring(1); // 08xx → 628xx
+        else if (c.startsWith('8')) c = '62' + c; // 8xx → 628xx
         return c;
     };
 
