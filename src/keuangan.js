@@ -201,8 +201,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td style="font-size:0.8rem; color:var(--text-muted)">${item.channel || '-'}</td>
                      <td style="text-align:center;">
                          ${item.bukti_url ? `
-                             <button class="btn btn-sm btn-view-photo" data-url="${item.bukti_url}" style="width:30px; height:30px; border-radius:4px; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
-                                 <img src="${window.getDirectDriveLink(item.bukti_url)}" style="width:100%; height:100%; object-fit:cover;">
+                             <button class="btn btn-sm btn-view-photo" data-url="${item.bukti_url}" style="width:30px; height:30px; border-radius:4px; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
+                                 <img src="${window.getDirectDriveLink(item.bukti_url)}" style="width:100%; height:100%; object-fit:cover; pointer-events:none;">
                              </button>
                          ` : '<span style="opacity:0.2">🚫</span>'}
                      </td>
@@ -244,6 +244,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.btn-view-photo').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
+                console.log('Lihat Foto clicked:', btn.dataset.url);
                 const url = window.getDirectDriveLink(btn.dataset.url);
                 const modal = document.getElementById('photoLightbox');
                 const img = document.getElementById('lightboxImg');
@@ -271,20 +272,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!item) return;
         
         window.showConfirm(`Hapus transaksi ${id}?`, async () => {
-            if(item.related_trx_id) {
-                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', item.related_trx_id).single();
-                if(trx) {
-                    const updatedPaid = (parseFloat(trx.total_paid) || 0) - (parseFloat(item.nominal) || 0);
-                    const updatedHistory = (trx.history_bayar || []).filter(h => h.payId !== id);
-                    await supabase.from('transaksi').update({ 
-                        total_paid: Math.max(0, updatedPaid), 
-                        history_bayar: updatedHistory 
-                    }).eq('id', item.related_trx_id);
-                }
-            }
+            // Delete the record first
             await supabase.from('keuangan').delete().eq('id', id);
+
+            // If related to a sale, RECALCULATE for absolute accuracy
+            if(item.related_trx_id) {
+                const { data: relatedFins } = await supabase.from('keuangan').select('*').eq('related_trx_id', item.related_trx_id);
+                const total = (relatedFins || []).reduce((s, f) => s + (parseFloat(f.nominal) || 0), 0);
+                const history = (relatedFins || []).map(f => ({
+                    payId: f.id,
+                    tgl: f.tanggal,
+                    nominal: parseFloat(f.nominal),
+                    channel: f.channel,
+                    buktiUrl: f.bukti_url
+                }));
+
+                await supabase.from('transaksi').update({ 
+                    total_paid: Math.max(0, total), 
+                    history_bayar: history 
+                }).eq('id', item.related_trx_id);
+            }
+
             await renderApp();
-            if(window.showToast) window.showToast('Data dihapus & Saldo di-rollback', 'success');
+            if(window.showToast) window.showToast('Data dihapus & Saldo sinkron ulang', 'success');
         }, null, 'Hapus Transaksi', 'Ya, Hapus', 'btn-danger');
     }
 
