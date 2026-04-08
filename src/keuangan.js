@@ -202,11 +202,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                      <td style="text-align:center;">
                          ${item.bukti_url ? `
                              <button class="btn btn-sm btn-view-photo" data-url="${item.bukti_url}" style="width:30px; height:30px; border-radius:4px; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
-                                 <img src="${item.bukti_url}" style="width:100%; height:100%; object-fit:cover;">
+                                 <img src="${window.getDirectDriveLink(item.bukti_url)}" style="width:100%; height:100%; object-fit:cover;">
                              </button>
                          ` : '<span style="opacity:0.2">🚫</span>'}
                      </td>
                      <td style="white-space:nowrap;">
+                        <button class="btn btn-sm btn-edit-action" data-id="${item.id}" title="Edit" style="background:rgba(168,85,247,0.1); color:#a855f7; margin-right:4px;">✏️</button>
                         <button class="btn btn-sm btn-delete-action" data-id="${item.id}" title="Hapus" style="background:rgba(239,68,68,0.1); color:var(--danger);">🗑️</button>
                     </td>
                 `;
@@ -237,6 +238,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(totalPemasukanEl) totalPemasukanEl.textContent = isRestrictedFinance ? '********' : formatRp(inTotal);
         if(totalPengeluaranEl) totalPengeluaranEl.textContent = isRestrictedFinance ? '********' : formatRp(outTotal);
 
+        document.querySelectorAll('.btn-edit-action').forEach(btn => btn.onclick = () => handleEdit(btn.dataset.id));
         document.querySelectorAll('.btn-delete-action').forEach(btn => btn.onclick = () => handleDelete(btn.dataset.id));
          
         document.querySelectorAll('.btn-view-photo').forEach(btn => {
@@ -272,19 +274,74 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(item.related_trx_id) {
                 const { data: trx } = await supabase.from('transaksi').select('*').eq('id', item.related_trx_id).single();
                 if(trx) {
-                    const updatedPaid = (trx.totalPaid || 0) - (parseFloat(item.nominal) || 0);
-                    const updatedHistory = (trx.historyBayar || []).filter(h => h.payId !== id);
-                    await supabase.from('transaksi').update({ totalPaid: updatedPaid, historyBayar: updatedHistory }).eq('id', item.related_trx_id);
+                    const updatedPaid = (parseFloat(trx.total_paid) || 0) - (parseFloat(item.nominal) || 0);
+                    const updatedHistory = (trx.history_bayar || []).filter(h => h.payId !== id);
+                    await supabase.from('transaksi').update({ 
+                        total_paid: Math.max(0, updatedPaid), 
+                        history_bayar: updatedHistory 
+                    }).eq('id', item.related_trx_id);
                 }
             }
             await supabase.from('keuangan').delete().eq('id', id);
             await renderApp();
-            if(window.showToast) window.showToast('Berhasil dihapus', 'success');
+            if(window.showToast) window.showToast('Data dihapus & Saldo di-rollback', 'success');
         }, null, 'Hapus Transaksi', 'Ya, Hapus', 'btn-danger');
+    }
+
+    async function handleEdit(id) {
+        const { data: item } = await supabase.from('keuangan').select('*').eq('id', id).single();
+        if(!item) return;
+
+        window.editingId = item.id;
+        window.oldNominal = parseFloat(item.nominal) || 0;
+        window.oldTrxId = item.related_trx_id;
+
+        modalTitle.textContent = 'Edit Transaksi ' + item.tipe.toUpperCase();
+        tipeInput.value = item.tipe;
+        tanggalInput.value = item.tanggal;
+        nominalInput.value = item.nominal;
+        keteranganInput.value = item.keterangan;
+        originalIdInput.value = item.id;
+
+        // Load Categories
+        await populateKategori(item.tipe);
+        kategoriInput.value = item.kategori;
+
+        // Handle Channel
+        const chan = item.channel || 'Tunai';
+        if(chan.startsWith('TF ')) {
+            transaksiChannel.value = 'Transfer Bank';
+            const reks = await getBankAccounts();
+            containerTransaksiRek.style.display = 'block';
+            transaksiRekId.innerHTML = '<option value="">-- Pilih --</option>';
+            const rekLabel = chan.replace('TF ', '').trim();
+            reks.forEach(r => {
+                const o = document.createElement('option');
+                o.value = r.id; o.textContent = `${r.bank} - ${r.norek} (${r.an})`;
+                if(o.textContent.includes(rekLabel)) o.selected = true;
+                transaksiRekId.appendChild(o);
+            });
+        } else {
+            transaksiChannel.value = (chan === 'QRIS') ? 'QRIS' : 'Tunai';
+            containerTransaksiRek.style.display = 'none';
+        }
+
+        // Preview Photo
+        if(item.bukti_url) {
+            imgPreviewKeu.src = window.getDirectDriveLink(item.bukti_url);
+            previewBuktiKeuangan.style.display = 'flex';
+            window.existingKeuBukti = item.bukti_url;
+        } else {
+            previewBuktiKeuangan.style.display = 'none';
+            window.existingKeuBukti = null;
+        }
+
+        modalKeuangan.classList.add('active');
     }
 
     const handleSave = async (e) => {
         e.preventDefault();
+        const id = window.editingId || ('FIN-' + Date.now().toString().slice(-6));
         const tipe = tipeInput.value;
         const nominal = parseFloat(nominalInput.value);
         const tgl = tanggalInput.value;
@@ -299,24 +356,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if(tipe === 'pengeluaran' && !['Prive / Tarik Tunai'].includes(kat)) {
-            if(!await checkSaldoCukup(finalChannel, nominal, finalChannel)) return;
+            const checkNominal = window.editingId ? (nominal - window.oldNominal) : nominal;
+            if(checkNominal > 0) {
+                if(!await checkSaldoCukup(finalChannel, checkNominal, finalChannel)) return;
+            }
         }
 
-        let buktiUrl = null;
+        let buktiUrl = window.existingKeuBukti || null;
         if(inpBuktiKeuangan && inpBuktiKeuangan.files.length > 0) {
             window.showToast('Mengompres & Mengunggah bukti...', 'info');
             const b64 = await compressImage(inpBuktiKeuangan.files[0]);
             buktiUrl = await uploadToGDrive(b64, "BUKTI_KEUANGAN");
         }
 
-        const id = 'FIN-' + Date.now().toString().slice(-6);
-        const { error } = await supabase.from('keuangan').insert([{
+        const payload = {
             id, tipe, tanggal: tgl, kategori: kat, nominal, keterangan: ket, channel: finalChannel, bukti_url: buktiUrl
-        }]);
+        };
+
+        const { error } = await supabase.from('keuangan').upsert([payload]);
 
         if(!error) {
+            // SYNC WITH TRANSAKSI IF RELATED
+            const currentTrxId = window.oldTrxId;
+            if (currentTrxId) {
+                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', currentTrxId).single();
+                if (trx) {
+                    let updatedPaid = (parseFloat(trx.total_paid) || 0);
+                    if (window.editingId) updatedPaid = updatedPaid - window.oldNominal + nominal;
+                    else updatedPaid += nominal;
+
+                    let history = trx.history_bayar || [];
+                    const hIdx = history.findIndex(h => h.payId === id);
+                    const hData = { payId: id, tgl, nominal, channel: finalChannel, buktiUrl };
+                    if (hIdx >= 0) history[hIdx] = hData;
+                    else history.push(hData);
+
+                    await supabase.from('transaksi').update({ 
+                        total_paid: Math.max(0, updatedPaid), 
+                        history_bayar: history 
+                    }).eq('id', currentTrxId);
+                }
+            }
+
             window.showToast('Data berhasil disimpan!', 'success');
             modalKeuangan.classList.remove('active');
+            window.editingId = null;
+            window.oldNominal = 0;
+            window.oldTrxId = null;
+            window.existingKeuBukti = null;
             renderApp();
         } else {
             window.showAlert('Gagal menyimpan data: ' + error.message, 'danger');
@@ -370,18 +457,28 @@ document.addEventListener('DOMContentLoaded', async () => {
      });
 
     document.getElementById('btnTambahPemasukan')?.addEventListener('click', () => {
+        window.editingId = null;
+        window.oldNominal = 0;
+        window.oldTrxId = null;
+        window.existingKeuBukti = null;
         formKeuangan.reset();
         tipeInput.value = 'pemasukan';
         modalTitle.textContent = 'Tambah Pemasukan';
         tanggalInput.value = window.getLocalDate();
+        populateKategori('pemasukan');
         modalKeuangan.classList.add('active');
     });
 
     document.getElementById('btnTambahPengeluaran')?.addEventListener('click', () => {
+        window.editingId = null;
+        window.oldNominal = 0;
+        window.oldTrxId = null;
+        window.existingKeuBukti = null;
         formKeuangan.reset();
         tipeInput.value = 'pengeluaran';
         modalTitle.textContent = 'Catat Pengeluaran';
         tanggalInput.value = window.getLocalDate();
+        populateKategori('pengeluaran');
         modalKeuangan.classList.add('active');
     });
 
@@ -396,6 +493,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('inpSearchKeuangan')?.addEventListener('input', renderApp);
     document.getElementById('btnCloseModal')?.addEventListener('click', () => modalKeuangan.classList.remove('active'));
     document.getElementById('btnCancelModal')?.addEventListener('click', () => modalKeuangan.classList.remove('active'));
+
+    async function populateKategori(tipe) {
+        if(!kategoriInput) return;
+        kategoriInput.innerHTML = '';
+        const katIn = ['Modal Awal','Terima Pelunasan','Penjualan Sapi','Jual Kambing','Kompensasi Supplier','Penerimaan Lainnya'];
+        const katOut = ['Beli Kambing','Beban Pakan','Beban Operasional Kandang','Gaji & Bonus','Listrik & Air','Transportasi','Marketing / Iklan','Bayar Supplier','Pelunasan Supplier','Bagi Hasil (Investor)','Prive / Tarik Tunai','Biaya Lain-lain','Kerugian (Mati/Hilang)'];
+        const list = tipe === 'pemasukan' ? katIn : katOut;
+        list.forEach(k => {
+            const o = document.createElement('option'); o.value = k; o.textContent = k;
+            kategoriInput.appendChild(o);
+        });
+    }
 
     await renderApp();
 });
