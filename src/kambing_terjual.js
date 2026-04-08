@@ -694,19 +694,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Tgl Transaksi': t.tgl_trx,
                         'Agen': t.agen?.nama || '-',
                         'Customer': t.customer?.nama || '-',
-                        'WA 1': t.customer?.wa1 || '-',
-                        'WA 2': t.customer?.wa2 || '-',
-                        'Alamat Lengkap': fullAddress,
-                        'Tgl Deli': t.delivery?.tgl || '-',
-                        'Tipe Deli': t.delivery?.tipe || '-',
-                        'No Tali': it.noTali || '-',
-                        'Batch': it.batch || '-',
-                        'Nama Sohibul': it.namaSohibul || '-',
-                        'Harga Deal Item': it.hargaDeal || 0,
-                        'Total Nota': t.total_deal || 0,
-                        'Total DP/Bayar': t.total_paid || 0,
-                        'Sisa Tagihan Nota': sisa,
-                        'Status Komisi': t.komisi?.status || '-'
+                        'WA 1': t.customer?.wa1 || '',
+                        'WA 2': t.customer?.wa2 || '',
+                        'Alamat Lengkap': fullAddress || '',
+                        'Tgl Deli': t.delivery?.tgl || '',
+                        'Tipe Deli': t.delivery?.tipe || '',
+                        'No Tali': it.noTali || '',
+                        'Batch': it.batch || '',
+                        'Nama Sohibul': it.namaSohibul || '',
+                        'Harga Deal Item': parseFloat(it.hargaDeal) || 0,
+                        'Total Nota': parseFloat(t.total_deal) || 0,
+                        'Total DP/Bayar': parseFloat(t.total_paid) || 0,
+                        'Sisa Tagihan Nota': parseFloat(sisa) || 0,
+                        'Status Komisi': t.komisi?.status || ''
                     });
                 });
             });

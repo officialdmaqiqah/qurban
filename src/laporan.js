@@ -106,10 +106,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             omzet += (t.total_deal || t.totalDeal || 0);
             (t.items || []).forEach(it => {
                 const g = goats.find(x => x.id === it.goatId);
-                hpp += (g?.harga_nota || 0);
-                saving += (g?.saving || 0);
+                hpp += parseFloat(g?.harga_nota || 0);
+                saving += parseFloat(g?.saving || 0);
             });
-            komisi += (t.komisi?.nominal || 0);
+            komisi += parseFloat(t.komisi?.nominal || 0);
         });
 
         let opex = 0;
@@ -118,9 +118,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dt = new Date(f.tanggal);
             return dt >= start && dt <= end;
         }).forEach(f => {
+            const nom = parseFloat(f.nominal || 0);
             if(f.tipe === 'pengeluaran') {
-                if(f.kategori === 'Kerugian (Mati/Hilang)') deadLoss += f.nominal;
-                else if(f.kategori !== 'Bayar Supplier' && f.kategori !== 'Pelunasan Supplier') opex += f.nominal;
+                if(f.kategori === 'Kerugian (Mati/Hilang)') deadLoss += nom;
+                else if(f.kategori !== 'Bayar Supplier' && f.kategori !== 'Pelunasan Supplier') opex += nom;
             }
         });
 
@@ -179,16 +180,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         fin.forEach(f => {
             const dt = new Date(f.tanggal);
             const chan = f.channel || 'Tunai';
+            const nom = parseFloat(f.nominal || 0);
             if(!channels[chan]) channels[chan] = { in: 0, out: 0, saldo: 0, show: false };
             
-            // Saldo Kumulatif (untuk Baris "Saldo Akhir")
-            if(f.tipe === 'pemasukan') channels[chan].saldo += f.nominal;
-            else channels[chan].saldo -= f.nominal;
+            // Saldo Kumulatif
+            if(f.tipe === 'pemasukan') channels[chan].saldo += nom;
+            else channels[chan].saldo -= nom;
 
-            // Filter Periode untuk In/Out
+            // Filter Periode
             if(dt >= start && dt <= end) {
-                if(f.tipe === 'pemasukan') channels[chan].in += f.nominal;
-                else channels[chan].out += f.nominal;
+                if(f.tipe === 'pemasukan') channels[chan].in += nom;
+                else channels[chan].out += nom;
                 channels[chan].show = true;
             }
         });
