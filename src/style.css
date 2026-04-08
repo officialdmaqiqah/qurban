@@ -78,6 +78,8 @@ a:hover {
   position: relative;
   overflow: hidden;
   white-space: nowrap;
+  color: var(--text-main); /* Ensure default text color is light */
+  background-color: rgba(255, 255, 255, 0.05); /* Default subtle background */
 }
 
 .btn:active {
@@ -598,7 +600,7 @@ body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td.sticky-co
   padding: 0.625rem 1rem;
   background-color: var(--bg-input);
   border: 1px solid rgba(255,255,255,0.1);
-  color: var(--text-main);
+  color: var(--text-main) !important; /* Force light text in dark mode */
   border-radius: var(--radius-md);
   font-family: var(--font-family);
   transition: var(--transition);
@@ -707,6 +709,18 @@ select.form-control option {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+  background-color: var(--bg-card);
+}
+
+/* Specific fix for cancel/neutral buttons in dark mode footer */
+.modal-footer .btn:not(.btn-primary):not(.btn-danger):not(.btn-edit) {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-footer .btn:not(.btn-primary):not(.btn-danger):not(.btn-edit):hover {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 /* Action Buttons Grid */
