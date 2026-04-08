@@ -193,10 +193,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         };
 
+        // Susun urutan sesuai permintaan om: Lonceng -> Tema -> Power (Nama User sudah ada di kiri mereka)
         actionsDiv.appendChild(bell);
         actionsDiv.appendChild(themeBtn);
         actionsDiv.appendChild(logoutHeader);
-        topbar.querySelector('.user-menu')?.prepend(actionsDiv);
+        
+        // Gunakan appendChild agar ikon muncul DI SEBELAH KANAN Nama User
+        topbar.querySelector('.user-menu')?.appendChild(actionsDiv);
     }
 
     // 3. Profile & Permissions

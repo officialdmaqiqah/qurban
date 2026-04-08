@@ -436,6 +436,14 @@ html { background-color: var(--bg-dark); }
   position: relative;
 }
 
+.logout-icon {
+  color: #ffffff; /* Putih di Dark Mode */
+}
+
+body.light-mode .logout-icon {
+  color: #ef4444 !important; /* Merah di Light Mode */
+}
+
 .action-icon:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
@@ -906,6 +914,37 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
 
 /* ===== MOBILE RESPONSIVE & NAVIGATION (CONSOLIDATED) ===== */
 @media (max-width: 768px) {
+    .topbar {
+        padding: 0 0.5rem !important;
+        gap: 0.25rem;
+    }
+
+    .user-menu {
+        gap: 0.25rem;
+        flex: 1;
+        justify-content: flex-end;
+    }
+
+    #userEmailDisplay {
+        font-size: 0.65rem !important;
+        max-width: 60px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .topbar {
+        padding: 0 0.75rem !important; /* Rapatkan padding agar ikon muat */
+        gap: 0.5rem;
+    }
+
+    .user-menu {
+        gap: 0.5rem;
+    }
+
+    .header-actions {
+        margin-right: 0;
+        gap: 0.25rem;
+    }
     :root {
         --sidebar-width: 0px;
     }
