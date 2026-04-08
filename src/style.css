@@ -1187,3 +1187,38 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
 .menu-toggle {
     display: none;
 }
+
+/* --- WHATSAPP & PROFILE PREMIUM UI REFINEMENT --- */
+.wa-grid-settings {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+}
+
+@media (max-width: 768px) {
+    .wa-grid-settings {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+    
+    .wa-config-left {
+        border-right: none !important;
+        padding-right: 0 !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        padding-bottom: 2rem;
+    }
+
+    /* Hilangkan teks instruksi yang bikin berantakan di HP */
+    #tabWA h4 + p {
+        display: none !important;
+    }
+    
+    #tabWA .card-box {
+        padding: 1.25rem !important;
+    }
+
+    #waTemplateEditor {
+        min-height: 450px !important;
+        font-size: 0.8rem !important;
+    }
+}
