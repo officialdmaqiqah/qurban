@@ -74,6 +74,44 @@ window.showConfirm = function(message, onConfirm, onCancel, title = 'Konfirmasi'
     document.getElementById('modalConfirmCancelBtn').onclick = () => { overlay.remove(); if(onCancel) onCancel(); };
 };
 
+window.showChoice = function(message, options, title = 'Konfirmasi') {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay-custom';
+    overlay.style.zIndex = '100005';
+    
+    let buttonsHtml = '';
+    options.forEach((opt, idx) => {
+        const btnClass = idx === 0 ? 'btn-primary' : 'btn';
+        buttonsHtml += `<button class="btn ${btnClass}" id="choiceBtn_${idx}" style="width:100%; margin-bottom:0.5rem;">${opt.text}</button>`;
+    });
+
+    overlay.innerHTML = `
+        <div class="modal-custom" style="max-width:400px;">
+            <div class="modal-custom-header">
+                <div class="modal-custom-icon">❓</div>
+                <div class="modal-custom-title">${title}</div>
+            </div>
+            <div class="modal-custom-body" style="text-align:center; padding-bottom:1.5rem;">${message}</div>
+            <div class="modal-custom-footer" style="flex-direction:column; gap:0;">
+                ${buttonsHtml}
+                <button class="btn" id="choiceBtnCancel" style="width:100%; background:transparent; border:1px solid rgba(255,255,255,0.1); margin-top:0.5rem;">Batal</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    options.forEach((opt, idx) => {
+        document.getElementById(`choiceBtn_${idx}`).onclick = () => {
+            overlay.remove();
+            if (opt.callback) opt.callback();
+        };
+    });
+
+    document.getElementById('choiceBtnCancel').onclick = () => {
+        overlay.remove();
+    };
+};
+
 // --- GLOBAL UTILS ---
 window.getSaldoChannel = async (channelKey) => {
     const { data } = await supabase.from('keuangan').select('nominal, tipe, channel');
