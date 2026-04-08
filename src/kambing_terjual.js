@@ -38,16 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // GOOGLE DRIVE INTEGRATION
     const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
 
-    function getDirectDriveLink(url) {
-        if (!url) return '';
-        if (!url.includes('drive.google.com')) return url;
-        let fileId = '';
-        const matchFile = url.match(/\/file\/d\/([^\/?]+)/);
-        const matchId = url.match(/[?&]id=([^&]+)/);
-        if (matchFile) fileId = matchFile[1];
-        else if (matchId) fileId = matchId[1];
-        return fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : url;
-    }
+
 
     async function compressImage(file) {
         return new Promise((resolve) => {
@@ -79,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({ base64: base64, mimeType: "image/jpeg", fileName: "dp_" + Date.now(), folderName: folderName })
             });
             const result = await response.json();
-            return result.success ? getDirectDriveLink(result.url) : null;
+            return result.success ? window.getDirectDriveLink(result.url) : null;
         } catch (error) { console.error('GDrive Upload failed:', error); return null; }
     }
 
@@ -355,9 +346,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const lb = document.getElementById('photoLightbox');
         const img = document.getElementById('lightboxImg');
+        const loader = document.getElementById('lightboxLoading');
+        
         if(lb && img) {
-            img.src = k.foto_fisik;
+            img.style.display = 'none';
+            if(loader) {
+                loader.style.display = 'block';
+                loader.innerHTML = 'Memuat Foto...';
+                loader.style.color = 'white';
+            }
+            
+            img.src = window.getDirectDriveLink(k.foto_fisik);
             lb.style.display = 'flex';
+            
+            img.onerror = () => {
+                if(loader) {
+                    loader.innerHTML = `Gagal memuat foto.<br><span style="font-size:0.75rem; color:var(--danger); font-style:normal;">Pastikan file di Google Drive sudah diset ke <b>"Anyone with the link can view"</b>.</span>`;
+                }
+            };
         }
     };
 
@@ -599,33 +605,53 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { data: trxs } = await supabase.from('transaksi').select('*');
             if (!trxs) return;
 
-            const exportData = trxs.map(t => {
-                const itemNames = (t.items || []).map(it => `No.${it.noTali}`).join(', ');
+            let exportData = [];
+            trxs.forEach(t => {
                 const sisa = (t.total_deal || 0) - (t.total_paid || 0);
-                return {
-                    'ID Transaksi': t.id,
-                    'Tgl Transaksi': t.tgl_trx,
-                    'Agen': t.agen?.nama || '-',
-                    'Customer': t.customer?.nama || '-',
-                    'WA Customer': t.customer?.wa1 || '-',
-                    'Alamat Deli': `${t.delivery?.alamat?.kec || ''}, ${t.delivery?.alamat?.kab || ''}`,
-                    'Tgl Deli': t.delivery?.tgl || '-',
-                    'Tipe Deli': t.delivery?.tipe || '-',
-                    'Items': itemNames,
-                    'Total Deal': t.total_deal || 0,
-                    'Total Paid': t.total_paid || 0,
-                    'Sisa Tagihan': sisa,
-                    'Status Komisi': t.komisi?.status || '-'
-                };
+                // Pecah data per item (kambing)
+                (t.items || []).forEach(it => {
+                    exportData.push({
+                        'ID Transaksi': t.id,
+                        'Tgl Transaksi': t.tgl_trx,
+                        'Agen': t.agen?.nama || '-',
+                        'Customer': t.customer?.nama || '-',
+                        'WA Customer': t.customer?.wa1 || '-',
+                        'Alamat Deli': `${t.delivery?.alamat?.kec || ''}, ${t.delivery?.alamat?.kab || ''}`,
+                        'Tgl Deli': t.delivery?.tgl || '-',
+                        'Tipe Deli': t.delivery?.tipe || '-',
+                        'No Tali': it.noTali || '-',
+                        'Batch': it.batch || '-',
+                        'Harga Deal Item': it.hargaDeal || 0,
+                        'Total Nota': t.total_deal || 0,
+                        'Total DP/Bayar': t.total_paid || 0,
+                        'Sisa Tagihan Nota': sisa,
+                        'Status Komisi': t.komisi?.status || '-'
+                    });
+                });
             });
 
             if (typeof XLSX !== 'undefined') {
                 const ws = XLSX.utils.json_to_sheet(exportData);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Histori Penjualan");
-                XLSX.writeFile(wb, `Histori_Penjualan_${new Date().getTime()}.xlsx`);
+                XLSX.writeFile(wb, `Histori_Penjualan_Detail_${new Date().getTime()}.xlsx`);
             } else {
                 window.showAlert("Library Export gagal dimuat.", 'danger');
+            }
+        });
+    }
+
+    if (inpCustKab && inpCustKec) {
+        inpCustKab.addEventListener('change', () => {
+            const kab = inpCustKab.value;
+            inpCustKec.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+            if (kab && BB_REGIONS[kab]) {
+                BB_REGIONS[kab].forEach(kec => {
+                    const opt = document.createElement('option');
+                    opt.value = kec;
+                    opt.textContent = kec;
+                    inpCustKec.appendChild(opt);
+                });
             }
         });
     }

@@ -10,11 +10,15 @@ window.getDirectDriveLink = function(url) {
     if (!url) return '';
     if (url.includes('lh3.googleusercontent.com/d/')) return url;
     if (!url.includes('drive.google.com') && !url.includes('docs.google.com')) return url;
+    
+    // Improved regex to handle /file/d/ID/... and ?id=ID patterns more robustly
     let fileId = '';
-    const matchFile = url.match(/\/file\/d\/([^\/?#]+)/);
-    const matchId = url.match(/[?&]id=([^&#]+)/);
-    if (matchFile) fileId = matchFile[1];
-    else if (matchId) fileId = matchId[1];
+    const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    
+    if (fileMatch) fileId = fileMatch[1];
+    else if (idMatch) fileId = idMatch[1];
+    
     if (fileId) return `https://lh3.googleusercontent.com/d/${fileId}`;
     return url;
 };

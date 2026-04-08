@@ -19,17 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
 
-    function getDirectDriveLink(url) {
-        if (!url) return '';
-        if (!url.includes('drive.google.com')) return url;
-        let fileId = '';
-        const matchFile = url.match(/\/file\/d\/([^\/?]+)/);
-        const matchId = url.match(/[?&]id=([^\&]+)/);
-        if (matchFile) fileId = matchFile[1];
-        else if (matchId) fileId = matchId[1];
-        if (fileId) return `https://lh3.googleusercontent.com/d/${fileId}`;
-        return url;
-    }
+
 
     async function compressImage(file) {
         return new Promise((resolve) => {
@@ -70,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 })
             });
             const result = await response.json();
-            return result.success ? getDirectDriveLink(result.url) : null;
+            return result.success ? window.getDirectDriveLink(result.url) : null;
         } catch (error) {
             console.error('GDrive Upload failed:', error);
             return null;
@@ -293,7 +283,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${item.supplier || '-'}</td>
                     <td style="font-weight:600;">
                         ${item.noTali}
-                        ${item.fotoNotaUrl ? `<button class="btn btn-sm btn-view-photo" data-url="${getDirectDriveLink(item.fotoNotaUrl)}" style="background:none; border:none; cursor:pointer; padding:0 4px; font-size:0.8rem;" title="Lihat Foto Nota">📸</button>` : ''}
+                        ${item.fotoNotaUrl ? `<button class="btn btn-sm btn-view-photo" data-url="${window.getDirectDriveLink(item.fotoNotaUrl)}" style="background:none; border:none; cursor:pointer; padding:0 4px; font-size:0.8rem;" title="Lihat Foto Nota">📸</button>` : ''}
                     </td>
                     <td>${item.warnaTali || '-'}</td>
                     <td>${item.sex || '-'}</td>

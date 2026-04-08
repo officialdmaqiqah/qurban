@@ -58,22 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
 
     // --- PHOTO UTILITIES ---
-    function getDirectDriveLink(url) {
-        if (!url) return '';
-        if (!url.includes('drive.google.com')) return url;
-        
-        let fileId = '';
-        const matchFile = url.match(/\/file\/d\/([^\/?]+)/);
-        const matchId = url.match(/[?&]id=([^\&]+)/);
-        
-        if (matchFile) fileId = matchFile[1];
-        else if (matchId) fileId = matchId[1];
-        
-        if (fileId) {
-            return `https://lh3.googleusercontent.com/d/${fileId}`;
-        }
-        return url;
-    }
+
 
     async function compressImage(file) {
         return new Promise((resolve) => {
@@ -115,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const result = await response.json();
             if(result.success) {
-                return getDirectDriveLink(result.url);
+                return window.getDirectDriveLink(result.url);
             }
             return null;
         } catch (error) {
