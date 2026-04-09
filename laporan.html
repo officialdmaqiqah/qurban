@@ -8,19 +8,58 @@
     <link rel="stylesheet" href="src/style.css">
     <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
     <style>
-        .report-section { display: none; }
+        .report-section { display: none; animation: fadeIn 0.4s ease; }
         .report-section.active { display: block; }
-        .tab-menu { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; }
-        .tab-item { cursor: pointer; padding: 0.5rem 1rem; border-radius: 4px; color: var(--text-muted); transition: 0.3s; }
-        .tab-item.active { background: var(--primary); color: white; }
-        .report-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
-        .report-table th, .report-table td { padding: 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .report-table th { background: rgba(255,255,255,0.02); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
-        .report-table tr:hover { background: rgba(255,255,255,0.01); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Premium Tab Menu (Horizontal Scroll on Mobile) */
+        .tab-menu { 
+            display: flex; gap: 0.5rem; margin-bottom: 2rem; 
+            padding-bottom: 0.5rem; overflow-x: auto; 
+            scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory;
+        }
+        .tab-menu::-webkit-scrollbar { display: none; }
+        
+        .tab-item { 
+            cursor: pointer; padding: 0.6rem 1.25rem; 
+            border-radius: 30px; color: var(--text-muted); 
+            transition: all 0.3s ease; white-space: nowrap;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.85rem; font-weight: 600; scroll-snap-align: start;
+        }
+        .tab-item:hover { background: rgba(255,255,255,0.08); color: var(--text-main); }
+        .tab-item.active { 
+            background: var(--primary); color: white; 
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            border-color: var(--primary);
+        }
+
+        /* Filter Bar Premium */
+        .filter-bar { 
+            display: flex; gap: 1rem; align-items: flex-end; 
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9)); 
+            padding: 1.25rem; border-radius: 16px; margin-bottom: 1.5rem; flex-wrap: wrap; 
+            border: 1px solid rgba(255,255,255,0.05); box-shadow: var(--shadow-md);
+        }
+
+        /* Table Elegance */
+        .report-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 1rem; font-size: 0.85rem; }
+        .report-table th, .report-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .report-table th { background: rgba(255,255,255,0.02); color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-top: 1px solid rgba(255,255,255,0.03); }
+        .report-table th:first-child { border-top-left-radius: 8px; }
+        .report-table th:last-child { border-top-right-radius: 8px; }
+        .report-table tr:hover { background: rgba(255,255,255,0.02); }
         .row-total { font-weight: 700; background: rgba(16, 185, 129, 0.05) !important; color: var(--primary); }
-        .row-grand-total { font-weight: 800; background: rgba(16, 185, 129, 0.1) !important; font-size: 1rem; border-top: 2px solid var(--primary); }
+        .row-grand-total { font-weight: 800; background: rgba(16, 185, 129, 0.1) !important; font-size: 1rem; border-top: 2px dashed rgba(16, 185, 129, 0.3); }
         .negative { color: #ef4444; }
-        .filter-bar { display: flex; gap: 1rem; align-items: center; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+
+        @media (max-width: 768px) {
+            .filter-bar { flex-direction: column; align-items: stretch; padding: 1rem; gap: 1rem; }
+            .btn-group-mobile { display: flex; gap: 0.5rem; width: 100%; }
+            .btn-group-mobile > button { flex: 1; padding: 0.5rem; font-size: 0.85rem !important; height: 42px !important; min-width: 0 !important; }
+            #customDateContainer { flex-direction: column; width: 100%; align-items: stretch !important; gap: 0.5rem !important; }
+            #customDateContainer > div { width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -73,18 +112,18 @@
                     <div id="debugDetails" style="font-size:0.75rem; opacity:0.7; margin-left:auto;"></div>
                 </div>
 
-                <!-- Filter Bar (GLASS) -->
-                <div class="filter-bar" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); backdrop-filter:blur(10px);">
-                    <div style="flex:1; min-width:150px;">
-                        <label class="form-label" style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">RENTANG PERIODE</label>
-                        <select id="selRange" class="form-control" style="background:rgba(255,255,255,0.05)">
+                <!-- Filter Bar (PREMIUM GLASS) -->
+                <div class="filter-bar">
+                    <div style="flex:1; width: 100%;">
+                        <label class="form-label" style="font-size:0.75rem; color:var(--primary); font-weight:800; letter-spacing: 0.05em; text-transform: uppercase;">RENTANG PERIODE</label>
+                        <select id="selRange" class="form-control" style="background:rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
                             <option value="thisMonth">Bulan Ini</option>
                             <option value="thisYear">Tahun Ini (Musim 2026)</option>
                             <option value="all" selected>Semua Data</option>
                             <option value="custom">Custom Range...</option>
                         </select>
                     </div>
-                    <div id="customDateContainer" style="display:none; gap:0.5rem; align-items:center;">
+                    <div id="customDateContainer" style="display:none; gap:1rem; align-items:center;">
                         <div>
                             <label class="form-label" style="font-size:0.7rem; color:var(--text-muted);">DARI</label>
                             <input type="date" id="inpStartDate" class="form-control">
@@ -94,12 +133,12 @@
                             <input type="date" id="inpEndDate" class="form-control">
                         </div>
                     </div>
-                    <div style="display:flex; align-items:flex-end; gap:0.75rem;">
-                        <button class="btn btn-primary btn-shimmer" id="btnRender" style="height:42px; min-width:160px; font-weight:600;">
-                            🔍 Proses Data
+                    <div class="btn-group-mobile" style="display:flex; align-items:flex-end; gap:0.75rem;">
+                        <button class="btn btn-primary btn-shimmer" id="btnRender" style="height:42px; min-width:140px; font-weight:700;">
+                            🔍 Proses
                         </button>
-                        <button class="btn btn-shimmer" id="btnExportExcel" style="background:#10b981; border:none; height:42px; color:white; font-weight:600;">
-                            📥 Export CSV
+                        <button class="btn btn-shimmer" id="btnExportExcel" style="background:var(--bg-input); border:1px solid rgba(255,255,255,0.1); height:42px; color:var(--text-main); font-weight:700;">
+                            📥 CSV
                         </button>
                     </div>
                 </div>
