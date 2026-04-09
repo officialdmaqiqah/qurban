@@ -62,17 +62,20 @@
             
             /* Responsive Swipeable Tables for Mobile Setup */
             .report-table {
-                display: block;
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                white-space: nowrap;
+                display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap;
+                background: #0f172a; /* Solid darkest slate background for max contrast */
+                border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);
             }
-            .table-responsive {
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
+            /* Slim down padding and font for mobile to minimize scrolling */
+            .report-table th, .report-table td {
+                padding: 8px 10px !important;
+                font-size: 0.75rem !important;
+                background: #0f172a; /* Ensure solid cell background */
+                color: #f8fafc; /* Max contrast text */
             }
+            /* Subtle header contrast */
+            .report-table th { font-size: 0.65rem !important; color: #94a3b8 !important; }
+            .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         }
     </style>
 </head>
