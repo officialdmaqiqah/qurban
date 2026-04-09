@@ -177,6 +177,51 @@ window.showConfirm = function(message, onConfirm, onCancel, title = 'Konfirmasi'
     document.getElementById('modalConfirmCancelBtn').onclick = () => { overlay.remove(); if(onCancel) onCancel(); };
 };
 
+window.showInput = function(message, defaultValue = '', onOk = null, onCancel = null, title = 'Input Data', placeholder = 'Masukkan data...') {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay-custom';
+    
+    overlay.innerHTML = `
+        <div class="modal-custom" style="max-width:400px;">
+            <div class="modal-custom-header">
+                <div class="modal-custom-icon" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary);">
+                    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </div>
+                <div class="modal-custom-title">${title}</div>
+            </div>
+            <div class="modal-custom-body" style="text-align:center;">
+                <div style="margin-bottom:1.5rem; color:var(--text-muted); font-size:1rem; line-height:1.5;">${message}</div>
+                <input type="text" id="modalInputText" class="form-control" value="${defaultValue}" placeholder="${placeholder}" 
+                    style="width:100%; padding:1.25rem; border-radius:16px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-main); font-size:1.1rem; text-align:center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+            </div>
+            <div class="modal-custom-footer" style="margin-top:2rem;">
+                <button class="btn" id="modalInputCancelBtn" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">BATAL</button>
+                <button class="btn btn-primary" id="modalInputOkBtn">SIMPAN DATA</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    const input = document.getElementById('modalInputText');
+    setTimeout(() => {
+        input.focus();
+        input.select();
+    }, 100);
+
+    document.getElementById('modalInputOkBtn').onclick = () => { 
+        const val = input.value;
+        overlay.remove(); 
+        if(onOk) onOk(val); 
+    };
+    document.getElementById('modalInputCancelBtn').onclick = () => { 
+        overlay.remove(); 
+        if(onCancel) onCancel(); 
+    };
+    input.onkeydown = (e) => {
+        if(e.key === 'Enter') document.getElementById('modalInputOkBtn').click();
+        if(e.key === 'Escape') document.getElementById('modalInputCancelBtn').click();
+    };
+};
+
 window.showChoice = function(message, options, title = 'Konfirmasi') {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay-custom';

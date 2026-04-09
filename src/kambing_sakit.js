@@ -100,9 +100,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted); line-height:1.3;">${item.catatan_keluar || '-'}</div>
                         </div>
                         ${(item.status_kesehatan === 'Mati' || item.status_kesehatan === 'Disembelih') ? `
-                            <button class="btn btn-sm" onclick="window.editLossRecord('${item.id}')" style="padding:4px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); margin-left:8px;" title="Edit Catatan & Kompensasi">
-                                ✏️
-                            </button>
+                            <div style="display:flex; gap:4px;">
+                                <button class="btn btn-sm" onclick="window.editLossRecord('${item.id}')" style="padding:4px; background:rgba(var(--primary-rgb), 0.1); border:1px solid rgba(var(--primary-rgb), 0.2);" title="Edit Catatan & Kompensasi">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-sm" onclick="window.rollbackStatus('${item.id}', '${item.no_tali}')" style="padding:4px; background:rgba(var(--danger-rgb),0.1); border:1px solid rgba(var(--danger-rgb),0.2);" title="Batalkan Status / Kembalikan ke Sakit">
+                                    ↩️
+                                </button>
+                            </div>
                         ` : ''}
                     </div>
                 </td>
@@ -134,30 +139,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             const updates = { status_kesehatan: val, updated_at: upDate };
 
             if(val === 'Mati' || val === 'Disembelih') {
-                 const comp = prompt("Komentar: Masukkan nominal kompensasi supplier (Rp) - Opsional:", "0");
-                 const kompensasi = parseFloat(comp) || 0;
-                 
-                 updates.status_fisik = 'Mati';
-                 updates.status_transaksi = val;
-                 updates.tgl_keluar = upDate.split('T')[0];
+                 window.showInput("Catatan Keluar (Opsional):", "", async (note) => {
+                    window.showInput(`Nominal Kompensasi Supplier (Rp) - <b>${val}</b>:`, "0", async (kompStr) => {
+                        const kompensasi = parseFloat(kompStr) || 0;
+                        
+                        updates.status_fisik = 'Mati';
+                        updates.status_transaksi = val;
+                        updates.tgl_keluar = upDate.split('T')[0];
+                        updates.catatan_keluar = note;
 
-                 await supabase.from('stok_kambing').update(updates).eq('id', id);
-                 
-                 // Record loss
-                 await supabase.from('keuangan').insert([{
-                     id: 'LOSS-'+Date.now(), tipe: 'pengeluaran', tanggal: updates.tgl_keluar,
-                     kategori: 'Kerugian (Mati/Hilang)', nominal: currentGoat.harga_nota, 
-                     keterangan: `Kerugian ${val} No Tali ${currentGoat.no_tali} (Eks Sakit)`, channel: 'Non-Kas', related_goat_id: id
-                 }]);
-                 
-                 if(kompensasi > 0) {
-                     await supabase.from('keuangan').insert([{
-                         id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: updates.tgl_keluar,
-                         kategori: 'Kompensasi Supplier', nominal: kompensasi,
-                         keterangan: `Kompensasi ${val} No Tali ${currentGoat.no_tali}`, channel: 'Non-Kas', related_goat_id: id,
-                         supplier: currentGoat.supplier, batch: currentGoat.batch
-                     }]);
-                 }
+                        await supabase.from('stok_kambing').update(updates).eq('id', id);
+                        
+                        // Record loss
+                        await supabase.from('keuangan').insert([{
+                            id: 'LOSS-'+Date.now(), tipe: 'pengeluaran', tanggal: updates.tgl_keluar,
+                            kategori: 'Kerugian (Mati/Hilang)', nominal: currentGoat.harga_nota, 
+                            keterangan: `Kerugian ${val} No Tali ${currentGoat.no_tali} (Eks Sakit)`, channel: 'Non-Kas', related_goat_id: id
+                        }]);
+                        
+                        if(kompensasi > 0) {
+                            await supabase.from('keuangan').insert([{
+                                id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: updates.tgl_keluar,
+                                kategori: 'Kompensasi Supplier', nominal: kompensasi,
+                                keterangan: `Kompensasi ${val} No Tali ${currentGoat.no_tali}`, channel: 'Non-Kas', related_goat_id: id,
+                                supplier: currentGoat.supplier, batch: currentGoat.batch
+                            }]);
+                        }
+
+                        window.showToast(`Status ${goatNoTali} diperbarui!`);
+                        await loadGoats(true);
+                        renderTable();
+                    }, null, "Kompensasi Supplier", "0");
+                 }, null, "Catatan Tindakan", "Misal: Sakit parah tidak tertolong");
             } else {
                 // Sembuh
                 updates.status_kesehatan = 'Sehat';
@@ -245,43 +258,69 @@ document.addEventListener('DOMContentLoaded', async () => {
             .select('*')
             .eq('related_goat_id', id)
             .eq('kategori', 'Kompensasi Supplier')
-            .single();
+            .maybeSingle();
 
         const oldNote = goat.catatan_keluar || '';
         const oldKomp = finKomp ? finKomp.nominal : 0;
 
-        const newNote = prompt("Edit Catatan Keluar:", oldNote);
-        if (newNote === null) return;
+        window.showInput("Edit Catatan Keluar:", oldNote, (newNote) => {
+            window.showInput("Edit Nominal Kompensasi Supplier (Rp):", oldKomp, async (newKompStr) => {
+                const newKomp = parseFloat(newKompStr) || 0;
 
-        const newKompStr = prompt("Edit Nominal Kompensasi Supplier (Rp):", oldKomp);
-        if (newKompStr === null) return;
-        const newKomp = parseFloat(newKompStr) || 0;
+                // 1. Update Stok Kambing
+                await supabase.from('stok_kambing').update({ catatan_keluar: newNote }).eq('id', id);
 
-        // 1. Update Stok Kambing
-        await supabase.from('stok_kambing').update({ catatan_keluar: newNote }).eq('id', id);
+                // 2. Update/Insert Keuangan Kompensasi
+                if (newKomp > 0) {
+                    if (finKomp) {
+                        await supabase.from('keuangan').update({ nominal: newKomp, keterangan: `Kompensasi ${goat.status_transaksi} No Tali ${goat.no_tali} (Updated)` }).eq('id', finKomp.id);
+                    } else {
+                        await supabase.from('keuangan').insert([{
+                            id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: goat.tgl_keluar || new Date().toISOString().split('T')[0],
+                            kategori: 'Kompensasi Supplier', nominal: newKomp,
+                            keterangan: `Kompensasi ${goat.status_transaksi} No Tali ${goat.no_tali}`, channel: 'Non-Kas', related_goat_id: id,
+                            supplier: goat.supplier, batch: goat.batch
+                        }]);
+                    }
+                } else if (finKomp) {
+                    await supabase.from('keuangan').delete().eq('id', finKomp.id);
+                }
 
-        // 2. Update/Insert Keuangan Kompensasi
-        if (newKomp > 0) {
-            if (finKomp) {
-                // Update existing
-                await supabase.from('keuangan').update({ nominal: newKomp, keterangan: `Kompensasi ${goat.status_kesehatan} No Tali ${goat.no_tali} (Updated)` }).eq('id', finKomp.id);
-            } else {
-                // Insert new
-                await supabase.from('keuangan').insert([{
-                    id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: goat.tgl_keluar || new Date().toISOString().split('T')[0],
-                    kategori: 'Kompensasi Supplier', nominal: newKomp,
-                    keterangan: `Kompensasi ${goat.status_kesehatan} No Tali ${goat.no_tali}`, channel: 'Non-Kas', related_goat_id: id,
-                    supplier: goat.supplier, batch: goat.batch
-                }]);
+                window.showToast('Data berhasil diperbarui!', 'success');
+                await loadGoats(true);
+                renderTable();
+            }, null, "Edit Kompensasi", "0");
+        }, null, "Edit Catatan");
+    };
+
+    window.rollbackStatus = async (id, noTali) => {
+        window.showConfirm(`Batalkan status Kambing <b>${noTali}</b>?<br><br><small>Status akan kembali ke <b>Sakit</b> dan seluruh catatan keuangan kerugian/kompensasi terkait akan <b>DIHAPUS</b>.</small>`, async () => {
+            try {
+                // 1. Kembalikan Status Stok
+                await supabase.from('stok_kambing').update({
+                    status_kesehatan: 'Sakit',
+                    status_fisik: 'Ada',
+                    status_transaksi: 'Tersedia',
+                    tgl_keluar: null,
+                    catatan_keluar: null,
+                    updated_at: new Date().toISOString()
+                }).eq('id', id);
+
+                // 2. Hapus Data Keuangan Terkait (Loss & Kompensasi)
+                const { error: delErr } = await supabase.from('keuangan')
+                    .delete()
+                    .eq('related_goat_id', id)
+                    .in('kategori', ['Kerugian (Mati/Hilang)', 'Kompensasi Supplier']);
+
+                if (delErr) throw delErr;
+
+                window.showToast(`Status ${noTali} berhasil dibatalkan!`, 'success');
+                await loadGoats(true);
+                renderTable();
+            } catch (err) {
+                window.showAlert('Gagal membatalkan status: ' + err.message, 'danger');
             }
-        } else if (finKomp) {
-            // Hapus jika jadi 0
-            await supabase.from('keuangan').delete().eq('id', finKomp.id);
-        }
-
-        window.showToast('Data berhasil diperbarui!');
-        await loadGoats(true);
-        renderTable();
+        }, null, 'Batalkan Status', 'Ya, Batalkan', 'btn-danger');
     };
 
     renderTable();
