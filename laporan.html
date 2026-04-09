@@ -60,22 +60,31 @@
             #customDateContainer { flex-direction: column; width: 100%; align-items: stretch !important; gap: 0.5rem !important; }
             #customDateContainer > div { width: 100%; }
             
-            /* Responsive Swipeable Tables for Mobile Setup */
+            /* Clean Slim Tables for Mobile (Without ugly dark blocks) */
             .report-table {
                 display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap;
-                background: #0f172a; /* Solid darkest slate background for max contrast */
-                border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);
+                border-radius: 8px;
             }
-            /* Slim down padding and font for mobile to minimize scrolling */
-            .report-table th, .report-table td {
-                padding: 8px 10px !important;
+            /* Slim down padding to minimize scrolling */
+            .report-table td {
+                padding: 6px 8px !important;
                 font-size: 0.75rem !important;
-                background: #0f172a; /* Ensure solid cell background */
-                color: #f8fafc; /* Max contrast text */
+                background: transparent !important; /* Keep it transparent/glass */
+                color: var(--text-main) !important;
             }
-            /* Subtle header contrast */
-            .report-table th { font-size: 0.65rem !important; color: #94a3b8 !important; }
+            /* Subtle header */
+            .report-table th { 
+                padding: 6px 8px !important;
+                font-size: 0.65rem !important; 
+                color: var(--text-muted) !important; 
+                background: rgba(255,255,255,0.02) !important; 
+            }
+            
             .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            
+            /* High Contrast for Dark Buttons */
+            .btn-group-mobile > button { color: #ffffff !important; }
+            .tab-item.active { color: #ffffff !important; font-weight: 800; }
         }
     </style>
 </head>
