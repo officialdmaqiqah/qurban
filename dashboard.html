@@ -5,8 +5,17 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dashboard - Qurban Manager</title>
         <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="src/style.css?v=3.5">
+        <link rel="stylesheet" href="src/style.css?v=3.6">
         <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+        <style>
+            /* DEEP FIX v3.6 - INLINE BYPASS */
+            .topbar-actions { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 0.5rem !important; }
+            .premium-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important; gap: 1.5rem !important; }
+            @media (max-width: 768px) {
+                .premium-grid { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+                .page-title { font-size: 0.85rem !important; max-width: 140px !important; }
+            }
+        </style>
 </head>
 <body>
         <div class="app-layout">
@@ -43,7 +52,7 @@
                 <!-- Main Content -->
                 <main class="main-content">
                         <header class="topbar">
-                                <div class="page-title">Ringkasan Bisnis (Real-Time)</div>
+                                <div class="page-title">Ringkasan Bisnis (v3.6)</div>
                                 <div class="user-menu">
                                         <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
                                 </div>
