@@ -1216,6 +1216,34 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         display: block;
     }
 
+    /* FIX: SIDEBAR MENU POSITION ON MOBILE */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px; /* Hide off-screen by default */
+        bottom: 0;
+        z-index: 10001; /* Stay above everything else */
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100vh;
+        overflow-y: auto;
+    }
+
+    .sidebar.active {
+        transform: translateX(280px); /* Slide in when active */
+    }
+
+    .menu-toggle {
+        display: block !important;
+        background: transparent;
+        border: none;
+        color: var(--text-main);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        margin-right: 0.5rem;
+    }
+
+
     /* Typography Refinement for Mobile */
     body {
         font-size: 14px;
