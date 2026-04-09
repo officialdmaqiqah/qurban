@@ -1314,8 +1314,10 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         margin: 0 !important;
     }
 
-    /* Padding & Table Density */
-    .content-area { padding: 1rem !important; }
+    /* Padding & Table Density - Compensate for fixed topbar height (60px) */
+    .content-area { 
+        padding: calc(60px + 1rem) 1rem 1rem 1rem !important; 
+    }
     .data-table th, .data-table td {
         padding: 0.6rem 0.4rem !important;
         font-size: 0.8rem !important;
