@@ -1414,14 +1414,8 @@ body.light-mode .premium-icon-box {
     gap: 1.5rem;
     margin-bottom: 2.5rem;
 }
-
-    .page-title {
-        font-size: 1.1rem;
-    }
-
     /* Hide Desktop-only elements if any */
     .desktop-only { display: none !important; }
-}
 
 /* Sidebar Overlay */
 .sidebar-overlay {
