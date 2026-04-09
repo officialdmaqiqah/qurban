@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${item.globalSisa > 0 ? formatRp(item.globalSisa) : '<span class="badge badge-success">LUNAS</span>'}
                 </td>
                 <td style="text-align:right;">
-                    <button class="btn btn-sm btn-bayar btn-shimmer" data-name="${item.nama}" data-batch="${item.batch}" style="background:var(--primary); border:none; padding:6px 12px;">💸 Bayar</button>
+                    <button class="btn btn-sm btn-bayar btn-shimmer" data-name="${item.nama}" data-batch="${item.batch}" style="background:var(--primary); color:#ffffff; border:none; padding:6px 12px;">💸 Bayar</button>
                 </td>
             `;
             tableBody.appendChild(tr);

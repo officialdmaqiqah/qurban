@@ -7,6 +7,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/style.css">
     <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+    <style>
+        /* Mobile Optimization for Cards and layout */
+        @media (max-width: 768px) {
+            .grid-cards-supplier { 
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important; 
+                gap: 0.5rem !important; 
+            }
+            .grid-cards-supplier .card-box { 
+                flex-direction: column !important; 
+                text-align: center !important; 
+                padding: 1rem 0.5rem !important; 
+                gap: 0.5rem !important; 
+                min-height: auto !important;
+            }
+            .grid-cards-supplier .card-box > div:first-child { width: 32px !important; height: 32px !important; font-size: 1.2rem !important; margin: 0 auto !important; }
+            .grid-cards-supplier .card-box > div:last-child { display: flex; flex-direction: column; justify-content: center; }
+            .grid-cards-supplier .stat-label { font-size: 0.6rem !important; margin-bottom: 2px !important; }
+            .grid-cards-supplier .stat-value { font-size: 0.9rem !important; font-weight: 800 !important; }
+        }
+    </style>
 </head>
 <body>
     <div class="app-layout">
@@ -52,26 +73,27 @@
 
             <div class="content-area fade-in tall-header">
                 <!-- PAPAN STATISTIK (PREMIUM) -->
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+                <div class="grid-cards-supplier" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
                     <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--danger);">
-                        <div style="font-size:2rem;">📉</div>
+                        <div style="font-size:2rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:10px;">📉</div>
                         <div>
-                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Total Beban Modal</div>
-                            <div id="statTotalHutang" style="font-size:1.5rem; font-weight:700;">Rp 0</div>
+                            <div class="stat-label" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Total Beban Modal</div>
+                            <div id="statTotalHutang" class="stat-value" style="font-size:1.5rem; font-weight:700;">Rp 0</div>
                         </div>
                     </div>
                     <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--success);">
-                        <div style="font-size:2rem;">✅</div>
+                        <div style="font-size:2rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:10px;">✅</div>
                         <div>
-                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Total Terbayar</div>
-                            <div id="statTotalTerbayar" style="font-size:1.5rem; font-weight:700;">Rp 0</div>
+                            <div class="stat-label" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Total Terbayar</div>
+                            <div id="statTotalTerbayar" class="stat-value" style="font-size:1.5rem; font-weight:700;">Rp 0</div>
                         </div>
                     </div>
+                    <!-- Sisa Hutang Aktif -->
                     <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--warning);">
-                        <div style="font-size:2rem;">⏳</div>
+                        <div style="font-size:2rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:10px;">⏳</div>
                         <div>
-                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Sisa Hutang Aktif</div>
-                            <div id="statSisaHutang" style="font-size:1.5rem; font-weight:700;">Rp 0</div>
+                            <div class="stat-label" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Sisa Hutang Aktif</div>
+                            <div id="statSisaHutang" class="stat-value" style="font-size:1.5rem; font-weight:700; color:var(--warning);">Rp 0</div>
                         </div>
                     </div>
                 </div>
