@@ -119,17 +119,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         let opex = 0;
-        let deadLoss = 0;
+        let deadLossRaw = 0;
+        let deadKomp = 0;
+        
         fin.filter(f => {
             const dt = new Date(f.tanggal);
             return dt >= start && dt <= end;
         }).forEach(f => {
             const nom = parseFloat(f.nominal || 0);
             if(f.tipe === 'pengeluaran') {
-                if(f.kategori === 'Kerugian (Mati/Hilang)') deadLoss += nom;
+                if(f.kategori === 'Kerugian (Mati/Hilang)') deadLossRaw += nom;
                 else if(f.kategori !== 'Bayar Supplier' && f.kategori !== 'Pelunasan Supplier') opex += nom;
+            } else if(f.tipe === 'pemasukan') {
+                if(f.kategori === 'Kompensasi Supplier') deadKomp += nom;
             }
         });
+
+        const deadLossNet = deadLossRaw - deadKomp;
 
         const addRow = (l, v, cls='') => body.innerHTML += `<tr class="${cls}"><td>${l}</td><td align="right">${formatRp(v)}</td></tr>`;
         
@@ -138,8 +144,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         addRow('LABA KOTOR', omzet - hpp, 'row-total');
         addRow('(-) Komisi Agen', -komisi);
         addRow('(-) Biaya Operasional', -opex);
-        addRow('(-) Kerugian Kematian', -deadLoss);
-        // Detailed Saving Breakdown for Audit
+        addRow('(-) Kerugian Kematian (Netto)', -deadLossNet, deadLossNet > 0 ? 'text-danger' : '');
+        
         const savingStr = saving > 0 ? `<br><small style="font-weight:normal; opacity:0.7">Audit Kalkulasi: Terhitung dari ${trxs.filter(t => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
             return dt >= start && dt <= end;

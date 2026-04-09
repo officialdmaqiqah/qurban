@@ -94,8 +94,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid rgba(255,255,255,0.1);">Batch ${item.batch}</span></td>
                 <td style="font-weight:600;">${formatTgl(item.tgl_keluar)}</td>
                 <td>
-                    <span class="badge ${badge}">${(item.status_kesehatan || 'Sakit').toUpperCase()}</span>
-                    <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted); line-height:1.3;">${item.catatan_keluar || '-'}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <span class="badge ${badge}">${(item.status_kesehatan || 'Sakit').toUpperCase()}</span>
+                            <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted); line-height:1.3;">${item.catatan_keluar || '-'}</div>
+                        </div>
+                        ${(item.status_kesehatan === 'Mati' || item.status_kesehatan === 'Disembelih') ? `
+                            <button class="btn btn-sm" onclick="window.editLossRecord('${item.id}')" style="padding:4px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); margin-left:8px;" title="Edit Catatan & Kompensasi">
+                                ✏️
+                            </button>
+                        ` : ''}
+                    </div>
                 </td>
                 <td>
                     <select class="form-control" onchange="window.updateHealth(this, '${item.id}')" style="font-size:0.75rem; background:rgba(16, 185, 129, 0.1); border-color:var(--primary);">
@@ -226,6 +235,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('inpSearch')?.addEventListener('input', renderTable);
     document.getElementById('selHealthStatus')?.addEventListener('change', renderTable);
+
+    window.editLossRecord = async (id) => {
+        const goat = cachedGoats.find(g => g.id === id);
+        if(!goat) return;
+
+        // Cari data keuangan kompensasi lama jika ada
+        const { data: finKomp } = await supabase.from('keuangan')
+            .select('*')
+            .eq('related_goat_id', id)
+            .eq('kategori', 'Kompensasi Supplier')
+            .single();
+
+        const oldNote = goat.catatan_keluar || '';
+        const oldKomp = finKomp ? finKomp.nominal : 0;
+
+        const newNote = prompt("Edit Catatan Keluar:", oldNote);
+        if (newNote === null) return;
+
+        const newKompStr = prompt("Edit Nominal Kompensasi Supplier (Rp):", oldKomp);
+        if (newKompStr === null) return;
+        const newKomp = parseFloat(newKompStr) || 0;
+
+        // 1. Update Stok Kambing
+        await supabase.from('stok_kambing').update({ catatan_keluar: newNote }).eq('id', id);
+
+        // 2. Update/Insert Keuangan Kompensasi
+        if (newKomp > 0) {
+            if (finKomp) {
+                // Update existing
+                await supabase.from('keuangan').update({ nominal: newKomp, keterangan: `Kompensasi ${goat.status_kesehatan} No Tali ${goat.no_tali} (Updated)` }).eq('id', finKomp.id);
+            } else {
+                // Insert new
+                await supabase.from('keuangan').insert([{
+                    id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: goat.tgl_keluar || new Date().toISOString().split('T')[0],
+                    kategori: 'Kompensasi Supplier', nominal: newKomp,
+                    keterangan: `Kompensasi ${goat.status_kesehatan} No Tali ${goat.no_tali}`, channel: 'Non-Kas', related_goat_id: id,
+                    supplier: goat.supplier, batch: goat.batch
+                }]);
+            }
+        } else if (finKomp) {
+            // Hapus jika jadi 0
+            await supabase.from('keuangan').delete().eq('id', finKomp.id);
+        }
+
+        window.showToast('Data berhasil diperbarui!');
+        await loadGoats(true);
+        renderTable();
+    };
 
     renderTable();
 });
