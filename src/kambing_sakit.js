@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('tableBodyKeluar');
     const modalKeluar = document.getElementById('modalKeluar');
     const selectTarget = document.getElementById('inpKambingTarget');
+    const formSakit = document.getElementById('formSakit');
     
     async function renderTable() {
         const goats = await loadGoats();
@@ -176,7 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 list.appendChild(o);
             });
         }
-        modalKeluar.classList.add('active');
+        modalKeluar?.classList.add('active');
     });
 
     // Close Modal Listeners
@@ -189,7 +190,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnCloseKomp')?.addEventListener('click', closeKomp);
     document.getElementById('btnSkipKomp')?.addEventListener('click', closeKomp);
 
-    document.getElementById('formSakit')?.addEventListener('submit', async (e) => {
+    formSakit?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const noTali = selectTarget.value;
         const note = document.getElementById('inpCatatan').value;
@@ -204,17 +205,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!conf) return;
         }
 
-        await supabase.from('stok_kambing').update({ 
+        const { error } = await supabase.from('stok_kambing').update({ 
             status_kesehatan: stt, 
             tgl_keluar: tgl, 
             catatan_keluar: note,
             updated_at: new Date().toISOString()
         }).eq('id', goat.id);
 
-        modalKeluar.classList.remove('active');
-        await loadGoats(true);
-        renderTable();
-        showToast(`Kambing No ${noTali} masuk daftar penanganan kesehatan.`);
+        if(!error) {
+            if(window.showToast) window.showToast('Data kambing sakit berhasil diregistrasi!', 'success');
+            modalKeluar?.classList.remove('active');
+            await loadGoats(true);
+            renderTable();
+        } else {
+            if(window.showAlert) window.showAlert('Gagal menyimpan data: ' + error.message, 'danger');
+            else alert('Gagal menyimpan: ' + error.message);
+        }
     });
 
     document.getElementById('inpSearch')?.addEventListener('input', renderTable);
