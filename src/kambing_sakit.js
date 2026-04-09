@@ -59,8 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 (k.catatan_keluar || '').toLowerCase().includes(term);
             
             let matchStatus = true;
-            if (healthFilter === 'sakit') matchStatus = (k.status_kesehatan === 'Sakit' || k.status_kesehatan === 'Perawatan');
-            else if (healthFilter === 'sembuh') matchStatus = k.status_kesehatan === 'Sehat'; // Should not be in this list though
+            if (healthFilter === 'sakit') matchStatus = ((k.status_kesehatan || '').toLowerCase() === 'sakit' || k.status_kesehatan === 'Perawatan');
             
             return matchSearch && matchStatus;
         }).sort((a,b) => new Date(b.updated_at || b.tgl_keluar) - new Date(a.updated_at || a.tgl_keluar));
@@ -103,48 +102,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.updateHealth = async (sel, id) => {
         const val = sel.value; if(!val) return;
         const currentGoat = cachedGoats.find(g => g.id === id);
+        if(!currentGoat) return;
 
-        showConfirm(`Update status ${currentGoat.no_tali} menjadi ${val}?`, async () => {
-            const upDate = new Date().toISOString();
-            const updates = { status_kesehatan: val, updated_at: upDate };
+        const goatNoTali = currentGoat.no_tali || 'Kambing';
+        const isConfirmed = confirm(`Update status ${goatNoTali} menjadi ${val}?`);
+        if(!isConfirmed) {
+            sel.value = "";
+            return;
+        }
 
-            if(val === 'Mati' || val === 'Disembelih') {
-                 const comp = prompt("Komentar: Masukkan nominal kompensasi supplier (Rp) - Opsional:", "0");
-                 const kompensasi = parseFloat(comp) || 0;
-                 
-                 updates.status_fisik = 'Mati';
-                 updates.status_transaksi = val;
-                 updates.tgl_keluar = upDate.split('T')[0];
+        const upDate = new Date().toISOString();
+        const updates = { status_kesehatan: val, updated_at: upDate };
 
-                 await supabase.from('stok_kambing').update(updates).eq('id', id);
-                 
-                 // Record loss
+        if(val === 'Mati' || val === 'Disembelih') {
+             const comp = prompt("Komentar: Masukkan nominal kompensasi supplier (Rp) - Opsional:", "0");
+             const kompensasi = parseFloat(comp) || 0;
+             
+             updates.status_fisik = 'Mati';
+             updates.status_transaksi = val;
+             updates.tgl_keluar = upDate.split('T')[0];
+
+             await supabase.from('stok_kambing').update(updates).eq('id', id);
+             
+             // Record loss
+             await supabase.from('keuangan').insert([{
+                 id: 'LOSS-'+Date.now(), tipe: 'pengeluaran', tanggal: updates.tgl_keluar,
+                 kategori: 'Kerugian (Mati/Hilang)', nominal: currentGoat.harga_nota, 
+                 keterangan: `Kerugian ${val} No Tali ${currentGoat.no_tali} (Eks Sakit)`, channel: 'Non-Kas', related_goat_id: id
+             }]);
+             
+             if(kompensasi > 0) {
                  await supabase.from('keuangan').insert([{
-                     id: 'LOSS-'+Date.now(), tipe: 'pengeluaran', tanggal: updates.tgl_keluar,
-                     kategori: 'Kerugian (Mati/Hilang)', nominal: currentGoat.harga_nota, 
-                     keterangan: `Kerugian ${val} No Tali ${currentGoat.no_tali} (Eks Sakit)`, channel: 'Non-Kas', related_goat_id: id
+                     id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: updates.tgl_keluar,
+                     kategori: 'Kompensasi Supplier', nominal: kompensasi,
+                     keterangan: `Kompensasi ${val} No Tali ${currentGoat.no_tali}`, channel: 'Non-Kas', related_goat_id: id,
+                     supplier: currentGoat.supplier, batch: currentGoat.batch
                  }]);
-                 
-                 if(kompensasi > 0) {
-                     await supabase.from('keuangan').insert([{
-                         id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: updates.tgl_keluar,
-                         kategori: 'Kompensasi Supplier', nominal: kompensasi,
-                         keterangan: `Kompensasi ${val} No Tali ${currentGoat.no_tali}`, channel: 'Non-Kas', related_goat_id: id,
-                         supplier: currentGoat.supplier, batch: currentGoat.batch
-                     }]);
-                 }
-            } else {
-                // Sembuh
-                updates.status_kesehatan = 'Sehat';
-                updates.tgl_keluar = null;
-                updates.catatan_keluar = null;
-                await supabase.from('stok_kambing').update(updates).eq('id', id);
-            }
+             }
+        } else {
+            // Sembuh
+            updates.status_kesehatan = 'Sehat';
+            updates.tgl_keluar = null;
+            updates.catatan_keluar = null;
+            await supabase.from('stok_kambing').update(updates).eq('id', id);
+        }
 
-            showToast(`Status ${currentGoat.no_tali} diperbarui!`);
-            await loadGoats(true);
-            renderTable();
-        });
+        if (typeof showToast === 'function') showToast(`Status ${goatNoTali} diperbarui!`);
+        else alert(`Status ${goatNoTali} diperbarui!`);
+        
+        await loadGoats(true);
+        renderTable();
         sel.value = "";
     };
 

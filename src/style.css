@@ -1194,14 +1194,16 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        margin-right: 8px;
     }
     .topbar {
-        padding: 0 0.75rem !important; /* Rapatkan padding agar ikon muat */
-        gap: 0.5rem;
+        padding: 0 0.75rem !important;
+        gap: 0.75rem;
     }
-
     .user-menu {
-        gap: 0.5rem;
+        gap: 0.75rem;
+        flex: 1;
+        justify-content: flex-end;
     }
 
     .header-actions {
@@ -1305,9 +1307,9 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         gap: 1rem !important;
     }
 
-    /* Premium Grid → compact 2-column on mobile (not 1 column) */
+    /* Premium Grid → auto-fit 2-column on mobile, stacks safely */
     .premium-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
         gap: 0.75rem !important;
         margin-bottom: 1.25rem !important;
     }
@@ -1315,22 +1317,31 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
     /* Compact premium cards on mobile */
     .premium-card {
         min-height: auto !important;
-        padding: 0.9rem 1rem 0.9rem 1.25rem !important;
+        padding: 1rem 1rem 1rem 1.25rem !important;
         border-radius: 12px !important;
     }
-    .premium-value { font-size: 1.1rem !important; }
-    .premium-label { font-size: 0.6rem !important; margin-bottom: 0.25rem !important; }
+    .premium-value { 
+        font-size: 1rem !important; 
+        line-height: 1.2;
+    }
+    .premium-label { 
+        font-size: 0.6rem !important; 
+        margin-bottom: 0.15rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
     .premium-icon-box {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 1.2rem !important;
-        top: 0.9rem !important;
-        right: 0.75rem !important;
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 1.1rem !important;
+        top: 0.75rem !important;
+        right: 0.5rem !important;
     }
 
     /* grid-cards → 2 column slim on mobile */
     .grid-cards {
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
         gap: 0.5rem !important;
     }
 
