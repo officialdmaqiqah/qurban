@@ -120,19 +120,21 @@
             </header>
 
             <div class="content-area tall-header">
-                <div class="summary-grid">
-                    <div class="summary-card">
-                        <div class="summary-icon icon-in"> 📈 </div>
-                        <div class="summary-info">
-                            <h4>Total Pemasukan</h4>
-                            <p id="totalPemasukan">Rp 0</p>
+                <div class="scroll-hint-wrapper">
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <div class="summary-icon icon-in"> 📈 </div>
+                            <div class="summary-info">
+                                <h4>Total Pemasukan</h4>
+                                <p id="totalPemasukan">Rp 0</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-icon icon-out"> 📉 </div>
-                        <div class="summary-info">
-                            <h4>Total Pengeluaran</h4>
-                            <p id="totalPengeluaran">Rp 0</p>
+                        <div class="summary-card">
+                            <div class="summary-icon icon-out"> 📉 </div>
+                            <div class="summary-info">
+                                <h4>Total Pengeluaran</h4>
+                                <p id="totalPengeluaran">Rp 0</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -140,12 +142,12 @@
                 <div id="containerRealtimeBalance" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;"></div>
 
                 <div class="card-box">
-                    <div class="flex-between" style="margin-bottom: 1.5rem;">
+                    <div class="flex-between" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 15px;">
                         <div>
                             <h3 style="margin-bottom: 0.25rem;">Riwayat Transaksi</h3>
                             <p style="font-size: 0.875rem; color: var(--text-muted);">Catatan keluar masuk dana kandang.</p>
                         </div>
-                        <div style="display: flex; gap: 0.5rem; align-items:center;">
+                        <div class="header-actions" style="display: flex; gap: 0.5rem; align-items:center;">
                             <button class="btn btn-primary" id="btnTambahPemasukan">+ Pemasukan</button>
                             <button class="btn" style="background-color: transparent; border: 1px solid var(--danger); color: var(--danger);" id="btnTambahPengeluaran">- Pengeluaran</button>
                         </div>
