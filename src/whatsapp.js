@@ -5,7 +5,7 @@
 import { supabase } from './supabase.js';
 
 const WA_DEFAULT_CONFIG = {
-    apiKey: 'raRmjxN5P9CI7O63PKtFifPhZLiRDf',
+    apiKey: 'raRmjxN5P9CI7O63PKtFifPhZliRDf',
     sender: '6285335150001',
     footer: 'Kandang DM Aqiqah - Berkah & Amanah',
     templateLunas: "*DM AQIQAH & QURBAN*\n_Berkah, Amanah & Sesuai Syariat_\n==========================\n\nAssalamu’alaikum Warahmatullahi Wabarakatuh,\n\nBapak/Ibu *[[NAMA]]*, Alhamdulillah kami telah mengonfirmasi penerimaan dana pembayaran Anda dengan rincian berikut:\n\n📌 *INFORMASI PEMBAYARAN*\nNo. Transaksi: *[[ID]]*\nTgl Pembayaran: [[TGL]]\nNominal Masuk: *[[NOMINAL]]*\n\n📊 *STATUS TAGIHAN*\nSisa Tagihan: *[[SISA]]*\n\nJazakumullah Khairan Katsiran.\nSemoga harta yang dikeluarkan mendapat ganti keberkahan dari Allah SWT. Aamiin.\n\nWassalamu’alaikum Warahmatullahi Wabarakatuh.\n\n[[FOOTER]]",
@@ -127,18 +127,23 @@ export const parseWaTemplate = async (template, data = {}) => {
 window.parseWaTemplate = parseWaTemplate;
 
 /**
+ * Generate wa.me link for manual fallback
+ */
+export const getWaLink = (number, message) => {
+    const cleanNumber = typeof window.cleanWhatsApp === 'function' ? window.cleanWhatsApp(number) : number.replace(/\D/g, '');
+    const encodedMsg = encodeURIComponent(message);
+    return `https://wa.me/${cleanNumber}?text=${encodedMsg}`;
+};
+window.getWaLink = getWaLink;
+
+/**
  * Fungsi Inti Pengiriman WA via XSender API
  */
 export const sendWa = async (number, message) => {
     const config = await window.getWaConfig();
     
     // Normalisasi nomor (pastikan 62xxx)
-    let cleanNumber = number.replace(/\D/g, '');
-    if (cleanNumber.startsWith('0')) {
-        cleanNumber = '62' + cleanNumber.substring(1);
-    } else if (cleanNumber.startsWith('8')) {
-        cleanNumber = '62' + cleanNumber;
-    }
+    const cleanNumber = typeof window.cleanWhatsApp === 'function' ? window.cleanWhatsApp(number) : number.replace(/\D/g, '');
 
     console.log('[WA] Menyiapkan pengiriman ke:', cleanNumber);
     
@@ -148,7 +153,7 @@ export const sendWa = async (number, message) => {
         return { success: false, msg: 'Konfigurasi WA (API Key/Sender) belum diset di Pengaturan.' };
     }
 
-    // Gunakan URL GET dengan query parameters untuk kompatibilitas browser yang lebih baik (CORS Bypass)
+    // Gunakan URL GET dengan query parameters
     const url = new URL('https://xsender.id/api/send-message');
     url.searchParams.append('api_key', config.apiKey);
     url.searchParams.append('sender', config.sender);
@@ -157,30 +162,37 @@ export const sendWa = async (number, message) => {
     if (config.footer) url.searchParams.append('footer', config.footer);
 
     try {
-        // Percobaan pengiriman (Bisa membaca respons JSON jika server mendukung CORS)
         const response = await fetch(url.toString(), {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         });
 
-        // Jika berhasil membaca respons
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+        }
+
         const result = await response.json();
         console.log('[WA] Response:', result);
         
         if (result.status === true || result.status === 'success') {
             return { success: true, msg: 'Pesan terkirim!' };
         } else {
-            return { success: false, msg: result.message || 'Gagal mengirim pesan.' };
+            return { 
+                success: false, 
+                msg: result.message || result.msg || 'Gagal mengirim pesan via Gateway.',
+                link: getWaLink(cleanNumber, message) 
+            };
         }
     } catch (error) {
-        // Jika gagal karena CORS (Kesalahan Jaringan), biasanya pesan tetap sampai ke server XSender
-        // Namun browser memblokir pembacaan responsnya. Kita kembalikan sukses agar tidak membingungkan
-        // dan menghindari pengiriman ganda melalui retry.
-        console.warn('[WA] Respons dibatasi browser (CORS), namun pesan kemungkinan besar tetap terkirim.', error);
+        // Jika gagal karena CORS atau Jaringan, kita kembalikan error asli supaya UI bisa menawarkan fallback manual
+        console.error('[WA] Gateway Error:', error);
         return { 
-            success: true, 
-            msg: 'Pesan dikirim (Mode Kompatibilitas). Silakan cek HP target/history XSender Anda.' 
+            success: false, 
+            msg: 'Gagal terhubung ke Gateway WA (CORS/Network Error).',
+            link: getWaLink(cleanNumber, message)
         };
     }
 };
+window.sendWa = sendWa;
+
 window.sendWa = sendWa;

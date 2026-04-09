@@ -598,15 +598,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const res = await window.sendWa(num, 'Bismillah, ini adalah Pesan Uji Coba dari Dashboard Qurban Manager. (Koneksi Berhasil!)');
             if (res.success) {
-                showToast('Uji Coba Berhasil!');
+                showAlert('Berhasil! ' + res.msg, 'success');
             } else {
-                showAlert('Gagal: ' + res.msg, 'danger');
+                window.showConfirm(`Uji Coba Gagal: ${res.msg}\n\nGateway mungkin sedang bermasalah atau API Key salah. Ingin tes kirim manual (wa.me)?`, () => {
+                    window.open(res.link, '_blank');
+                }, null, 'Pesan Gagal Terkirim', 'Coba Manual', 'btn-primary');
             }
         } catch (e) {
-            showAlert('Terjadi kesalahan teknis.', 'danger');
+            showAlert('Terjadi kesalahan: ' + e.message, 'danger');
         } finally {
             btnTestWA.disabled = false;
-            btnTestWA.textContent = '🚀 Kirim Pesan Uji Coba';
+            btnTestWA.textContent = '🚀 Test WA';
         }
     });
 

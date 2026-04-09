@@ -212,13 +212,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         await supabase.from('transaksi').update({ total_paid: trx.total_paid + realPay, total_overpaid: (trx.total_overpaid || 0) + over, history_bayar: updatedHistory }).eq('id', trxId);
         await supabase.from('keuangan').insert([{ id: payId, tipe: 'pemasukan', tanggal: tgl, kategori: 'Pelunasan Order', nominal, channel: finalChannel, related_trx_id: trxId, bukti_url: buktiUrl }]);
 
-        if (sendWA) {
-            const config = (await supabase.from('master_data').select('val').eq('key', 'WA_CONFIG').single()).data?.val || {};
-            const waTarget = trx.customer.wa1 || trx.customer.wa2;
-            const agens = await getAgenDb();
-            const matchedAgen = agens.find(a => a.id === trx.agen.id);
-            if(waTarget) await window.sendWa(waTarget, window.parseWaTemplate(config.templateLunas, { nama: trx.customer.nama, id: trx.id, nominal: formatRp(nominal), sisa: formatRp(sisa - realPay) }));
-            if(matchedAgen?.wa) await window.sendWa(matchedAgen.wa, window.parseWaTemplate(config.templateLunasAgent, { nama_agen: matchedAgen.nama, nama: trx.customer.nama, id: trx.id, nominal: formatRp(nominal), sisa: formatRp(sisa - realPay) }));
+        if (sendWA && typeof window.sendWa === 'function') {
+            try {
+                const config = await window.getWaConfig();
+                const waTarget = trx.customer.wa1 || trx.customer.wa2;
+                const agens = await getAgenDb();
+                const matchedAgen = agens.find(a => a.id === trx.agen.id || a.nama === trx.agen.nama);
+                const commonData = { nama: trx.customer.nama, id: trx.id, nominal: formatRp(nominal), sisa: formatRp(sisa - realPay) };
+
+                if (waTarget) {
+                    const msgCust = await window.parseWaTemplate(config.templateLunas, commonData);
+                    const res = await window.sendWa(waTarget, msgCust);
+                    if (!res.success) {
+                        window.showConfirm(`WA Konsumen Gagal: ${res.msg}\n\nIngin kirim manual?`, () => {
+                            window.open(res.link, '_blank');
+                        }, null, 'WA Gateway Masalah', 'Kirim Manual', 'btn-primary');
+                    }
+                }
+
+                if (matchedAgen?.wa) {
+                    const msgAgen = await window.parseWaTemplate(config.templateLunasAgent, { ...commonData, nama_agen: matchedAgen.nama });
+                    const resA = await window.sendWa(matchedAgen.wa, msgAgen);
+                    if (!resA.success) {
+                        window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
+                    }
+                }
+            } catch (e) {
+                console.error('WA Lunas Err:', e);
+            }
         }
 
         showAlert('Pembayaran Berhasil!', 'success', () => { selOrder.value = ''; boxInfoOrder.style.display = 'none'; formBayar.style.display = 'none'; renderStats(); renderList(); });

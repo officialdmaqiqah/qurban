@@ -281,11 +281,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td style="font-weight:600;">${item.batch}</td>
                     <td>${item.tglMasuk}</td>
                     <td>${item.supplier || '-'}</td>
-                    <td style="font-weight:600;">
-                        ${item.noTali}
+                    <td class="sticky-col">
+                        <div style="font-weight:600;">${item.noTali}</div>
+                        <div style="font-size:0.7rem; color:var(--text-muted); font-weight:400; margin-top:2px;">${item.warnaTali || '-'}</div>
                         ${item.fotoNotaUrl ? `<button class="btn btn-sm btn-view-photo" data-url="${window.getDirectDriveLink(item.fotoNotaUrl)}" style="background:none; border:none; cursor:pointer; padding:0 4px; font-size:0.8rem;" title="Lihat Foto Nota">📸</button>` : ''}
                     </td>
-                    <td>${item.warnaTali || '-'}</td>
                     <td>${item.sex || '-'}</td>
                     <td style="font-weight:600; color:var(--primary);">${item.berat ? item.berat + ' kg' : '-'}</td>
                     <td><span class="badge" style="background:rgba(255,255,255,0.1);">${item.lokasi || '-'}</span></td>

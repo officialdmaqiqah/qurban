@@ -433,19 +433,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(paidNow > 0) await supabase.from('keuangan').insert([{ id: 'PAY-'+Date.now(), tipe: 'pemasukan', tanggal: newTrx.tgl_trx, kategori: 'Jual Kambing', nominal: paidNow, channel: finalChannelDP, related_trx_id: trxId, bukti_url: buktiUrl }]);
 
             if (sendWA && typeof window.sendWa === 'function') {
-                window.getWaConfig().then(async config => {
+                try {
+                    const config = await window.getWaConfig();
                     const itemsStr = currentCart.map(it => `• No.${it.noTali} (${it.batch})`).join('\n');
                     const sohibulStr = currentCart.map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
                     const commonData = { nama: newTrx.customer?.nama || '-', id: trxId, tgl: formatTgl(newTrx.tgl_trx), total: formatRp(total), dp: formatRp(paidNow), sisa: formatRp(total - newTrx.total_paid), items: itemsStr, sohibul: sohibulStr, alamat: (newTrx.customer?.alamat?.jalan || '') + ', ' + (newTrx.customer?.alamat?.kec || ''), wa_konsumen: newTrx.customer?.wa1 || '-', nama_agen: newTrx.agen?.nama || '-', jadwal: formatTgl(newTrx.delivery?.tgl) };
+                    
                     const templateCust = (newTrx.agen?.tipe || '').toUpperCase().includes('DM') ? config.templateOrderDM : config.templateOrderNormal;
                     const msgCust = await window.parseWaTemplate(templateCust, commonData);
-                    if (newTrx.customer?.wa1) window.sendWa(newTrx.customer.wa1, msgCust);
                     
-                    const agenData = matchedAgen; // Reuse the perfectly matched agent from validation
+                    if (newTrx.customer?.wa1) {
+                        const res = await window.sendWa(newTrx.customer.wa1, msgCust);
+                        if (!res.success) {
+                            window.showConfirm(`WA Konsumen Gagal: ${res.msg}\n\nIngin kirim manual?`, () => {
+                                window.open(res.link, '_blank');
+                            }, null, 'WA Gateway Masalah', 'Kirim Manual', 'btn-primary');
+                        }
+                    }
+                    
+                    const agenData = matchedAgen;
                     const templateAgen = (newTrx.agen?.tipe || '').toUpperCase().includes('DM') ? config.templateAgentDM : config.templateAgentNormal;
-                    const msgAgen = await window.parseWaTemplate(templateAgen, commonData);
-                    if (agenData && agenData.wa) window.sendWa(agenData.wa, msgAgen);
-                }).catch(e => console.error('WA Err:', e));
+                    const msgAgen = await window.parseWaTemplate(templateCust, commonData); // Fix: use msgAgen later
+
+                    if (agenData && agenData.wa) {
+                        const msgAgenParsed = await window.parseWaTemplate(templateAgen, commonData);
+                        const resA = await window.sendWa(agenData.wa, msgAgenParsed);
+                        if (!resA.success) {
+                            window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
+                        }
+                    }
+                } catch (e) {
+                    console.error('WA Err:', e);
+                }
             }
             
             showAlert('Berhasil Disimpan!', 'success', () => { modalKeluar.classList.remove('active'); renderTable(); window.editingTrxId = null; });
@@ -503,25 +522,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         await supabase.from('keuangan').insert([{ id: payId, tipe: 'pemasukan', tanggal: tgl, kategori: 'Pelunasan Order', nominal, channel, related_trx_id: trxId }]);
         
         if (kirimWA && typeof window.sendWa === 'function') {
-            const config = await window.getWaConfig();
-            const commonData = {
-                nama: trx.customer.nama,
-                id: trx.id,
-                tgl: formatTgl(tgl),
-                nominal: formatRp(nominal),
-                sisa: formatRp(trx.total_deal - totalPaidNew),
-                nama_agen: trx.agen.nama
-            };
+            try {
+                const config = await window.getWaConfig();
+                const commonData = {
+                    nama: trx.customer.nama,
+                    id: trx.id,
+                    tgl: formatTgl(tgl),
+                    nominal: formatRp(nominal),
+                    sisa: formatRp(trx.total_deal - totalPaidNew),
+                    nama_agen: trx.agen.nama
+                };
 
-            // 1. Notif Ke Konsumen
-            const msgCust = await window.parseWaTemplate(config.templateLunas, commonData);
-            if (trx.customer.wa1) await window.sendWa(trx.customer.wa1, msgCust);
+                // 1. Notif Ke Konsumen
+                const msgCust = await window.parseWaTemplate(config.templateLunas, commonData);
+                if (trx.customer.wa1) {
+                    const res = await window.sendWa(trx.customer.wa1, msgCust);
+                    if (!res.success) {
+                        window.showConfirm(`WA Pelunasan Gagal: ${res.msg}\n\nIngin kirim manual?`, () => {
+                            window.open(res.link, '_blank');
+                        }, null, 'WA Gateway Masalah', 'Kirim Manual', 'btn-primary');
+                    }
+                }
 
-            // 2. Notif Ke Agen
-            const msgAgen = await window.parseWaTemplate(config.templateLunasAgent, commonData);
-            const allAgens = await getAgenDb();
-            const agenData = allAgens.find(a => a.id === trx.agen.id || a.nama === trx.agen.nama);
-            if (agenData && agenData.wa) await window.sendWa(agenData.wa, msgAgen);
+                // 2. Notif Ke Agen
+                const msgAgen = await window.parseWaTemplate(config.templateLunasAgent, commonData);
+                const allAgens = await getAgenDb();
+                const agenData = allAgens.find(a => a.id === trx.agen.id || a.nama === trx.agen.nama);
+                if (agenData && agenData.wa) {
+                    await window.sendWa(agenData.wa, msgAgen);
+                }
+            } catch (e) {
+                console.error('WA Lunas Err:', e);
+            }
         }
         showAlert('Pembayaran Berhasil!', 'success', () => { modalLunas.classList.remove('active'); renderTable(); });
     };

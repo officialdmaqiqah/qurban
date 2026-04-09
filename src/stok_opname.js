@@ -74,10 +74,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(isChecked) tr.style.background = 'rgba(16, 185, 129, 0.08)';
             
             tr.innerHTML = `
-                <td style="font-weight:700; color:var(--primary); font-size:1.1rem;">${item.no_tali}</td>
+                <td class="sticky-col">
+                    <div style="font-weight:700; color:var(--primary); font-size:1.1rem;">${item.no_tali}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${item.warna_tali || '-'}</div>
+                </td>
                 <td>${item.batch}</td>
                 <td>${formatTgl(item.tgl_masuk)}</td>
-                <td>${item.warna_tali} | ${item.sex}</td>
+                <td>${item.sex || '-'}</td>
                 <td>
                     <select class="form-control select-opname" data-id="${item.id}" style="font-size:0.85rem; ${isChecked?'border-color:var(--success)':''}">
                         <option value="">Belum diset</option>
@@ -235,7 +238,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (res.success) {
             showToast('✅ Laporan Audit Berhasil Terkirim!', 'success');
         } else {
-            showAlert('Gagal mengirim WA: ' + res.msg, 'danger');
+            window.showConfirm(`WA Laporan Gagal: ${res.msg}\n\nIngin kirim manual?`, () => {
+                window.open(res.link, '_blank');
+            }, null, 'WA Gateway Masalah', 'Kirim Manual', 'btn-primary');
         }
     });
 

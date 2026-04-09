@@ -571,9 +571,7 @@ html { background-color: var(--bg-dark); }
   border-spacing: 0 !important;
 }
 
-/* Target kolom ke-3 (No Tali) HANYA pada tabel yang diaktifkan fiturnya */
-.data-table.sticky-enabled th:nth-child(3),
-.data-table.sticky-enabled td:nth-child(3),
+/* Target kolom identity yang diaktifkan fiturnya */
 .data-table .sticky-col {
   position: sticky !important;
   left: 0 !important;
@@ -583,19 +581,16 @@ html { background-color: var(--bg-dark); }
 }
 
 /* Header tetap di atas */
-.data-table.sticky-enabled th:nth-child(3) {
+th.sticky-col {
   z-index: 22 !important;
 }
 
 /* PERBAIKAN: Mode Terang (Light Mode) */
-body.light-mode .data-table.sticky-enabled th:nth-child(3),
-body.light-mode .data-table.sticky-enabled td:nth-child(3),
 body.light-mode .sticky-col {
   background-color: #ffffff !important;
   border-right: 1px solid #e2e8f0 !important;
 }
-body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td:nth-child(3),
-body.light-mode .data-table.sticky-enabled tbody tr:nth-child(even) td.sticky-col {
+body.light-mode .data-table tbody tr:nth-child(even) td.sticky-col {
   background-color: #f1f5f9 !important;
 }
 

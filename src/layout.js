@@ -251,17 +251,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'header-actions';
 
-        // 1. Notification Bell
+        // 1. Notification Bell (For Approval / Alerts)
         const bell = document.createElement('div');
         bell.className = 'action-icon';
+        bell.id = 'notifBellIcon';
         bell.innerHTML = '🔔';
+        bell.title = 'Notifikasi';
         bell.onclick = () => window.location.href = 'pengaturan.html';
         
-        // 2. Theme Toggle
+        // 2. Settings Gear
+        const gear = document.createElement('div');
+        gear.className = 'action-icon';
+        gear.innerHTML = '⚙️';
+        gear.title = 'Pengaturan';
+        gear.onclick = () => window.location.href = 'pengaturan.html';
+
+        // 3. Theme Toggle
         const themeBtn = document.createElement('div');
         themeBtn.className = 'action-icon';
         const t = localStorage.getItem('QURBAN_THEME') || 'dark';
         themeBtn.innerHTML = t === 'dark' ? '☀️' : '🌙';
+        themeBtn.title = 'Ganti Tema';
         themeBtn.onclick = () => {
             const isDark = !document.documentElement.classList.contains('light-mode');
             if (isDark) {
@@ -275,7 +285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
-        // 3. Logout Button in Header
+        // 4. Logout Button in Header
         const logoutHeader = document.createElement('div');
         logoutHeader.className = 'action-icon logout-icon';
         logoutHeader.innerHTML = `
@@ -293,8 +303,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         };
 
-        // Susun urutan sesuai permintaan om: Lonceng -> Tema -> Power (Nama User sudah ada di kiri mereka)
+        // Susun urutan: Lonceng -> Gear -> Tema -> Power
         actionsDiv.appendChild(bell);
+        actionsDiv.appendChild(gear);
         actionsDiv.appendChild(themeBtn);
         actionsDiv.appendChild(logoutHeader);
         
@@ -343,7 +354,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (count > 0) {
                 const badge = document.createElement('span');
                 badge.className = 'badge-dot';
-                document.querySelector('.header-actions .action-icon')?.appendChild(badge);
+                document.getElementById('notifBellIcon')?.appendChild(badge);
             }
         }
     }

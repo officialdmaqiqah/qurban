@@ -218,6 +218,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                 status_fisik: 'Terdistribusi',
                 updated_at: new Date().toISOString()
             }).eq('id', modal._goatId);
+
+            // Kirim Notifikasi WA Terdistribusi
+            try {
+                const config = await window.getWaConfig();
+                const { data: trx } = await supabase.from('transaksi').select('*, customer').contains('items', [{ goatId: modal._goatId }]).single();
+                if (trx && trx.customer?.wa1) {
+                    const commonData = {
+                        nama: trx.customer.nama,
+                        id: trx.id,
+                        tgl: new Date().toLocaleDateString('id-ID'),
+                        items: trips[tIdx].items[iIdx].noTali,
+                        sisa: formatRp((trx.total_deal || 0) - (trx.total_paid || 0)),
+                        nama_agen: trips[tIdx].sopirNama
+                    };
+                    const msg = await window.parseWaTemplate(config.templateDistribusiTerkirim, commonData);
+                    const res = await window.sendWa(trx.customer.wa1, msg);
+                    if (!res.success) {
+                        window.showToast('WA Distribusi gagal dikirim otomatis (Gateway error).', 'warning');
+                    }
+                }
+            } catch (waErr) {
+                console.warn('Opsi notifikasi WA gagal:', waErr);
+            }
             
             modal.classList.remove('active');
             showToast('✅ Distribusi tuntas!', 'success');
@@ -255,7 +278,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tr.innerHTML = `
                     <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-konsumen="${trx?.customer?.nama}" data-alamat="${trx?.delivery?.alamat?.alamat || '-'}"></td>
                     <td>${idx + 1}</td>
-                    <td><div style="font-weight:700; color:var(--primary);">${k.no_tali}</div></td>
+                    <td class="sticky-col">
+                        <div style="font-weight:700; color:var(--primary);">${k.no_tali}</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">${k.warna_tali || '-'}</div>
+                    </td>
                     <td>${trx?.customer?.nama || '-'}</td>
                     <td>${trx?.delivery?.alamat?.kab || '-'}</td>
                     <td>${trx?.delivery?.alamat?.kec || trx?.delivery?.alamat?.desa || '-'}</td>

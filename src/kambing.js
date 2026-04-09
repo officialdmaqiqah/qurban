@@ -237,8 +237,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td style="font-weight:600; display:none;">${displayBatch}</td>
                 <td style="white-space:nowrap; display:none;">${formatTgl(item.tgl_masuk)}</td>
-                <td class="sticky-col" style="font-weight:600;">${item.no_tali}</td>
-                <td>${item.warna_tali || '-'}</td>
+                <td class="sticky-col">
+                    <div style="font-weight:600;">${item.no_tali}</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted); font-weight:400; margin-top:2px;">${item.warna_tali || '-'}</div>
+                </td>
                 <td>${item.sex || '-'}</td>
                 <td><span class="badge" style="background:rgba(255,255,255,0.1);">${item.lokasi || '-'}</span></td>
                 <td style="font-weight:600; color:var(--primary);">${item.berat ? item.berat + ' kg' : '-'}</td>

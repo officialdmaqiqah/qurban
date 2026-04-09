@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tr = document.createElement('tr');
             const badge = item.status_kesehatan === 'Mati' ? 'badge-danger' : 'badge-warning';
             tr.innerHTML = `
-                <td>
+                <td class="sticky-col">
                     <div style="font-weight:700; color:var(--warning); font-size:1.1rem;">${item.no_tali}</div>
                     <div style="font-size:0.75rem; color:var(--text-muted);">${item.warna_tali || '-'}</div>
                 </td>
