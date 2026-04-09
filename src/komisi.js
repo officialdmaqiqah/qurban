@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="text-align:right;">
                     ${isLunas ? 
                         `<button class="btn btn-sm btn-shimmer" style="background:rgba(244,63,94,0.1); color:var(--danger); border:1px solid rgba(244,63,94,0.2);" onclick="window.rollbackKomisi('${t.id}')">↩️</button>` : 
-                        `<button class="btn btn-sm btn-shimmer" ${!canPay ? 'disabled style="background:rgba(255,255,255,0.05); color:var(--text-muted);"' : 'style="background:var(--primary); font-size:0.75rem; border:none; padding:4px 10px;"'} onclick="window.openBayarKomisi('${t.id}')">
+                        `<button class="btn btn-sm btn-shimmer" ${!canPay ? 'disabled style="background:rgba(255,255,255,0.05); color:var(--text-muted);"' : 'style="background:var(--primary); color:#ffffff; font-size:0.75rem; border:none; padding:4px 10px;"'} onclick="window.openBayarKomisi('${t.id}')">
                             ${canPay ? '💸 Cairkan' : '⌛ Tunggu Lunas'}
                         </button>`
                     }
