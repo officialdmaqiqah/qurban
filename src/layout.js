@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Header Actions Container
         const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'header-actions';
+        actionsDiv.className = 'topbar-actions';
 
         // 1. Notification Bell (For Approval / Alerts)
         const bell = document.createElement('div');

@@ -120,26 +120,20 @@
             </header>
 
             <div class="content-area tall-header">
-                <div class="scroll-hint-wrapper">
-                    <div class="summary-grid">
-                        <div class="summary-card">
-                            <div class="summary-icon icon-in"> 📈 </div>
-                            <div class="summary-info">
-                                <h4>Total Pemasukan</h4>
-                                <p id="totalPemasukan">Rp 0</p>
-                            </div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-icon icon-out"> 📉 </div>
-                            <div class="summary-info">
-                                <h4>Total Pengeluaran</h4>
-                                <p id="totalPengeluaran">Rp 0</p>
-                            </div>
-                        </div>
+                <div class="premium-grid">
+                    <div class="premium-card">
+                        <div class="premium-label">Total Pemasukan</div>
+                        <div class="premium-value" id="totalPemasukan">Rp 0</div>
+                        <div class="premium-icon-box" style="color: var(--success);">📈</div>
+                    </div>
+                    <div class="premium-card">
+                        <div class="premium-label">Total Pengeluaran</div>
+                        <div class="premium-value" id="totalPengeluaran">Rp 0</div>
+                        <div class="premium-icon-box" style="color: var(--danger);">📉</div>
                     </div>
                 </div>
 
-                <div id="containerRealtimeBalance" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;"></div>
+                <div id="containerRealtimeBalance" class="premium-grid" style="margin-bottom: 2rem;"></div>
 
                 <div class="card-box">
                     <div class="flex-between" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 15px;">
