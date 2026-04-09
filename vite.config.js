@@ -16,6 +16,7 @@ export default defineConfig({
         hutang_supplier: resolve(__dirname, 'hutang_supplier.html'),
         komisi: resolve(__dirname, 'komisi.html'),
         distribusi: resolve(__dirname, 'distribusi.html'),
+        kesehatan: resolve(__dirname, 'kesehatan.html'),
         kambing_sakit: resolve(__dirname, 'kambing_sakit.html'),
         kambing_mati: resolve(__dirname, 'kambing_mati.html'),
         stok_opname: resolve(__dirname, 'stok_opname.html'),
