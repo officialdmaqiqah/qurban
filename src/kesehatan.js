@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
                 <td><span class="badge" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">Batch ${item.batch}</span></td>
                 <td style="font-weight:600;">${formatTgl(item.tgl_keluar || item.updated_at)}</td>
-                <td>
+                <td style="padding-right: 1.5rem;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                         <div>
                             <span class="badge ${badgeClass}">${(item.status_kesehatan || item.status_fisik || 'Sakit').toUpperCase()}</span>

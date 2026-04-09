@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        const netProfit = omzet - hpp - komisi - opex - deadLoss - saving;
+        const netProfit = omzet - hpp - komisi - opex - deadLossNet - saving;
         addRow('LABA BERSIH', netProfit, 'row-grand-total');
         return netProfit;
     };
