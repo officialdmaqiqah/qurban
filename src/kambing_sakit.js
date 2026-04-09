@@ -23,13 +23,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const loadGoats = async (force = false) => {
         if (!force && cachedGoats.length > 0) return cachedGoats;
-        const { data } = await supabase.from('stok_kambing').select('*').neq('status_kesehatan', 'Sehat');
+        const { data, error } = await supabase.from('stok_kambing').select('*').neq('status_kesehatan', 'Sehat');
+        if (error) console.error("Error loading sick goats:", error);
         cachedGoats = data || [];
+        console.log(`Loaded ${cachedGoats.length} non-Sehat goats for history.`);
         return cachedGoats;
     };
 
     const updateStats = (data) => {
-        const inCare = data.filter(k => k.status_kesehatan === 'Sakit' || k.status_kesehatan === 'Perawatan').length;
+        const inCare = data.filter(k => {
+            const st = (k.status_kesehatan || '').toLowerCase();
+            return st === 'sakit' || st === 'perawatan';
+        }).length;
         const urgent = data.filter(k => (k.catatan_keluar || '').toLowerCase().includes('urgent') || (k.catatan_keluar || '').toLowerCase().includes('parah')).length;
         
         const today = new Date().toISOString().split('T')[0];
@@ -59,7 +64,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 (k.catatan_keluar || '').toLowerCase().includes(term);
             
             let matchStatus = true;
-            if (healthFilter === 'sakit') matchStatus = ((k.status_kesehatan || '').toLowerCase() === 'sakit' || k.status_kesehatan === 'Perawatan');
+            const itemStatus = (k.status_kesehatan || '').toLowerCase();
+            if (healthFilter === 'sakit') {
+                matchStatus = (itemStatus === 'sakit' || itemStatus === 'perawatan');
+            } else if (healthFilter === 'sembuh') {
+                matchStatus = (itemStatus === 'sehat');
+            }
             
             return matchSearch && matchStatus;
         }).sort((a,b) => new Date(b.updated_at || b.tgl_keluar) - new Date(a.updated_at || a.tgl_keluar));
