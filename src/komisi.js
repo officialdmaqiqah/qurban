@@ -270,5 +270,93 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('inpSearchKomisi')?.addEventListener('input', async () => renderTabel(await getTrxData()));
     document.getElementById('filterStatusKomisi')?.addEventListener('change', async () => renderTabel(await getTrxData()));
     
+    // --- TAB LOGIC ---
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            const target = btn.getAttribute('data-tab');
+            const el = document.getElementById(target);
+            if(el) el.classList.add('active');
+
+            const list = await getTrxData();
+            if(target === 'tabSaldoAgen') renderRekapPerAgen(list);
+            if(target === 'tabRekap') renderRekapBulanan(list);
+        });
+    });
+
+    function renderRekapPerAgen(list) {
+        const agens = {};
+        list.forEach(t => {
+            const id = t.agen?.id || 'unknown';
+            const nama = t.agen?.nama || 'Tanpa Agen';
+            const tipe = t.agen?.tipe || '-';
+            if(!agens[id]) agens[id] = { nama, tipe, total:0, lunas:0, belum:0, trx:0 };
+            
+            const n = parseFloat(t.komisi?.nominal) || 0;
+            agens[id].total += n;
+            agens[id].trx++;
+            if(t.komisi?.status === 'lunas') agens[id].lunas += n;
+            else agens[id].belum += n;
+        });
+
+        const container = document.getElementById('containerSaldoAgen');
+        if(!container) return;
+        
+        container.innerHTML = Object.values(agens).map(a => `
+            <div class="rekap-card">
+                <div class="rekap-card-header" style="margin-bottom:0.5rem;">
+                    <div>
+                        <div class="rekap-agen-name" style="color:var(--text-main); font-size:1.1rem;">${a.nama}</div>
+                        <div class="rekap-agen-tipe" style="color:var(--primary); font-weight:700;">${a.tipe}</div>
+                    </div>
+                </div>
+                <div class="rekap-row"><span class="rekap-row-label">Total Transaksi</span><span class="rekap-row-value">${a.trx} Ekor</span></div>
+                <div class="rekap-row"><span class="rekap-row-label">Total Hak Komisi</span><span class="rekap-row-value">${formatRp(a.total)}</span></div>
+                <div class="rekap-row"><span class="rekap-row-label">Sudah Dibayar</span><span class="rekap-row-value" style="color:var(--success)">${formatRp(a.lunas)}</span></div>
+                <div class="rekap-row" style="border-top:2px dashed rgba(255,255,255,0.05); padding-top:0.75rem; margin-top:0.2rem;"><span class="rekap-row-label" style="font-weight:700; color:var(--warning);">Sisa Outstanding</span><span class="rekap-row-value" style="color:var(--warning); font-weight:800; font-size:1.1rem;">${formatRp(a.belum)}</span></div>
+            </div>
+        `).join('') || `<div style="padding:2rem; text-align:center; color:var(--text-muted); width:100%;">Belum ada data.</div>`;
+    }
+
+    function renderRekapBulanan(list) {
+        const months = {};
+        list.forEach(t => {
+            const dateStr = t.tgl_trx || t.tglTrx;
+            if(!dateStr) return;
+            const d = new Date(dateStr);
+            const mKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+            if(!months[mKey]) months[mKey] = { lunas:0, belum:0, total:0 };
+            
+            const n = parseFloat(t.komisi?.nominal) || 0;
+            months[mKey].total += n;
+            if(t.komisi?.status === 'lunas') months[mKey].lunas += n;
+            else months[mKey].belum += n;
+        });
+
+        const grid = document.getElementById('rekapGrid');
+        if(!grid) return;
+
+        grid.innerHTML = Object.keys(months).sort().reverse().map(m => {
+            const [y, mo] = m.split('-');
+            const mName = new Date(y, parseInt(mo)-1).toLocaleString('id-ID', {month:'long', year:'numeric'});
+            const obj = months[m];
+
+            return `
+            <div class="rekap-card" style="border-left:4px solid var(--primary);">
+                <div class="rekap-card-header" style="margin-bottom:0.5rem;">
+                    <div>
+                        <div class="rekap-agen-name" style="color:var(--primary); font-size:1.1rem;">🗓️ ${mName}</div>
+                    </div>
+                </div>
+                <div class="rekap-row"><span class="rekap-row-label">Akumulasi Komisi</span><span class="rekap-row-value">${formatRp(obj.total)}</span></div>
+                <div class="rekap-row"><span class="rekap-row-label">Tercairkan (Lunas)</span><span class="rekap-row-value" style="color:var(--success)">${formatRp(obj.lunas)}</span></div>
+                <div class="rekap-row" style="background:rgba(245,158,11,0.05); padding:8px; border-radius:6px; margin-top:8px;"><span class="rekap-row-label" style="color:var(--warning); font-weight:700;">Outstanding Bulan Ini</span><span class="rekap-row-value" style="color:var(--warning); font-weight:800;">${formatRp(obj.belum)}</span></div>
+            </div>
+            `;
+        }).join('') || `<div style="padding:2rem; text-align:center; color:var(--text-muted); width:100%;">Belum ada data bulanan.</div>`;
+    }
+
     init();
 });
