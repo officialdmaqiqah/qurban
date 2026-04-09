@@ -13,14 +13,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // Helpers
-    const formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
     const formatTgl = (iso) => {
         if (!iso) return '-';
         const p = iso.split('-');
         return p.length >= 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
     };
-    const formatNum = (v) => Math.round(v || 0).toLocaleString('id-ID');
-    const parseNum = (s) => parseFloat(String(s).replace(/\./g, '').replace(',', '.')) || 0;
 
     const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
 
@@ -94,6 +91,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Set default date
     if(inpTglBayar) inpTglBayar.value = window.getLocalDate();
+
+    window.setupMoneyMask(inpNominalBayar);
+    window.setupMoneyMask('inpNominalRefund');
 
     const renderStats = async () => {
         const { data: trxs } = await supabase.from('transaksi').select('*');
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
              listHistoriPay.appendChild(div);
         });
         boxHistoriPay.style.display = (trx.history_bayar?.length > 0) ? 'block' : 'none';
-        inpNominalBayar.value = formatNum(sisa);
+        inpNominalBayar.value = window.formatNum(sisa);
         boxInfoOrder.style.display = 'block'; formBayar.style.display = 'block';
     });
 
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const performSaveLunas = async (sendWA) => {
         const trxId = selOrder.value;
-        const nominal = parseNum(inpNominalBayar.value);
+        const nominal = window.parseNum(inpNominalBayar.value);
         const chan = inpChannelBayar.value;
         const tgl = inpTglBayar.value;
         const payId = 'PAY-' + Date.now().toString().slice(-6);
@@ -298,15 +298,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const modal = document.getElementById('modalRefundKelebihan');
         document.getElementById('refundTrxId').textContent = trx.id;
         document.getElementById('refundKonsumen').textContent = trx.customer.nama;
-        document.getElementById('refundNominal').textContent = formatRp(trx.total_overpaid);
-        document.getElementById('inpNominalRefund').value = formatNum(trx.total_overpaid);
+        document.getElementById('refundNominal').textContent = window.formatRp(trx.total_overpaid);
+        document.getElementById('inpNominalRefund').value = window.formatNum(trx.total_overpaid);
         modal._trx = trx; modal.classList.add('active');
     };
 
     document.getElementById('btnSimpanRefund')?.addEventListener('click', async () => {
         const modal = document.getElementById('modalRefundKelebihan');
         const trx = modal._trx;
-        const nominal = parseNum(document.getElementById('inpNominalRefund').value);
+        const nominal = window.parseNum(document.getElementById('inpNominalRefund').value);
         const tgl = document.getElementById('inpTglRefund').value;
         const chan = document.getElementById('inpChannelRefund').value;
         const refId = 'REF-' + Date.now().toString().slice(-6);

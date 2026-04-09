@@ -105,31 +105,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="font-weight:700; color:var(--primary); font-size:1.1rem;">${item.no_tali}</div>
                     <div style="font-size:0.75rem; color:var(--text-muted);">${item.warna_tali || '-'}</div>
                 </td>
-                <td><span class="badge" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">Batch ${item.batch}</span></td>
+                <td>
+                    <span class="badge" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">Batch ${item.batch}</span>
+                    <div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">${item.supplier || '-'}</div>
+                </td>
                 <td style="font-weight:600;">${formatTgl(item.tgl_keluar || item.updated_at)}</td>
                 <td style="padding-right: 1.5rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <div>
-                            <span class="badge ${badgeClass}">${(item.status_kesehatan || item.status_fisik || 'Sakit').toUpperCase()}</span>
-                            <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted); line-height:1.3;">${item.catatan_keluar || '-'}</div>
-                        </div>
-                        <div style="display:flex; gap:4px;">
-                            ${(item.status_fisik === 'Mati' || item.status_kesehatan === 'Disembelih' || item.status_fisik === 'Hilang') ? `
-                                <button class="btn btn-sm" onclick="window.editLossRecord('${item.id}')" style="padding:4px; background:rgba(var(--primary-rgb), 0.1); border:1px solid rgba(var(--primary-rgb), 0.2);" title="Edit Catatan & Kompensasi">✏️</button>
-                                <button class="btn btn-sm" onclick="window.rollbackStatus('${item.id}', '${item.no_tali}')" style="padding:4px; background:rgba(var(--danger-rgb),0.1); border:1px solid rgba(var(--danger-rgb),0.2);" title="Batalkan / Restore">↩️</button>
-                            ` : `
-                                <select class="form-control" onchange="window.updateHealth(this, '${item.id}')" style="font-size:0.75rem; background:rgba(16, 185, 129, 0.1); border-color:var(--primary); padding:2px 5px; height:auto;">
-                                    <option value="">-- Tindakan --</option>
-                                    <option value="Sehat">✅ Sudah Sembuh</option>
-                                    <option value="Mati">💀 Mati / Afkir</option>
-                                    <option value="Disembelih">🔪 Disembelih Darurat</option>
-                                </select>
-                            `}
-                        </div>
-                    </div>
+                     <span class="badge ${badgeClass}">${(item.status_kesehatan || item.status_fisik || 'Sakit').toUpperCase()}</span>
+                     <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted); line-height:1.3;">${item.catatan_keluar || '-'}</div>
                 </td>
                 <td>
-                   <div style="font-size:0.7rem; color:var(--text-muted);">${item.supplier || '-'}</div>
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        ${(item.status_fisik === 'Mati' || item.status_kesehatan === 'Disembelih' || item.status_fisik === 'Hilang') ? `
+                            <button class="btn btn-sm" onclick="window.editLossRecord('${item.id}')" style="padding:4px; background:rgba(var(--primary-rgb), 0.1); border:1px solid rgba(var(--primary-rgb), 0.2);" title="Edit Catatan & Kompensasi">✏️</button>
+                            <button class="btn btn-sm" onclick="window.rollbackStatus('${item.id}', '${item.no_tali}')" style="padding:4px; background:rgba(var(--danger-rgb),0.1); border:1px solid rgba(var(--danger-rgb),0.2);" title="Batalkan / Restore">↩️</button>
+                        ` : `
+                            <select class="form-control" onchange="window.updateHealth(this, '${item.id}')" style="font-size:0.75rem; background:rgba(16, 185, 129, 0.1); border-color:var(--primary); padding:2px 5px; height:auto;">
+                                <option value="">-- Tindakan --</option>
+                                <option value="Sehat">✅ Sudah Sembuh</option>
+                                <option value="Mati">💀 Mati / Afkir</option>
+                                <option value="Disembelih">🔪 Disembelih Darurat</option>
+                            </select>
+                        `}
+                    </div>
                 </td>
             `;
             tableBody.appendChild(tr);
@@ -148,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(val === 'Mati' || val === 'Disembelih') {
                  window.showInput("Catatan Tindakan (Opsional):", "", (note) => {
                     window.showInput(`Nominal Kompensasi Supplier (Rp) - ${val}:`, "0", async (kompStr) => {
-                        const kompensasi = parseFloat(kompStr) || 0;
+                        const kompensasi = window.parseNum(kompStr);
                         updates.status_fisik = 'Mati';
                         updates.status_transaksi = val;
                         updates.tgl_keluar = upDate.split('T')[0];
@@ -157,19 +155,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                         await supabase.from('stok_kambing').update(updates).eq('id', id);
                         
                         // Keuangan Kerugian
-                        await supabase.from('keuangan').insert([{
+                        const { error: errLoss } = await supabase.from('keuangan').insert([{
                             id: 'LOSS-'+Date.now(), tipe: 'pengeluaran', tanggal: updates.tgl_keluar,
                             kategori: 'Kerugian (Mati/Hilang)', nominal: currentGoat.harga_nota, 
                             keterangan: `Kerugian ${val} No Tali ${currentGoat.no_tali}`, channel: 'Non-Kas', related_goat_id: id
                         }]);
+
+                        if (errLoss) {
+                            console.error("Loss entry failed:", errLoss);
+                            window.showAlert("⚠️ Gagal mencatat kerugian ke keuangan: " + errLoss.message, "danger");
+                        }
                         
                         if(kompensasi > 0) {
-                            await supabase.from('keuangan').insert([{
+                            const { error: errKomp } = await supabase.from('keuangan').insert([{
                                 id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: updates.tgl_keluar,
                                 kategori: 'Kompensasi Supplier', nominal: kompensasi,
                                 keterangan: `Kompensasi ${val} No Tali ${currentGoat.no_tali}`, channel: 'Non-Kas', related_goat_id: id,
                                 supplier: currentGoat.supplier, batch: currentGoat.batch
                             }]);
+                            if (errKomp) {
+                                console.error("Compensation entry failed:", errKomp);
+                                window.showAlert("⚠️ Gagal mencatat kompensasi ke keuangan: " + errKomp.message, "danger");
+                            }
                         }
                         window.showToast('Data diperbarui!', 'success');
                         await loadData(true);
@@ -198,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         window.showInput("Edit Catatan:", goat.catatan_keluar || '', (newNote) => {
             window.showInput("Edit Kompensasi (Rp):", finKomp ? finKomp.nominal : 0, async (newKompStr) => {
-                const newKomp = parseFloat(newKompStr) || 0;
+                const newKomp = window.parseNum(newKompStr);
                 await supabase.from('stok_kambing').update({ catatan_keluar: newNote }).eq('id', id);
                 
                 if (newKomp > 0) {

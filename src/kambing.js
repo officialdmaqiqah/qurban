@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (perm === 'hideSupplierInfo') return true;
             if (perm === 'hideHargaNota') return true;
             if (perm === 'hideProfit') return true;
+            if (perm === 'hideHargaKandang') return true;
             if (perm === 'noExportMaster') return true;
             if (perm === 'readonlyMaster') return true; // Melarang edit/hapus master
         }
@@ -124,7 +125,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return iso;
     };
 
-    const formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v);
 
     function getStatusBadge(type, status) {
         if (!status) return '-';
@@ -164,8 +164,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         let filtered = [...kambingData];
         const search = (inpSearch.value || '').toLowerCase();
-        const minHarga = parseInt(inpMinHarga.value) || 0;
-        const maxHarga = parseInt(inpMaxHarga.value) || Infinity;
+        const minHarga = window.parseNum(inpMinHarga.value);
+        const maxHarga = window.parseNum(inpMaxHarga.value) || Infinity;
         
         const fTrans = selStatusTransaksi.value;
         const fKes = selStatusKesehatan.value;
@@ -554,6 +554,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         modalKambing.classList.add('active');
     }
 
+    // --- LOGIKA SINKRONISASI HARGA KANDANG & PROFIT (PINDAH KE SINI AGAR AKTIF REALTIME) ---
+    const inpHN = document.getElementById('inpHargaNota');
+    const inpSV = document.getElementById('inpSaving');
+    const inpPF = document.getElementById('inpProfit');
+    const inpHK = document.getElementById('inpHargaKandang');
+
+    inpHN?.addEventListener('input', syncToKandang);
+    inpSV?.addEventListener('input', syncToKandang);
+    inpPF?.addEventListener('input', syncToKandang);
+    inpHK?.addEventListener('input', syncToProfit);
+
+    // Inisialisasi Masker Uang Otomatis
+    window.setupMoneyMask(inpHN);
+    window.setupMoneyMask(inpSV);
+    window.setupMoneyMask(inpPF);
+    window.setupMoneyMask(inpHK);
+    window.setupMoneyMask('inpMinHarga');
+    window.setupMoneyMask('inpMaxHarga');
+
+    function syncToKandang() {
+        const nota = window.parseNum(inpHN.value);
+        const saving = window.parseNum(inpSV.value);
+        const profit = window.parseNum(inpPF.value);
+        if (inpHK) inpHK.value = window.formatNum(nota + saving + profit);
+    }
+
+    function syncToProfit() {
+        const nota = window.parseNum(inpHN.value);
+        const saving = window.parseNum(inpSV.value);
+        const kandang = window.parseNum(inpHK.value);
+        if (inpPF) inpPF.value = window.formatNum(kandang - nota - saving);
+    }
+
     formKambing.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -597,14 +630,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showAlert('Gagal mengirim permintaan: ' + reqErr.message, 'danger');
                 return;
             }
-            showToast('🚀 Permintaan edit berhasil dikirim ke Admin!', 'success');
-            modalKambing.classList.remove('active');
-            return;
-        }
+        window.showToast('🚀 Permintaan edit berhasil dikirim ke Admin!', 'success');
+        modalKambing.classList.remove('active');
+        return;
+    }
 
-        const nota = parseFloat(document.getElementById('inpHargaNota').value) || 0;
-        const saving = parseFloat(document.getElementById('inpSaving').value) || 0;
-        const profit = parseFloat(document.getElementById('inpProfit').value) || 0;
+    const nota = window.parseNum(inpHN.value);
+    const saving = window.parseNum(inpSV.value);
+    const profit = window.parseNum(inpPF.value);
 
         const { data: dbItem } = await supabase.from('stok_kambing').select('*').eq('id', id).single();
         if (dbItem) {

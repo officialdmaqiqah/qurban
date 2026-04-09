@@ -53,8 +53,8 @@
         .stat-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.05); }
         .stat-card-icon { font-size: 2rem; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 10px; }
         .stat-info { flex: 1; }
-        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 2px; }
-        .stat-value { font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 300; margin-bottom: 2px; }
+        .stat-value { font-size: 1.25rem; font-weight: 300; color: var(--text-main); }
 
         /* Table Enhancements */
         .status-badge {
@@ -83,7 +83,7 @@
         }
         .rekap-card:hover { border-color: rgba(var(--primary-hsl), 0.4); }
         .rekap-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
-        .rekap-agen-name { font-size: 1rem; font-weight: 700; }
+        .rekap-agen-name { font-size: 1rem; font-weight: 300; }
         .rekap-agen-tipe { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
         .rekap-row { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
         .rekap-row:last-child { border-bottom: none; }
@@ -116,7 +116,7 @@
             .stat-card-icon { width: 32px !important; height: 32px !important; font-size: 1rem !important; margin: 0 !important; border-radius: 6px !important; }
             .stat-info { display: flex; flex-direction: column; justify-content: center; }
             .stat-label { font-size: 0.6rem !important; margin-bottom: 2px !important; }
-            .stat-value { font-size: 0.9rem !important; font-weight: 800 !important; }
+            .stat-value { font-size: 0.9rem !important; font-weight: 300 !important; }
             
             .tab-nav { overflow-x: auto; white-space: nowrap; padding-bottom: 0px; scrollbar-width: none; }
             .tab-nav::-webkit-scrollbar { display: none; }
@@ -145,7 +145,7 @@
                 <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                 
                 <a href="komisi.html" class="nav-item active">&bull; Komisi Agen</a>
-                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:800; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight: 300; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
             </nav>
             <div style="padding: 1.5rem;">
                 <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
@@ -273,12 +273,12 @@
             <div class="modal-body" style="display:block; padding:1.25rem;">
                 <div id="bayarModalInfo" style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:1rem; margin-bottom:1rem;"></div>
                 <div class="form-group">
-                    <label class="form-label" style="font-weight:700; color:#f59e0b;">Tanggal Pembayaran</label>
+                    <label class="form-label" style="font-weight: 300; color:#f59e0b;">Tanggal Pembayaran</label>
                     <input type="date" id="inpTglBayarKomisi" class="form-control">
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
                     <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" style="font-weight:700; color:var(--primary);">Sumber Modal</label>
+                        <label class="form-label" style="font-weight: 300; color:var(--primary);">Sumber Modal</label>
                         <select id="inpChannelBayarKomisi" class="form-control">
                             <option value="Tunai">💵 Tunai</option>
                             <option value="Transfer Bank">🏦 Transfer Bank</option>

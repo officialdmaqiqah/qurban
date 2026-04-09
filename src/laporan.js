@@ -137,14 +137,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const deadLossNet = deadLossRaw - deadKomp;
 
-        const addRow = (l, v, cls='') => body.innerHTML += `<tr class="${cls}"><td>${l}</td><td align="right">${formatRp(v)}</td></tr>`;
+        const addRow = (l, v, cls='') => body.innerHTML += `<tr class="${cls}"><td>${l}</td><td class="text-right">${formatRp(v)}</td></tr>`;
         
         addRow('Total Omzet Penjualan', omzet);
         addRow('(-) HPP (Harga Nota)', -hpp);
         addRow('LABA KOTOR', omzet - hpp, 'row-total');
         addRow('(-) Komisi Agen', -komisi);
         addRow('(-) Biaya Operasional', -opex);
-        addRow('(-) Kerugian Kematian (Netto)', -deadLossNet, deadLossNet > 0 ? 'text-danger' : '');
+        addRow('(-) Kerugian Kematian (Bruto)', -deadLossRaw);
+        if(deadKomp > 0) addRow('(+) Kompensasi Supplier', deadKomp, 'text-success');
+        addRow('Kerugian Kematian (Netto)', -deadLossNet, 'row-total ' + (deadLossNet > 0 ? 'text-danger' : ''));
         
         const savingStr = saving > 0 ? `<br><small style="font-weight:normal; opacity:0.7">Audit Kalkulasi: Terhitung dari ${trxs.filter(t => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
@@ -165,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <td>${sd.trxId}</td>
                             <td><strong>${sd.noTali}</strong></td>
                             <td>${sd.customer}</td>
-                            <td align="right">${formatRp(sd.val)}</td>
+                            <td class="text-right">${formatRp(sd.val)}</td>
                         </tr>
                     `;
                 });
@@ -206,8 +208,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(valHusni) valHusni.textContent = formatRp(pOwner);
         if(valTeam) valTeam.textContent = formatRp(pTeam);
 
-        body.innerHTML += `<tr><td>Porsi Owner (${currentConfig.owner}%)</td><td align="right"><b>${formatRp(pOwner)}</b></td></tr>`;
-        body.innerHTML += `<tr><td>Porsi Tim (${currentConfig.team}%)</td><td align="right"><b>${formatRp(pTeam)}</b></td></tr>`;
+        body.innerHTML += `<tr><td>Porsi Owner (${currentConfig.owner}%)</td><td class="text-right"><b>${formatRp(pOwner)}</b></td></tr>`;
+        body.innerHTML += `<tr><td>Porsi Tim (${currentConfig.team}%)</td><td class="text-right"><b>${formatRp(pTeam)}</b></td></tr>`;
     };
 
     const renderAK = (fin, start, end) => {
@@ -239,9 +241,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             body.innerHTML += `
                 <tr>
                     <td><strong>${k}</strong></td>
-                    <td align="right" class="text-success">${formatRp(channels[k].in)}</td>
-                    <td align="right" class="text-danger">(${formatRp(channels[k].out)})</td>
-                    <td align="right" style="font-weight:700;">${formatRp(channels[k].saldo)}</td>
+                    <td class="text-right text-success">${formatRp(channels[k].in)}</td>
+                    <td class="text-right text-danger">(${formatRp(channels[k].out)})</td>
+                    <td class="text-right" style="font-weight:700;">${formatRp(channels[k].saldo)}</td>
                 </tr>
             `;
         });
@@ -265,20 +267,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         Object.keys(chans).forEach(k => {
             if(chans[k] === 0) return;
-            bodyAktiva.innerHTML += `<tr><td>Kas/Bank: ${k}</td><td align="right">${formatRp(chans[k])}</td></tr>`;
+            bodyAktiva.innerHTML += `<tr><td>Kas/Bank: ${k}</td><td class="text-right">${formatRp(chans[k])}</td></tr>`;
             totalCash += chans[k];
         });
 
         // B. STOK (HPP)
         const totalStokHPP = goats.filter(g => g.status_transaksi === 'Tersedia').reduce((s,g) => s + (g.harga_nota || 0), 0);
-        bodyAktiva.innerHTML += `<tr><td>Persediaan Kambing (HPP)</td><td align="right">${formatRp(totalStokHPP)}</td></tr>`;
+        bodyAktiva.innerHTML += `<tr><td>Persediaan Kambing (HPP)</td><td class="text-right">${formatRp(totalStokHPP)}</td></tr>`;
 
         // C. PIUTANG KONSUMEN
         const totalPiutang = trxs.reduce((s,t) => s + ((t.total_deal || 0) - (t.total_paid || 0)), 0);
-        bodyAktiva.innerHTML += `<tr><td>Piutang Konsumen</td><td align="right">${formatRp(totalPiutang)}</td></tr>`;
+        bodyAktiva.innerHTML += `<tr><td>Piutang Konsumen</td><td class="text-right">${formatRp(totalPiutang)}</td></tr>`;
 
         const grandAktiva = totalCash + totalStokHPP + totalPiutang;
-        bodyAktiva.innerHTML += `<tr class="row-grand-total"><td>TOTAL AKTIVA</td><td align="right">${formatRp(grandAktiva)}</td></tr>`;
+        bodyAktiva.innerHTML += `<tr class="row-grand-total"><td>TOTAL AKTIVA</td><td class="text-right">${formatRp(grandAktiva)}</td></tr>`;
 
         // 2. PASIVA
         // A. HUTANG SUPPLIER
@@ -287,13 +289,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const totalKompensasiSupplier = fin.filter(f => f.kategori === 'Kompensasi Supplier').reduce((s,f) => s + f.nominal, 0);
         const sisaHutangSupplier = totalTagihanSupplier - totalSudahBayarSupplier - totalKompensasiSupplier;
         
-        bodyPasiva.innerHTML += `<tr><td>Hutang Supplier</td><td align="right">${formatRp(sisaHutangSupplier)}</td></tr>`;
+        bodyPasiva.innerHTML += `<tr><td>Hutang Supplier</td><td class="text-right">${formatRp(sisaHutangSupplier)}</td></tr>`;
 
         // B. MODAL & LABA DITAHAN (BALANCING)
         const modalLaba = grandAktiva - sisaHutangSupplier;
-        bodyPasiva.innerHTML += `<tr><td>Modal & Laba Ditahan</td><td align="right">${formatRp(modalLaba)}</td></tr>`;
+        bodyPasiva.innerHTML += `<tr><td>Modal & Laba Ditahan</td><td class="text-right">${formatRp(modalLaba)}</td></tr>`;
 
-        bodyPasiva.innerHTML += `<tr class="row-grand-total"><td>TOTAL PASIVA</td><td align="right">${formatRp(grandAktiva)}</td></tr>`;
+        bodyPasiva.innerHTML += `<tr class="row-grand-total"><td>TOTAL PASIVA</td><td class="text-right">${formatRp(grandAktiva)}</td></tr>`;
     };
 
 

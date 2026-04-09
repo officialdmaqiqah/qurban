@@ -176,19 +176,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         await supabase.from('stok_kambing').update(updates).eq('id', goat.id);
         
         // Loss entry
-        await supabase.from('keuangan').insert([{
+        const { error: errLoss } = await supabase.from('keuangan').insert([{
             id: 'LOSS-'+Date.now(), tipe: 'pengeluaran', tanggal: tgl,
             kategori: 'Kerugian (Mati/Hilang)', nominal: goat.harga_nota, 
             keterangan: `Kerugian ${stt.toUpperCase()} No Tali ${goat.no_tali}`, channel: 'Non-Kas', related_goat_id: goat.id
         }]);
 
+        if (errLoss) {
+            console.error("Loss entry failed:", errLoss);
+            window.showAlert("⚠️ Gagal mencatat kerugian ke keuangan: " + errLoss.message, "danger");
+        }
+
         if(kompensasi > 0) {
-            await supabase.from('keuangan').insert([{
+            const { error: errKomp } = await supabase.from('keuangan').insert([{
                 id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: tgl,
                 kategori: 'Kompensasi Supplier', nominal: kompensasi, 
                 keterangan: `Kompensasi ${stt.toUpperCase()} No Tali ${goat.no_tali}`, channel: 'Non-Kas', related_goat_id: goat.id,
                 supplier: goat.supplier, batch: goat.batch
             }]);
+            if (errKomp) {
+                console.error("Compensation entry failed:", errKomp);
+                window.showAlert("⚠️ Gagal mencatat kompensasi ke keuangan: " + errKomp.message, "danger");
+            }
         }
 
         modalKeluar.classList.remove('active');

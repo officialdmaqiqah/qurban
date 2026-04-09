@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loggedUser = profile;
     const isAdmin = loggedUser.role === 'admin';
 
-    const formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
     const formatTgl = (iso) => {
         if (!iso) return '-';
         const p = iso.split('-');
@@ -93,9 +92,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const elBelum = document.getElementById('statKomisiBelum');
         const elJml = document.getElementById('statJmlAgen');
 
-        if(elTotal) elTotal.textContent = formatRp(total);
-        if(elLunas) elLunas.textContent = formatRp(lunas);
-        if(elBelum) elBelum.textContent = formatRp(belum);
+        if(elTotal) elTotal.textContent = window.formatRp(total);
+        if(elLunas) elLunas.textContent = window.formatRp(lunas);
+        if(elBelum) elBelum.textContent = window.formatRp(belum);
         if(elJml) elJml.textContent = agens.size;
     };
 
@@ -144,8 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><div style="font-weight:700; color:var(--primary);">${t.id}</div><div style="font-size:0.7rem; color:var(--text-muted);">${formatTgl(t.tgl_trx || t.tglTrx)}</div></td>
                 <td><div style="font-weight:600;">${t.agen?.nama || '-'}</div><div style="font-size:0.7rem; color:var(--text-muted);">${t.agen?.tipe || ''}</div></td>
                 <td>${t.customer?.nama || '-'}</td>
-                <td>${formatRp(totalDeal)}</td>
-                <td style="color:#f59e0b; font-weight:800;">${formatRp(t.komisi.nominal)}</td>
+                <td>${window.formatRp(totalDeal)}</td>
+                <td style="color:#f59e0b; font-weight:800;">${window.formatRp(t.komisi.nominal)}</td>
                 <td><div style="font-size:0.8rem;">${t.komisi.metodePembayaran || 'Akhir'}</div></td>
                 <td><span class="badge ${isLunas ? 'badge-success' : 'badge-warning'}" style="font-size:0.7rem; padding:4px 8px;">${isLunas ? 'LUNAS' : 'OUTSTANDING'}</span></td>
                 <td style="text-align:right;">
@@ -176,7 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <div style="margin-top:1rem; text-align:center;">
                 <div style="font-size:0.85rem; color:var(--text-muted);">NOMINAL KOMISI</div>
-                <div style="font-size:1.6rem; font-weight:800; color:#f59e0b;">${formatRp(t.komisi.nominal)}</div>
+                <div style="font-size:1.6rem; font-weight:800; color:#f59e0b;">${window.formatRp(t.komisi.nominal)}</div>
             </div>
         `;
         modal._trxId = id; modal._nom = t.komisi.nominal; modal.classList.add('active');
@@ -313,9 +312,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </div>
                 <div class="rekap-row"><span class="rekap-row-label">Total Transaksi</span><span class="rekap-row-value">${a.trx} Ekor</span></div>
-                <div class="rekap-row"><span class="rekap-row-label">Total Hak Komisi</span><span class="rekap-row-value">${formatRp(a.total)}</span></div>
-                <div class="rekap-row"><span class="rekap-row-label">Sudah Dibayar</span><span class="rekap-row-value" style="color:var(--success)">${formatRp(a.lunas)}</span></div>
-                <div class="rekap-row" style="border-top:2px dashed rgba(255,255,255,0.05); padding-top:0.75rem; margin-top:0.2rem;"><span class="rekap-row-label" style="font-weight:700; color:var(--warning);">Sisa Outstanding</span><span class="rekap-row-value" style="color:var(--warning); font-weight:800; font-size:1.1rem;">${formatRp(a.belum)}</span></div>
+                <div class="rekap-row"><span class="rekap-row-label">Total Hak Komisi</span><span class="rekap-row-value">${window.formatRp(a.total)}</span></div>
+                <div class="rekap-row"><span class="rekap-row-label">Sudah Dibayar</span><span class="rekap-row-value" style="color:var(--success)">${window.formatRp(a.lunas)}</span></div>
+                <div class="rekap-row" style="border-top:2px dashed rgba(255,255,255,0.05); padding-top:0.75rem; margin-top:0.2rem;"><span class="rekap-row-label" style="font-weight:700; color:var(--warning);">Sisa Outstanding</span><span class="rekap-row-value" style="color:var(--warning); font-weight:800; font-size:1.1rem;">${window.formatRp(a.belum)}</span></div>
             </div>
         `).join('') || `<div style="padding:2rem; text-align:center; color:var(--text-muted); width:100%;">Belum ada data.</div>`;
     }
@@ -350,9 +349,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="rekap-agen-name" style="color:var(--primary); font-size:1.1rem;">🗓️ ${mName}</div>
                     </div>
                 </div>
-                <div class="rekap-row"><span class="rekap-row-label">Akumulasi Komisi</span><span class="rekap-row-value">${formatRp(obj.total)}</span></div>
-                <div class="rekap-row"><span class="rekap-row-label">Tercairkan (Lunas)</span><span class="rekap-row-value" style="color:var(--success)">${formatRp(obj.lunas)}</span></div>
-                <div class="rekap-row" style="background:rgba(245,158,11,0.05); padding:8px; border-radius:6px; margin-top:8px;"><span class="rekap-row-label" style="color:var(--warning); font-weight:700;">Outstanding Bulan Ini</span><span class="rekap-row-value" style="color:var(--warning); font-weight:800;">${formatRp(obj.belum)}</span></div>
+                <div class="rekap-row"><span class="rekap-row-label">Akumulasi Komisi</span><span class="rekap-row-value">${window.formatRp(obj.total)}</span></div>
+                <div class="rekap-row"><span class="rekap-row-label">Tercairkan (Lunas)</span><span class="rekap-row-value" style="color:var(--success)">${window.formatRp(obj.lunas)}</span></div>
+                <div class="rekap-row" style="background:rgba(245,158,11,0.05); padding:8px; border-radius:6px; margin-top:8px;"><span class="rekap-row-label" style="color:var(--warning); font-weight:700;">Outstanding Bulan Ini</span><span class="rekap-row-value" style="color:var(--warning); font-weight:800;">${window.formatRp(obj.belum)}</span></div>
             </div>
             `;
         }).join('') || `<div style="padding:2rem; text-align:center; color:var(--text-muted); width:100%;">Belum ada data bulanan.</div>`;

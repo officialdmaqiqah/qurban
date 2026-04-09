@@ -11,9 +11,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const email = profile.email;
     if (email) document.getElementById('userEmailDisplay').textContent = email;
 
-    const formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
-    const formatNum = (v) => Math.round(v || 0).toLocaleString('id-ID');
-    const parseNum = (s) => parseFloat(String(s).replace(/\./g, '').replace(',', '.')) || 0;
 
     const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
 
@@ -108,7 +105,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             supplierStats[sName].totalEkor++;
             
             const bKey = k.batch || 'BT-000';
-            if(!supplierStats[sName].batches[bKey]) supplierStats[sName].batches[bKey] = { ekor: 0, tagihan: 0, tgl: k.tgl_masuk, notes: [] };
+            if(!supplierStats[sName].batches[bKey]) {
+                supplierStats[sName].batches[bKey] = { ekor: 0, tagihan: 0, tgl: k.tgl_masuk, notes: [], paid: 0, komp: 0 };
+            }
             supplierStats[sName].batches[bKey].ekor++;
             supplierStats[sName].batches[bKey].tagihan += nota;
             if(k.catatan_masuk) supplierStats[sName].batches[bKey].notes.push(k.catatan_masuk);
@@ -118,8 +117,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sName = (f.supplier || '').trim();
             if(sName && supplierStats[sName]) {
                 const nom = parseFloat(f.nominal) || 0;
-                if(f.tipe === 'pemasukan' && f.kategori === 'Kompensasi Supplier') supplierStats[sName].totalKomp += nom;
-                else if(f.tipe === 'pengeluaran' && f.kategori === 'Bayar Supplier') supplierStats[sName].totalPaid += nom;
+                const bKey = f.batch;
+
+                if(f.tipe === 'pemasukan' && f.kategori === 'Kompensasi Supplier') {
+                    supplierStats[sName].totalKomp += nom;
+                    if(bKey && supplierStats[sName].batches[bKey]) supplierStats[sName].batches[bKey].komp += nom;
+                }
+                else if(f.tipe === 'pengeluaran' && f.kategori === 'Bayar Supplier') {
+                    supplierStats[sName].totalPaid += nom;
+                    // Alokasi Spesifik Batch
+                    if(bKey && supplierStats[sName].batches[bKey]) {
+                        supplierStats[sName].batches[bKey].paid += nom;
+                    } else {
+                        // Alokasi Global (Tanpa Batch)
+                        if(!supplierStats[sName].globalUnallocated) supplierStats[sName].globalUnallocated = 0;
+                        supplierStats[sName].globalUnallocated += nom;
+                    }
+                }
             }
         });
 
@@ -127,14 +141,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let flattenedData = [];
         Object.values(supplierStats).forEach(s => {
-            const globalSisa = s.totalTags - s.totalKomp - s.totalPaid;
-            Object.entries(s.batches).forEach(([batch, bData]) => {
+            // Urutkan batch berdasarkan tanggal masuk (Tertua pertama) untuk alokasi FIFO
+            const sortedBatches = Object.entries(s.batches).sort((a,b) => {
+                const dA = new Date(a[1].tgl || '2000-01-01');
+                const dB = new Date(b[1].tgl || '2000-01-01');
+                return dA - dB;
+            });
+
+            let unallocatedPool = s.globalUnallocated || 0;
+
+            sortedBatches.forEach(([batch, bData]) => {
+                const sisaSebelumGlobal = bData.tagihan - bData.komp - bData.paid;
+                
+                // Alokasikan dana global ke batch ini
+                let fromGlobal = 0;
+                if(unallocatedPool > 0 && sisaSebelumGlobal > 0) {
+                    fromGlobal = Math.min(sisaSebelumGlobal, unallocatedPool);
+                    unallocatedPool -= fromGlobal;
+                }
+
+                const batchSisa = sisaSebelumGlobal - fromGlobal;
+
                 flattenedData.push({
                     nama: s.nama, batch, tglMasuk: bData.tgl, totalEkor: bData.ekor,
-                    totalPokok: bData.tagihan, globalSisa, isLunas: globalSisa <= 0,
+                    totalPokok: bData.tagihan, 
+                    batchSisa, 
+                    isLunas: batchSisa <= 0,
                     keterangan: bData.notes[0] || '-',
-                    totalKomp: s.totalKomp,
-                    totalPaid: s.totalPaid
+                    totalKomp: bData.komp,
+                    totalPaid: bData.paid + fromGlobal, // Tampilkan total yang terbayar di batch ini
+                    fromGlobal: fromGlobal
                 });
             });
         });
@@ -174,16 +210,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="color:var(--warning); font-size:0.9rem;">${formatRp(item.totalKomp)}</td>
                 <td style="color:var(--success); font-size:0.9rem;">${formatRp(item.totalPaid)}</td>
                 <td style="font-weight:bold; color:${sisaColor}; font-size:1.05rem;">
-                    ${item.globalSisa > 0 ? formatRp(item.globalSisa) : '<span class="badge badge-success">LUNAS</span>'}
+                    ${item.batchSisa > 0 ? formatRp(item.batchSisa) : '<span class="badge badge-success">LUNAS</span>'}
                 </td>
                 <td style="text-align:right;">
-                    <button class="btn btn-sm btn-bayar btn-shimmer" data-name="${item.nama}" data-batch="${item.batch}" style="background:var(--primary); color:#ffffff; border:none; padding:6px 12px;">💸 Bayar</button>
+                    <button class="btn btn-sm btn-bayar btn-shimmer" 
+                        data-name="${item.nama}" 
+                        data-batch="${item.batch}" 
+                        data-sisa="${item.batchSisa}"
+                        style="background:var(--primary); color:#ffffff; border:none; padding:6px 12px;">💸 Bayar</button>
                 </td>
             `;
             tableBody.appendChild(tr);
         });
 
-        document.querySelectorAll('.btn-bayar').forEach(btn => btn.onclick = () => openBayarModal(btn.dataset.name, btn.dataset.batch));
+        document.querySelectorAll('.btn-bayar').forEach(btn => btn.onclick = () => openBayarModal(btn.dataset.name, btn.dataset.batch, btn.dataset.sisa));
     }
 
     async function checkSaldoCukup(channel, nominal, label) {
@@ -197,8 +237,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         if(s < nominal) {
-            window.showAlert(`⚠️ Saldo di ${label} tidak cukup! Saldo saat ini: ${formatRp(s)}`, 'warning');
-            return false;
+            // PERINGATAN (BYPASS)
+            const ok = confirm(`⚠️ Saldo di ${label} tidak cukup! Saldo saat ini: ${formatRp(s)}.\n\nTetap lanjutkan pencatatan pembayaran (Mungkin menggunakan dana luar)?`);
+            return ok;
         }
         return true;
     }
@@ -210,7 +251,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inpBuktiBayar = document.getElementById('inpBuktiBayar');
     const previewBuktiBayar = document.getElementById('previewBuktiBayar');
 
-    const openBayarModal = async (supplierName, activeBatch) => {
+    window.setupMoneyMask('inpNominal');
+
+    const openBayarModal = async (supplierName, activeBatch, suggestedNominal = 0) => {
         document.getElementById('inpSupplierName').value = supplierName;
         document.getElementById('displaySupplier').value = supplierName;
         document.getElementById('inpTglBayar').value = window.getLocalDate();
@@ -224,8 +267,8 @@ document.addEventListener('DOMContentLoaded', async () => {
              inpBatchBayar.appendChild(o);
         });
 
-        document.getElementById('inpNominal').value = '';
-        document.getElementById('inpCatatan').value = `Bayar supplier ${supplierName}`;
+        document.getElementById('inpNominal').value = window.formatNum(suggestedNominal); // Auto-fill sisa hutang
+        document.getElementById('inpCatatan').value = `Bayar supplier ${supplierName}${activeBatch ? ' (Batch '+activeBatch+')' : ''}`;
         inpChannelBayar.value = 'Tunai'; containerRekBayar.style.display = 'none';
         modalBayar.classList.add('active');
     };
@@ -233,7 +276,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     formBayar?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const nama = document.getElementById('inpSupplierName').value;
-        const nom = parseNum(document.getElementById('inpNominal').value);
+        const nom = window.parseNum(document.getElementById('inpNominal').value);
         const chan = inpChannelBayar.value;
         const tgl = document.getElementById('inpTglBayar').value;
         const batch = inpBatchBayar.value;
@@ -272,8 +315,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     inpSearch?.addEventListener('input', renderTable);
-    document.getElementById('btnCloseModal')?.addEventListener('click', () => modalBayar.classList.remove('active'));
     document.getElementById('btnCancelModal')?.addEventListener('click', () => modalBayar.classList.remove('active'));
+
+    document.getElementById('btnBayarGlobal')?.addEventListener('click', async () => {
+        const { goats } = await loadData();
+        const suppliers = [...new Set(goats.map(g => (g.supplier || 'Tanpa Supplier').trim()))];
+        
+        if (suppliers.length === 0) return window.showAlert('Tidak ada data supplier ditemukan.', 'warning');
+        
+        let targetSupplier = suppliers[0];
+        if (suppliers.length > 1) {
+            // Jika lebih dari satu, minta pilih atau tampilkan prompt sederhana
+            // Untuk saat ini kita ambil yang pertama atau biarkan user memilih di modal jika kita tambah dropdown
+            targetSupplier = suppliers[0]; 
+        }
+
+        // Hitung total sisa hutang supplier ini untuk suggestion nominal
+        const data = await loadData();
+        const fins = data.finance;
+        const gts = goats.filter(g => (g.supplier || 'Tanpa Supplier').trim() === targetSupplier);
+        const tags = gts.reduce((s, k) => s + (parseFloat(k.harga_nota) || 0), 0);
+        const paid = fins.filter(f => (f.supplier || '').trim() === targetSupplier && f.tipe === 'pengeluaran' && f.kategori === 'Bayar Supplier')
+                         .reduce((s, f) => s + (parseFloat(f.nominal) || 0), 0);
+        const komp = fins.filter(f => (f.supplier || '').trim() === targetSupplier && f.tipe === 'pemasukan' && f.kategori === 'Kompensasi Supplier')
+                         .reduce((s, f) => s + (parseFloat(f.nominal) || 0), 0);
+        
+        openBayarModal(targetSupplier, null, tags - komp - paid);
+    });
 
     document.querySelectorAll('.sort-header').forEach(h => {
         h.addEventListener('click', () => {

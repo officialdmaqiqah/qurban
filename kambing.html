@@ -30,7 +30,7 @@
                 <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                 
                                 <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:900; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight: 300; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
 
             </nav>
                         <div style="padding: 1.5rem;">
@@ -74,11 +74,11 @@
                                                 </div>
                                                 <div style="flex:1; min-width:140px;">
                                                         <label class="form-label">Min Harga (Kandang)</label>
-                                                        <input type="number" id="inpMinHarga" class="form-control" placeholder="Rp 0">
+                                                        <input type="text" id="inpMinHarga" class="form-control money-input" placeholder="Rp 0">
                                                 </div>
                                                 <div style="flex:1; min-width:140px;">
                                                         <label class="form-label">Max Harga (Kandang)</label>
-                                                        <input type="number" id="inpMaxHarga" class="form-control" placeholder="Batas Atas">
+                                                        <input type="text" id="inpMaxHarga" class="form-control money-input" placeholder="Batas Atas">
                                                 </div>
                                                 <div style="flex:1; min-width:150px;">
                                                         <label class="form-label">Status Transaksi</label>
@@ -196,18 +196,22 @@
                                         </div>
 
                                         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.1);">
-                                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                                                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
                                                         <div class="form-group">
                                                                 <label class="form-label" for="inpHargaNota">Harga Nota (Rp)</label>
-                                                                <input type="number" id="inpHargaNota" class="form-control" required>
+                                                                <input type="text" id="inpHargaNota" class="form-control money-input" required>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label class="form-label" for="inpSaving">Nilai Saving (Rp)</label>
-                                                                <input type="number" id="inpSaving" class="form-control" required>
+                                                                <input type="text" id="inpSaving" class="form-control money-input" required>
                                                         </div>
                                                         <div class="form-group">
                                                                 <label class="form-label" for="inpProfit">Est. Profit (Rp)</label>
-                                                                <input type="number" id="inpProfit" class="form-control" required>
+                                                                <input type="text" id="inpProfit" class="form-control money-input" required>
+                                                        </div>
+                                                        <div class="form-group">
+                                                                <label class="form-label" for="inpHargaKandang" style="color:var(--success); font-weight: 300;">Harga Kandang (Rp) ⭐</label>
+                                                                <input type="text" id="inpHargaKandang" class="form-control money-input" required style="border: 1px solid var(--success); font-weight: 300;">
                                                         </div>
                                                 </div>
                                         </div>
@@ -243,12 +247,12 @@
             
             <!-- Floating Download Bar -->
             <div style="position:absolute; bottom:30px; left:0; width:100%; display:flex; justify-content:center; pointer-events:none; z-index:100001;">
-                <button id="btnDownloadLightbox" class="btn" style="pointer-events:auto; background:#10b981 !important; color:white !important; border:none !important; padding:15px 30px !important; border-radius:50px !important; display:flex !important; align-items:center !important; gap:10px !important; font-weight:700 !important; font-size:1rem !important; box-shadow:0 10px 30px rgba(0,0,0,0.5) !important; cursor:pointer;" onclick="event.stopPropagation()">
+                <button id="btnDownloadLightbox" class="btn" style="pointer-events:auto; background:#10b981 !important; color:white !important; border:none !important; padding:15px 30px !important; border-radius:50px !important; display:flex !important; align-items:center !important; gap:10px !important; font-weight: 300 !important; font-size:1rem !important; box-shadow:0 10px 30px rgba(0,0,0,0.5) !important; cursor:pointer;" onclick="event.stopPropagation()">
                     📥 Download Foto Kambing
                 </button>
             </div>
 
-            <div style="position:absolute; top:20px; right:20px; color:white; font-size:3rem; font-weight:bold; cursor:pointer; line-height:1; opacity:0.8; z-index:100002;" onclick="this.parentElement.style.display='none'">&times;</div>
+            <div style="position:absolute; top:20px; right:20px; color:white; font-size:3rem; font-weight: 300; cursor:pointer; line-height:1; opacity:0.8; z-index:100002;" onclick="this.parentElement.style.display='none'">&times;</div>
         </div>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

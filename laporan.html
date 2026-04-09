@@ -45,12 +45,13 @@
         /* Table Elegance */
         .report-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 1rem; font-size: 0.85rem; }
         .report-table th, .report-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .report-table th { background: rgba(255,255,255,0.02); color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-top: 1px solid rgba(255,255,255,0.03); }
+        .report-table th { background: rgba(255,255,255,0.02); color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.08em; border-top: 1px solid rgba(255,255,255,0.03); }
         .report-table th:first-child { border-top-left-radius: 8px; }
         .report-table th:last-child { border-top-right-radius: 8px; }
         .report-table tr:hover { background: rgba(255,255,255,0.02); }
-        .row-total { font-weight: 700; background: rgba(16, 185, 129, 0.05) !important; color: var(--primary); }
-        .row-grand-total { font-weight: 800; background: rgba(16, 185, 129, 0.1) !important; font-size: 1rem; border-top: 2px dashed rgba(16, 185, 129, 0.3); }
+        .report-table td { font-variant-numeric: tabular-nums; }
+        .row-total { font-weight: 600; background: rgba(16, 185, 129, 0.05) !important; color: var(--primary); }
+        .row-grand-total { font-weight: 600; background: rgba(16, 185, 129, 0.1) !important; font-size: 1rem; border-top: 2px dashed rgba(16, 185, 129, 0.3); }
         .negative { color: #ef4444; }
 
         @media (max-width: 768px) {
@@ -62,8 +63,7 @@
             
             /* Clean Slim Tables for Mobile (Without ugly dark blocks) */
             .report-table {
-                display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap;
-                border-radius: 8px;
+                width: 100%; border-radius: 8px;
             }
             /* Slim down padding to minimize scrolling */
             .report-table td {
@@ -83,7 +83,7 @@
             .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
             /* High Contrast for Dark Buttons & Tabs (Adaptive) */
             .btn-group-mobile > button { color: var(--text-contrast, #ffffff) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-            .tab-item.active { color: #ffffff !important; font-weight: 800; }
+            .tab-item.active { color: #ffffff !important; font-weight: 600; }
         }
     </style>
 </head>
@@ -108,7 +108,7 @@
                 <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
                 <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                 <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                <a href="laporan.html" class="nav-item active" style="color:#a855f7 !important; font-weight:900; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+                <a href="laporan.html" class="nav-item active" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
                 
                 
             </nav>
@@ -132,14 +132,14 @@
                 <!-- RAMPED DIAGNOSTIC CONSOLE (PREMIUM) -->
                 <div id="debugBanner" style="background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2); padding:0.75rem 1.25rem; border-radius:12px; margin-bottom:1.5rem; font-size:0.85rem; color: #f59e0b; display:flex !important; align-items:center; gap:12px; backdrop-filter:blur(5px);">
                     <div style="background:#f59e0b; width:10px; height:10px; border-radius:50%; animation: pulse 2s infinite;"></div>
-                    <div id="debugText" style="font-weight:600; font-family: 'Open Sans', sans-serif;">Pusat Data Terhubung Internal...</div>
+                    <div id="debugText" style="font-weight:400; font-family: var(--font-family);">Pusat Data Terhubung Internal...</div>
                     <div id="debugDetails" style="font-size:0.75rem; opacity:0.7; margin-left:auto;"></div>
                 </div>
 
                 <!-- Filter Bar (PREMIUM THEME ADAPTIVE) -->
                 <div class="filter-bar">
                     <div style="flex:1; width: 100%;">
-                        <label class="form-label" style="font-size:0.75rem; color:var(--primary); font-weight:800; letter-spacing: 0.05em; text-transform: uppercase;">RENTANG PERIODE</label>
+                        <label class="form-label" style="font-size:0.75rem; color:var(--primary); font-weight:400; letter-spacing: 0.1em; text-transform: uppercase;">RENTANG PERIODE</label>
                         <select id="selRange" class="form-control" style="background:var(--bg-input); color:var(--text-main); border: 1px solid var(--border-color); border-radius: 8px;">
                             <option value="thisMonth">Bulan Ini</option>
                             <option value="thisYear">Tahun Ini (Musim 2026)</option>
@@ -158,10 +158,10 @@
                         </div>
                     </div>
                     <div class="btn-group-mobile" style="display:flex; align-items:flex-end; gap:0.75rem;">
-                        <button class="btn btn-primary btn-shimmer" id="btnRender" style="height:42px; min-width:140px; font-weight:700;">
+                        <button class="btn btn-primary btn-shimmer" id="btnRender" style="height:42px; min-width:140px; font-weight: 300;">
                             🔍 Proses
                         </button>
-                        <button class="btn btn-shimmer" id="btnExportExcel" style="background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-color); border-bottom:3px solid var(--primary); height:42px; font-weight:700;">
+                        <button class="btn btn-shimmer" id="btnExportExcel" style="background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-color); border-bottom:3px solid var(--primary); height:42px; font-weight: 300;">
                             📥 CSV
                         </button>
                     </div>
@@ -175,7 +175,7 @@
                     <div class="tab-item" data-target="sectionNR">Neraca Keuangan</div>
                     <div class="tab-item" data-target="sectionOP">Operasional & Kesehatan</div>
                     <div class="tab-item" data-target="sectionBagiHasil" id="tabBagiHasilItem">Bagi Hasil Partner</div>
-                    <div class="tab-item" data-target="sectionAnalytics" id="tabAnalyticsItem" style="color:var(--warning) !important; font-weight:700;">📊 Analisa & KPI</div>
+                    <div class="tab-item" data-target="sectionAnalytics" id="tabAnalyticsItem" style="color:var(--warning) !important; font-weight: 300;">📊 Analisa & KPI</div>
                 </div>
 
                 <div class="card-box">
@@ -207,14 +207,21 @@
                     <div id="secAK" class="report-section">
                         <h3>Laporan Arus Kas (Cash Flow)</h3>
                         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Aliran uang masuk dan keluar pada channel Kas/Bank.</p>
-                        <table class="report-table" id="tableAK">
-                            <thead>
-                                <tr><th>KETERANGAN</th><th style="text-align:right">MASUK</th><th style="text-align:right">KELUAR</th><th style="text-align:right">SALDO AKHIR</th></tr>
-                            </thead>
-                            <tbody>
-                                <!-- Data by JS -->
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="report-table" id="tableAK">
+                                <thead>
+                                    <tr>
+                                        <th>KETERANGAN</th>
+                                        <th class="text-right">MASUK</th>
+                                        <th class="text-right">KELUAR</th>
+                                        <th class="text-right">SALDO AKHIR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data by JS -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <!-- DISTRIBUSI -->
@@ -291,16 +298,16 @@
                             <div style="margin-top:2rem; display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
                                 <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; text-align:center;">
                                     <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">Porsi Owner</div>
-                                    <div style="font-size:1.5rem; font-weight:700; color:var(--primary);" id="valPorsiHusni">Rp 0</div>
+                                    <div style="font-size:1.5rem; font-weight: 300; color:var(--primary);" id="valPorsiHusni">Rp 0</div>
                                     <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
-                                        Persentase: <input type="number" id="inpPersenOwner" value="45" min="0" max="100" style="width:70px; background:var(--bg-input); border:1px solid var(--text-muted); color:var(--text-main); text-align:center; border-radius:4px; font-weight:700; padding:2px;"> %
+                                        Persentase: <input type="number" id="inpPersenOwner" value="45" min="0" max="100" style="width:70px; background:var(--bg-input); border:1px solid var(--text-muted); color:var(--text-main); text-align:center; border-radius:4px; font-weight: 300; padding:2px;"> %
                                     </div>
                                 </div>
                                 <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; text-align:center;">
                                     <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">Porsi Team Hijrah</div>
-                                    <div style="font-size:1.5rem; font-weight:700; color:var(--success);" id="valPorsiTeam">Rp 0</div>
+                                    <div style="font-size:1.5rem; font-weight: 300; color:var(--success);" id="valPorsiTeam">Rp 0</div>
                                     <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
-                                        Persentase: <input type="number" id="inpPersenTeam" value="55" min="0" max="100" style="width:70px; background:var(--bg-input); border:1px solid var(--text-muted); color:var(--text-main); text-align:center; border-radius:4px; font-weight:700; padding:2px;"> %
+                                        Persentase: <input type="number" id="inpPersenTeam" value="55" min="0" max="100" style="width:70px; background:var(--bg-input); border:1px solid var(--text-muted); color:var(--text-main); text-align:center; border-radius:4px; font-weight: 300; padding:2px;"> %
                                     </div>
                                 </div>
                             </div>
@@ -334,15 +341,15 @@
                         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:2rem;">
                             <div class="card-box" style="padding:1rem; text-align:center;">
                                 <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Biaya Per Ekor (CPH)</div>
-                                <div id="kpiCPH" style="font-size:1.25rem; font-weight:700; color:var(--text-main); margin-top:5px;">Rp 0</div>
+                                <div id="kpiCPH" style="font-size:1.25rem; font-weight: 300; color:var(--text-main); margin-top:5px;">Rp 0</div>
                             </div>
                             <div class="card-box" style="padding:1rem; text-align:center;">
                                 <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Mortality Rate</div>
-                                <div id="kpiMortality" style="font-size:1.25rem; font-weight:700; color:var(--danger); margin-top:5px;">0%</div>
+                                <div id="kpiMortality" style="font-size:1.25rem; font-weight: 300; color:var(--danger); margin-top:5px;">0%</div>
                             </div>
                             <div class="card-box" style="padding:1rem; text-align:center;">
                                 <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Avg. Profit / Closing</div>
-                                <div id="kpiAvgProfit" style="font-size:1.25rem; font-weight:700; color:var(--success); margin-top:5px;">Rp 0</div>
+                                <div id="kpiAvgProfit" style="font-size:1.25rem; font-weight: 300; color:var(--success); margin-top:5px;">Rp 0</div>
                             </div>
                         </div>
 

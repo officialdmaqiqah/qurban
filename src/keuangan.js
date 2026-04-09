@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 
-    const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
     const formatDate = (dateString) => {
         if(!dateString) return '-';
         const d = new Date(dateString);
@@ -335,7 +334,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.preventDefault();
         const id = window.editingId || ('FIN-' + Date.now().toString().slice(-6));
         const tipe = tipeInput.value;
-        const nominal = parseFloat(nominalInput.value);
+        const nominal = window.parseNum(nominalInput.value);
         const tgl = tanggalInput.value;
         const kat = kategoriInput.value;
         const ket = keteranganInput.value;
@@ -401,6 +400,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.showAlert('Gagal menyimpan data: ' + error.message, 'danger');
         }
     };
+
+    // Inisialisasi Masker Uang
+    window.setupMoneyMask('transaksiNominal');
+    window.setupMoneyMask('repairTotalDeal');
 
     formKeuangan?.addEventListener('submit', handleSave);
 
@@ -559,7 +562,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const trxId = document.getElementById('repairTrxId').value.trim();
         const talis = document.getElementById('repairNoTali').value.split(',').map(s => s.trim()).filter(s => s);
         const customerName = document.getElementById('repairCustomer').value.trim();
-        const totalDeal = parseFloat(document.getElementById('repairTotalDeal').value) || 0;
+        const totalDeal = window.parseNum(document.getElementById('repairTotalDeal').value) || 0;
 
         if(!trxId || talis.length === 0) return window.showAlert('ID TRX dan Nomor Tali wajib diisi!', 'danger');
 

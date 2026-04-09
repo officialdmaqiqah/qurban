@@ -25,7 +25,7 @@
             .grid-cards-supplier .card-box > div:first-child { width: 32px !important; height: 32px !important; font-size: 1.2rem !important; margin: 0 auto !important; }
             .grid-cards-supplier .card-box > div:last-child { display: flex; flex-direction: column; justify-content: center; }
             .grid-cards-supplier .stat-label { font-size: 0.6rem !important; margin-bottom: 2px !important; }
-            .grid-cards-supplier .stat-value { font-size: 0.9rem !important; font-weight: 800 !important; }
+            .grid-cards-supplier .stat-value { font-size: 0.9rem !important; font-weight: 300 !important; }
         }
     </style>
 </head>
@@ -51,7 +51,7 @@
                 <a href="hutang_supplier.html" class="nav-item active">&bull; Pelunasan Supplier</a>
                 
                 <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:800; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight: 300; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
                 
             </nav>
             <div style="padding: 1.5rem;">
@@ -77,14 +77,14 @@
                         <div style="font-size:2rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:10px;">📉</div>
                         <div>
                             <div class="stat-label" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Total Beban Modal</div>
-                            <div id="statTotalHutang" class="stat-value" style="font-size:1.5rem; font-weight:700;">Rp 0</div>
+                            <div id="statTotalHutang" class="stat-value" style="font-size:1.5rem; font-weight: 300;">Rp 0</div>
                         </div>
                     </div>
                     <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--success);">
                         <div style="font-size:2rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:10px;">✅</div>
                         <div>
                             <div class="stat-label" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Total Terbayar</div>
-                            <div id="statTotalTerbayar" class="stat-value" style="font-size:1.5rem; font-weight:700;">Rp 0</div>
+                            <div id="statTotalTerbayar" class="stat-value" style="font-size:1.5rem; font-weight: 300;">Rp 0</div>
                         </div>
                     </div>
                     <!-- Sisa Hutang Aktif -->
@@ -92,7 +92,7 @@
                         <div style="font-size:2rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:10px;">⏳</div>
                         <div>
                             <div class="stat-label" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Sisa Hutang Aktif</div>
-                            <div id="statSisaHutang" class="stat-value" style="font-size:1.5rem; font-weight:700; color:var(--warning);">Rp 0</div>
+                            <div id="statSisaHutang" class="stat-value" style="font-size:1.5rem; font-weight: 300; color:var(--warning);">Rp 0</div>
                         </div>
                     </div>
                 </div>
@@ -104,6 +104,7 @@
                             <p style="font-size:0.875rem; color:var(--text-muted);">Monitoring histori pembayaran hutang dan kalkulasi beban modal dari Data Master Stok.</p>
                         </div>
                         <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <button class="btn" id="btnBayarGlobal" style="background:var(--primary); color:white; border:none; display:flex; align-items:center; gap:8px;">💸 Bayar Global</button>
                             <button class="btn btn-primary btn-shimmer" id="btnExportCsv" style="background:#10b981; border:none;">! Export CSV</button>
                         </div>
                     </div>
@@ -166,8 +167,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight:700;">Tujuan Supplier</label>
-                        <input type="text" id="displaySupplier" class="form-control" disabled style="font-weight:bold; background:rgba(255,255,255,0.05);">
+                        <label class="form-label" style="font-weight: 300;">Tujuan Supplier</label>
+                        <input type="text" id="displaySupplier" class="form-control" disabled style="font-weight: 300; background:rgba(255,255,255,0.05);">
                     </div>
 
                     <div class="form-group">
@@ -184,13 +185,13 @@
                             <input type="date" id="inpTglBayar" class="form-control" required>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label class="form-label" style="color:var(--success); font-weight:700;">Nominal Pembayaran</label>
-                            <input type="text" id="inpNominal" class="form-control money-input" placeholder="Rp 0" required style="font-size:1.1rem; font-weight:700;">
+                            <label class="form-label" style="color:var(--success); font-weight: 300;">Nominal Pembayaran</label>
+                            <input type="text" id="inpNominal" class="form-control money-input" placeholder="Rp 0" required style="font-size:1.1rem; font-weight: 300;">
                         </div>
                     </div>
 
                     <div class="form-group" style="margin-top:1rem;">
-                        <label class="form-label" style="font-weight:700; color:var(--primary);">Sumber Modal / Channel</label>
+                        <label class="form-label" style="font-weight: 300; color:var(--primary);">Sumber Modal / Channel</label>
                         <select id="inpChannelBayar" class="form-control" style="font-size:0.9rem;" required>
                             <option value="Tunai">💵 Tunai</option>
                             <option value="Transfer Bank">🏦 Transfer Bank</option>

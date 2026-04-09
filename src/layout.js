@@ -77,6 +77,51 @@ window.setupAutoCleanWA = (selectorOrEl) => {
     });
 };
 
+// --- GLOBAL MONEY UTILITIES ---
+window.formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
+
+window.formatNum = (v) => {
+    if (v === null || v === undefined || v === '') return '';
+    // Hapus karakter non-digit kecuali jika sudah angka
+    let val = typeof v === 'number' ? v : String(v).replace(/\D/g, '');
+    if (!val && val !== 0) return '';
+    return Math.round(Number(val)).toLocaleString('id-ID');
+};
+
+window.parseNum = (s) => {
+    if (typeof s === 'number') return s;
+    if (!s) return 0;
+    // Hapus titik pemisah ribuan dan ganti koma menjadi titik desimal jika ada
+    return parseFloat(String(s).replace(/\./g, '').replace(',', '.')) || 0;
+};
+
+window.setupMoneyMask = (selectorOrEl) => {
+    const el = typeof selectorOrEl === 'string' ? document.getElementById(selectorOrEl) : selectorOrEl;
+    if (!el) return;
+    
+    // Set initial mask if already has value
+    if (el.value) el.value = window.formatNum(el.value);
+
+    el.addEventListener('input', (e) => {
+        const cursorP = e.target.selectionStart;
+        const oldL = e.target.value.length;
+        
+        let v = e.target.value.replace(/\D/g, '');
+        if (!v && v !== '0') {
+            e.target.value = '';
+            return;
+        }
+        
+        const formatted = window.formatNum(v);
+        e.target.value = formatted;
+        
+        // Adjust cursor position after dots are added
+        const newL = formatted.length;
+        const adj = newL - oldL;
+        e.target.setSelectionRange(cursorP + adj, cursorP + adj);
+    });
+};
+
 // --- GLOBAL NOTIFICATION SYSTEM ---
 let toastContainer = null;
 window.showToast = function(message, type = 'info', duration = 3000) {

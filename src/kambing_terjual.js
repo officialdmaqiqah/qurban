@@ -134,10 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentAgenTipeKomisi = false;
     const TIPE_BERHAK_KOMISI_UPPER = ['MARKETING KANDANG', 'RESELLER'];
 
-    const formatNum = (v) => Math.round(v || 0).toLocaleString('id-ID');
-    const parseNum = (s) => parseFloat(String(s).replace(/\./g, '').replace(',', '.')) || 0;
     const formatTgl = (iso) => { if(!iso) return '-'; const p = iso.split('-'); return p.length >= 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso; };
-    const formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v);
 
     const generateTrxId = async () => {
         const { data } = await supabase.from('transaksi').select('id').order('id', { ascending: false }).limit(1);
@@ -190,6 +187,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(imgPreviewDP) imgPreviewDP.src = '';
         window.existingBuktiUrl = null;
         
+        
+        window.setupMoneyMask(inpTotalBayarAwal);
+        window.setupMoneyMask(inpNominalLunas);
+
         renderCart();
     };
 
@@ -299,15 +300,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             div.innerHTML = `
                 <div style="line-height: 1.2;"><strong style="font-size:1rem; color:var(--text-main);"># ${item.noTali}</strong><br><small style="color:var(--text-muted); font-size:0.75rem;">${item.warnaTali || ''} | ${item.batch}</small></div>
                 <div><label style="color:var(--text-muted); font-size:0.65rem;">Sohibul Qurban</label><input type="text" class="form-control inp-sohibul" data-index="${index}" value="${item.namaSohibul || ''}" placeholder="Nama pendaftar..."></div>
-                <div><label style="color:var(--text-muted); font-size:0.65rem;">Hrg Kandang</label><input type="text" class="form-control" style="background:rgba(0,0,0,0.15); color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);" value="${formatNum(item.hargaKandang)}" readonly></div>
-                <div><label style="color:var(--text-muted); font-size:0.65rem;">Hrg Deal</label><input type="text" class="form-control inp-deal money-input" data-index="${index}" value="${formatNum(item.hargaDeal)}"></div>
+                <div><label style="color:var(--text-muted); font-size:0.65rem;">Hrg Kandang</label><input type="text" class="form-control" style="background:rgba(0,0,0,0.15); color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);" value="${window.formatNum(item.hargaKandang)}" readonly></div>
+                <div><label style="color:var(--text-muted); font-size:0.65rem;">Hrg Deal</label><input type="text" class="form-control inp-deal money-input" data-index="${index}" value="${window.formatNum(item.hargaDeal)}"></div>
                 <div style="display:flex; justify-content:center;"><button type="button" class="btn btn-remove" data-index="${index}">&times;</button></div>
             `;
             cartContainer.appendChild(div);
         });
-        displayTotalDeal.textContent = `TOTAL: ${formatRp(total)}`; updateKomisiUI();
+        displayTotalDeal.textContent = `TOTAL: ${window.formatRp(total)}`; updateKomisiUI();
         document.querySelectorAll('.inp-deal').forEach(inp => {
-            inp.addEventListener('blur', (e) => { const raw = parseNum(e.target.value); currentCart[e.target.dataset.index].hargaDeal = raw; e.target.value = formatNum(raw); const subTotal = currentCart.reduce((s,i) => s + (parseFloat(i.hargaDeal)||0), 0); displayTotalDeal.textContent = `TOTAL: ${formatRp(subTotal)}`; updateKomisiUI(); });
+            window.setupMoneyMask(inp);
+            inp.addEventListener('input', (e) => { 
+                const raw = window.parseNum(e.target.value); 
+                currentCart[e.target.dataset.index].hargaDeal = raw; 
+                const subTotal = currentCart.reduce((s,i) => s + (parseFloat(i.hargaDeal)||0), 0); 
+                displayTotalDeal.textContent = `TOTAL: ${window.formatRp(subTotal)}`; 
+                updateKomisiUI(); 
+            });
         });
         document.querySelectorAll('.inp-sohibul').forEach(inp => { inp.addEventListener('input', (e) => { currentCart[e.target.dataset.index].namaSohibul = e.target.value; }); });
         document.querySelectorAll('.btn-remove').forEach(btn => { btn.addEventListener('click', async (e) => { currentCart.splice(parseInt(e.target.dataset.index), 1); renderCart(); await refreshKambingDropdown(); }); });

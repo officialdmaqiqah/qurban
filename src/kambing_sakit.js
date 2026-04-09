@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(val === 'Mati' || val === 'Disembelih') {
                  window.showInput("Catatan Keluar (Opsional):", "", async (note) => {
                     window.showInput(`Nominal Kompensasi Supplier (Rp) - <b>${val}</b>:`, "0", async (kompStr) => {
-                        const kompensasi = parseFloat(kompStr) || 0;
+                        const kompensasi = window.parseNum(kompStr);
                         
                         updates.status_fisik = 'Mati';
                         updates.status_transaksi = val;
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         window.showInput("Edit Catatan Keluar:", oldNote, (newNote) => {
             window.showInput("Edit Nominal Kompensasi Supplier (Rp):", oldKomp, async (newKompStr) => {
-                const newKomp = parseFloat(newKompStr) || 0;
+                const newKomp = window.parseNum(newKompStr);
 
                 // 1. Update Stok Kambing
                 await supabase.from('stok_kambing').update({ catatan_keluar: newNote }).eq('id', id);

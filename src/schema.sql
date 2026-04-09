@@ -55,6 +55,9 @@ CREATE TABLE IF NOT EXISTS keuangan (
     rek_id TEXT,
     bukti_url TEXT,
     related_trx_id TEXT,
+    related_goat_id TEXT,
+    supplier TEXT,
+    batch TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

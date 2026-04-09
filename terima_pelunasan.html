@@ -39,8 +39,8 @@
         .stat-card.c-warning::before { background: var(--warning); }
         .stat-card.c-danger::before { background: var(--danger); }
         .stat-card.c-success::before { background: var(--success); }
-        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 0.4rem; }
-        .stat-val { font-size: 1.2rem; font-weight: 800; }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 300; letter-spacing: 0.04em; margin-bottom: 0.4rem; }
+        .stat-val { font-size: 1.2rem; font-weight: 300; }
 
         /* Two-column layout (Desktop) → Stack (Mobile) */
         .pay-layout-grid {
@@ -60,8 +60,8 @@
         }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1.5rem; font-size: 0.875rem; }
         .info-label { color: var(--text-muted); }
-        .info-val { font-weight: 700; color: var(--text-main); }
-        .sisa-big { font-size: 1.5rem; font-weight: 800; color: var(--warning); }
+        .info-val { font-weight: 300; color: var(--text-main); }
+        .sisa-big { font-size: 1.5rem; font-weight: 300; color: var(--warning); }
         .history-item {
             display: flex; justify-content: space-between; align-items: center;
             padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
@@ -151,7 +151,7 @@
                 <a href="terima_pelunasan.html" class="nav-item active">&bull; Pelunasan Order</a>
                 <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                 <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:800; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight: 300; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
             </nav>
             <div style="padding: 1.5rem;">
                 <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
@@ -206,7 +206,7 @@
                                 <div class="sisa-big" id="displaySisa">Rp 0</div>
                             </div>
                             <div id="boxHistoriPay" style="margin-top:0.75rem; display:none;">
-                                <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:0.35rem;">🕒 RIWAYAT BAYAR:</div>
+                                <div style="font-size:0.75rem; font-weight: 300; color:var(--text-muted); margin-bottom:0.35rem;">🕒 RIWAYAT BAYAR:</div>
                                 <div id="listHistoriPay"></div>
                             </div>
                         </div>
@@ -216,7 +216,7 @@
                                 <div class="form-group" style="margin-bottom:0">
                                     <label class="form-label">Nominal Dibayar (Rp)</label>
                                     <input type="text" id="inpNominalBayar" class="form-control" placeholder="0"
-                                        style="font-size:1.1rem; font-weight:700; color:var(--success);">
+                                        style="font-size:1.1rem; font-weight: 300; color:var(--success);">
                                 </div>
                                 <div class="form-group" style="margin-bottom:0">
                                     <label class="form-label">Channel</label>
@@ -249,7 +249,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button id="btnSimpanBayar" class="btn btn-primary" style="width:100%; font-size:1rem; padding:0.75rem; color:#ffffff; font-weight:700; margin-top:0.5rem;">
+                            <button id="btnSimpanBayar" class="btn btn-primary" style="width:100%; font-size:1rem; padding:0.75rem; color:#ffffff; font-weight: 300; margin-top:0.5rem;">
                                 💾 Simpan Pembayaran
                             </button>
                         </div>
@@ -323,23 +323,23 @@
             <div class="modal-body" style="display:block; padding:1.25rem;">
                 <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:1rem; margin-bottom:1rem; font-size:0.85rem;">
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
-                        <span style="color:var(--text-muted);">ID Order:</span><span id="refundTrxId" style="font-weight:700;"></span>
-                        <span style="color:var(--text-muted);">Konsumen:</span><span id="refundKonsumen" style="font-weight:700;"></span>
-                        <span style="color:var(--text-muted);">Kelebihan Bayar:</span><span id="refundNominal" style="font-weight:700; color:var(--warning);"></span>
+                        <span style="color:var(--text-muted);">ID Order:</span><span id="refundTrxId" style="font-weight: 300;"></span>
+                        <span style="color:var(--text-muted);">Konsumen:</span><span id="refundKonsumen" style="font-weight: 300;"></span>
+                        <span style="color:var(--text-muted);">Kelebihan Bayar:</span><span id="refundNominal" style="font-weight: 300; color:var(--warning);"></span>
                     </div>
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
                     <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" style="font-weight:700;">Tgl Pengembalian</label>
+                        <label class="form-label" style="font-weight: 300;">Tgl Pengembalian</label>
                         <input type="date" id="inpTglRefund" class="form-control">
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" style="font-weight:700; color:var(--warning);">Nominal Dikembalikan</label>
-                        <input type="text" id="inpNominalRefund" class="form-control" style="font-weight:700; color:var(--warning);">
+                        <label class="form-label" style="font-weight: 300; color:var(--warning);">Nominal Dikembalikan</label>
+                        <input type="text" id="inpNominalRefund" class="form-control" style="font-weight: 300; color:var(--warning);">
                     </div>
                 </div>
                 <div class="form-group" style="margin-top:0.75rem;">
-                    <label class="form-label" style="font-weight:700; color:var(--primary);">Channel Pengembalian Dana</label>
+                    <label class="form-label" style="font-weight: 300; color:var(--primary);">Channel Pengembalian Dana</label>
                     <select id="inpChannelRefund" class="form-control">
                         <option value="Tunai">💵 Tunai</option>
                         <option value="Transfer Bank">🏦 Transfer Bank</option>
@@ -353,7 +353,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn" id="btnCancelRefund" style="background:transparent; border:1px solid rgba(255,255,255,0.1);">Batal</button>
-                <button type="button" class="btn btn-primary" id="btnSimpanRefund" style="background:#f59e0b; color:#000; font-weight:700;">&#x21A9; Catat Pengembalian</button>
+                <button type="button" class="btn btn-primary" id="btnSimpanRefund" style="background:#f59e0b; color:#000; font-weight: 300;">&#x21A9; Catat Pengembalian</button>
             </div>
         </div>
     </div>

@@ -80,7 +80,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
     
     const makeCustomId = (batchFull, supp, warna, noTali, sex) => {
         let b = (batchFull || '').replace(/\D/g, ''); 
@@ -144,10 +143,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const calcKandang = () => {
-        const nota = parseFloat(document.getElementById('inpHargaNota').value) || 0;
-        const saving = parseFloat(document.getElementById('inpSaving').value) || 0;
-        const profit = parseFloat(document.getElementById('inpProfit').value) || 0;
-        document.getElementById('inpHargaKandang').value = formatRp(nota + saving + profit);
+        const nota = window.parseNum(document.getElementById('inpHargaNota').value);
+        const saving = window.parseNum(document.getElementById('inpSaving').value);
+        const profit = window.parseNum(document.getElementById('inpProfit').value);
+        document.getElementById('inpHargaKandang').value = window.formatRp(nota + saving + profit);
     };
     document.getElementById('inpHargaNota').addEventListener('input', calcKandang);
     document.getElementById('inpSaving').addEventListener('input', calcKandang);
@@ -215,9 +214,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('formInput').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const hNota = parseFloat(document.getElementById('inpHargaNota').value) || 0;
-        const hSaving = parseFloat(document.getElementById('inpSaving').value) || 0;
-        const hProfit = parseFloat(document.getElementById('inpProfit').value) || 0;
+        const hNota = window.parseNum(document.getElementById('inpHargaNota').value);
+        const hSaving = window.parseNum(document.getElementById('inpSaving').value);
+        const hProfit = window.parseNum(document.getElementById('inpProfit').value);
         
         let fotoNotaUrl = null;
         if (inpFotoNota && inpFotoNota.files.length > 0) {
@@ -511,8 +510,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     id: makeCustomId(batch, cols[1], cols[3], cols[2], cols[4]),
                     batch, tglMasuk: parseDateString(cols[0]), supplier: cols[1], noTali: cols[2], warnaTali: cols[3], sex: cols[4],
                     berat: cols[9] || '',
-                    hargaNota: parseFloat(cols[5])||0, saving: parseFloat(cols[6])||0, profit: parseFloat(cols[7])||0,
-                    lokasi: cols[8]||'', hargaKandang: (parseFloat(cols[5])||0)+(parseFloat(cols[6])||0)+(parseFloat(cols[7])||0),
+                    hargaNota: window.parseNum(cols[5]), saving: window.parseNum(cols[6]), profit: window.parseNum(cols[7]),
+                    lokasi: cols[8]||'', hargaKandang: window.parseNum(cols[5]) + window.parseNum(cols[6]) + window.parseNum(cols[7]),
                     statusTransaksi: 'Tersedia', statusKesehatan: 'Sehat', statusFisik: 'Ada'
                 });
             }

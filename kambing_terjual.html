@@ -30,7 +30,7 @@
         }
         .form-section-title {
             font-size: 0.9rem;
-            font-weight: 700;
+            font-weight: 300;
             color: var(--primary);
             text-transform: uppercase;
             margin-bottom: 0.75rem;
@@ -66,7 +66,7 @@
             border-radius: 12px;
             text-align: center;
             font-size: 1.5rem;
-            font-weight: 800;
+            font-weight: 300;
             box-shadow: var(--shadow-green);
             display: flex;
             align-items: center;
@@ -97,7 +97,7 @@
             text-align: center;
         }
         .komisi-badge .label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px; }
-        .komisi-badge .value { font-size: 1.1rem; font-weight: 700; color: #f59e0b; }
+        .komisi-badge .value { font-size: 1.1rem; font-weight: 300; color: #f59e0b; }
     </style> </head> <body> <div class="app-layout"> <aside class="sidebar"> <div class="sidebar-header" id="sidebarHeaderWrapper"> <h2 id="sidebarTitleGlobal">Qurban Manager</h2> </div>            <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
                 <div class="nav-header">&#128188; DATA STOCK</div>
@@ -113,7 +113,7 @@
                 <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                 
                                 <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:800; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight: 300; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
 
             </nav> <div style="padding: 1.5rem;"> <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);"> Logout
                 </button> </div> </aside> <main class="main-content"> <header class="topbar"> <div class="page-title">Histori Penjualan</div> <div class="user-menu"> <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span> </div> </header> <div class="content-area"> <div class="card-box"> <div class="flex-between" style="margin-bottom: 1.5rem;"> <div> <h3 style="margin-bottom: 0;">Log Histori Penjualan</h3> <p style="font-size:0.875rem; color:var(--text-muted);">Manajemen transaksi penjualan kambing qurban.</p> </div> <div style="display:flex; gap:0.5rem; align-items:center;"> <button class="btn btn-primary" id="btnExportCsv" style="background:#10b981; border:none;">! Export CSV</button> <button class="btn btn-primary" id="btnTambahTerjual" style="display:none;">+ Order Baru</button> </div> </div> <div style="display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; background:rgba(0,0,0,0.15); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);"> <div style="flex:1; min-width:200px;"> <label class="form-label">Pencarian Transaksi</label> <input type="text" id="inpSearch" class="form-control" placeholder="Cari ID TRX, Nama Konsumen, Agen..."> </div> </div> <div class="table-responsive"> <table class="data-table"> <thead> <tr> <th class="sort-header" data-column="id">ID Trx / Tgl 🔽</th> <th class="sort-header" data-column="agen">Agen / Marketing ↕️</th> <th class="sort-header" data-column="customer">Konsumen &amp; WA ↕️</th> <th>Alamat &amp; Tujuan</th> <th class="sort-header" data-column="tglAntar">Tgl Antar / Tipe ↕️</th> <th>Items</th> <th class="sort-header" data-column="totalDeal">Total Deal ↕️</th> <th class="sort-header" data-column="totalPaid">DP Dibayar ↕️</th> <th class="sort-header" data-column="sisa">Sisa Tagihan ↕️</th> <th style="text-align: right;">Aksi</th> </tr> </thead> <tbody id="tableBodyTransaksi"> </tbody> </table> </div> </div> </div> </main> </div> <!-- MODAL CATAT PENJUALAN BARU -->
@@ -232,14 +232,14 @@
                 <!-- ROW 4: PAYMENT (Full Width) -->
                 <div class="form-section full-width" style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:1.5rem; align-items:stretch; background:rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.15); padding: 1.25rem;">
                     <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label" style="color:var(--success); font-weight:700; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Uang Muka / Bayar Awal (DP)</label>
+                        <label class="form-label" style="color:var(--success); font-weight: 300; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Uang Muka / Bayar Awal (DP)</label>
                         <div style="position:relative;">
-                            <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-weight:700; color:var(--success); opacity:0.6;">Rp</span>
-                            <input type="text" id="inpTotalBayarAwal" class="form-control money-input" placeholder="0" style="padding-left:40px; font-size:1.25rem; font-weight:800; color:var(--success); height:50px; background:rgba(255,255,255,0.05);">
+                            <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-weight: 300; color:var(--success); opacity:0.6;">Rp</span>
+                            <input type="text" id="inpTotalBayarAwal" class="form-control money-input" placeholder="0" style="padding-left:40px; font-size:1.25rem; font-weight: 300; color:var(--success); height:50px; background:rgba(255,255,255,0.05);">
                         </div>
                     </div>
                     <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label" style="color:var(--success); font-weight:700; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Channel Pembayaran</label>
+                        <label class="form-label" style="color:var(--success); font-weight: 300; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Channel Pembayaran</label>
                         <select id="inpChannelDP" class="form-control" style="height:50px; font-size:1rem; font-weight:600; background:rgba(255,255,255,0.05);">
                             <option value="Tunai">💵 Tunai</option>
                             <option value="Transfer Bank">🏦 Transfer Bank</option>
@@ -288,12 +288,12 @@
         
         <!-- Floating Download Bar -->
         <div style="position:absolute; bottom:30px; left:0; width:100%; display:flex; justify-content:center; pointer-events:none; z-index:100001;">
-            <button id="btnDownloadLightbox" class="btn" style="pointer-events:auto; background:#10b981 !important; color:white !important; border:none !important; padding:15px 30px !important; border-radius:50px !important; display:flex !important; align-items:center !important; gap:10px !important; font-weight:700 !important; font-size:1rem !important; box-shadow:0 10px 30px rgba(0,0,0,0.5) !important; cursor:pointer;" onclick="event.stopPropagation()">
+            <button id="btnDownloadLightbox" class="btn" style="pointer-events:auto; background:#10b981 !important; color:white !important; border:none !important; padding:15px 30px !important; border-radius:50px !important; display:flex !important; align-items:center !important; gap:10px !important; font-weight: 300 !important; font-size:1rem !important; box-shadow:0 10px 30px rgba(0,0,0,0.5) !important; cursor:pointer;" onclick="event.stopPropagation()">
                 📥 Download Foto Kambing
             </button>
         </div>
 
-        <div style="position:absolute; top:20px; right:20px; color:white; font-size:3rem; font-weight:bold; cursor:pointer; line-height:1; opacity:0.8; z-index:100002;" onclick="this.parentElement.style.display='none'">&times;</div>
+        <div style="position:absolute; top:20px; right:20px; color:white; font-size:3rem; font-weight: 300; cursor:pointer; line-height:1; opacity:0.8; z-index:100002;" onclick="this.parentElement.style.display='none'">&times;</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
@@ -322,7 +322,7 @@
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;"> 
                         <div class="form-group" style="margin-bottom:0"> 
                             <label class="form-label">Nominal Dibayar (Rp)</label> 
-                            <input type="text" id="inpNominalLunas" class="form-control money-input" placeholder="0" style="font-weight:700; font-size:1rem;"> 
+                            <input type="text" id="inpNominalLunas" class="form-control money-input" placeholder="0" style="font-weight: 300; font-size:1rem;"> 
                         </div> 
                         <div class="form-group" style="margin-bottom:0"> 
                             <label class="form-label">Channel</label> 

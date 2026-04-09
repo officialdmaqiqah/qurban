@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
 /* ===== VARIABLES & THEME ===== */
 :root {
   /* Colors - Modern Dark Green Theme */
@@ -35,7 +37,7 @@
   --radius-xl: 16px;
   
   /* Typography */
-  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -57,7 +59,8 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   color: var(--text-main);
-  font-weight: 600;
+  font-weight: 300; /* Ultra elegant light weight */
+  letter-spacing: -0.01em;
 }
 
 a {
@@ -345,7 +348,7 @@ html { background-color: var(--bg-dark); }
 
 .sidebar-header h2 {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 300;
 }
 
 .sidebar-header h2 span {
@@ -374,7 +377,7 @@ html { background-color: var(--bg-dark); }
 
 .sidebar-logo span {
     font-size: 1.1rem;
-    font-weight: 700;
+    font-weight: 300;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -394,8 +397,8 @@ html { background-color: var(--bg-dark); }
   font-size: 0.75rem;
   text-transform: uppercase;
   color: var(--text-muted);
-  font-weight: 800;
-  letter-spacing: 0.05em;
+  font-weight: 300;
+  letter-spacing: 0.15em;
   opacity: 0.7;
 }
 
@@ -405,7 +408,7 @@ html { background-color: var(--bg-dark); }
   padding: 0.75rem 1rem;
   color: var(--text-muted);
   border-radius: var(--radius-md);
-  font-weight: 500;
+  font-weight: 300;
   transition: var(--transition);
   text-decoration: none;
   border-left: 3px solid transparent;
@@ -1010,6 +1013,7 @@ select.form-control option {
   --bg-dark: #f1f5f9;          /* Slate 100 */
   --bg-card: #ffffff;          /* White */
   --bg-input: #f8fafc;         /* Slate 50 */
+  --bg-card-rgb: 255, 255, 255;
   
   --primary: #059669;          /* Emerald 600 - darker for contrast */
   --primary-hover: #047857;
@@ -1459,19 +1463,21 @@ body.light-mode .premium-card {
 }
 
 .premium-label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--text-muted);
     text-transform: uppercase;
-    font-weight: 800;
-    letter-spacing: 0.05em;
+    font-weight: 400; /* Light label */
+    letter-spacing: 0.1em;
     margin-bottom: 0.5rem;
+    opacity: 0.8;
 }
 
 .premium-value {
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: 1.7rem;
+    font-weight: 300; /* Ultra Elegant Light Weight */
     color: var(--text-main);
-    letter-spacing: -0.025em;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums; /* Keeping digits aligned */
 }
 
 .premium-icon-box {
@@ -1665,4 +1671,11 @@ body.light-mode #photoLightbox {
 }
 body.light-mode #lightboxLoading {
     color: var(--text-main) !important;
+}
+
+/* Money Input Standardization */
+.money-input {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
