@@ -21,6 +21,8 @@ export default defineConfig({
         kambing_mati: resolve(__dirname, 'kambing_mati.html'),
         stok_opname: resolve(__dirname, 'stok_opname.html'),
         laporan: resolve(__dirname, 'laporan.html'),
+        cek_laporan: resolve(__dirname, 'cek_laporan.html'),
+        tes_laporan: resolve(__dirname, 'tes_laporan.html'),
         register: resolve(__dirname, 'register.html'),
         forgot_password: resolve(__dirname, 'forgot_password.html')
       }
