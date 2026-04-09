@@ -6,6 +6,15 @@
         <title>Data Sakit - Qurban Manager</title>
         <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="src/style.css">
+        <style>
+            @media (max-width: 768px) {
+                .stat-grid-mobile { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+                .stat-grid-mobile .card-box { flex-direction: row !important; padding: 0.75rem 0.6rem !important; gap: 0.5rem !important; margin-bottom: 0 !important; min-height: auto !important; }
+                .stat-grid-mobile .card-box > div:first-child { font-size: 1.2rem !important; width: 32px !important; height: 32px !important; display: flex !important; align-items: center !important; justify-content: center !important; background: rgba(255,255,255,0.05) !important; border-radius: 8px !important; flex-shrink: 0 !important; }
+                .stat-grid-mobile .stat-lbl { font-size: 0.6rem !important; }
+                .stat-grid-mobile .stat-val { font-size: 0.9rem !important; font-weight: 800 !important; }
+            }
+        </style>
 </head>
 
 <body>
@@ -48,26 +57,26 @@
 
                         <div class="content-area fade-in">
                                 <!-- PAPAN STATISTIK (PREMIUM) -->
-                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+                                <div class="stat-grid-mobile" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
                                     <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--warning);">
                                         <div style="font-size:2rem;">🏥</div>
                                         <div>
-                                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Dalam Perawatan</div>
-                                            <div id="statInCare" style="font-size:1.5rem; font-weight:700;">0</div>
+                                            <div class="stat-lbl" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Dalam Perawatan</div>
+                                            <div id="statInCare" class="stat-val" style="font-size:1.5rem; font-weight:700;">0</div>
                                         </div>
                                     </div>
                                     <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--danger);">
                                         <div style="font-size:2rem;">⚠️</div>
                                         <div>
-                                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Perlu Penanganan</div>
-                                            <div id="statUrgent" style="font-size:1.5rem; font-weight:700;">0</div>
+                                            <div class="stat-lbl" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Perlu Penanganan</div>
+                                            <div id="statUrgent" class="stat-val" style="font-size:1.5rem; font-weight:700;">0</div>
                                         </div>
                                     </div>
                                     <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--primary);">
                                         <div style="font-size:2rem;">💊</div>
                                         <div>
-                                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Riwayat Sembuh (Bulan Ini)</div>
-                                            <div id="statRecovered" style="font-size:1.5rem; font-weight:700;">0</div>
+                                            <div class="stat-lbl" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Riwayat Sembuh (Bulan Ini)</div>
+                                            <div id="statRecovered" class="stat-val" style="font-size:1.5rem; font-weight:700;">0</div>
                                         </div>
                                     </div>
                                 </div>
