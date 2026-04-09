@@ -404,15 +404,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             { h: 'kambing.html', n: 'Master Data (Stok)' },
             { h: 'kambing_masuk.html', n: 'Kambing Masuk' },
             { h: 'kambing_terjual.html', n: 'Kambing Terjual' },
-            { h: 'kambing_mati.html', n: 'Kambing Mati' },
-            { h: 'kambing_sakit.html', n: 'Kambing Sakit' },
+            { h: 'kesehatan.html', n: 'Kambing Sakit/Mati' },
             { h: 'stok_opname.html', n: 'Stok Opname' },
             { h: 'distribusi.html', n: 'Distribusi' },
             { h: 'keuangan.html', n: 'Pencatatan Keuangan' },
             { h: 'terima_pelunasan.html', n: 'Terima Pelunasan' },
             { h: 'hutang_supplier.html', n: 'Hutang ke Supplier' },
             { h: 'komisi.html', n: 'Komisi Agen' },
-            { h: 'laporan.html', n: 'Pusat Laporan' },
+            { h: 'laporan.html', n: 'LAPORAN' },
             { h: 'pengaturan.html', n: 'Pengaturan' }
         ];
 

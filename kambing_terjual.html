@@ -104,8 +104,7 @@
                 <a href="kambing.html" class="nav-item">&bull; Master Data</a>
                 <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
                 <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
-                <a href="kambing_mati.html" class="nav-item">&bull; Kambing Mati</a>
-                <a href="kambing_sakit.html" class="nav-item">&bull; Kambing Sakit</a>
+                <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
                 <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
                 <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
                 <div class="nav-header">&#128176; DATA FINANCE</div>
@@ -114,7 +113,7 @@
                 <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                 
                                 <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                                <a href="laporan.html" class="nav-item">📊 Pusat Laporan</a>
+                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:800; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
 
             </nav> <div style="padding: 1.5rem;"> <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);"> Logout
                 </button> </div> </aside> <main class="main-content"> <header class="topbar"> <div class="page-title">Histori Penjualan</div> <div class="user-menu"> <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span> </div> </header> <div class="content-area"> <div class="card-box"> <div class="flex-between" style="margin-bottom: 1.5rem;"> <div> <h3 style="margin-bottom: 0;">Log Histori Penjualan</h3> <p style="font-size:0.875rem; color:var(--text-muted);">Manajemen transaksi penjualan kambing qurban.</p> </div> <div style="display:flex; gap:0.5rem; align-items:center;"> <button class="btn btn-primary" id="btnExportCsv" style="background:#10b981; border:none;">! Export CSV</button> <button class="btn btn-primary" id="btnTambahTerjual" style="display:none;">+ Order Baru</button> </div> </div> <div style="display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; background:rgba(0,0,0,0.15); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);"> <div style="flex:1; min-width:200px;"> <label class="form-label">Pencarian Transaksi</label> <input type="text" id="inpSearch" class="form-control" placeholder="Cari ID TRX, Nama Konsumen, Agen..."> </div> </div> <div class="table-responsive"> <table class="data-table"> <thead> <tr> <th class="sort-header" data-column="id">ID Trx / Tgl 🔽</th> <th class="sort-header" data-column="agen">Agen / Marketing ↕️</th> <th class="sort-header" data-column="customer">Konsumen &amp; WA ↕️</th> <th>Alamat &amp; Tujuan</th> <th class="sort-header" data-column="tglAntar">Tgl Antar / Tipe ↕️</th> <th>Items</th> <th class="sort-header" data-column="totalDeal">Total Deal ↕️</th> <th class="sort-header" data-column="totalPaid">DP Dibayar ↕️</th> <th class="sort-header" data-column="sisa">Sisa Tagihan ↕️</th> <th style="text-align: right;">Aksi</th> </tr> </thead> <tbody id="tableBodyTransaksi"> </tbody> </table> </div> </div> </div> </main> </div> <!-- MODAL CATAT PENJUALAN BARU -->

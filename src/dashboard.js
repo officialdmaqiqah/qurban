@@ -161,9 +161,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('dashTersedia').textContent = countTersedia;
         document.getElementById('dashTerjual').textContent = countTerjual;
         document.getElementById('dashDistribusi').textContent = countDistribusi;
-        document.getElementById('dashSakit').textContent = countSakit;
-        document.getElementById('dashMati').textContent = countMati;
-        document.getElementById('dashHilang').textContent = countHilang;
+        document.getElementById('dashSakitOnly').textContent = countSakit;
+        document.getElementById('dashSakitMatiCount').textContent = countSakit + countMati;
 
         // Apply Permissions Hiding
         if (permissions.hideProfit) {

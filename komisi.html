@@ -136,8 +136,7 @@
                 <a href="kambing.html" class="nav-item">&bull; Master Data</a>
                 <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
                 <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
-                <a href="kambing_mati.html" class="nav-item">&bull; Kambing Mati</a>
-                <a href="kambing_sakit.html" class="nav-item">&bull; Kambing Sakit</a>
+                <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
                 <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
                 <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
                 <div class="nav-header">&#128176; DATA FINANCE</div>
@@ -145,10 +144,8 @@
                 <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
                 <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                 
-                                <a href="komisi.html" class="nav-item active"> Komisi Agen</a>
-                <!-- NEW MENU -->
-                <a href="laporan.html" class="nav-item">📊 Pusat Laporan</a>
-
+                <a href="komisi.html" class="nav-item active">&bull; Komisi Agen</a>
+                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:800; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
             </nav>
             <div style="padding: 1.5rem;">
                 <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
@@ -161,7 +158,7 @@
             <header class="topbar">
                 <div class="page-title">Komisi Marketing Kandang & Reseller</div>
                 <div class="user-menu">
-                    <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;"></span>
+                    <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
                 </div>
             </header>
             <div class="content-area fade-in">
@@ -311,14 +308,14 @@
                             <button type="button" id="btnRemoveKomisiPhoto" class="btn btn-sm" style="background:#ef4444; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:0.7rem;" title="Hapus Foto">🗑️</button>
                         </div>
                     </div>
-                </div> <!-- modal-body -->
-
-                <div class="modal-footer">
-                    <button type="button" class="btn" id="btnBatalBayar" style="background: transparent; border: 1px solid rgba(255,255,255,0.1);">Batal</button>
-                    <button type="button" class="btn btn-primary" id="btnKonfirmasiBayar" style="background: #10b981;">💾 Konfirmasi Pembayaran</button>
                 </div>
-            </div> <!-- modal-content -->
-        </div> <!-- modal-overlay -->
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn" id="btnBatalBayar" style="background: transparent; border: 1px solid rgba(255,255,255,0.1);">Batal</button>
+                <button type="button" class="btn btn-primary" id="btnKonfirmasiBayar" style="background: #10b981;">💾 Konfirmasi Pembayaran</button>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="src/layout.js"></script>
