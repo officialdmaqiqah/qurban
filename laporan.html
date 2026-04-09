@@ -34,12 +34,12 @@
             border-color: var(--primary);
         }
 
-        /* Filter Bar Premium */
+        /* Filter Bar Premium (Theme Adaptive) */
         .filter-bar { 
             display: flex; gap: 1rem; align-items: flex-end; 
-            background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9)); 
+            background: var(--bg-card); 
             padding: 1.25rem; border-radius: 16px; margin-bottom: 1.5rem; flex-wrap: wrap; 
-            border: 1px solid rgba(255,255,255,0.05); box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color); box-shadow: var(--shadow-md);
         }
 
         /* Table Elegance */
@@ -81,15 +81,10 @@
             }
             
             .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            
-            /* High Contrast for Dark Buttons & Tabs */
-            .btn-group-mobile > button { color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+            /* High Contrast for Dark Buttons & Tabs (Adaptive) */
+            .btn-group-mobile > button { color: var(--text-contrast, #ffffff) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
             .tab-item.active { color: #ffffff !important; font-weight: 800; }
         }
-
-        /* Forced High Contrast for Filter Bar Inputs since its bg is dark */
-        .filter-bar select, .filter-bar input { color: #ffffff !important; background: rgba(255,255,255,0.1) !important; color-scheme: dark; }
-        .filter-bar select option { background: #1e293b; color: #ffffff; }
     </style>
 </head>
 <body>
@@ -142,11 +137,11 @@
                     <div id="debugDetails" style="font-size:0.75rem; opacity:0.7; margin-left:auto;"></div>
                 </div>
 
-                <!-- Filter Bar (PREMIUM GLASS) -->
+                <!-- Filter Bar (PREMIUM THEME ADAPTIVE) -->
                 <div class="filter-bar">
                     <div style="flex:1; width: 100%;">
-                        <label class="form-label" style="font-size:0.75rem; color:#34d399; font-weight:800; letter-spacing: 0.05em; text-transform: uppercase;">RENTANG PERIODE</label>
-                        <select id="selRange" class="form-control" style="border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;">
+                        <label class="form-label" style="font-size:0.75rem; color:var(--primary); font-weight:800; letter-spacing: 0.05em; text-transform: uppercase;">RENTANG PERIODE</label>
+                        <select id="selRange" class="form-control" style="background:var(--bg-input); color:var(--text-main); border: 1px solid var(--border-color); border-radius: 8px;">
                             <option value="thisMonth">Bulan Ini</option>
                             <option value="thisYear">Tahun Ini (Musim 2026)</option>
                             <option value="all" selected>Semua Data</option>
@@ -155,19 +150,19 @@
                     </div>
                     <div id="customDateContainer" style="display:none; gap:1rem; align-items:center;">
                         <div>
-                            <label class="form-label" style="font-size:0.7rem; color:#cbd5e1;">DARI</label>
-                            <input type="date" id="inpStartDate" class="form-control" style="border: 1px solid rgba(255,255,255,0.2);">
+                            <label class="form-label" style="font-size:0.7rem; color:var(--text-muted);">DARI</label>
+                            <input type="date" id="inpStartDate" class="form-control" style="background:var(--bg-input); color:var(--text-main); border: 1px solid var(--border-color);">
                         </div>
                         <div>
-                            <label class="form-label" style="font-size:0.7rem; color:#cbd5e1;">SAMPAI</label>
-                            <input type="date" id="inpEndDate" class="form-control" style="border: 1px solid rgba(255,255,255,0.2);">
+                            <label class="form-label" style="font-size:0.7rem; color:var(--text-muted);">SAMPAI</label>
+                            <input type="date" id="inpEndDate" class="form-control" style="background:var(--bg-input); color:var(--text-main); border: 1px solid var(--border-color);">
                         </div>
                     </div>
                     <div class="btn-group-mobile" style="display:flex; align-items:flex-end; gap:0.75rem;">
                         <button class="btn btn-primary btn-shimmer" id="btnRender" style="height:42px; min-width:140px; font-weight:700;">
                             🔍 Proses
                         </button>
-                        <button class="btn btn-shimmer" id="btnExportExcel" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2); height:42px; font-weight:700;">
+                        <button class="btn btn-shimmer" id="btnExportExcel" style="background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-color); border-bottom:3px solid var(--primary); height:42px; font-weight:700;">
                             📥 CSV
                         </button>
                     </div>
