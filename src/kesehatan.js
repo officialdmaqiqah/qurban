@@ -286,8 +286,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderTable();
     });
 
-    document.getElementById('btnCloseModal')?.onclick = () => modalKeluar.classList.remove('active');
-    document.getElementById('btnCancelModal')?.onclick = () => modalKeluar.classList.remove('active');
+    document.getElementById('btnCloseModal')?.addEventListener('click', () => modalKeluar.classList.remove('active'));
+    document.getElementById('btnCancelModal')?.addEventListener('click', () => modalKeluar.classList.remove('active'));
     document.getElementById('inpSearch')?.addEventListener('input', renderTable);
     document.getElementById('selHealthStatus')?.addEventListener('change', renderTable);
 
