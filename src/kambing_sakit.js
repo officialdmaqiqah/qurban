@@ -116,54 +116,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!currentGoat) return;
 
         const goatNoTali = currentGoat.no_tali || 'Kambing';
-        const isConfirmed = confirm(`Update status ${goatNoTali} menjadi ${val}?`);
-        if(!isConfirmed) {
-            sel.value = "";
-            return;
-        }
+        if(!id || !val) return;
+        window.showConfirm(`Update status <b>${goatNoTali}</b> menjadi <b>${val}</b>?`, async () => {
+            const { data: goat } = await supabase.from('stok_kambing').select('*').eq('id', id).single();
+            if(!goat) return;
+            
+            const upDate = new Date().toISOString();
+            const updates = { status_kesehatan: val, updated_at: upDate };
 
-        const upDate = new Date().toISOString();
-        const updates = { status_kesehatan: val, updated_at: upDate };
+            if(val === 'Mati' || val === 'Disembelih') {
+                 const comp = prompt("Komentar: Masukkan nominal kompensasi supplier (Rp) - Opsional:", "0");
+                 const kompensasi = parseFloat(comp) || 0;
+                 
+                 updates.status_fisik = 'Mati';
+                 updates.status_transaksi = val;
+                 updates.tgl_keluar = upDate.split('T')[0];
 
-        if(val === 'Mati' || val === 'Disembelih') {
-             const comp = prompt("Komentar: Masukkan nominal kompensasi supplier (Rp) - Opsional:", "0");
-             const kompensasi = parseFloat(comp) || 0;
-             
-             updates.status_fisik = 'Mati';
-             updates.status_transaksi = val;
-             updates.tgl_keluar = upDate.split('T')[0];
-
-             await supabase.from('stok_kambing').update(updates).eq('id', id);
-             
-             // Record loss
-             await supabase.from('keuangan').insert([{
-                 id: 'LOSS-'+Date.now(), tipe: 'pengeluaran', tanggal: updates.tgl_keluar,
-                 kategori: 'Kerugian (Mati/Hilang)', nominal: currentGoat.harga_nota, 
-                 keterangan: `Kerugian ${val} No Tali ${currentGoat.no_tali} (Eks Sakit)`, channel: 'Non-Kas', related_goat_id: id
-             }]);
-             
-             if(kompensasi > 0) {
+                 await supabase.from('stok_kambing').update(updates).eq('id', id);
+                 
+                 // Record loss
                  await supabase.from('keuangan').insert([{
-                     id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: updates.tgl_keluar,
-                     kategori: 'Kompensasi Supplier', nominal: kompensasi,
-                     keterangan: `Kompensasi ${val} No Tali ${currentGoat.no_tali}`, channel: 'Non-Kas', related_goat_id: id,
-                     supplier: currentGoat.supplier, batch: currentGoat.batch
+                     id: 'LOSS-'+Date.now(), tipe: 'pengeluaran', tanggal: updates.tgl_keluar,
+                     kategori: 'Kerugian (Mati/Hilang)', nominal: currentGoat.harga_nota, 
+                     keterangan: `Kerugian ${val} No Tali ${currentGoat.no_tali} (Eks Sakit)`, channel: 'Non-Kas', related_goat_id: id
                  }]);
-             }
-        } else {
-            // Sembuh
-            updates.status_kesehatan = 'Sehat';
-            updates.tgl_keluar = null;
-            updates.catatan_keluar = null;
-            await supabase.from('stok_kambing').update(updates).eq('id', id);
-        }
+                 
+                 if(kompensasi > 0) {
+                     await supabase.from('keuangan').insert([{
+                         id: 'KOMP-'+Date.now(), tipe: 'pemasukan', tanggal: updates.tgl_keluar,
+                         kategori: 'Kompensasi Supplier', nominal: kompensasi,
+                         keterangan: `Kompensasi ${val} No Tali ${currentGoat.no_tali}`, channel: 'Non-Kas', related_goat_id: id,
+                         supplier: currentGoat.supplier, batch: currentGoat.batch
+                     }]);
+                 }
+            } else {
+                // Sembuh
+                updates.status_kesehatan = 'Sehat';
+                updates.tgl_keluar = null;
+                updates.catatan_keluar = null;
+                await supabase.from('stok_kambing').update(updates).eq('id', id);
+            }
 
-        if (typeof showToast === 'function') showToast(`Status ${goatNoTali} diperbarui!`);
-        else alert(`Status ${goatNoTali} diperbarui!`);
-        
-        await loadGoats(true);
-        renderTable();
-        sel.value = "";
+            if (typeof showToast === 'function') showToast(`Status ${goatNoTali} diperbarui!`);
+            else alert(`Status ${goatNoTali} diperbarui!`);
+            
+            await loadGoats(true);
+            renderTable();
+        }, () => { sel.value = ""; });
     };
 
     document.getElementById('btnTambahSakit')?.addEventListener('click', async () => {
@@ -198,10 +197,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const stt = document.getElementById('inpTargetStatus').value;
 
         const { data: goat } = await supabase.from('stok_kambing').select('*').eq('no_tali', noTali).eq('status_fisik', 'Ada').single();
-        if(!goat) return showAlert('Kambing tidak ditemukan atau sedang tidak tersedia!', 'warning');
+        if(!goat) return window.showAlert('Kambing tidak ditemukan atau sedang tidak tersedia!', 'warning');
 
         if(goat.status_transaksi === 'Terjual') {
-            const conf = await confirm('⚠️ Kambing ini SUDAH TERJUAL! Jika sakit parah, harap segera hubungi konsumen. Lanjutkan?');
+            const conf = await new Promise(res => {
+                window.showConfirm('⚠️ Kambing ini SUDAH TERJUAL! Jika Anda melanjutkan, Anda harus segera menghubungi konsumen. Lanjutkan?', () => res(true), () => res(false), 'Peringatan Penjualan', 'Ya, Lanjutkan', 'btn-danger');
+            });
             if (!conf) return;
         }
 

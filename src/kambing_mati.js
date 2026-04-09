@@ -152,7 +152,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!goat) return showAlert('Kambing tidak ditemukan atau sudah tidak aktif!', 'warning');
 
         if(goat.status_transaksi === 'Terjual') {
-            const conf = await confirm('⚠️ Kambing ini SUDAH TERJUAL! Jika Anda melanjutkan, Anda harus segera menghubungi konsumen. Lanjutkan?');
+            const conf = await new Promise(res => {
+                window.showConfirm('⚠️ Kambing ini SUDAH TERJUAL! Jika Anda melanjutkan, Anda harus segera menghubungi konsumen. Lanjutkan?', () => res(true), () => res(false), 'Peringatan Penjualan', 'Ya, Lanjutkan', 'btn-danger');
+            });
             if (!conf) return;
         }
 

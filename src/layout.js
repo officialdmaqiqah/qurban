@@ -87,11 +87,26 @@ window.showToast = function(message, type = 'info', duration = 3000) {
     }
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    let icon = 'ℹ️';
-    if(type === 'success') icon = '✅';
-    if(type === 'danger') icon = '❌';
-    if(type === 'warning') icon = '⚠️';
-    toast.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-content">${message}</div>`;
+    
+    let iconSvg = '';
+    let bg = 'rgba(var(--primary-rgb), 0.1)';
+    let color = 'var(--primary)';
+    
+    if(type === 'success') {
+        iconSvg = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        bg = 'rgba(var(--success-rgb), 0.1)'; color = 'var(--success)';
+    } else if(type === 'danger') {
+        iconSvg = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+        bg = 'rgba(var(--danger-rgb), 0.1)'; color = 'var(--danger)';
+    } else if(type === 'warning') {
+        iconSvg = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+        bg = 'rgba(var(--warning-rgb), 0.1)'; color = 'var(--warning)';
+    } else {
+        iconSvg = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+        bg = 'rgba(var(--info-rgb), 0.1)'; color = 'var(--primary)';
+    }
+    
+    toast.innerHTML = `<div class="toast-icon" style="background:${bg}; color:${color};">${iconSvg}</div><div class="toast-content" style="font-weight:600; font-size:0.9rem;">${message}</div>`;
     toastContainer.appendChild(toast);
     setTimeout(() => { toast.classList.add('hiding'); setTimeout(() => toast.remove(), 300); }, duration);
 };
@@ -99,31 +114,61 @@ window.showToast = function(message, type = 'info', duration = 3000) {
 window.showAlert = function(message, type = 'info', onOk = null) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay-custom';
-    let icon = 'ℹ️', color = 'var(--primary)';
-    if(type === 'success') { icon = '✅'; color = '#10b981'; }
-    if(type === 'danger') { icon = '❌'; color = '#ef4444'; }
-    if(type === 'warning') { icon = '⚠️'; color = '#f59e0b'; }
+    
+    let iconHtml = '', color = 'var(--primary)', bg = 'rgba(var(--primary-rgb), 0.1)', titleText = 'Pemberitahuan';
+    
+    if(type === 'success') { 
+        iconHtml = `<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        color = 'var(--success)'; bg = 'rgba(var(--success-rgb), 0.1)'; titleText = 'Berhasil';
+    } else if(type === 'danger') { 
+        iconHtml = `<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+        color = 'var(--danger)'; bg = 'rgba(var(--danger-rgb), 0.1)'; titleText = 'Terjadi Kesalahan';
+    } else if(type === 'warning') { 
+        iconHtml = `<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+        color = 'var(--warning)'; bg = 'rgba(var(--warning-rgb), 0.1)'; titleText = 'Peringatan';
+    } else {
+        iconHtml = `<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+        color = 'var(--primary)'; bg = 'rgba(var(--primary-rgb), 0.1)'; titleText = 'Informasi';
+    }
+
     overlay.innerHTML = `
         <div class="modal-custom">
-            <div class="modal-custom-header"><div class="modal-custom-icon">${icon}</div><div class="modal-custom-title">Info</div></div>
+            <div class="modal-custom-header">
+                <div class="modal-custom-icon" style="background:${bg}; color:${color};">
+                    ${iconHtml}
+                </div>
+                <div class="modal-custom-title">${titleText}</div>
+            </div>
             <div class="modal-custom-body">${message}</div>
-            <div class="modal-custom-footer"><button class="btn btn-primary" id="modalOkBtn" style="background:${color};">OK</button></div>
+            <div class="modal-custom-footer">
+                <button class="btn btn-primary" id="modalOkBtn" style="background:${color}; box-shadow: 0 4px 14px 0 ${bg.replace('0.1', '0.4')};">OKE, MENGERTI</button>
+            </div>
         </div>
     `;
     document.body.appendChild(overlay);
     document.getElementById('modalOkBtn').onclick = () => { overlay.remove(); if(onOk) onOk(); };
 };
 
-window.showConfirm = function(message, onConfirm, onCancel, title = 'Konfirmasi', confirmText = 'Lanjut', confirmClass = 'btn-danger') {
+window.showConfirm = function(message, onConfirm, onCancel, title = 'Konfirmasi', confirmText = 'Ya, Lanjutkan', confirmClass = 'btn-primary') {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay-custom';
+    
+    let color = 'var(--primary)';
+    if (confirmClass.includes('danger')) color = 'var(--danger)';
+    else if (confirmClass.includes('warning')) color = 'var(--warning)';
+
     overlay.innerHTML = `
         <div class="modal-custom">
-            <div class="modal-custom-header"><div class="modal-custom-icon">❓</div><div class="modal-custom-title">${title}</div></div>
+            <div class="modal-custom-header">
+                <div class="modal-custom-icon" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary);">
+                    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+                <div class="modal-custom-title">${title}</div>
+            </div>
             <div class="modal-custom-body">${message}</div>
             <div class="modal-custom-footer">
-                <button class="btn" id="modalConfirmCancelBtn">Batal</button>
-                <button class="btn ${confirmClass}" id="modalConfirmOkBtn">${confirmText}</button>
+                <button class="btn" id="modalConfirmCancelBtn" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">Batal</button>
+                <button class="btn ${confirmClass}" id="modalConfirmOkBtn" style="${confirmClass === 'btn-primary' ? '' : `background:${color};`}">${confirmText}</button>
             </div>
         </div>
     `;
