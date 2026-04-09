@@ -1300,9 +1300,38 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
     }
 
     /* Grid Stacking Fix */
-    .grid-cards, .dashboard-grid, .stats-grid, .form-row, .komisi-grid, .premium-grid {
+    .dashboard-grid, .stats-grid, .form-row, .komisi-grid {
         grid-template-columns: 1fr !important;
         gap: 1rem !important;
+    }
+
+    /* Premium Grid → compact 2-column on mobile (not 1 column) */
+    .premium-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+
+    /* Compact premium cards on mobile */
+    .premium-card {
+        min-height: auto !important;
+        padding: 0.9rem 1rem 0.9rem 1.25rem !important;
+        border-radius: 12px !important;
+    }
+    .premium-value { font-size: 1.1rem !important; }
+    .premium-label { font-size: 0.6rem !important; margin-bottom: 0.25rem !important; }
+    .premium-icon-box {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 1.2rem !important;
+        top: 0.9rem !important;
+        right: 0.75rem !important;
+    }
+
+    /* grid-cards → 2 column slim on mobile */
+    .grid-cards {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.5rem !important;
     }
 
     /* Modal Adjustments */

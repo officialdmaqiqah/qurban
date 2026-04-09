@@ -78,6 +78,26 @@
             font-size: 1rem;
             font-weight: 700;
         }
+
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.5rem !important;
+            }
+            .summary-card {
+                padding: 0.75rem !important;
+                gap: 0.5rem !important;
+                border-radius: 10px !important;
+            }
+            .summary-icon {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 1.1rem !important;
+                flex-shrink: 0 !important;
+            }
+            .summary-info h4 { font-size: 0.6rem !important; }
+            .summary-info p { font-size: 0.9rem !important; }
+        }
     </style>
 </head>
 <body>
@@ -142,8 +162,8 @@
                             <p style="font-size: 0.875rem; color: var(--text-muted);">Catatan keluar masuk dana kandang.</p>
                         </div>
                         <div class="header-actions" style="display: flex; gap: 0.5rem; align-items:center;">
-                            <button class="btn btn-primary" id="btnTambahPemasukan">+ Pemasukan</button>
-                            <button class="btn" style="background-color: transparent; border: 1px solid var(--danger); color: var(--danger);" id="btnTambahPengeluaran">- Pengeluaran</button>
+                            <button class="btn btn-primary" id="btnTambahPemasukan" style="color:#ffffff; font-weight:700;">+ Pemasukan</button>
+                            <button class="btn" style="background-color: transparent; border: 1px solid var(--danger); color: var(--danger); font-weight:700;" id="btnTambahPengeluaran">- Pengeluaran</button>
                         </div>
                     </div>
 
