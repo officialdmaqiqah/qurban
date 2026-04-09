@@ -301,6 +301,14 @@ html { background-color: var(--bg-dark); }
   animation: appFadeIn 0.3s ease-out;
 }
 
+@media (min-width: 769px) {
+  /* Reverted: Let the whole page scroll normally */
+  .app-layout {
+    height: auto;
+    overflow: visible;
+  }
+}
+
 @keyframes appFadeIn {
   from { opacity: 0; transform: translateY(2px); }
   to { opacity: 1; transform: translateY(0); }
@@ -419,8 +427,8 @@ html { background-color: var(--bg-dark); }
 }
 
 @keyframes contentFadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .topbar {
@@ -493,7 +501,7 @@ html { background-color: var(--bg-dark); }
 .content-area {
   padding: 1.5rem;
   flex: 1;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 /* ===== CARDS & TABLES ===== */
@@ -605,6 +613,148 @@ body.light-mode .data-table tbody tr:nth-child(even) td.sticky-col {
 .badge-success { background-color: rgba(34, 197, 94, 0.15); color: var(--success); }
 .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); }
 .badge-danger { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+/* --- STICKY HEADER (DESKTOP) --- */
+@media (min-width: 769px) {
+  .sidebar {
+    height: auto;
+    overflow-y: visible;
+  }
+
+  /* --- CONDITIONAL SCROLLING FOR TABLE --- */
+  .table-responsive {
+    max-height: calc(100vh - 280px); /* Default offset for Master Data, Sakit, Mati */
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    padding-right: 5px; 
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+  }
+
+  /* Specific offset for pages with stats cards / summary grids */
+  .tall-header .table-responsive {
+    max-height: calc(100vh - 400px); 
+  }
+
+  .data-table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30 !important;
+    background-color: var(--bg-card) !important;
+    background-clip: padding-box;
+    border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+  }
+
+  /* Priority z-index for sticky-col headers */
+  th.sticky-col {
+    z-index: 35 !important;
+  }
+}
+
+/* --- PERBAIKAN VISIBILITAS TOMBOL AKSI --- */
+.btn-edit-action, .btn-view-photo, .btn-verify-single {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important; /* Emerald 400 */
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Row highlight for selections */
+.row-selected {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+.row-selected td {
+  border-top: 1px solid var(--success) !important;
+  border-bottom: 1px solid var(--success) !important;
+}
+
+/* Specific densities for split tables in Pelunasan page */
+.card-box.tall-header .data-table td {
+  padding: 0.75rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* Pelunasan Page Grid */
+.pay-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .pay-layout-grid {
+    grid-template-columns: 380px 1fr;
+  }
+}
+
+/* Tabs System */
+.tab-container {
+  display: flex;
+  flex-direction: column;
+}
+.tab-header {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 1.5rem;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.75rem 0.25rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tab-btn:hover {
+  color: var(--text-main);
+}
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+}
+
+/* Logout button specifically for better visibility */
+#logoutBtn {
+  color: var(--text-main) !important;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+#logoutBtn:hover {
+  opacity: 1;
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+.btn-edit-action:hover, .btn-view-photo:hover {
+  background-color: rgba(16, 185, 129, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+.btn-delete-action {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  color: #f87171 !important; /* Red 400 */
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+
+.btn-delete-action:hover {
+  background-color: rgba(239, 68, 68, 0.3) !important;
+  transform: translateY(-2px);
+}
 
 /* Form Controls in App */
 .form-group {
@@ -759,18 +909,18 @@ select.form-control option {
 }
 
 .btn-danger {
-  background-color: transparent;
-  color: var(--danger);
-  border: 1px solid var(--danger);
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171; /* Red 400 */
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
-.btn-danger:hover { background-color: rgba(239, 68, 68, 0.1); }
+.btn-danger:hover { background-color: rgba(239, 68, 68, 0.2); transform: translateY(-1px); }
 
 .btn-edit {
-  background-color: transparent;
-  color: var(--warning);
-  border: 1px solid var(--warning);
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #fbbf24; /* Amber 400 */
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
-.btn-edit:hover { background-color: rgba(245, 158, 11, 0.1); }
+.btn-edit:hover { background-color: rgba(245, 158, 11, 0.2); transform: translateY(-1px); }
 
 /* ===== LIGHT MODE OVERRIDES ===== */
 .light-mode {

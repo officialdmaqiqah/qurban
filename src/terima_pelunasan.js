@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inpChannelBayar = document.getElementById('inpChannelBayar');
     const inpTglBayar = document.getElementById('inpTglBayar');
     const btnSimpanBayar = document.getElementById('btnSimpanBayar');
-    const listOrderBelumLunas = document.getElementById('listOrderBelumLunas');
+    const tableBodyBelumLunas = document.getElementById('tableBodyBelumLunas');
     const inpSearchOrder = document.getElementById('inpSearchOrder');
     const containerRekBayar = document.getElementById('containerRekBayar');
     const inpRekIdBayar = document.getElementById('inpRekIdBayar');
@@ -89,14 +89,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const previewBuktiBayar = document.getElementById('previewBuktiBayar');
     const btnOpenCameraTP = document.getElementById('btnOpenCameraTP');
     const btnRemoveTPPhoto = document.getElementById('btnRemoveTPPhoto');
-    const listOrderOverpaid = document.getElementById('listOrderOverpaid');
+    const tableBodyOverpaid = document.getElementById('tableBodyOverpaid');
     const badgeOverpaidCount = document.getElementById('badgeOverpaidCount');
 
     // Set default date
     if(inpTglBayar) inpTglBayar.value = window.getLocalDate();
 
     const renderStats = async () => {
-        const trxs = await getTrxData();
+        const { data: trxs } = await supabase.from('transaksi').select('*');
         const userRole = (profile?.role || '').toLowerCase().replace(/_/g, ' ').trim();
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const linkedAgenId = profile?.linked_agen_id;
@@ -127,36 +127,74 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         }
 
-        // Let search results show ALL if keyword matches ID exactly
-        const exactMatch = trxs.find(t => t.id.toLowerCase() === keyword);
-        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0 || t.id.toLowerCase() === keyword).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
+        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
         const overpaid = filtered.filter(t => (t.total_overpaid || 0) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
 
-        listOrderBelumLunas.innerHTML = belumLunas.length === 0 ? '<div style="text-align:center; padding:1.5rem; font-size:0.8rem;">Semua lunas!</div>' : '';
-        belumLunas.forEach(t => listOrderBelumLunas.appendChild(createOrderCard(t, 'belum')));
+        tableBodyBelumLunas.innerHTML = belumLunas.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:1.5rem; font-size:0.8rem; color:var(--text-muted);">Semua lunas!</td></tr>' : '';
+        belumLunas.forEach(t => tableBodyBelumLunas.appendChild(createOrderRow(t, 'belum')));
 
-        listOrderOverpaid.innerHTML = overpaid.length === 0 ? '<div style="text-align:center; padding:1rem; font-size:0.75rem;">Tidak ada kelebihan bayar</div>' : '';
-        overpaid.forEach(t => listOrderOverpaid.appendChild(createOrderCard(t, 'overpaid')));
+        tableBodyOverpaid.innerHTML = overpaid.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:1rem; font-size:0.75rem; color:var(--text-muted);">Tidak ada kelebihan bayar</td></tr>' : '';
+        overpaid.forEach(t => tableBodyOverpaid.appendChild(createOrderRow(t, 'overpaid')));
+        
         badgeOverpaidCount.textContent = overpaid.length;
         badgeOverpaidCount.style.display = overpaid.length > 0 ? 'inline-block' : 'none';
+        
+        // Highlight active row if any
+        if (selOrder.value) {
+            const rows = tableBodyBelumLunas.querySelectorAll('tr');
+            rows.forEach(r => {
+                if(r.dataset.id === selOrder.value) r.classList.add('row-selected');
+                else r.classList.remove('row-selected');
+            });
+        }
     };
 
-    const createOrderCard = (t, type) => {
+    const createOrderRow = (t, type) => {
         const sisa = (t.total_deal || 0) - (t.total_paid || 0);
         const pct = Math.round(((t.total_paid || 0) / (t.total_deal || 1)) * 100);
-        const card = document.createElement('div');
-        card.className = 'order-card';
-        card.style.cssText = 'border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.85rem 1rem; margin-bottom:0.6rem; cursor:pointer; background:rgba(255,255,255,0.02);';
-        card.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem;">
-                <div><span style="font-weight:700; color:var(--primary);">${t.id}</span> <span style="font-size:0.75rem; color:var(--text-muted);">${formatTgl(t.tgl_trx)}</span></div>
-                <span style="font-size:0.78rem; font-weight:700; color:${type==='overpaid'?'var(--warning)':'var(--warning)'}">${type==='overpaid' ? 'Over: '+formatRp(t.total_overpaid) : 'Sisa: '+formatRp(sisa)}</span>
-            </div>
-            <div style="font-size:0.82rem; margin-bottom:0.5rem;">${t.customer.nama || '-'}</div>
-            <div style="background:rgba(255,255,255,0.06); height:5px; border-radius:4px;"><div style="width:${Math.min(100, pct)}%; height:100%; background:var(--success); border-radius:4px;"></div></div>
-        `;
-        card.onclick = () => { if(type==='belum') { selOrder.value = t.id; selOrder.dispatchEvent(new Event('input')); } else { openRefundModal(t); } };
-        return card;
+        const tr = document.createElement('tr');
+        tr.dataset.id = t.id;
+        tr.style.cursor = 'pointer';
+        
+        if (type === 'belum') {
+            tr.innerHTML = `
+                <td style="font-weight:700; color:var(--primary);">${t.id}</td>
+                <td>
+                    <div style="font-weight:600;">${t.customer.nama || '-'}</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">${formatTgl(t.tgl_trx)}</div>
+                </td>
+                <td style="font-weight:700; color:var(--warning);">${formatRp(sisa)}</td>
+                <td style="min-width:100px;">
+                    <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Terbayar ${pct}%</div>
+                    <div style="background:rgba(255,255,255,0.06); height:6px; border-radius:4px; width:100%;">
+                        <div style="width:${Math.min(100, pct)}%; height:100%; background:var(--success); border-radius:4px;"></div>
+                    </div>
+                </td>
+                <td><button class="btn btn-sm" style="padding:4px 10px; font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--success); border:1px solid rgba(16,185,129,0.3);">Pilih</button></td>
+            `;
+            tr.onclick = () => {
+                // Clear selected state from all rows
+                tableBodyBelumLunas.querySelectorAll('tr').forEach(r => r.classList.remove('row-selected'));
+                tr.classList.add('row-selected');
+                
+                selOrder.value = t.id;
+                selOrder.dispatchEvent(new Event('input'));
+                
+                // Scroll the form into view if on mobile
+                if (window.innerWidth <= 768) {
+                    document.querySelector('.card-box').scrollIntoView({ behavior: 'smooth' });
+                }
+            };
+        } else {
+            tr.innerHTML = `
+                <td style="font-weight:700; color:var(--primary);">${t.id}</td>
+                <td>${t.customer.nama || '-'}</td>
+                <td style="font-weight:700; color:var(--warning);">${formatRp(t.total_overpaid)}</td>
+                <td><button class="btn btn-sm" style="padding:4px 10px; font-size:0.75rem; background:rgba(245,158,11,0.15); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">Refund</button></td>
+            `;
+            tr.onclick = () => openRefundModal(t);
+        }
+        return tr;
     };
 
     selOrder.addEventListener('input', async () => {
@@ -292,6 +330,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             listOrders.appendChild(o); 
         });
     }
+
+    // Tab System Logic
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.onclick = () => {
+            const tabId = btn.dataset.tab;
+            
+            // Toggle buttons
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Toggle contents
+            tabContents.forEach(content => {
+                if (content.id === 'tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1)) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        };
+    });
+
+    // Event Search
+    inpSearchOrder.addEventListener('input', renderList);
 
     renderStats(); renderList();
 });

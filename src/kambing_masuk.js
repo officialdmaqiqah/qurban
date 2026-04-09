@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td class="sticky-col">
                         <div style="font-weight:600;">${item.noTali}</div>
                         <div style="font-size:0.7rem; color:var(--text-muted); font-weight:400; margin-top:2px;">${item.warnaTali || '-'}</div>
-                        ${item.fotoNotaUrl ? `<button class="btn btn-sm btn-view-photo" data-url="${window.getDirectDriveLink(item.fotoNotaUrl)}" style="background:none; border:none; cursor:pointer; padding:0 4px; font-size:0.8rem;" title="Lihat Foto Nota">📸</button>` : ''}
+                        ${item.fotoNotaUrl ? `<button class="btn btn-sm btn-view-photo" data-url="${window.getDirectDriveLink(item.fotoNotaUrl)}" title="Lihat Foto Nota">📸</button>` : ''}
                     </td>
                     <td>${item.sex || '-'}</td>
                     <td style="font-weight:600; color:var(--primary);">${item.berat ? item.berat + ' kg' : '-'}</td>

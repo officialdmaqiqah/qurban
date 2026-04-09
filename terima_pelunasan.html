@@ -91,7 +91,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: start;">
+                <div class="pay-layout-grid">
                     <!-- Kiri: Form Terima Bayar -->
                     <div class="card-box">
                         <h3 style="margin-bottom:1.25rem;">💳 Input Pembayaran</h3>
@@ -158,25 +158,54 @@
                             </button>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Kanan: Daftar Order Belum Lunas & Kelebihan Bayar -->
-                    <div class="card-box" style="display:flex; flex-direction:column; max-height:800px;">
-                        <div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                                <h3 style="margin:0;">📋 Order Belum Lunas</h3>
-                                <input type="text" id="inpSearchOrder" class="form-control" placeholder="Cari..." style="width:150px; font-size:0.8rem;">
-                            </div>
-                            <div style="max-height: 350px; overflow-y: auto; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:1rem;">
-                                <div id="listOrderBelumLunas"></div>
+                <!-- Kanan: Management Order & Refund (Tabs) -->
+                <div class="card-box tall-header">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                            <h3 style="margin:0;">📋 Kelola Order</h3>
+                            <input type="text" id="inpSearchOrder" class="form-control" placeholder="Cari Konsumen / ID..." style="width:180px; font-size:0.85rem;">
+                        </div>
+
+                        <div class="tab-header">
+                            <button class="tab-btn active" data-tab="unpaid">📋 Order Belum Lunas</button>
+                            <button class="tab-btn" data-tab="overpaid">
+                                ⚠️ Kelebihan Bayar
+                                <span id="badgeOverpaidCount" style="background:var(--warning); color:black; font-size:0.65rem; padding:2px 6px; border-radius:10px; margin-left:5px; display:none;">0</span>
+                            </button>
+                        </div>
+
+                        <div class="tab-content active" id="tabUnpaid">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Order</th>
+                                            <th>Konsumen</th>
+                                            <th>Sisa Tagihan</th>
+                                            <th>Penyelesaian</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBodyBelumLunas"></tbody>
+                                </table>
                             </div>
                         </div>
 
-                        <div style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
-                            <h3 style="margin-bottom:1rem; color:var(--warning); display:flex; align-items:center; gap:0.5rem;">
-                                ⚠️ Kelebihan Bayar 
-                                <span id="badgeOverpaidCount" style="background:var(--warning); color:var(--bg-dark); font-size:0.7rem; padding:2px 6px; border-radius:10px; display:none;">0</span>
-                            </h3>
-                            <div id="listOrderOverpaid" style="overflow-y: auto; flex:1;"></div>
+                        <div class="tab-content" id="tabOverpaid">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Order</th>
+                                            <th>Konsumen</th>
+                                            <th>Kelebihan</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBodyOverpaid"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
