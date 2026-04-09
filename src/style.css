@@ -1205,30 +1205,13 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
     h4 { font-size: 1rem !important; }
 
     .page-title {
-        font-size: 0.95rem !important;
-        font-weight: 700;
-        max-width: 150px;
+        font-size: 0.9rem !important;
+        font-weight: 800;
+        max-width: 130px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-    }
-
-    .sidebar {
-        position: fixed;
-        left: 0; top: 0; bottom: 0;
-        width: 280px;
-        z-index: 10001;
-        transform: translateX(-100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 20px 0 50px rgba(0,0,0,0.5);
-    }
-    .sidebar.active { transform: translateX(0); }
-
-    .main-content {
-        margin-left: 0;
-        width: 100%;
-        padding-top: 60px;
-        padding-bottom: 2rem;
+        letter-spacing: -0.01em;
     }
 
     .topbar {
@@ -1236,12 +1219,22 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         top: 0; left: 0; right: 0;
         z-index: 10000;
         height: 60px;
-        padding: 0 1rem;
+        padding: 0 0.75rem;
         background: var(--bg-card);
         backdrop-filter: blur(10px);
         display: flex;
         align-items: center;
         justify-content: space-between;
+    }
+
+    .topbar-actions {
+        gap: 0.35rem !important;
+    }
+
+    .action-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
     }
 
     /* Content Area Buttons - Stacking on mobile */

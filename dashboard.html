@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dashboard - Qurban Manager</title>
         <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="src/style.css">
+        <link rel="stylesheet" href="src/style.css?v=3.5">
         <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
 </head>
 <body>
@@ -51,14 +51,15 @@
 
                         <div class="content-area fade-in">
                                 <!-- EMERGENCY SHORTCUT (PREMIUM) -->
-                                <div class="card-box btn-shimmer" style="background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.05)); border: 2px solid #a855f7; cursor:pointer; margin-bottom: 2rem; border-radius:15px;" onclick="window.location.href='laporan.html'">
-                                    <div style="display:flex; align-items:center; gap:1.5rem; padding:0.5rem;">
-                                        <div style="font-size:3rem; filter: drop-shadow(0 0 10px rgba(168,85,247,0.3));">📊</div>
-                                        <div style="text-align:left;">
-                                            <h3 style="margin:0; color:#a855f7; font-size:1.4rem; letter-spacing:-0.5px;">Pusat Laporan Strategis (Real-Time)</h3>
-                                            <p style="margin:0.2rem 0 0; font-size:0.85rem; color:var(--text-muted);">Klik untuk melihat Laba Rugi, Arus Kas, & Neraca Bisnis.</p>
+                                <div class="premium-card btn-shimmer" style="background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.05)); border: 2px solid #a855f7; cursor:pointer; margin-bottom: 2rem;" onclick="window.location.href='laporan.html'">
+                                    <div style="display:flex; align-items:center; gap:1.25rem;">
+                                        <div style="font-size:2.5rem; filter: drop-shadow(0 0 10px rgba(168,85,247,0.3));">📊</div>
+                                        <div style="text-align:left; flex:1;">
+                                            <div class="premium-label" style="color:#a855f7; margin:0;">Laporan Strategis</div>
+                                            <div class="premium-value" style="font-size:1.2rem; color:var(--text-main);">Summary Bisnis (Real-Time)</div>
+                                            <p style="margin:0.2rem 0 0; font-size:0.8rem; color:var(--text-muted);">Klik untuk Laba Rugi, Kas & Neraca.</p>
                                         </div>
-                                        <div style="margin-left:auto; background:#a855f7; color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; box-shadow:0 8px 15px rgba(168,85,247,0.3);">➔</div>
+                                        <div style="background:#a855f7; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 8px 15px rgba(168,85,247,0.3); flex-shrink:0;">➔</div>
                                     </div>
                                 </div>
 
@@ -149,7 +150,7 @@
                         </div>
                 </main>
         </div>
-        <script type="module" src="src/layout.js"></script>
+        <script type="module" src="src/layout.js?v=3.5"></script>
         <script type="module" src="src/dashboard.js"></script>
 </body>
 </html>
