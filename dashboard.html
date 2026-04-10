@@ -42,7 +42,7 @@
                 <!-- Main Content -->
                 <main class="main-content">
                         <header class="topbar">
-                                <div class="page-title">Ringkasan Bisnis (Final v3.9)</div>
+                                <div class="page-title">Summary Bisnis (Real-Time)</div>
                                 <div class="user-menu">
                                         <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
                                 </div>
@@ -50,36 +50,36 @@
 
                         <div class="content-area fade-in">
                                 <!-- EMERGENCY SHORTCUT (PREMIUM) -->
-                                <div class="premium-card btn-shimmer" style="background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.05)); border: 2px solid #a855f7; cursor:pointer; margin-bottom: 2rem;" onclick="window.location.href='laporan.html'">
-                                    <div style="display:flex; align-items:center; gap:1.25rem;">
-                                        <div style="font-size:2.5rem; filter: drop-shadow(0 0 10px rgba(168,85,247,0.3));">📊</div>
+                                <div class="premium-card violet btn-shimmer" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05)); border: 1px solid rgba(139, 92, 246, 0.3); cursor:pointer; margin-bottom: 2.5rem; min-height: 100px;" onclick="window.location.href='laporan.html'">
+                                    <div style="display:flex; align-items:center; gap:1.5rem;">
+                                        <div class="premium-icon-box" style="position:relative; transform:none; top:auto; right:auto; background:rgba(139, 92, 246, 0.1); color:#8b5cf6;">📊</div>
                                         <div style="text-align:left; flex:1;">
-                                            <div class="premium-label" style="color:#a855f7; margin:0;">Laporan Strategis</div>
-                                            <div class="premium-value" style="font-size:1.2rem; color:var(--text-main);">Summary Bisnis (Real-Time)</div>
-                                            <p style="margin:0.2rem 0 0; font-size:0.8rem; color:var(--text-muted);">Klik untuk Laba Rugi, Kas & Neraca.</p>
+                                            <div class="premium-label" style="color:#8b5cf6; margin-bottom:0.15rem;">Laporan Strategis Terintegrasi</div>
+                                            <div class="premium-value" style="font-size:1.35rem; font-weight:600; letter-spacing:-0.03em;">Summary Bisnis (Real-Time)</div>
+                                            <p style="margin:0.15rem 0 0; font-size:0.85rem; color:var(--text-muted);">Akses Laba Rugi, Cashflow, & Neraca Kandang.</p>
                                         </div>
-                                        <div style="background:#a855f7; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 8px 15px rgba(168,85,247,0.3); flex-shrink:0;">➔</div>
+                                        <div style="background:#8b5cf6; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; box-shadow:0 4px 12px rgba(139, 92, 246, 0.3); flex-shrink:0;">➔</div>
                                     </div>
                                 </div>
 
                                 <h3 style="margin-bottom: 1.25rem; font-weight: 400; display:flex; align-items:center; gap:8px;">💎 Posisi Kas & Likuiditas</h3>
                                 <div class="premium-grid">
-                                    <div class="premium-card">
+                                    <div class="premium-card emerald">
                                         <div class="premium-label">Total Saldo Kas</div>
                                         <div class="premium-value" id="dashTotalSaldoKas">Rp 0</div>
                                         <div class="premium-icon-box">💵</div>
                                     </div>
-                                    <div class="premium-card">
+                                    <div class="premium-card amber">
                                         <div class="premium-label">Hutang Komisi Agen</div>
                                         <div class="premium-value" id="dashHutangAgen">Rp 0</div>
                                         <div class="premium-icon-box">🤝</div>
                                     </div>
-                                    <div class="premium-card" style="border-left-color: var(--success); background:rgba(34, 197, 94, 0.05);">
+                                    <div class="premium-card emerald">
                                         <div class="premium-label">Saldo Bersih Kandang</div>
                                         <div class="premium-value text-success" id="dashSaldoNetto">Rp 0</div>
                                         <div class="premium-icon-box">🏦</div>
                                     </div>
-                                    <div class="premium-card">
+                                    <div class="premium-card indigo">
                                         <div class="premium-label">Nilai Aset Stok</div>
                                         <div class="premium-value" id="dashNilaiAsetStok">Rp 0</div>
                                         <div class="premium-icon-box">🐏</div>
@@ -88,17 +88,17 @@
 
                                 <h3 style="margin-bottom: 1.25rem; font-weight: 400; margin-top: 2rem; display:flex; align-items:center; gap:8px;">📈 Performa & Profitabilitas</h3>
                                 <div class="premium-grid">
-                                    <div class="premium-card">
+                                    <div class="premium-card emerald">
                                         <div class="premium-label">Pemasukan (Cash-In)</div>
                                         <div class="premium-value" id="dashPemasukan">Rp 0</div>
                                         <div class="premium-icon-box">📥</div>
                                     </div>
-                                    <div class="premium-card">
+                                    <div class="premium-card rose">
                                         <div class="premium-label">Pengeluaran (Cash-Out)</div>
                                         <div class="premium-value" id="dashPengeluaran">Rp 0</div>
                                         <div class="premium-icon-box">📤</div>
                                     </div>
-                                    <div class="premium-card" style="border-left-color: var(--success); background:rgba(34, 197, 94, 0.05);">
+                                    <div class="premium-card emerald">
                                         <div class="premium-label">Laba Bersih Aktual</div>
                                         <div class="premium-value text-success" id="dashProfitRealtime">Rp 0</div>
                                         <div class="premium-icon-box">✨</div>
@@ -107,41 +107,41 @@
 
                                 <h3 style="margin-bottom: 1.25rem; font-weight: 400; margin-top: 2rem; display:flex; align-items:center; gap:8px;">📊 Inventori & Status Kandang</h3>
                                 <div class="premium-grid">
-                                    <div class="premium-card">
+                                    <div class="premium-card indigo">
                                         <div class="premium-label">Total Populasi Kambing</div>
                                         <div class="premium-value" id="dashTotalKambing">0 Ekor</div>
                                         <div class="premium-icon-box">🐐</div>
                                         
-                                        <div class="kambing-breakdown" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:1rem; margin-top:1rem;">
+                                        <div class="kambing-breakdown" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; border-top:1px solid rgba(0,0,0,0.05); padding-top:1rem; margin-top:1rem;">
                                             <div class="breakdown-item">
-                                                <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase;">Tersedia</div>
+                                                <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Tersedia</div>
                                                 <div class="text-success" id="dashTersedia" style="font-size:1.1rem; font-weight:300;">0</div>
                                             </div>
                                             <div class="breakdown-item">
-                                                <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase;">Terjual</div>
+                                                <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Terjual</div>
                                                 <div class="text-warning" id="dashTerjual" style="font-size:1.1rem; font-weight:300;">0</div>
                                             </div>
                                             <div class="breakdown-item">
-                                                <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase;">Sakit/Mati</div>
+                                                <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Sakit/Mati</div>
                                                 <div class="text-danger" id="dashSakitMatiCount" style="font-size:1.1rem; font-weight:300;">0</div>
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    <div class="premium-card">
+                                    <div class="premium-card violet">
                                         <div class="premium-label">Distribusi & Kesehatan</div>
                                         <div class="premium-value" id="dashDistribusi">0 Unit</div>
                                         <div class="premium-icon-box">🚚</div>
-                                        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem;">
-                                            🏥 Sedang Sakit: <span id="dashSakitOnly" class="text-warning" style="font-weight:300;">0</span>
+                                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; font-weight:400;">
+                                            🏥 Sedang Sakit: <span id="dashSakitOnly" class="text-warning" style="font-weight:600;">0</span>
                                         </div>
                                     </div>
 
-                                    <div class="premium-card">
+                                    <div class="premium-card amber">
                                         <div class="premium-label">Lain-lain</div>
                                         <div class="premium-value" id="dashHilang">0 Ekor</div>
                                         <div class="premium-icon-box">🔍</div>
-                                        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem;">
+                                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; font-weight:400;">
                                             Kambing Hilang / Tidak Ditemukan
                                         </div>
                                     </div>
