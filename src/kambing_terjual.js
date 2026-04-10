@@ -675,7 +675,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
 
-    formTerjual.addEventListener('submit', (e) => { e.preventDefault(); if(currentCart.length === 0) return; showChoice("Simpan Transaksi?", [{ text: "📲 Simpan & WA", callback: () => performSave(true) }, { text: "💾 Simpan Saja", callback: () => performSave(false) }]); });
+    if (formTerjual) {
+        formTerjual.addEventListener('submit', (e) => { e.preventDefault(); if(currentCart.length === 0) return; showChoice("Simpan Transaksi?", [{ text: "📲 Simpan & WA", callback: () => performSave(true) }, { text: "💾 Simpan Saja", callback: () => performSave(false) }]); });
+    }
     
     // Global Access
     window.terimaLunas = (trxId) => {
@@ -687,19 +689,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         modalLunas.classList.add('active');
     };
 
-    selOrderLunas.addEventListener('change', async () => {
-        const { data: trx } = await supabase.from('transaksi').select('*').eq('id', selOrderLunas.value).single();
-        if(!trx) return;
-        detailOrderLunas.innerHTML = `ID: ${trx.id} | Sisa: ${formatRp(trx.total_deal-trx.total_paid)}`;
-        let hist = ''; (trx.history_bayar || []).forEach(h => { hist += `<div>${formatTgl(h.tgl)} - ${formatRp(h.nominal)} <button onclick="deleteHistoryItem('${trx.id}','${h.payId}',${h.nominal})">🗑️</button></div>`; });
-        historiPayLunas.innerHTML = hist;
-        inpNominalLunas.value = formatNum(trx.total_deal - trx.total_paid);
-        infoOrderLunas.style.display = 'block'; formInputLunas.style.display = 'block'; btnSimpanLunas.disabled = false;
-    });
+    if (selOrderLunas) {
+        selOrderLunas.addEventListener('change', async () => {
+            const { data: trx } = await supabase.from('transaksi').select('*').eq('id', selOrderLunas.value).single();
+            if(!trx) return;
+            detailOrderLunas.innerHTML = `ID: ${trx.id} | Sisa: ${formatRp(trx.total_deal-trx.total_paid)}`;
+            let hist = ''; (trx.history_bayar || []).forEach(h => { hist += `<div>${formatTgl(h.tgl)} - ${formatRp(h.nominal)} <button onclick="deleteHistoryItem('${trx.id}','${h.payId}',${h.nominal})">🗑️</button></div>`; });
+            historiPayLunas.innerHTML = hist;
+            inpNominalLunas.value = formatNum(trx.total_deal - trx.total_paid);
+            infoOrderLunas.style.display = 'block'; formInputLunas.style.display = 'block'; btnSimpanLunas.disabled = false;
+        });
+    }
 
-    btnSimpanLunas.addEventListener('click', () => { performSaveLunas(parseNum(inpNominalLunas.value), selOrderLunas.value, inpChannelLunas.value, inpTglLunas.value, true); });
+    if (btnSimpanLunas) btnSimpanLunas.addEventListener('click', () => { performSaveLunas(parseNum(inpNominalLunas.value), selOrderLunas.value, inpChannelLunas.value, inpTglLunas.value, true); });
 
-    document.getElementById('btnTambahTerjual').addEventListener('click', () => { window.editingTrxId = null; initForm(); modalKeluar.classList.add('active'); });
+    const btnTambahGlobal = document.getElementById('btnTambahTerjual');
+    if (btnTambahGlobal) btnTambahGlobal.addEventListener('click', () => { window.editingTrxId = null; initForm(); modalKeluar.classList.add('active'); });
     
     // Fix: Handle both btnCloseModal and btnCancelModal
     const closeMainModal = () => modalKeluar.classList.remove('active');
@@ -708,16 +713,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (closeBtn1) closeBtn1.addEventListener('click', closeMainModal);
     if (closeBtn2) closeBtn2.addEventListener('click', closeMainModal);
     
-    document.getElementById('btnCloseLunasModal').addEventListener('click', () => modalLunas.classList.remove('active'));
+    const closeBtnLunas = document.getElementById('btnCloseLunasModal');
+    if (closeBtnLunas) closeBtnLunas.addEventListener('click', () => modalLunas.classList.remove('active'));
     
     const btnBatalLunas = document.getElementById('btnBatalLunas');
     if (btnBatalLunas) btnBatalLunas.addEventListener('click', () => modalLunas.classList.remove('active'));
     
-    inpSearchKambing.addEventListener('change', async () => { await addKambingToCart(); });
-    btnAddKambing.addEventListener('click', async () => { await addKambingToCart(); });
-    inpAgenId.addEventListener('change', async () => { await handleAgenChange(); });
-    inpChannelDP.addEventListener('change', () => handleChannelChangeLocal(inpChannelDP.value, containerRekDP, inpRekIdDP));
-    inpChannelLunas.addEventListener('change', () => handleChannelChangeLocal(inpChannelLunas.value, containerRekLunas, inpRekIdLunas));
+    if (inpSearchKambing) inpSearchKambing.addEventListener('change', async () => { await addKambingToCart(); });
+    if (btnAddKambing) btnAddKambing.addEventListener('click', async () => { await addKambingToCart(); });
+    if (inpAgenId) inpAgenId.addEventListener('change', async () => { await handleAgenChange(); });
+    if (inpChannelDP) inpChannelDP.addEventListener('change', () => handleChannelChangeLocal(inpChannelDP.value, containerRekDP, inpRekIdDP));
+    if (inpChannelLunas) inpChannelLunas.addEventListener('change', () => handleChannelChangeLocal(inpChannelLunas.value, containerRekLunas, inpRekIdLunas));
 
     const addKambingToCart = async () => {
         const db = await getKambingDb();
