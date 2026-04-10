@@ -443,10 +443,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${menusFull.map(m => `<label style="font-size:0.85rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" class="inpAuthMenu" value="${m.h}" ${(u.allowed_menus||[]).includes(m.h)?'checked':''}> ${m.n}</label>`).join('')}
             </div>
             <hr>
-            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color:var(--warning);">
-                <input type="checkbox" id="permStrictAgen" ${u.permissions?.strictAgen?'checked':''}> <strong>Strict Data Filter</strong><br>
-                <span style="font-size:0.7rem; color:var(--text-muted);">(Hanya boleh melihat/edit data penjualannya sendiri)</span>
-            </label>
+            <div style="display:flex; flex-direction:column; gap:0.75rem; background:rgba(255,255,255,0.02); padding:1rem; border-radius:10px;">
+                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color:var(--warning);">
+                    <input type="checkbox" id="permStrictAgen" ${u.permissions?.strictAgen?'checked':''}> <strong>Strict Data Filter</strong>
+                </label>
+                <p style="font-size:0.7rem; color:var(--text-muted); margin-top:-0.5rem; margin-left:1.5rem; margin-bottom:0.5rem;">(Hanya boleh melihat/edit data penjualannya sendiri)</p>
+
+                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color:var(--danger);">
+                    <input type="checkbox" id="permHideProfit" ${u.permissions?.hideProfit?'checked':''}> <strong>Sembunyikan Profit</strong>
+                </label>
+                <p style="font-size:0.7rem; color:var(--text-muted); margin-top:-0.5rem; margin-left:1.5rem; margin-bottom:0.5rem;">(Menyembunyikan angka Laba di Dashboard)</p>
+
+                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; color:#fb923c;">
+                    <input type="checkbox" id="permHideHargaNota" ${u.permissions?.hideHargaNota?'checked':''}> <strong>Sembunyikan Harga Beli</strong>
+                </label>
+                <p style="font-size:0.7rem; color:var(--text-muted); margin-top:-0.5rem; margin-left:1.5rem;">(Menyembunyikan Modal/Harga Nota dari Supplier)</p>
+            </div>
         `;
         modalGeneral.classList.add('active');
         
@@ -457,6 +469,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const status = document.getElementById('inpUserStatus').value;
             const menus = Array.from(document.querySelectorAll('.inpAuthMenu:checked')).map(c => c.value);
             const strict = document.getElementById('permStrictAgen').checked;
+            const hideProfit = document.getElementById('permHideProfit').checked;
+            const hideHargaNota = document.getElementById('permHideHargaNota').checked;
             const linked = document.getElementById('inpLinkedAgen')?.value || '';
 
             const { error } = await supabase.from('profiles').update({ 
@@ -465,7 +479,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 allowed_menus: menus, 
                 permissions: { 
                     strictAgen: strict,
-                    linkedAgen: linked
+                    linkedAgen: linked,
+                    hideProfit: hideProfit,
+                    hideHargaNota: hideHargaNota
                 } 
             }).eq('id', id);
 
