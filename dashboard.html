@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dashboard - Qurban Manager</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700" rel="stylesheet">
-        <link rel="stylesheet" href="src/style.css?v=4.2">
+        <link rel="stylesheet" href="src/style.css?v=4.3">
         <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
 </head>
 <body>
@@ -105,25 +105,25 @@
                                     </div>
                                 </div>
 
-                                <h3 style="margin-bottom: 1.25rem; font-weight: 400; margin-top: 2rem; display:flex; align-items:center; gap:8px;">📊 Inventori & Status Kandang</h3>
+                                <h3 style="margin-bottom: 1.25rem; font-weight: 400; margin-top: 2rem; display:flex; align-items:center; gap:8px;"><span class="section-icon">📊</span> Inventori & Status Kandang</h3>
                                 <div class="premium-grid">
                                     <div class="premium-card indigo">
                                         <div class="premium-label">Total Populasi Kambing</div>
                                         <div class="premium-value" id="dashTotalKambing">0 Ekor</div>
                                         <div class="premium-icon-box">🐐</div>
                                         
-                                        <div class="kambing-breakdown" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; border-top:1px solid rgba(0,0,0,0.05); padding-top:1rem; margin-top:1rem;">
-                                            <div class="breakdown-item">
-                                                <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Tersedia</div>
-                                                <div class="text-success" id="dashTersedia" style="font-size:1.1rem; font-weight:300;">0</div>
+                                        <div class="kambing-breakdown" style="display: flex; gap: 0.5rem; margin-top: 1.25rem;">
+                                            <div class="breakdown-pill emerald">
+                                                <div class="pill-label">Tersedia</div>
+                                                <div id="dashTersedia" class="pill-value">0</div>
                                             </div>
-                                            <div class="breakdown-item">
-                                                <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Terjual</div>
-                                                <div class="text-warning" id="dashTerjual" style="font-size:1.1rem; font-weight:300;">0</div>
+                                            <div class="breakdown-pill amber">
+                                                <div class="pill-label">Terjual</div>
+                                                <div id="dashTerjual" class="pill-value">0</div>
                                             </div>
-                                            <div class="breakdown-item">
-                                                <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Sakit/Mati</div>
-                                                <div class="text-danger" id="dashSakitMatiCount" style="font-size:1.1rem; font-weight:300;">0</div>
+                                            <div class="breakdown-pill rose">
+                                                <div class="pill-label">Sakit/Mati</div>
+                                                <div id="dashSakitMatiCount" class="pill-value">0</div>
                                             </div>
                                         </div>
                                     </div>
@@ -132,16 +132,17 @@
                                         <div class="premium-label">Distribusi & Kesehatan</div>
                                         <div class="premium-value" id="dashDistribusi">0 Unit</div>
                                         <div class="premium-icon-box">🚚</div>
-                                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; font-weight:400;">
-                                            🏥 Sedang Sakit: <span id="dashSakitOnly" class="text-warning" style="font-weight:600;">0</span>
+                                        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.65rem; font-weight:400; display:flex; align-items:center; gap:6px;">
+                                            <span style="opacity:0.7;">Sedang Sakit:</span>
+                                            <span id="dashSakitOnly" class="text-warning" style="font-weight:600;">0</span>
                                         </div>
                                     </div>
 
                                     <div class="premium-card amber">
-                                        <div class="premium-label">Lain-lain</div>
+                                        <div class="premium-label">Status Fisik & Lainnya</div>
                                         <div class="premium-value" id="dashHilang">0 Ekor</div>
                                         <div class="premium-icon-box">🔍</div>
-                                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; font-weight:400;">
+                                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; font-weight:400; opacity:0.8;">
                                             Kambing Hilang / Tidak Ditemukan
                                         </div>
                                     </div>
