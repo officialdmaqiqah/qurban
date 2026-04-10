@@ -1477,11 +1477,7 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         text-overflow: ellipsis;
     }
     .premium-icon-box {
-        width: 34px !important;
-        height: 34px !important;
-        font-size: 1.1rem !important;
-        /* Removing top/right/transform overrides to inherit centered behavior */
-        border-radius: 10px !important;
+        display: none !important;
     }
 
     /* grid-cards → 2 column slim on mobile */
