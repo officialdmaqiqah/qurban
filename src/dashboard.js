@@ -39,16 +39,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isStrict = permissions.strictAgen;
 
         // Filter by Agency if needed
+        console.log("[Dashboard Debug] Profile:", profile);
+        console.log("[Dashboard Debug] LinkedAgen:", linkedAgen);
+        
         if (!isAdmin || isStrict) {
             if (linkedAgen) {
                 const search = linkedAgen.toLowerCase().trim();
+                const beforeCount = trxDb.length;
                 trxDb = trxDb.filter(t => {
                     if (!t.agen) return false;
                     const name = (typeof t.agen === 'string' ? t.agen : (t.agen.nama || '')).toLowerCase().trim();
                     const id = (t.agen.id || '').toLowerCase().trim();
                     return name === search || id === search;
                 });
+                console.log(`[Dashboard Debug] Filtered from ${beforeCount} to ${trxDb.length} rows using search: "${search}"`);
             } else if (userRole === 'agen') {
+                 console.log("[Dashboard Debug] Role Agen but no linkedAgen - clearing data");
                  trxDb = [];
             }
         }

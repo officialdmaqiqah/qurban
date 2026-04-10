@@ -336,6 +336,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         let trx = [...trxData];
         const keyword = (inpGlobalSearch ? inpGlobalSearch.value : '').toLowerCase();
 
+        console.log("[Trx Debug] Profile:", profile);
+        console.log("[Trx Debug] LinkedAgen:", linkedAgen);
+        console.log("[Trx Debug] Total Data Awal:", trxData ? trxData.length : 0);
+
         if (!isAdmin) { 
             if (linkedAgen) {
                 const search = linkedAgen.toLowerCase().trim();
@@ -345,12 +349,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const id = (t.agen.id || '').toLowerCase().trim();
                     return name === search || id === search;
                 });
+                console.log(`[Trx Debug] Filtered by LinkedAgen "${search}": ${trx.length} rows remaining.`);
             } else {
                 trx = trx.filter(t => {
                     if (!t.agen) return false;
                     const name = (typeof t.agen === 'string' ? t.agen : (t.agen.nama || '')).toLowerCase().trim();
                     return name === profileName;
                 });
+                console.log(`[Trx Debug] Filtered by ProfileName "${profileName}": ${trx.length} rows remaining.`);
             }
         }
         if (keyword) { trx = trx.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer?.nama || '').toLowerCase().includes(keyword) || (t.agen?.nama || '').toLowerCase().includes(keyword) || (t.customer?.wa1 || '').toLowerCase().includes(keyword)); }

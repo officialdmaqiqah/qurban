@@ -473,13 +473,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             const hideHargaNota = document.getElementById('permHideHargaNota').checked;
             const linked = document.getElementById('inpLinkedAgen')?.value || '';
 
+            // Cari ID agen dari master data
+            const { data: agenMaster } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single();
+            const agenMatched = (agenMaster?.val || []).find(a => a.nama === linked);
+            const matchedId = agenMatched ? agenMatched.id : '';
+
             const { error } = await supabase.from('profiles').update({ 
                 role, 
                 status, 
                 allowed_menus: menus, 
+                linked_agen_nama: linked,
+                linked_agen_id: matchedId,
                 permissions: { 
                     strictAgen: strict,
                     linkedAgen: linked,
+                    linkedAgenId: matchedId,
                     hideProfit: hideProfit,
                     hideHargaNota: hideHargaNota
                 } 
