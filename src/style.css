@@ -41,6 +41,48 @@
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ===== LIGHT MODE OVERRIDES ===== */
+.light-mode {
+  --bg-dark: #f8fafc;          /* Slate 50 */
+  --bg-card: #ffffff;
+  --bg-input: #f1f5f9;         /* Slate 100 */
+  --text-main: #0f172a;        /* Slate 900 */
+  --text-muted: #64748b;       /* Slate 500 */
+  --bg-card-rgb: 255, 255, 255;
+  --primary-transparent: rgba(16, 185, 129, 0.1);
+}
+
+body.light-mode .card-box {
+  background-color: var(--bg-card);
+  border-color: rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-sm);
+}
+
+body.light-mode .data-table thead th {
+  background-color: #f1f5f9;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+body.light-mode .sidebar {
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+}
+
+body.light-mode .nav-item {
+  color: #475569;
+}
+
+body.light-mode .nav-item:hover, body.light-mode .nav-item.active {
+  background-color: #f1f5f9;
+  color: var(--primary);
+}
+
+body.light-mode .topbar {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #e2e8f0;
+}
+
 /* ===== RESET & GLOBAL ===== */
 * {
   box-sizing: border-box;
@@ -159,7 +201,7 @@ a:hover {
   justify-content: center;
   min-height: 100vh;
   padding: 1rem;
-  background: radial-gradient(circle at top left, #1e293b, #0f172a 70%);
+  background: radial-gradient(circle at top left, var(--bg-card), var(--bg-dark) 70%);
   position: relative;
   overflow: hidden;
 }
@@ -194,13 +236,18 @@ a:hover {
 }
 
 .login-card {
-  background-color: rgba(30, 41, 59, 0.7); /* Slate 800 with transparency */
+  background-color: rgba(var(--bg-card-rgb), 0.7); /* Themed with transparency */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-xl);
   padding: 2.5rem 2rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(var(--text-main), 0.1);
+}
+
+.light-mode .login-card {
+  border-color: rgba(0,0,0,0.05);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
 }
 
 .login-header {
