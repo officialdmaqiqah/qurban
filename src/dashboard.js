@@ -33,15 +33,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const userRole = (profile.role || 'staff').toLowerCase().trim();
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const permissions = profile.permissions || {};
-        const agenLinkedId = profile.permissions?.linkedAgenId || '';
+        const linkedAgen = profile.permissions?.linkedAgen || '';
 
         let trxDb = trxDbAll || [];
         const isStrict = permissions.strictAgen;
 
         // Filter by Agency if needed
         if (!isAdmin || isStrict) {
-            if (agenLinkedId) {
-                trxDb = trxDb.filter(t => t.agen && t.agen.id === agenLinkedId);
+            if (linkedAgen) {
+                trxDb = trxDb.filter(t => t.agen && (t.agen.nama === linkedAgen || t.agen.id === linkedAgen));
             } else if (userRole === 'agen') {
                  trxDb = [];
             }
@@ -181,7 +181,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Hide Report Banner for non-admin/non-marketing kandang
-        const isMK = userRole === 'admin' || (profile?.jenis_agen || '').toUpperCase().includes('MARKETING KANDANG');
+        const agens = (await supabase.from('master_data').select('val').eq('key', 'AGENS').single()).data?.val || [];
+        const linkedAgenData = agens.find(a => a.nama === linkedAgen);
+        const linkedType = (linkedAgenData?.jenis || '').toUpperCase();
+        
+        const isMK = isAdmin || linkedType.includes('MARKETING KANDANG');
         if (!isMK) {
             const banner = document.querySelector('div[onclick*="laporan.html"]');
             if (banner) banner.style.display = 'none';

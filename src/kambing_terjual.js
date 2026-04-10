@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const initForm = async () => {
         const userRole = (profile.role || '').toLowerCase();
         const isAdmin = userRole === 'admin';
-        const linkedAgenId = profile.linked_agen_id;
+        const linkedAgen = profile.permissions?.linkedAgen || '';
 
         const agens = await getAgenDb();
         inpAgenId.innerHTML = '<option value="">-- Pilih Agen --</option>';
@@ -163,10 +163,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const opt = document.createElement('option');
             opt.value = `${a.nama} - ${a.jenis || 'Agen'}`;
             opt.textContent = `${a.nama} — ${a.jenis || 'Agen'}`;
-            if (userRole === 'agen' && a.id === linkedAgenId) opt.selected = true;
+            if (userRole === 'agen' && a.nama === linkedAgen) opt.selected = true;
             inpAgenId.appendChild(opt);
         });
-        if (userRole === 'agen') { inpAgenId.disabled = true; setTimeout(() => handleAgenChange(), 100); } else { inpAgenId.disabled = false; }
+        if (userRole === 'agen' && linkedAgen) { inpAgenId.disabled = true; setTimeout(() => handleAgenChange(), 100); } else { inpAgenId.disabled = false; }
         inpCustKab.innerHTML = '<option value="">-- Pilih Kabupaten --</option>' + Object.keys(BB_REGIONS).map(k => `<option value="${k}">${k}</option>`).join('');
         await refreshKambingDropdown();
         currentCart = []; currentAgenTipeKomisi = false;
@@ -322,15 +322,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const renderTable = async () => {
-        const agenLinkedId = profile?.linked_agen_id || '';
-        const agenLinkedName = (profile?.full_name || '').toLowerCase();
+        const linkedAgen = profile?.permissions?.linkedAgen || '';
+        const profileName = (profile?.full_name || '').toLowerCase();
+        
         let query = supabase.from('transaksi').select('*');
-        if (!isAdmin) { if (!agenLinkedId && !agenLinkedName) { tableBody.innerHTML = '<tr><td colspan="10">Data tidak ditemukan.</td></tr>'; return; } }
+        if (!isAdmin && !linkedAgen && !profileName) { 
+            tableBody.innerHTML = '<tr><td colspan="10">Data tidak ditemukan.</td></tr>'; 
+            return; 
+        }
+
         const { data: trxData, error } = await query;
         if (error) return;
         let trx = [...trxData];
         const keyword = (inpGlobalSearch ? inpGlobalSearch.value : '').toLowerCase();
-        if (!isAdmin) { trx = trx.filter(t => (agenLinkedId && t.agen?.id === agenLinkedId) || (agenLinkedName && (t.agen?.nama || '').toLowerCase() === agenLinkedName)); }
+
+        if (!isAdmin) { 
+            if (linkedAgen) {
+                trx = trx.filter(t => t.agen && (t.agen.nama === linkedAgen || t.agen.id === linkedAgen));
+            } else {
+                trx = trx.filter(t => (t.agen?.nama || '').toLowerCase() === profileName);
+            }
+        }
         if (keyword) { trx = trx.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer?.nama || '').toLowerCase().includes(keyword) || (t.agen?.nama || '').toLowerCase().includes(keyword) || (t.customer?.wa1 || '').toLowerCase().includes(keyword)); }
         trx.sort((a, b) => { let vA = a[currentSort.column], vB = b[currentSort.column]; if (currentSort.column === 'sisa') { vA = (a.total_deal || 0) - (a.total_paid || 0); vB = (b.total_deal || 0) - (b.total_paid || 0); } return currentSort.direction === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1); });
         const { data: editReqs } = await supabase.from('edit_requests').select('*').eq('status', 'pending');
