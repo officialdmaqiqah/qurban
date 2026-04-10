@@ -452,7 +452,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         const total = currentCart.reduce((sum, i) => sum + (parseFloat(i.hargaDeal) || 0), 0);
         const paidNow = parseNum(inpTotalBayarAwal.value);
         let finalChannelDP = inpChannelDP.value; if(finalChannelDP === 'Transfer Bank' && inpRekIdDP.value) finalChannelDP = `TF ${inpRekIdDP.options[inpRekIdDP.selectedIndex].textContent}`;
-            const roleNorm = (profile.role || '').toLowerCase().trim();
+        const roleNorm = (profile.role || '').toLowerCase().trim();
+
+        try {
+            if (window.editingTrxId && roleNorm !== 'agen') await silentRollback(window.editingTrxId, true);
+            
+            let buktiUrl = window.existingBuktiUrl || null; 
+            if (inpBuktiDP?.files.length > 0) { 
+                const b64 = await compressImage(inpBuktiDP.files[0]); 
+                buktiUrl = await uploadToGDrive(b64, 'FOTO_BUKTI_DP'); 
+            }
+            
+            const newTrx = {
+                id: trxId, tgl_trx: inpTglOrder.value || window.getLocalDate(),
+                agen: { id: matchedAgen?.id || '', nama: matchedAgen?.nama || inpAgenId.value, tipe: matchedAgen?.jenis || 'Agen' },
+                customer: { nama: document.getElementById('inpCustNama').value, wa1: document.getElementById('inpCustWA1').value, wa2: document.getElementById('inpCustWA2').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
+                delivery: { tipe: document.getElementById('inpDeliveryTipe').value, tgl: document.getElementById('inpDeliveryTgl').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
+                items: currentCart, total_deal: total, total_paid: paidNow + (window.existingInstallmentsTotal || 0),
+                history_bayar: paidNow > 0 ? [{ payId: 'PAY-'+Date.now(), tgl: inpTglOrder.value || window.getLocalDate(), nominal: paidNow, channel: finalChannelDP, buktiUrl }] : [],
+                komisi: { berhak: currentAgenTipeKomisi, nominal: parseNum(inpKomisiNominal?.value), status: 'belum_bayar', needs_approval: roleNorm === 'agen' }
+            };
+
             console.log(`[Edit Debug] Attempting save. ID: ${window.editingTrxId}, Role: ${roleNorm}, Email: ${profile.email}`);
 
             if (window.editingTrxId && roleNorm === 'agen') {
