@@ -340,16 +340,20 @@
                         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Metrik kinerja lapangan dan efisiensi penagihan.</p>
                         
                         <h5>📊 Kesehatan Kandang (Mortalitas per Batch)</h5>
-                        <table class="report-table" id="tableOPE_Health" style="margin-bottom:2rem;">
-                            <thead><tr><th>BATCH</th><th>STOK AWAL</th><th>MATI/HILANG</th><th>HEALTH RATE</th></tr></thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="table-responsive glass-panel" style="padding: 1rem; border-radius: 12px; margin-bottom: 2rem;">
+                            <table class="report-table" id="tableOPE_Health">
+                                <thead><tr><th>BATCH</th><th>STOK AWAL</th><th>MATI/HILANG</th><th>HEALTH RATE</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
 
                         <h5>💳 Efektivitas Penagihan (Aging Piutang)</h5>
-                        <table class="report-table" id="tableOPE_Aging" style="margin-bottom:2rem;">
-                            <thead><tr><th>UMUR PIUTANG</th><th>JUMLAH ORDER</th><th>TOTAL NILAI PIUTANG</th></tr></thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="table-responsive glass-panel" style="padding: 1rem; border-radius: 12px; margin-bottom: 2rem;">
+                            <table class="report-table" id="tableOPE_Aging">
+                                <thead><tr><th>UMUR PIUTANG</th><th>JUMLAH ORDER</th><th>TOTAL NILAI PIUTANG</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <!-- ANALISA & KPI -->
@@ -393,11 +397,13 @@
                         </div>
 
                         <div style="margin-top:2rem;">
-                            <h5 style="margin-bottom:1rem;">🏆 Top Performance: Sales & Agen</h5>
-                            <table class="report-table" id="tableAnalisisAgen">
-                                <thead><tr><th>NAMA AGEN</th><th>TIPE</th><th style="text-align:right">EKOR</th><th style="text-align:right">VALUASI DEAL</th><th style="text-align:right">AVG PROFIT</th></tr></thead>
-                                <tbody></tbody>
-                            </table>
+                            <h5 style="margin-bottom:1rem; color: var(--primary); letter-spacing: 0.05em;">🏆 Top Performance: Sales & Agen</h5>
+                            <div class="table-responsive glass-panel" style="padding: 1rem; border-radius: 12px;">
+                                <table class="report-table" id="tableAnalisisAgen">
+                                    <thead><tr><th>NAMA AGEN</th><th>TIPE</th><th style="text-align:right">EKOR</th><th style="text-align:right">VALUASI DEAL</th><th style="text-align:right">AVG PROFIT</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
