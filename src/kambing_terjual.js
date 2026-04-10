@@ -340,6 +340,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let trx = [...trxData];
         const keyword = (inpGlobalSearch ? inpGlobalSearch.value : '').toLowerCase();
 
+        const agenLinkedId = profile?.linked_agen_id || profile?.permissions?.linkedAgenId || '';
+        const agenLinkedName = (profile?.linked_agen_nama || profile?.permissions?.linkedAgen || '').toLowerCase().trim();
+
         console.log("[Trx Debug] Profile:", profile);
         console.log("[Trx Debug] LinkedAgen:", linkedAgen);
         console.log("[Trx Debug] Total Data Awal:", trxData ? trxData.length : 0);
