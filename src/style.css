@@ -1644,6 +1644,7 @@ body.light-mode .violet .premium-icon-box { background: rgba(139, 92, 246, 0.08)
 .kambing-breakdown {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap; /* Allow wrapping on narrow screens */
     margin-top: 1.25rem;
     border-top: none !important;
     padding-top: 0 !important;
@@ -1651,6 +1652,7 @@ body.light-mode .violet .premium-icon-box { background: rgba(139, 92, 246, 0.08)
 
 .breakdown-pill {
     flex: 1;
+    min-width: 80px; /* Ensure pills are readable */
     padding: 0.75rem 0.4rem;
     border-radius: 14px;
     background: rgba(0,0,0,0.02);
