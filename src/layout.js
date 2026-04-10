@@ -485,8 +485,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Notif Bell Badge (Admin)
         if (isAdmin) {
-            const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'pending');
-            if (count > 0) {
+            const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+            const { count: editCount } = await supabase.from('edit_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+            const totalNotif = (userCount || 0) + (editCount || 0);
+
+            if (totalNotif > 0) {
                 const badge = document.createElement('span');
                 badge.className = 'badge-dot';
                 document.getElementById('notifBellIcon')?.appendChild(badge);
