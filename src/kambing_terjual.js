@@ -377,20 +377,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         trx.forEach(t => {
             const hasPendingEdit = editReqs?.find(r => r.trx_id === t.id);
             const sisa = (t.total_deal || 0) - (t.total_paid || 0);
-            const itemsHtml = (t.items || []).map(item => { 
+            const itemsHtml = `<div style="display:flex; flex-wrap:wrap; gap:6px;">` + (t.items || []).map(item => { 
                 const kMeta = kambingDb.find(k => k.id === item.goatId); 
-                return `<div style="display:flex; align-items:center; gap:5px; margin-bottom:2px;">
-                    <span style="cursor:pointer; color:var(--primary); text-decoration:underline;" onclick="window.viewGoatPhoto('${item.goatId}')">• No ${item.noTali}</span>
-                    <small>(${kMeta?.warna_tali || '-'})</small>
-                </div>`; 
-            }).join('');
+                let badgeColor = 'var(--primary)';
+                if (kMeta?.status_kesehatan === 'Sakit') badgeColor = 'var(--warning)';
+                if (kMeta?.status_kesehatan === 'Mati') badgeColor = 'var(--danger)';
+
+                return `
+                    <div style="display:inline-flex; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:4px 8px; font-size:0.75rem; transition: var(--transition); cursor:pointer;" 
+                         onclick="window.viewGoatPhoto('${item.goatId}')"
+                         onmouseover="this.style.borderColor='${badgeColor}'; this.style.background='rgba(0,0,0,0.2)'" 
+                         onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(255,255,255,0.05)'">
+                        <span style="color:${badgeColor}; font-weight:600; margin-right:4px;">No.${item.noTali}</span>
+                        <span style="color:var(--text-muted); font-size:0.65rem;">${item.batch}</span>
+                    </div>`; 
+            }).join('') + `</div>`;
             
             const tr = document.createElement('tr');
             const isOwner = (agenLinkedId && t.agen?.id === agenLinkedId) || (agenLinkedName && (t.agen?.nama || '').toLowerCase() === agenLinkedName);
             const canEdit = isAdmin || (isMarketingRole && isOwner);
 
             tr.innerHTML = `
-                <td><div style="font-weight:700;">${t.id}</div><div style="font-size:0.75rem;">${formatTgl(t.tgl_trx)}</div>${hasPendingEdit ? '<span class="badge" style="background:#f59e0b22; color:#f59e0b;">⏳ Review</span>' : ''}</td>
+                <td>
+                    <div style="font-weight:700;">${t.id}</div>
+                    <div style="font-size:0.75rem;">${formatTgl(t.tgl_trx)}</div>
+                    ${hasPendingEdit ? '<div class="status-pill status-review" style="margin-top:5px; transform: scale(0.85); origin: left center;">⏳ Review</div>' : ''}
+                </td>
                 <td>${t.agen?.nama || '-'}<br><small>${t.agen?.tipe || 'Agen'}</small></td>
                 <td><strong>${t.customer?.nama || '-'}</strong><br><small>WA: ${t.customer?.wa1 || '-'}</small></td>
                 <td><small>${t.delivery?.alamat?.kec || '-'}, ${t.delivery?.alamat?.kab || '-'}</small></td>

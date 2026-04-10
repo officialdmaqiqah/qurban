@@ -522,20 +522,83 @@ document.addEventListener('DOMContentLoaded', async () => {
         const list = document.getElementById('tableEditRequests');
         if(!list) return;
         list.innerHTML = '';
-        if(!reqs?.length) return (document.getElementById('emptyEditRequests').style.display = 'block');
+        if(!reqs?.length) {
+            document.getElementById('emptyEditRequests').style.display = 'block';
+            return;
+        }
         document.getElementById('emptyEditRequests').style.display = 'none';
+
+        // Fetch original transactions for comparison
+        const trxIds = reqs.map(r => r.trx_id);
+        const { data: originalTrxs } = await supabase.from('transaksi').select('*').in('id', trxIds);
+
         reqs.forEach(r => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${r.trx_id}</td><td>${r.requester_email}</td><td><button onclick="window.approveReq('${r.id}')">✅</button><button onclick="window.rejectReq('${r.id}')">❌</button></td>`;
+            const original = originalTrxs?.find(t => t.id === r.trx_id);
+            const newData = r.new_data;
+
+            // Generate Diff HTML
+            let diffHtml = '';
+            const compareFields = [
+                { label: 'Nama Konsumen', old: original?.customer?.nama, new: newData?.customer?.nama },
+                { label: 'WA 1', old: original?.customer?.wa1, new: newData?.customer?.wa1 },
+                { label: 'Alamat (Kec)', old: original?.customer?.delivery?.alamat?.kec || original?.customer?.alamat?.kec, new: newData?.customer?.alamat?.kec },
+                { label: 'Alamat (Jalan)', old: original?.customer?.delivery?.alamat?.jalan || original?.customer?.alamat?.jalan, new: newData?.customer?.alamat?.jalan }
+            ];
+
+            compareFields.forEach(f => {
+                if (f.old !== f.new) {
+                    diffHtml += `
+                        <div class="diff-box">
+                            <div class="diff-label">${f.label}</div>
+                            <div class="diff-content">
+                                <div class="diff-old">${f.old || '(Kosong)'}</div>
+                                <div class="diff-new">${f.new || '(Kosong)'}</div>
+                            </div>
+                        </div>`;
+                }
+            });
+
+            tr.innerHTML = `
+                <td>
+                    <div style="font-weight:700;">${r.trx_id}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${r.requester_email}</div>
+                </td>
+                <td>
+                    ${diffHtml || '<div style="font-style:italic; font-size:0.8rem; color:var(--text-muted);">Tidak ada perubahan data utama (mungkin Item/Lainnya)</div>'}
+                </td>
+                <td style="text-align:right;">
+                    <button class="btn btn-sm btn-primary" onclick="window.approveReq('${r.id}')" style="background:var(--success); border:none; margin-right:5px;" title="Setujui">✅</button>
+                    <button class="btn btn-sm" onclick="window.rejectReq('${r.id}')" style="background:var(--danger); color:white; border:none;" title="Tolak">❌</button>
+                </td>`;
             list.appendChild(tr);
         });
     }
 
     window.approveReq = async (id) => {
-        showConfirm('Setujui perubahan?', async () => {
+        showConfirm('APPLY PERUBAHAN?\nData transaksi akan diperbarui sesuai permintaan agen.', async () => {
             const { data: req } = await supabase.from('edit_requests').select('*').eq('id', id).single();
-            await supabase.from('transaksi').update({ customer: req.new_data.customer, delivery: req.new_data.delivery }).eq('id', req.trx_id);
+            if(!req) return;
+
+            const { error: upErr } = await supabase.from('transaksi').update({ 
+                customer: req.new_data.customer, 
+                delivery: req.new_data.delivery,
+                items: req.new_data.items,
+                total_deal: req.new_data.total_deal
+            }).eq('id', req.trx_id);
+
+            if(upErr) return showAlert('Gagal Update: ' + upErr.message, 'danger');
+
             await supabase.from('edit_requests').update({ status: 'done' }).eq('id', id);
+            showToast('Perubahan Berhasil Diterapkan!');
+            renderEditRequests();
+        });
+    };
+
+    window.rejectReq = async (id) => {
+        showConfirm('TOLAK & HAPUS PERMINTAAN?\nPerubahan ini akan dibatalkan permanen.', async () => {
+            await supabase.from('edit_requests').delete().eq('id', id);
+            showToast('Permintaan Ditolak');
             renderEditRequests();
         });
     };
