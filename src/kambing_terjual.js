@@ -338,9 +338,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!isAdmin) { 
             if (linkedAgen) {
-                trx = trx.filter(t => t.agen && (t.agen.nama === linkedAgen || t.agen.id === linkedAgen));
+                const search = linkedAgen.toLowerCase().trim();
+                trx = trx.filter(t => {
+                    if (!t.agen) return false;
+                    const name = (typeof t.agen === 'string' ? t.agen : (t.agen.nama || '')).toLowerCase().trim();
+                    const id = (t.agen.id || '').toLowerCase().trim();
+                    return name === search || id === search;
+                });
             } else {
-                trx = trx.filter(t => (t.agen?.nama || '').toLowerCase() === profileName);
+                trx = trx.filter(t => {
+                    if (!t.agen) return false;
+                    const name = (typeof t.agen === 'string' ? t.agen : (t.agen.nama || '')).toLowerCase().trim();
+                    return name === profileName;
+                });
             }
         }
         if (keyword) { trx = trx.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer?.nama || '').toLowerCase().includes(keyword) || (t.agen?.nama || '').toLowerCase().includes(keyword) || (t.customer?.wa1 || '').toLowerCase().includes(keyword)); }

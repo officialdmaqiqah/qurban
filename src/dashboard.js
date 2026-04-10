@@ -41,7 +41,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Filter by Agency if needed
         if (!isAdmin || isStrict) {
             if (linkedAgen) {
-                trxDb = trxDb.filter(t => t.agen && (t.agen.nama === linkedAgen || t.agen.id === linkedAgen));
+                const search = linkedAgen.toLowerCase().trim();
+                trxDb = trxDb.filter(t => {
+                    if (!t.agen) return false;
+                    const name = (typeof t.agen === 'string' ? t.agen : (t.agen.nama || '')).toLowerCase().trim();
+                    const id = (t.agen.id || '').toLowerCase().trim();
+                    return name === search || id === search;
+                });
             } else if (userRole === 'agen') {
                  trxDb = [];
             }
