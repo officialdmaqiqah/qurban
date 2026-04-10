@@ -1632,6 +1632,14 @@ body.light-mode .violet .premium-icon-box { background: rgba(139, 92, 246, 0.08)
     color: var(--primary);
 }
 
+/* --- PREMIUM GRID SYSTEM --- */
+.premium-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
 /* --- PREMIUM BREAKDOWN PILLS --- */
 .kambing-breakdown {
     display: flex;
