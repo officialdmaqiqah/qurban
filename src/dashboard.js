@@ -43,14 +43,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log("[Dashboard Debug] LinkedAgen:", linkedAgen);
         
         if (!isAdmin || isStrict) {
+            const clean = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
             if (linkedAgen) {
-                const search = linkedAgen.toLowerCase().trim();
+                const search = clean(linkedAgen);
                 const beforeCount = trxDb.length;
                 trxDb = trxDb.filter(t => {
                     if (!t.agen) return false;
-                    const name = (typeof t.agen === 'string' ? t.agen : (t.agen.nama || '')).toLowerCase().trim();
-                    const id = (t.agen.id || '').toLowerCase().trim();
-                    return name === search || id === search;
+                    const name = clean(typeof t.agen === 'string' ? t.agen : (t.agen.nama || ''));
+                    const id = clean(t.agen.id || '');
+                    return name === search || id === search || name.includes(search) || search.includes(name);
                 });
                 console.log(`[Dashboard Debug] Filtered from ${beforeCount} to ${trxDb.length} rows using search: "${search}"`);
             } else if (userRole === 'agen') {

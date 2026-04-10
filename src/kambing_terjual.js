@@ -345,22 +345,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log("[Trx Debug] Total Data Awal:", trxData ? trxData.length : 0);
 
         if (!isAdmin) { 
+            const clean = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
             if (linkedAgen) {
-                const search = linkedAgen.toLowerCase().trim();
+                const search = clean(linkedAgen);
+                const beforeCount = trx.length;
                 trx = trx.filter(t => {
                     if (!t.agen) return false;
-                    const name = (typeof t.agen === 'string' ? t.agen : (t.agen.nama || '')).toLowerCase().trim();
-                    const id = (t.agen.id || '').toLowerCase().trim();
-                    return name === search || id === search;
+                    const name = clean(typeof t.agen === 'string' ? t.agen : (t.agen.nama || ''));
+                    const id = clean(t.agen.id || '');
+                    return name === search || id === search || name.includes(search) || search.includes(name);
                 });
-                console.log(`[Trx Debug] Filtered by LinkedAgen "${search}": ${trx.length} rows remaining.`);
+                console.log(`[Trx Debug] Search: "${search}", Found: ${trx.length} from ${beforeCount}`);
             } else {
+                const search = clean(profileName);
                 trx = trx.filter(t => {
                     if (!t.agen) return false;
-                    const name = (typeof t.agen === 'string' ? t.agen : (t.agen.nama || '')).toLowerCase().trim();
-                    return name === profileName;
+                    const name = clean(typeof t.agen === 'string' ? t.agen : (t.agen.nama || ''));
+                    return name === search || name.includes(search);
                 });
-                console.log(`[Trx Debug] Filtered by ProfileName "${profileName}": ${trx.length} rows remaining.`);
+                console.log(`[Trx Debug] Fallback Search: "${search}", Found: ${trx.length}`);
             }
         }
         if (keyword) { trx = trx.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer?.nama || '').toLowerCase().includes(keyword) || (t.agen?.nama || '').toLowerCase().includes(keyword) || (t.customer?.wa1 || '').toLowerCase().includes(keyword)); }
