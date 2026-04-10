@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userRole = (profile.role || '').toLowerCase().replace(/_/g, ' ').trim();
     const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
     const marketingRoles = [
+        'agen',
         'reseller', 
         'marketing dm', 
         'marketing ext', 
