@@ -283,6 +283,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         showAlert('Pembayaran Berhasil!', 'success', () => { selOrder.value = ''; boxInfoOrder.style.display = 'none'; formBayar.style.display = 'none'; renderStats(); renderList(); });
     };
 
+    // --- CAMERA & BUKTI BAYAR LOGIC ---
+    btnOpenCameraTP?.addEventListener('click', () => {
+        if(typeof window.openCameraUI === 'function') {
+            window.openCameraUI(async (file) => {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                if(inpBuktiBayar) inpBuktiBayar.files = dt.files;
+                
+                if(previewBuktiBayar) {
+                    const previewImg = previewBuktiBayar.querySelector('img');
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        if(previewImg) previewImg.src = e.target.result;
+                        previewBuktiBayar.style.display = 'flex';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+
+    inpBuktiBayar?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file && previewBuktiBayar) {
+            const previewImg = previewBuktiBayar.querySelector('img');
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                if(previewImg) previewImg.src = re.target.result;
+                previewBuktiBayar.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    btnRemoveTPPhoto?.addEventListener('click', () => {
+        if(inpBuktiBayar) inpBuktiBayar.value = '';
+        if(previewBuktiBayar) {
+            previewBuktiBayar.style.display = 'none';
+            const img = previewBuktiBayar.querySelector('img');
+            if(img) img.src = '';
+        }
+    });
+
     btnSimpanBayar.onclick = () => showChoice("Kirim WA resi?", [{ text: "Ya, Kirim", callback: () => performSaveLunas(true) }, { text: "Simpan Saja", callback: () => performSaveLunas(false) }]);
 
     inpChannelBayar.addEventListener('change', async () => {

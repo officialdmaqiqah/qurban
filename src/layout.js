@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 1. Theme Immediate Sync
     const applyTheme = () => {
-        const t = localStorage.getItem('QURBAN_THEME') || 'dark';
+        const t = localStorage.getItem('QURBAN_THEME') || 'light';
         if (t === 'light') document.documentElement.classList.add('light-mode');
         else document.documentElement.classList.remove('light-mode');
     };
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 3. Theme Toggle
         const themeBtn = document.createElement('div');
         themeBtn.className = 'action-icon';
-        const t = localStorage.getItem('QURBAN_THEME') || 'dark';
+        const t = localStorage.getItem('QURBAN_THEME') || 'light';
         themeBtn.innerHTML = t === 'dark' ? '☀️' : '🌙';
         themeBtn.title = 'Ganti Tema';
         themeBtn.onclick = () => {

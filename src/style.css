@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 /* ===== VARIABLES & THEME ===== */
 :root {
@@ -37,7 +37,7 @@
   --radius-xl: 16px;
   
   /* Typography */
-  --font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1409,8 +1409,18 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         width: 100% !important;
         max-width: 100% !important;
         height: 100% !important;
+        max-height: 100% !important;
         border-radius: 0 !important;
         margin: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .modal-body {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 2rem !important;
     }
 
     /* Padding & Table Density - Compensate for fixed topbar height (60px) */

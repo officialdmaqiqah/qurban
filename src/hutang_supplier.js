@@ -227,6 +227,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function checkSaldoCukup(channel, nominal, label) {
+        if (typeof window.checkSaldoCukup === 'function') {
+            return await window.checkSaldoCukup(channel, nominal, label);
+        }
+        // Fallback for isolated testing
         const { data } = await supabase.from('keuangan').select('*');
         let s = 0; const target = (channel || '').toLowerCase().trim();
         (data || []).forEach(it => {
@@ -237,9 +241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         if(s < nominal) {
-            // PERINGATAN (BYPASS)
-            const ok = confirm(`⚠️ Saldo di ${label} tidak cukup! Saldo saat ini: ${formatRp(s)}.\n\nTetap lanjutkan pencatatan pembayaran (Mungkin menggunakan dana luar)?`);
-            return ok;
+            return confirm(`⚠️ Saldo di ${label} tidak cukup! Saldo saat ini: ${formatRp(s)}.\n\nTetap lanjutkan pencatatan pembayaran?`);
         }
         return true;
     }
@@ -312,6 +314,101 @@ document.addEventListener('DOMContentLoaded', async () => {
             inpRekIdBayar.innerHTML = '<option value="">-- Pilih --</option>';
             reks.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = `${r.bank} - ${r.norek} (${r.an})`; inpRekIdBayar.appendChild(o); });
         } else containerRekBayar.style.display = 'none';
+    });
+
+    // --- CAMERA & BUKTI BAYAR LOGIC ---
+    const btnOpenCameraHutang = document.getElementById('btnOpenCameraHutang');
+    const btnRemoveHutangPhoto = document.getElementById('btnRemoveHutangPhoto');
+    const previewImg = previewBuktiBayar?.querySelector('img');
+
+    btnOpenCameraHutang?.addEventListener('click', () => {
+        if(typeof window.openCameraUI === 'function') {
+            window.openCameraUI(async (file) => {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                if(inpBuktiBayar) inpBuktiBayar.files = dt.files;
+                
+                if(previewBuktiBayar && previewImg) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        previewImg.src = e.target.result;
+                        previewBuktiBayar.style.display = 'flex';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+
+    inpBuktiBayar?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file && previewBuktiBayar && previewImg) {
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                previewImg.src = re.target.result;
+                previewBuktiBayar.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    btnRemoveHutangPhoto?.addEventListener('click', () => {
+        if(inpBuktiBayar) inpBuktiBayar.value = '';
+        if(previewBuktiBayar) previewBuktiBayar.style.display = 'none';
+        if(previewImg) previewImg.src = '';
+    });
+
+    // --- EXPORT CSV LOGIC ---
+    document.getElementById('btnExportCsv')?.addEventListener('click', async () => {
+        const { goats, finance } = await loadData();
+        
+        // Re-process for flat data
+        const supplierStats = {};
+        goats.forEach(k => {
+            const sName = (k.supplier || 'Tanpa Supplier').trim();
+            if(!supplierStats[sName]) supplierStats[sName] = { nama: sName, totalTags: 0, totalKomp: 0, totalPaid: 0, batches: {}, totalEkor: 0 };
+            const nota = parseFloat(k.harga_nota) || 0;
+            supplierStats[sName].totalTags += nota;
+            supplierStats[sName].totalEkor++;
+            const bKey = k.batch || 'BT-000';
+            if(!supplierStats[sName].batches[bKey]) supplierStats[sName].batches[bKey] = { ekor: 0, tagihan: 0, tgl: k.tgl_masuk, notes: [], paid: 0, komp: 0 };
+            supplierStats[sName].batches[bKey].ekor++;
+            supplierStats[sName].batches[bKey].tagihan += nota;
+        });
+
+        finance.forEach(f => {
+            const sName = (f.supplier || '').trim();
+            if(sName && supplierStats[sName]) {
+                const nom = parseFloat(f.nominal) || 0;
+                const bKey = f.batch;
+                if(f.tipe === 'pemasukan' && f.kategori === 'Kompensasi Supplier') {
+                    supplierStats[sName].totalKomp += nom;
+                    if(bKey && supplierStats[sName].batches[bKey]) supplierStats[sName].batches[bKey].komp += nom;
+                }
+                else if(f.tipe === 'pengeluaran' && f.kategori === 'Bayar Supplier') {
+                    supplierStats[sName].totalPaid += nom;
+                    if(bKey && supplierStats[sName].batches[bKey]) supplierStats[sName].batches[bKey].paid += nom;
+                }
+            }
+        });
+
+        let csv = 'Batch;Tanggal Masuk;Supplier;Ekor;Tagihan;Kompensasi;Terbayar;Sisa Hutang\n';
+        Object.values(supplierStats).forEach(s => {
+            Object.entries(s.batches).forEach(([batch, bData]) => {
+                const sisa = bData.tagihan - bData.komp - bData.paid;
+                csv += `${batch};${bData.tgl || '-'};${s.nama};${bData.ekor};${bData.tagihan};${bData.komp};${bData.paid};${sisa}\n`;
+            });
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `Rekap_Hutang_Supplier_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     });
 
     inpSearch?.addEventListener('input', renderTable);
