@@ -332,7 +332,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const { data: trxData, error } = await query;
-        if (error) return;
+        if (error) {
+            console.error("Query Error:", error);
+            showAlert("Gagal memuat data transaksi: " + error.message, "danger");
+            return;
+        }
         let trx = [...trxData];
         const keyword = (inpGlobalSearch ? inpGlobalSearch.value : '').toLowerCase();
 
