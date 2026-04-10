@@ -61,29 +61,49 @@
             #customDateContainer { flex-direction: column; width: 100%; align-items: stretch !important; gap: 0.5rem !important; }
             #customDateContainer > div { width: 100%; }
             
-            /* Clean Slim Tables for Mobile (Without ugly dark blocks) */
+            /* Stacking Grids for Mobile */
+            #sectionNR > div, 
+            #sectionAnalytics > div:not(.card-box),
+            .report-section div[style*="display:grid"] {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem !important;
+            }
+
+            /* Premium Bagi Hasil Stacking */
+            #sectionBagiHasil div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Clean Slim Tables for Mobile (Premium Glass Effect) */
             .report-table {
-                width: 100%; border-radius: 8px;
+                width: 100%; border-radius: 12px;
+                overflow: hidden;
+                border: 1px solid rgba(255,255,255,0.05);
             }
-            /* Slim down padding to minimize scrolling */
             .report-table td {
-                padding: 6px 8px !important;
-                font-size: 0.75rem !important;
-                background: transparent !important; /* Keep it transparent/glass */
-                color: var(--text-main) !important;
+                padding: 10px 8px !important;
+                font-size: 0.8rem !important;
+                background: rgba(255,255,255,0.01) !important;
             }
-            /* Subtle header */
             .report-table th { 
-                padding: 6px 8px !important;
-                font-size: 0.65rem !important; 
-                color: var(--text-muted) !important; 
-                background: rgba(255,255,255,0.02) !important; 
+                padding: 10px 8px !important;
+                font-size: 0.7rem !important; 
+                background: rgba(255,255,255,0.05) !important; 
             }
             
-            .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            /* High Contrast for Dark Buttons & Tabs (Adaptive) */
-            .btn-group-mobile > button { color: var(--text-contrast, #ffffff) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-            .tab-item.active { color: #ffffff !important; font-weight: 600; }
+            .table-responsive { 
+                width: 100%; 
+                overflow-x: auto; 
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 0.5rem;
+            }
+
+            /* High Contrast for Interactive Elements */
+            .tab-item.active { 
+                color: #ffffff !important; 
+                font-weight: 700; 
+                box-shadow: 0 4px 15px var(--primary-transparent) !important;
+            }
         }
     </style>
 </head>
@@ -250,16 +270,16 @@
                     <div id="sectionNR" class="report-section">
                         <h3>Neraca (Balance Sheet)</h3>
                         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Posisi aset, kewajiban, dan modal perusahaan saat ini.</p>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
-                            <div>
-                                <h5>AKTIVA (HARTA)</h5>
+                        <div class="premium-grid" style="grid-template-columns: 1fr 1fr; gap:1.5rem;">
+                            <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px;">
+                                <h5 style="color: var(--primary); margin-bottom: 1rem; letter-spacing: 0.1em;">AKTIVA (HARTA)</h5>
                                 <table class="report-table" id="tableNR_Aktiva">
                                     <thead><tr><th>ASET</th><th style="text-align:right">NOMINAL</th></tr></thead>
                                     <tbody></tbody>
                                 </table>
                             </div>
-                            <div>
-                                <h5>PASIVA (KEWAJIBAN + MODAL)</h5>
+                            <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px;">
+                                <h5 style="color: var(--warning); margin-bottom: 1rem; letter-spacing: 0.1em;">PASIVA (KEWAJIBAN + MODAL)</h5>
                                 <table class="report-table" id="tableNR_Pasiva">
                                     <thead><tr><th>SUMBER</th><th style="text-align:right">NOMINAL</th></tr></thead>
                                     <tbody></tbody>
@@ -296,18 +316,18 @@
                             </div>
 
                             <div style="margin-top:2rem; display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
-                                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; text-align:center;">
-                                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">Porsi Owner</div>
-                                    <div style="font-size:1.5rem; font-weight: 300; color:var(--primary);" id="valPorsiHusni">Rp 0</div>
-                                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
-                                        Persentase: <input type="number" id="inpPersenOwner" value="45" min="0" max="100" style="width:70px; background:var(--bg-input); border:1px solid var(--text-muted); color:var(--text-main); text-align:center; border-radius:4px; font-weight: 300; padding:2px;"> %
+                                <div class="glass-panel" style="padding:1.5rem; border-radius:20px; text-align:center; border-bottom: 4px solid var(--primary) !important;">
+                                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Porsi Owner</div>
+                                    <div class="text-premium" style="font-size:1.75rem; color:var(--primary);" id="valPorsiHusni">Rp 0</div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.75rem;">
+                                        Persentase: <input type="number" id="inpPersenOwner" value="45" min="0" max="100" class="form-control" style="width:70px; display:inline-block; padding:2px; height:auto; font-size:0.75rem; text-align:center;"> %
                                     </div>
                                 </div>
-                                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; text-align:center;">
-                                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">Porsi Team Hijrah</div>
-                                    <div style="font-size:1.5rem; font-weight: 300; color:var(--success);" id="valPorsiTeam">Rp 0</div>
-                                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
-                                        Persentase: <input type="number" id="inpPersenTeam" value="55" min="0" max="100" style="width:70px; background:var(--bg-input); border:1px solid var(--text-muted); color:var(--text-main); text-align:center; border-radius:4px; font-weight: 300; padding:2px;"> %
+                                <div class="glass-panel" style="padding:1.5rem; border-radius:20px; text-align:center; border-bottom: 4px solid var(--success) !important;">
+                                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Porsi Team Hijrah</div>
+                                    <div class="text-premium" style="font-size:1.75rem; color:var(--success);" id="valPorsiTeam">Rp 0</div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.75rem;">
+                                        Persentase: <input type="number" id="inpPersenTeam" value="55" min="0" max="100" class="form-control" style="width:70px; display:inline-block; padding:2px; height:auto; font-size:0.75rem; text-align:center;"> %
                                     </div>
                                 </div>
                             </div>
@@ -338,33 +358,33 @@
                         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Parameter keberhasilan operasional dan efisiensi bisnis.</p>
                         
                         <!-- KPI Scorecards -->
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:2rem;">
-                            <div class="card-box" style="padding:1rem; text-align:center;">
-                                <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Biaya Per Ekor (CPH)</div>
-                                <div id="kpiCPH" style="font-size:1.25rem; font-weight: 300; color:var(--text-main); margin-top:5px;">Rp 0</div>
+                        <div class="premium-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                            <div class="premium-card indigo" style="min-height: auto; padding: 1.25rem;">
+                                <div class="premium-label">Biaya Per Ekor (CPH)</div>
+                                <div id="kpiCPH" class="premium-value" style="font-size: 1.3rem;">Rp 0</div>
                             </div>
-                            <div class="card-box" style="padding:1rem; text-align:center;">
-                                <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Mortality Rate</div>
-                                <div id="kpiMortality" style="font-size:1.25rem; font-weight: 300; color:var(--danger); margin-top:5px;">0%</div>
+                            <div class="premium-card rose" style="min-height: auto; padding: 1.25rem;">
+                                <div class="premium-label">Mortality Rate</div>
+                                <div id="kpiMortality" class="premium-value" style="font-size: 1.3rem; color: var(--danger);">0%</div>
                             </div>
-                            <div class="card-box" style="padding:1rem; text-align:center;">
-                                <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Avg. Profit / Closing</div>
-                                <div id="kpiAvgProfit" style="font-size:1.25rem; font-weight: 300; color:var(--success); margin-top:5px;">Rp 0</div>
+                            <div class="premium-card emerald" style="min-height: auto; padding: 1.25rem;">
+                                <div class="premium-label">Avg. Profit / Closing</div>
+                                <div id="kpiAvgProfit" class="premium-value" style="font-size: 1.3rem; color: var(--success);">Rp 0</div>
                             </div>
                         </div>
 
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
+                        <div class="premium-grid" style="grid-template-columns: 1fr 1fr; gap:1.5rem;">
                             <!-- Expense breakdown -->
-                            <div>
-                                <h5 style="margin-bottom:1rem;">📂 Distribusi Pengeluaran (By Kategori)</h5>
+                            <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px;">
+                                <h5 style="margin-bottom:1rem; color: var(--primary); letter-spacing: 0.05em;">📂 Distribusi Pengeluaran (Kategori)</h5>
                                 <table class="report-table" id="tableAnalisisKategori">
                                     <thead><tr><th>KATEGORI</th><th style="text-align:right">NOMINAL</th><th style="text-align:right">%</th></tr></thead>
                                     <tbody></tbody>
                                 </table>
                             </div>
                             <!-- Weekly Spending -->
-                            <div>
-                                <h5 style="margin-bottom:1rem;">📉 Tren Pengeluaran Mingguan</h5>
+                            <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px;">
+                                <h5 style="margin-bottom:1rem; color: var(--warning); letter-spacing: 0.05em;">📉 Tren Pengeluaran Mingguan</h5>
                                 <table class="report-table" id="tableAnalisisMingguan">
                                     <thead><tr><th>PEKAN KE- (ISO)</th><th style="text-align:right">TOTAL BIAYA</th></tr></thead>
                                     <tbody></tbody>

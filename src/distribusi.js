@@ -123,31 +123,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         filteredTrips.forEach(t => {
             const card = document.createElement('div');
-            card.className = 'trip-card';
+            card.className = 'trip-card glass-panel';
             const isDone = t.status === 'Selesai';
             card.innerHTML = `
-                <div class="trip-header">
+                <div class="trip-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <div>
-                        <div class="trip-id">${t.id}</div>
+                        <div class="trip-id text-premium">${t.id}</div>
                         <div class="trip-date">${formatTgl(t.tglKirim)}</div>
                     </div>
-                    <span class="badge ${isDone ? 'badge-success' : 'badge-warning'}" style="padding:4px 10px; font-size:0.7rem;">${t.status.toUpperCase()}</span>
+                    <span class="badge ${isDone ? 'badge-success' : 'badge-warning'}" style="padding:4px 10px; font-size:0.75rem; border-radius:30px;">${t.status.toUpperCase()}</span>
                 </div>
                 <div class="trip-info" style="font-size:0.85rem; line-height:1.6;">
                     <div style="color:var(--text-main); font-weight:600;">🚚 ${t.sopirNama}</div>
                     <div style="color:var(--text-muted); font-size:0.75rem;">📋 ${t.nopol || '-'} • ${t.note || 'Tanpa catatan'}</div>
                 </div>
-                <div class="trip-items" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05);">
+                <div class="trip-items" style="background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.05); margin-top: 1rem;">
                     ${t.items.map(i => `
-                        <div class="trip-item" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-                            <div style="max-width:70%;">
-                                <div style="font-weight:700; color:var(--primary); font-size:0.9rem;">${i.noTali}</div>
-                                <div style="font-size:0.75rem; color:var(--text-main); font-weight:500;">${i.konsumen}</div>
-                                <div style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📍 ${i.alamat}</div>
+                        <div class="trip-item" style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <div style="max-width:75%;">
+                                <div style="font-weight:700; color:var(--primary); font-size:0.95rem; letter-spacing:0.02em;">${i.noTali}</div>
+                                <div style="font-size:0.8rem; color:var(--text-main); font-weight:500; margin: 2px 0;">${i.konsumen}</div>
+                                <div style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8;">📍 ${i.alamat}</div>
                             </div>
                             <div style="text-align:right;">
-                                ${i.status === 'Terdistribusi' ? '<span style="color:var(--success); font-size:1.2rem;">✅</span>' : 
-                                  `<button class="btn btn-sm btn-shimmer" onclick="window.openLaporDist('${t.id}','${i.goatId}','${i.konsumen}')" style="background:var(--primary); padding:4px 12px; font-size:0.7rem; border-radius:6px; border:none;">Lapor</button>`}
+                                ${i.status === 'Terdistribusi' ? '<span style="color:var(--success); font-size:1.25rem;">✅</span>' : 
+                                  `<button class="btn btn-sm btn-shimmer" onclick="window.openLaporDist('${t.id}','${i.goatId}','${i.konsumen}')" style="background:var(--primary); padding:6px 14px; font-size:0.75rem; border-radius:8px; border:none; box-shadow:0 4px 10px var(--primary-transparent);">Lapor</button>`}
                             </div>
                         </div>
                     `).join('')}

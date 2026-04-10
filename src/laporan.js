@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${idx === 0 ? `<strong>${t.sopirNama}</strong><br><small>${t.nopol || ''}</small>` : ''}</td>
                     <td><strong>${it.noTali}</strong></td>
                     <td>${it.konsumen}<br><small>${it.alamat || '-'}</small></td>
-                    <td><span class="badge" style="background:rgba(255,255,255,0.05); color:${statusColor}">${it.status}</span></td>
+                    <td><span class="badge glass-panel" style="color:${statusColor}; border:1px solid ${statusColor}77; font-size:0.65rem; padding:4px 8px;">${it.status}</span></td>
                     <td align="center">
                         ${it.buktiUrl ? `
                             <button class="btn btn-sm btn-shimmer" onclick="window.viewDistPhoto('${it.buktiUrl}')" style="padding:2px 8px; font-size:0.75rem; border:none; background:var(--primary);">
@@ -139,9 +139,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const addRow = (l, v, cls='') => body.innerHTML += `<tr class="${cls}"><td>${l}</td><td class="text-right">${formatRp(v)}</td></tr>`;
         
-        addRow('Total Omzet Penjualan', omzet);
-        addRow('(-) HPP (Harga Nota)', -hpp);
-        addRow('LABA KOTOR', omzet - hpp, 'row-total');
+        addRow('Total Omzet Penjualan', omzet, 'text-premium');
+        addRow('(-) HPP (Harga Nota)', -hpp, 'text-muted');
+        addRow('LABA KOTOR', omzet - hpp, 'row-total text-premium');
         addRow('(-) Komisi Agen', -komisi);
         addRow('(-) Biaya Operasional', -opex);
         addRow('(-) Kerugian Kematian (Bruto)', -deadLossRaw);
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const netProfit = omzet - hpp - komisi - opex - deadLossNet - saving;
-        addRow('LABA BERSIH', netProfit, 'row-grand-total');
+        addRow('LABA BERSIH', netProfit, 'row-grand-total text-premium');
         return netProfit;
     };
 
