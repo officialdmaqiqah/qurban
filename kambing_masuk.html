@@ -121,10 +121,10 @@
                                 <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                                         <input type="hidden" id="draftId" value="">
                                         
-                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                        <div class="responsive-grid-2">
                                                 <div class="form-group">
                                                         <label class="form-label" for="inpBatch">Batch (Otomatis)</label>
-                                                        <input type="text" id="inpBatch" class="form-control" readonly style="background: rgba(255,255,255,0.05);">
+                                                        <input type="text" id="inpBatch" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight: 600;">
                                                 </div>
                                                 <div class="form-group">
                                                         <label class="form-label" for="inpTgl">Tanggal Masuk</label>
@@ -161,39 +161,44 @@
                                                 </div>
                                         </div>
 
-                                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.1);">
-                                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
-                                                        <div class="form-group">
-                                                                <label class="form-label" for="inpHargaNota">Harga Nota (Rp)</label>
-                                                                <input type="text" id="inpHargaNota" class="form-control money-input" required>
-                                                        </div>
-                                                        <div class="form-group">
-                                                                <label class="form-label" for="inpSaving">Nilai Saving (Rp)</label>
-                                                                <input type="text" id="inpSaving" class="form-control money-input" required>
-                                                        </div>
-                                                        <div class="form-group">
-                                                                <label class="form-label" for="inpProfit">Est. Profit (Rp)</label>
-                                                                <input type="text" id="inpProfit" class="form-control money-input" required>
-                                                        </div>
-                                                </div>
-                                                <div class="form-group" style="margin-bottom:0.5rem;">
-                                                        <label class="form-label">Total Harga Kandang (Kalkulasi Otomatis)</label>
-                                                        <input type="text" id="inpHargaKandang" class="form-control money-input" readonly style="background: rgba(34, 197, 94, 0.1); color: var(--success); font-weight: 300; border-color: var(--success);">
-                                                </div>
-                                                <div class="form-group" style="margin-top:1rem; border-top:1px dotted rgba(255,255,255,0.1); padding-top:1rem;">
-                                                        <label class="form-label">📸 Foto Nota (Opsional)</label>
-                                                        <div style="display:flex; gap:10px; align-items:center;">
-                                                            <input type="file" id="inpFotoNota" class="form-control" accept="image/*" style="font-size:0.8rem; flex:1;">
-                                                            <button type="button" id="btnOpenCameraMasuk" class="btn btn-sm" style="background:#4b5563; color:white; padding:8px 12px; height:40px; border-radius:8px; border:none; display:flex; align-items:center; gap:5px;" title="Ambil Foto Langsung dari Kamera">📸 Kamera</button>
-                                                            <div id="previewFotoNota" style="display:none; align-items:center; gap:8px;">
-                                                                <div style="width:40px; height:40px; border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
-                                                                    <img src="" style="width:100%; height:100%; object-fit:cover;">
-                                                                </div>
-                                                                <button type="button" id="btnRemoveMasukPhoto" class="btn btn-sm" style="background:#ef4444; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:0.7rem;" title="Hapus Foto">🗑️</button>
-                                                            </div>
+                                        <div class="form-section">
+                                                <div class="responsive-grid-4">
+                                                         <div class="form-group">
+                                                                 <label class="form-label" for="inpHargaNota">Harga Nota (Rp)</label>
+                                                                 <input type="text" id="inpHargaNota" class="form-control money-input" required>
+                                                         </div>
+                                                         <div class="form-group">
+                                                                 <label class="form-label" for="inpSaving">Nilai Saving (Rp)</label>
+                                                                 <input type="text" id="inpSaving" class="form-control money-input" required>
+                                                         </div>
+                                                         <div class="form-group">
+                                                                 <label class="form-label" for="inpProfit">Est. Profit (Rp)</label>
+                                                                 <input type="text" id="inpProfit" class="form-control money-input" required>
+                                                         </div>
+                                                         <div class="form-group">
+                                                                <label class="form-label">Total Harga Kandang</label>
+                                                                <input type="text" id="inpHargaKandang" class="form-control money-input" readonly style="background: rgba(34, 197, 94, 0.1); color: var(--success); font-weight: 600; border: 2px solid var(--success);">
                                                         </div>
                                                 </div>
-                                        </div>
+                                         </div>
+
+                                         <div class="form-section">
+                                             <div class="form-group mb-0">
+                                                 <label class="form-label">📸 Foto Nota (Opsional)</label>
+                                                 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem;">
+                                                     <input type="file" id="inpFotoNota" class="form-control" accept="image/*" style="flex: 1; min-width: 200px;">
+                                                     <button type="button" id="btnOpenCameraMasuk" class="btn btn-sm" style="background:#4b5563; color:white; padding:8px 16px; min-height:46px; border-radius:8px; border:none; display:flex; align-items:center; gap:8px;" title="Ambil Foto Langsung dari Kamera">📸 Kamera</button>
+                                                     
+                                                     <div id="previewFotoNota" style="display:none; align-items:center; gap:0.75rem;">
+                                                         <div style="width: 46px; height: 46px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                                                             <img src="" style="width: 100%; height: 100%; object-fit: cover;">
+                                                         </div>
+                                                         <button type="button" id="btnRemoveMasukPhoto" class="btn" style="background:#ef4444; color:white; border:none; border-radius:8px; padding:8px 12px; height:46px; font-size:0.85rem;" title="Hapus Foto">🗑️ Hapus</button>
+                                                     </div>
+                                                 </div>
+                                                 <small style="color: var(--text-muted); display: block; margin-top: 0.5rem; font-style: italic;">Foto akan otomatis dikompres & disimpan di cloud.</small>
+                                             </div>
+                                         </div>
                                 </div>
                                 <div class="modal-footer">
                                         <button type="button" class="btn" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1);" id="btnCancelModal">Batal</button>
