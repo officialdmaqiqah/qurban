@@ -185,6 +185,7 @@
                         <div class="header-actions" style="display: flex; gap: 0.5rem; align-items:center;">
                             <button class="btn btn-primary" id="btnTambahPemasukan" style="color:#ffffff; font-weight: 300;">+ Pemasukan</button>
                             <button class="btn" style="background-color: transparent; border: 1px solid var(--danger); color: var(--danger); font-weight: 300;" id="btnTambahPengeluaran">- Pengeluaran</button>
+                            <button class="btn" id="btnTambahMutasi" style="background:rgba(99,102,241,0.1); color:#6366f1; border:1px solid rgba(99,102,241,0.2); font-weight: 300;">⇄ Mutasi Saldo</button>
                         </div>
                     </div>
 
@@ -250,9 +251,19 @@
                         <label class="form-label">Pilih Rekening</label>
                         <select id="transaksiRekId" class="form-control"></select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="containerKategori">
                         <label class="form-label">Kategori</label>
                         <select id="transaksiKategori" class="form-control" required></select>
+                    </div>
+                    <div class="form-group" id="containerKategoriLain" style="display:none;">
+                        <label class="form-label">Tulis Kategori Baru</label>
+                        <input type="text" id="transaksiKategoriLain" class="form-control" placeholder="Contoh: Sedekah, Perbaikan Atap, dll">
+                    </div>
+                    <div class="form-group" id="containerMutasiTujuan" style="display:none;">
+                        <label class="form-label">Ke (Tujuan)</label>
+                        <select id="transaksiMutasiTujuan" class="form-control">
+                            <option value="Tunai">Tunai / Cash</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Nominal (Rp)</label>

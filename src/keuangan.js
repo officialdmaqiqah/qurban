@@ -36,6 +36,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tipeInput = document.getElementById('transaksiTipe');
     const tanggalInput = document.getElementById('transaksiTanggal');
     const kategoriInput = document.getElementById('transaksiKategori');
+    const kategoriLainInput = document.getElementById('transaksiKategoriLain');
+    const containerKategori = document.getElementById('containerKategori');
+    const containerKategoriLain = document.getElementById('containerKategoriLain');
+    const containerMutasiTujuan = document.getElementById('containerMutasiTujuan');
+    const transaksiMutasiTujuan = document.getElementById('transaksiMutasiTujuan');
     const nominalInput = document.getElementById('transaksiNominal');
     const keteranganInput = document.getElementById('transaksiKeterangan');
     const transaksiChannel = document.getElementById('transaksiChannel');
@@ -360,8 +365,55 @@ document.addEventListener('DOMContentLoaded', async () => {
             buktiUrl = await uploadToGDrive(b64, "BUKTI_KEUANGAN");
         }
 
+        let finalKat = kat;
+        if(kat === 'Lainnya (Tulis Sendiri)') {
+            finalKat = kategoriLainInput.value.trim();
+            if(!finalKat) return window.showAlert('Tuliskan nama kategori baru!', 'warning');
+        }
+
+        if(tipe === 'mutasi') {
+            const dest = transaksiMutasiTujuan.value;
+            let destChannel = dest;
+            if(dest === 'Tunai') destChannel = 'Tunai / Cash';
+            else {
+                const opt = transaksiMutasiTujuan.options[transaksiMutasiTujuan.selectedIndex];
+                destChannel = opt.textContent;
+            }
+
+            if(finalChannel === destChannel) return window.showAlert('Sumber dan Tujuan tidak boleh sama!', 'warning');
+            
+            window.showToast('Memproses Mutasi...', 'info');
+            const mutasiId = 'MUT-' + Date.now().toString().slice(-6);
+            
+            // 1. Record Pengeluaran (Out)
+            const pOut = {
+                id: mutasiId + '-OUT', tipe: 'pengeluaran', tanggal: tgl,
+                kategori: 'Mutasi Antar Rekening', nominal, keterangan: `Transfer ke ${destChannel} | ${ket}`,
+                channel: finalChannel, bukti_url: buktiUrl
+            };
+            
+            // 2. Record Pemasukan (In)
+            const pIn = {
+                id: mutasiId + '-IN', tipe: 'pemasukan', tanggal: tgl,
+                kategori: 'Mutasi Antar Rekening', nominal, keterangan: `Terima dari ${finalChannel} | ${ket}`,
+                channel: destChannel, bukti_url: buktiUrl
+            };
+
+            const { error: err1 } = await supabase.from('keuangan').insert([pOut]);
+            const { error: err2 } = await supabase.from('keuangan').insert([pIn]);
+
+            if(!err1 && !err2) {
+                window.showToast('Mutasi Saldo Berhasil!', 'success');
+                modalKeuangan.classList.remove('active');
+                renderApp();
+                return;
+            } else {
+                return window.showAlert('Gagal mutasi: ' + (err1?.message || err2?.message), 'danger');
+            }
+        }
+
         const payload = {
-            id, tipe, tanggal: tgl, kategori: kat, nominal, keterangan: ket, channel: finalChannel, bukti_url: buktiUrl
+            id, tipe, tanggal: tgl, kategori: finalKat, nominal, keterangan: ket, channel: finalChannel, bukti_url: buktiUrl
         };
 
         const { error } = await supabase.from('keuangan').upsert([payload]);
@@ -465,29 +517,84 @@ document.addEventListener('DOMContentLoaded', async () => {
          }
      });
 
-    document.getElementById('btnTambahPemasukan')?.addEventListener('click', () => {
-        window.editingId = null;
-        window.oldNominal = 0;
-        window.oldTrxId = null;
-        window.existingKeuBukti = null;
-        formKeuangan.reset();
-        tipeInput.value = 'pemasukan';
-        modalTitle.textContent = 'Tambah Pemasukan';
-        tanggalInput.value = window.getLocalDate();
-        populateKategori('pemasukan');
-        modalKeuangan.classList.add('active');
-    });
-
     document.getElementById('btnTambahPengeluaran')?.addEventListener('click', () => {
         window.editingId = null;
         window.oldNominal = 0;
         window.oldTrxId = null;
         window.existingKeuBukti = null;
         formKeuangan.reset();
+        
+        containerKategori.style.display = 'block';
+        containerKategoriLain.style.display = 'none';
+        containerMutasiTujuan.style.display = 'none';
+        const lblSumber = document.querySelector('#containerTransaksiRek .form-label');
+        if(lblSumber) lblSumber.textContent = 'Pilih Rekening';
+
         tipeInput.value = 'pengeluaran';
         modalTitle.textContent = 'Catat Pengeluaran';
         tanggalInput.value = window.getLocalDate();
         populateKategori('pengeluaran');
+        modalKeuangan.classList.add('active');
+    });
+
+    document.getElementById('btnTambahMutasi')?.addEventListener('click', async () => {
+        window.editingId = null;
+        window.oldNominal = 0;
+        window.oldTrxId = null;
+        window.existingKeuBukti = null;
+        formKeuangan.reset();
+        
+        tipeInput.value = 'mutasi';
+        modalTitle.textContent = '⇄ Mutasi Antar Rekening';
+        tanggalInput.value = window.getLocalDate();
+        
+        containerKategori.style.display = 'none';
+        containerKategoriLain.style.display = 'none';
+        containerMutasiTujuan.style.display = 'block';
+        
+        const lblSumber = document.querySelector('#containerTransaksiRek .form-label');
+        if(lblSumber) lblSumber.textContent = 'Dari (Sumber)';
+        
+        transaksiChannel.value = 'Tunai';
+        containerTransaksiRek.style.display = 'none';
+        
+        // Populate Tujuan
+        transaksiMutasiTujuan.innerHTML = '<option value="Tunai">Tunai / Cash</option>';
+        const reks = await getBankAccounts();
+        reks.forEach(r => {
+            const o = document.createElement('option');
+            o.value = r.id; o.textContent = `TF ${r.bank} - ${r.norek} (${r.an})`;
+            transaksiMutasiTujuan.appendChild(o);
+        });
+
+        modalKeuangan.classList.add('active');
+    });
+
+    kategoriInput?.addEventListener('change', () => {
+        if(kategoriInput.value === 'Lainnya (Tulis Sendiri)') {
+            containerKategoriLain.style.display = 'block';
+        } else {
+            containerKategoriLain.style.display = 'none';
+        }
+    });
+
+    document.getElementById('btnTambahPemasukan')?.addEventListener('click', () => {
+        window.editingId = null;
+        window.oldNominal = 0;
+        window.oldTrxId = null;
+        window.existingKeuBukti = null;
+        formKeuangan.reset();
+
+        containerKategori.style.display = 'block';
+        containerKategoriLain.style.display = 'none';
+        containerMutasiTujuan.style.display = 'none';
+        const lblSumber = document.querySelector('#containerTransaksiRek .form-label');
+        if(lblSumber) lblSumber.textContent = 'Pilih Rekening';
+
+        tipeInput.value = 'pemasukan';
+        modalTitle.textContent = 'Tambah Pemasukan';
+        tanggalInput.value = window.getLocalDate();
+        populateKategori('pemasukan');
         modalKeuangan.classList.add('active');
     });
 
@@ -622,8 +729,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function populateKategori(tipe) {
         if(!kategoriInput) return;
         kategoriInput.innerHTML = '';
-        const katIn = ['Modal Awal','Terima Pelunasan','Penjualan Sapi','Jual Kambing','Kompensasi Supplier','Penerimaan Lainnya'];
-        const katOut = ['Beli Kambing','Beban Pakan','Beban Operasional Kandang','Gaji & Bonus','Listrik & Air','Transportasi','Marketing / Iklan','Bayar Supplier','Pelunasan Supplier','Bagi Hasil (Investor)','Prive / Tarik Tunai','Biaya Lain-lain','Kerugian (Mati/Hilang)'];
+        const katIn = ['Modal Awal','Terima Pelunasan','Penjualan Sapi','Jual Kambing','Kompensasi Supplier','Penerimaan Lainnya', 'Lainnya (Tulis Sendiri)'];
+        const katOut = ['Beli Kambing','Beban Pakan','Beban Operasional Kandang','Gaji & Bonus','Listrik & Air','Transportasi','Marketing / Iklan','Bayar Supplier','Pelunasan Supplier','Bagi Hasil (Investor)','Prive / Tarik Tunai','Biaya Lain-lain','Kerugian (Mati/Hilang)', 'Lainnya (Tulis Sendiri)'];
         const list = tipe === 'pemasukan' ? katIn : katOut;
         list.forEach(k => {
             const o = document.createElement('option'); o.value = k; o.textContent = k;
