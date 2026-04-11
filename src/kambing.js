@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (perm === 'readonlyMaster') return true; // Melarang edit/hapus master
             if (perm === 'hideWeight') {
                 const roleNorm = userRole.replace(/_/g, ' ');
-                const jenisNorm = (profile.jenis_agen || '').toLowerCase().trim().replace(/_/g, ' ');
+                const jenisNorm = (profile.permissions?.jenis_agen || '').toLowerCase().trim().replace(/_/g, ' ');
 
                 // Hide for specific roles
                 if (roleNorm === 'marketing dm' || roleNorm === 'reseller') return true;
