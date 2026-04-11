@@ -438,14 +438,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         };
 
-        // Susun urutan: Lonceng -> Gear -> Tema -> Power
-        actionsDiv.appendChild(bell);
-        actionsDiv.appendChild(gear);
+        // Theme & Logout are for everyone
         actionsDiv.appendChild(themeBtn);
         actionsDiv.appendChild(logoutHeader);
         
-        // Gunakan appendChild agar ikon muncul DI SEBELAH KANAN Nama User
+        // Use appendChild so icons appear TO THE RIGHT of User Name
         topbar.querySelector('.user-menu')?.appendChild(actionsDiv);
+
+        // Store references to admin-only icons to be shown later
+        window.bellIcon = bell;
+        window.gearIcon = gear;
+        window.actionsDiv = actionsDiv;
     }
 
     // 3. Profile & Permissions
@@ -474,13 +477,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!isAdmin) {
             document.querySelectorAll('.nav-item').forEach(item => {
                 const href = item.getAttribute('href');
-                if (href && !allowedMenus.includes(href)) {
+                // Hide if not in allowed menus OR if it's the settings page
+                if (href && (!allowedMenus.includes(href) || href === 'pengaturan.html')) {
                     item.style.display = 'none';
                 }
             });
             
             // Special handling for nav-headers (hide if all items below it are hidden)
             // But for now, just filtering individual items is enough for the user.
+        } else {
+            // Show Admin-only topbar actions
+            if (window.actionsDiv) {
+                if (window.bellIcon) window.actionsDiv.prepend(window.bellIcon);
+                if (window.gearIcon) window.actionsDiv.insertBefore(window.gearIcon, window.actionsDiv.children[1]);
+            }
         }
 
         // Notif Bell Badge (Admin)
