@@ -793,8 +793,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnExport = document.getElementById('btnExportCsv');
     if (btnExport) {
         btnExport.addEventListener('click', async () => {
-            const { data: trxs } = await supabase.from('transaksi').select('*');
-            if (!trxs) return;
+            const { data: trxsRaw } = await supabase.from('transaksi').select('*');
+            if (!trxsRaw) return;
+
+            let trxs = [...trxsRaw];
+            
+            // Apply filtering logic (same as renderTable)
+            if (!isAdmin) {
+                const linkedAgen = profile?.permissions?.linkedAgen || '';
+                const profileName = (profile?.full_name || '').toLowerCase();
+                const clean = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+
+                if (linkedAgen) {
+                    const search = clean(linkedAgen);
+                    trxs = trxs.filter(t => {
+                        if (!t.agen) return false;
+                        const name = clean(typeof t.agen === 'string' ? t.agen : (t.agen.nama || ''));
+                        const id = clean(t.agen.id || '');
+                        return name === search || id === search || name.includes(search) || search.includes(name);
+                    });
+                } else if (profileName) {
+                    const search = clean(profileName);
+                    trxs = trxs.filter(t => {
+                        if (!t.agen) return false;
+                        const name = clean(typeof t.agen === 'string' ? t.agen : (t.agen.nama || ''));
+                        return name === search || name.includes(search);
+                    });
+                }
+            }
 
             let exportData = [];
             trxs.forEach(t => {
