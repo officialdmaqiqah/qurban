@@ -28,6 +28,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (perm === 'hideHargaKandang') return true;
             if (perm === 'noExportMaster') return true;
             if (perm === 'readonlyMaster') return true; // Melarang edit/hapus master
+            if (perm === 'hideWeight') {
+                const roleNorm = userRole.replace(/_/g, ' ');
+                const jenisNorm = (profile.jenis_agen || '').toLowerCase().trim().replace(/_/g, ' ');
+
+                // Hide for specific roles
+                if (roleNorm === 'marketing dm' || roleNorm === 'reseller') return true;
+                
+                // Hide for 'agen' role with specific types
+                if (roleNorm === 'agen') {
+                   return jenisNorm === 'marketing dm' || jenisNorm === 'reseller';
+                }
+            }
         }
         return false;
     };
@@ -243,7 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
                 <td>${item.sex || '-'}</td>
                 <td><span class="badge" style="background:rgba(255,255,255,0.1);">${item.lokasi || '-'}</span></td>
-                <td style="font-weight:600; color:var(--primary);">${item.berat ? item.berat + ' kg' : '-'}</td>
+                <td style="font-weight:600; color:var(--primary); display: ${isRestricted('hideWeight') ? 'none' : ''}">${item.berat ? item.berat + ' kg' : '-'}</td>
                 ${isReseller ? '' : `<td style="font-weight:bold; color:var(--success);">${formatRp(item.harga_kandang)}</td>`}
                 <td>${getStatusBadge('transaksi', item.status_transaksi)}${pendingBadge}</td>
                 <td>${getStatusBadge('kesehatan', item.status_kesehatan)}</td>
@@ -272,6 +284,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const headHarga = document.querySelector('th[data-column="harga_kandang"]');
             if (headHarga) headHarga.style.display = isReseller ? 'none' : '';
+
+            const headBerat = document.querySelector('th[data-column="berat"]');
+            if (headBerat) headBerat.style.display = isRestricted('hideWeight') ? 'none' : '';
 
             tableBody.appendChild(tr);
         });
@@ -491,7 +506,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('inpWarnaTali').value = item.warna_tali;
             document.getElementById('inpSex').value = item.sex;
             if(inpLokasi) inpLokasi.value = item.lokasi || '';
-            if(document.getElementById('inpBerat')) document.getElementById('inpBerat').value = item.berat || '';
+            const inpB = document.getElementById('inpBerat');
+            if(inpB) {
+                 inpB.value = item.berat || '';
+                 const bGroup = inpB.closest('.form-group');
+                 if(bGroup) bGroup.style.display = isRestricted('hideWeight') ? 'none' : 'block';
+            }
             document.getElementById('inpHargaNota').value = item.harga_nota;
             document.getElementById('inpSaving').value = item.saving;
             document.getElementById('inpProfit').value = item.profit;
@@ -891,7 +911,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Warna Tali': k.warna_tali || '-',
                     'Sex': k.sex || '-',
                     'Lokasi': k.lokasi || '-',
-                    'Berat (kg)': k.berat || '-',
+                    ...(isRestricted('hideWeight') ? {} : { 'Berat (kg)': k.berat || '-' }),
                     'Link Foto': k.foto_fisik || '-',
                     ...(isRestricted('hideHargaNota') ? {} : { 'Harga Nota (Rp)': parseFloat(k.harga_nota) || 0 }),
                     ...(isRestricted('hideProfit') ? {} : { 

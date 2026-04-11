@@ -484,6 +484,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 allowed_menus: menus, 
                 linked_agen_nama: linked,
                 linked_agen_id: matchedId,
+                jenis_agen: agenMatched ? agenMatched.jenis : '',
                 permissions: { 
                     strictAgen: strict,
                     linkedAgen: linked,
