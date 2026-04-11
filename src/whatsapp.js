@@ -21,6 +21,14 @@ const WA_DEFAULT_CONFIG = {
     templateDistribusiTerkirim: "*NOTIFIKASI PENGIRIMAN SELESAI* 🚚\n==========================\n\nBismillah\nAlhamdulillah, pesanan atas nama *[[NAMA]]* (ID: *[[ID]]*) telah berhasil diantarkan dan diterima dengan baik.\n\n📌 *Detail Pengiriman*\nTgl Antar: [[TGL]]\nNo. Kambing: *[[ITEMS]]*\nSisa Tagihan Konsumen: *[[SISA]]*\nPetugas/Sopir: *[[NAMA_AGEN]]*\n\nSemoga ibadah qurban Diterima oleh Allah SWT.\n\n_Jazakumullah Khairan_\n\n[[FOOTER]]"
 };
 
+window.cleanWhatsApp = (num) => {
+    let c = String(num || '').replace(/\D/g, ''); // Hapus semua karakter non-angka
+    if (c.startsWith('62')) return c;        // Sudah format internasional
+    if (c.startsWith('0')) c = '62' + c.substring(1); // 08xx → 628xx
+    else if (c.startsWith('8')) c = '62' + c; // 8xx → 628xx
+    return c;
+};
+
 /**
  * Mendapatkan konfigurasi WA dari Supabase (Cloud Synced)
  */
@@ -143,7 +151,7 @@ export const sendWa = async (number, message) => {
     const config = await window.getWaConfig();
     
     // Normalisasi nomor (pastikan 62xxx)
-    const cleanNumber = typeof window.cleanWhatsApp === 'function' ? window.cleanWhatsApp(number) : number.replace(/\D/g, '');
+    const cleanNumber = window.cleanWhatsApp(number);
 
     console.log('[WA] Menyiapkan pengiriman ke:', cleanNumber);
     
