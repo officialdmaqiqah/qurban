@@ -161,8 +161,8 @@ export const sendWa = async (number, message) => {
         return { success: false, msg: 'Konfigurasi WA (API Key/Sender) belum diset di Pengaturan.' };
     }
 
-    // Gunakan URL GET dengan query parameters
-    const url = new URL('https://xsender.id/api/send-message');
+    // Gunakan Proxy Serverless (api/send-wa.js) untuk menghindari CORS & Blokir Network Lokal
+    const url = new URL('/api/send-wa', window.location.origin);
     url.searchParams.append('api_key', config.apiKey);
     url.searchParams.append('sender', config.sender);
     url.searchParams.append('number', cleanNumber);
