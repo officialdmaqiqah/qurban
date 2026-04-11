@@ -503,12 +503,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // NOTIFIKASI WA JIKA APPROVED
                 if (status === 'approved') {
-                   // Ambil data profil untuk nomor WA
-                   const { data: prof } = await supabase.from('profiles').select('full_name, wa, email').eq('id', id).single();
+                    // Ambil data profil untuk nomor WA
+                    const { data: prof } = await supabase.from('profiles').select('full_name, wa, email').eq('id', id).single();
                     if (prof && prof.wa) {
                         const waNum = window.cleanWhatsApp(prof.wa);
-                        const msg = `*AKSES DITERIMA!* 🚀\n\nAssalamu'alaikum *${prof.full_name}*,\n\nAkun Anda dengan email *${prof.email}* telah AKTIF dan disetujui oleh Admin sebagai *${role.toUpperCase()}*.\n\nSilakan login kembali untuk mulai bekerja di sistem Qurban.\n\nKlik di sini: https://qurban-blond.vercel.app`;
-                        await window.sendWa(waNum, msg);
+                        const config = await window.getWaConfig();
+                        const template = config.templateUserApproved;
+                        const waMsg = await window.parseWaTemplate(template, {
+                            nama: prof.full_name,
+                            email: prof.email,
+                            role: (role || '').toUpperCase()
+                        });
+                        await window.sendWa(waNum, waMsg);
                         showToast('Notifikasi WA terkirim ke user!');
                     }
                 }
