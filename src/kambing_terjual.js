@@ -516,10 +516,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const sohibulStr = currentCart.map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
                     const commonData = { nama: newTrx.customer?.nama || '-', id: trxId, tgl: formatTgl(newTrx.tgl_trx), total: formatRp(total), dp: formatRp(paidNow), sisa: formatRp(total - newTrx.total_paid), items: itemsStr, sohibul: sohibulStr, alamat: (newTrx.customer?.alamat?.jalan || '') + ', ' + (newTrx.customer?.alamat?.kec || ''), wa_konsumen: newTrx.customer?.wa1 || '-', nama_agen: newTrx.agen?.nama || '-', jadwal: formatTgl(newTrx.delivery?.tgl) };
                     
-                    const templateCust = (newTrx.agen?.tipe || '').toUpperCase().includes('DM') ? config.templateOrderDM : config.templateOrderNormal;
+                    const isDMAgen = (newTrx.agen?.tipe || '').toUpperCase().includes('DM');
+                    const templateCust = isDMAgen ? config.templateOrderDM : config.templateOrderNormal;
                     const msgCust = await window.parseWaTemplate(templateCust, commonData);
                     
-                    if (newTrx.customer?.wa1) {
+                    // Notif Ke Konsumen (Hanya jika BUKAN agen DM)
+                    if (newTrx.customer?.wa1 && !isDMAgen) {
                         const res = await window.sendWa(newTrx.customer.wa1, msgCust);
                         if (!res.success) {
                             window.showConfirm(`WA Konsumen Gagal: ${res.msg}\n\nIngin kirim manual?`, () => {
@@ -529,8 +531,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     
                     const agenData = matchedAgen;
-                    const templateAgen = (newTrx.agen?.tipe || '').toUpperCase().includes('DM') ? config.templateAgentDM : config.templateAgentNormal;
-                    const msgAgen = await window.parseWaTemplate(templateCust, commonData); // Fix: use msgAgen later
+                    const templateAgen = isDMAgen ? config.templateAgentDM : config.templateAgentNormal;
 
                     if (agenData && agenData.wa) {
                         const msgAgenParsed = await window.parseWaTemplate(templateAgen, commonData);
@@ -610,9 +611,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     nama_agen: trx.agen.nama
                 };
 
-                // 1. Notif Ke Konsumen
-                const msgCust = await window.parseWaTemplate(config.templateLunas, commonData);
-                if (trx.customer.wa1) {
+                // 1. Notif Ke Konsumen (Hanya jika BUKAN agen DM)
+                const isDMAgen = (trx.agen?.tipe || '').toUpperCase().includes('DM');
+                if (trx.customer.wa1 && !isDMAgen) {
+                    const msgCust = await window.parseWaTemplate(config.templateLunas, commonData);
                     const res = await window.sendWa(trx.customer.wa1, msgCust);
                     if (!res.success) {
                         window.showConfirm(`WA Pelunasan Gagal: ${res.msg}\n\nIngin kirim manual?`, () => {
