@@ -118,7 +118,7 @@ export const parseWaTemplate = async (template, data = {}) => {
         '[[KOMISI]]': data.komisi || 'Rp 0',
         '[[FOTO]]': data.foto || '-',
         '[[EMAIL]]': data.email || '-',
-        '[[PASSWORD]]': data.password || '***',
+        '[[PASSWORD]]': '****', // Proteksi (Selalu rahasiakan password dalam WA)
         '[[SUDAH]]': data.sudah || '0',
         '[[BELUM]]': data.belum || '0',
         '[[PERSENTASE]]': data.persentase || '0',
