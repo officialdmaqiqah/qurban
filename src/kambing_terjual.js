@@ -159,6 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const linkedAgen = profile.permissions?.linkedAgen || '';
 
         const agens = await getAgenDb();
+        agens.sort((a, b) => (a.nama || "").localeCompare(b.nama || ""));
         inpAgenId.innerHTML = '<option value="">-- Pilih Agen --</option>';
         agens.forEach(a => {
             const opt = document.createElement('option');
