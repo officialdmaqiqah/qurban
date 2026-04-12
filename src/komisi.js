@@ -136,8 +136,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isLunas = t.komisi.status === 'lunas';
             const totalDeal = parseFloat(t.total_deal || t.totalDeal || 0);
             const totalPaid = parseFloat(t.total_paid || t.totalPaid || 0);
-            const sisa = totalDeal - totalPaid;
-            const canPay = sisa <= 1000; // Allow 1000 tolerance for rounding
+            const nominalKomisi = parseFloat(t.komisi.nominal) || 0;
+            const canPay = totalPaid > nominalKomisi;
+            const btnLabel = isLunas ? '💸 Cairkan' : (canPay ? '💸 Cairkan (DP)' : '⌛ Tunggu DP > Komisi');
             
             tr.innerHTML = `
                 <td><div style="font-weight:700; color:var(--primary);">${t.id}</div><div style="font-size:0.7rem; color:var(--text-muted);">${formatTgl(t.tgl_trx || t.tglTrx)}</div></td>
@@ -151,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${isLunas ? 
                         `<button class="btn btn-sm btn-shimmer" style="background:rgba(244,63,94,0.1); color:var(--danger); border:1px solid rgba(244,63,94,0.2);" onclick="window.rollbackKomisi('${t.id}')">↩️</button>` : 
                         `<button class="btn btn-sm btn-shimmer" ${!canPay ? 'disabled style="background:rgba(255,255,255,0.05); color:var(--text-muted);"' : 'style="background:var(--primary); color:#ffffff; font-size:0.75rem; border:none; padding:4px 10px;"'} onclick="window.openBayarKomisi('${t.id}')">
-                            ${canPay ? '💸 Cairkan' : '⌛ Tunggu Lunas'}
+                            ${btnLabel}
                         </button>`
                     }
                 </td>
@@ -201,13 +202,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const trxs = await getTrxData();
             const trx = trxs.find(x => x.id === id);
-            const updatedKomisi = { ...trx.komisi, status: 'lunas', tglBayar: tgl };
+            const totalDeal = parseFloat(trx.total_deal || trx.totalDeal || 0);
+            const totalPaid = parseFloat(trx.total_paid || trx.totalPaid || 0);
+            const isUpfront = (totalDeal - totalPaid) > 1000;
+
+            const updatedKomisi = { ...trx.komisi, status: 'lunas', tglBayar: tgl, isUpfront };
             
             await supabase.from('transaksi').update({ komisi: updatedKomisi, updated_at: new Date().toISOString() }).eq('id', id);
             await supabase.from('keuangan').insert([{
                 id: 'KMS-'+Date.now().toString().slice(-6), tipe: 'pengeluaran', tanggal: tgl,
                 kategori: 'Komisi Agen', nominal: nom, channel: finalChan, related_trx_id: id,
-                keterangan: `Bayar Komisi ${trx.agen.nama} (${id})`
+                keterangan: `Bayar Komisi ${trx.agen.nama} (${id}) ${isUpfront ? '(Upfront)' : ''}`
             }]);
 
             showToast('✅ Komisi berhasil dicairkan!');
