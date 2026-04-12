@@ -264,7 +264,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const handleAgenChange = async () => {
         const agens = await getAgenDb();
         const agenInputVal = inpAgenId.value;
-        const matchedAgen = agens.find(a => a.nama === agenInputVal || `${a.nama} - ${a.jenis || 'Agen'}` === agenInputVal);
+        const matchedAgen = agens.find(a => 
+            a.nama === agenInputVal || 
+            `${a.nama} - ${a.jenis || 'Agen'}` === agenInputVal ||
+            (agenInputVal && agenInputVal.startsWith(a.nama + ' '))
+        );
         const tipe = matchedAgen ? (matchedAgen.jenis || '') : '';
         currentAgenTipeKomisi = TIPE_BERHAK_KOMISI_UPPER.includes(tipe.toUpperCase());
         if (labelKomisiAgen) labelKomisiAgen.textContent = currentAgenTipeKomisi ? `(${tipe})` : '';
@@ -448,7 +452,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const performSave = async (sendWA) => {
         const agens = await getAgenDb();
-        const matchedAgen = agens.find(a => a.nama === inpAgenId.value || `${a.nama} - ${a.jenis || 'Agen'}` === inpAgenId.value);
+        const matchedAgen = agens.find(a => 
+            a.nama === inpAgenId.value || 
+            `${a.nama} - ${a.jenis || 'Agen'}` === inpAgenId.value ||
+            (inpAgenId.value && inpAgenId.value.startsWith(a.nama + ' '))
+        );
         const trxId = window.editingTrxId || await generateTrxId();
         const total = currentCart.reduce((sum, i) => sum + (parseFloat(i.hargaDeal) || 0), 0);
         const paidNow = parseNum(inpTotalBayarAwal.value);
@@ -515,9 +523,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const config = await window.getWaConfig();
                     const itemsStr = currentCart.map(it => `• No.${it.noTali} (${it.batch})`).join('\n');
                     const sohibulStr = currentCart.map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
-                    const commonData = { nama: newTrx.customer?.nama || '-', id: trxId, tgl: formatTgl(newTrx.tgl_trx), total: formatRp(total), dp: formatRp(paidNow), sisa: formatRp(total - newTrx.total_paid), items: itemsStr, sohibul: sohibulStr, alamat: (newTrx.customer?.alamat?.jalan || '') + ', ' + (newTrx.customer?.alamat?.kec || ''), wa_konsumen: newTrx.customer?.wa1 || '-', nama_agen: newTrx.agen?.nama || '-', jadwal: formatTgl(newTrx.delivery?.tgl) };
                     
                     const isDMAgen = (newTrx.agen?.tipe || '').toUpperCase().includes('DM');
+                    const calculatedKomisi = isDMAgen ? 0 : Math.round(total * 0.10);
+                    
+                    const commonData = { 
+                        nama: newTrx.customer?.nama || '-', 
+                        id: trxId, 
+                        tgl: formatTgl(newTrx.tgl_trx), 
+                        total: formatRp(total), 
+                        dp: formatRp(paidNow), 
+                        sisa: formatRp(total - newTrx.total_paid), 
+                        items: itemsStr, 
+                        sohibul: sohibulStr, 
+                        alamat: (newTrx.customer?.alamat?.jalan || '') + ', ' + (newTrx.customer?.alamat?.kec || ''), 
+                        wa_konsumen: newTrx.customer?.wa1 || '-', 
+                        nama_agen: newTrx.agen?.nama || '-', 
+                        jadwal: formatTgl(newTrx.delivery?.tgl),
+                        komisi: formatRp(calculatedKomisi)
+                    };
+                    
                     const templateCust = isDMAgen ? config.templateOrderDM : config.templateOrderNormal;
                     const msgCust = await window.parseWaTemplate(templateCust, commonData);
                     
@@ -536,9 +561,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     if (agenData && agenData.wa) {
                         const msgAgenParsed = await window.parseWaTemplate(templateAgen, commonData);
+                        console.log(`[WA] Menyiapkan pengiriman Ke Agen: ${agenData.nama} (${agenData.wa})`);
                         const resA = await window.sendWa(agenData.wa, msgAgenParsed);
                         if (!resA.success) {
                             window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
+                        }
+                    } else {
+                        console.warn('[WA] Data Agen/WA tidak ditemukan untuk:', inpAgenId.value);
+                        if (newTrx.agen?.nama && newTrx.agen.nama !== '-- Pilih Agen --') {
+                             window.showToast(`Peringatan: WA Agen (${newTrx.agen.nama}) tidak terkirim karena nomor WA tidak ditemukan di database.`, 'warning');
                         }
                     }
                 } catch (e) {
