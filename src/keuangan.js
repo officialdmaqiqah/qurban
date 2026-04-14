@@ -53,6 +53,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnOpenCameraKeu = document.getElementById('btnOpenCameraKeu');
 
     // DB Helpers
+    let officialKatIn = [];
+    let officialKatOut = [];
+
+    const loadAndSyncCategories = async () => {
+        try {
+            // 1. Fetch from master_data
+            const { data: catIn } = await supabase.from('master_data').select('val').eq('key', 'KAT_KEU_IN').single();
+            const { data: catOut } = await supabase.from('master_data').select('val').eq('key', 'KAT_KEU_OUT').single();
+
+            // 2. Default hardcoded lists (sebagai fallback & basis awal)
+            const defIn = ['Modal Awal','Terima Pelunasan','Penjualan Sapi','Jual Kambing','Kompensasi Supplier','Penerimaan Lainnya'];
+            const defOut = ['Beli Kambing','Beban Pakan','Beban Operasional Kandang','Gaji & Bonus','Listrik & Air','Transportasi','Marketing / Iklan','Bayar Supplier','Pelunasan Supplier','Bagi Hasil (Investor)','Prive / Tarik Tunai','Biaya Lain-lain','Kerugian (Mati/Hilang)'];
+
+            if (!catIn || !catOut) {
+                // MIGRASI PERTAMA: Scan tabel keuangan untuk kategori unik
+                console.log('[Migration] Memulai migrasi kategori dari riwayat transaksi...');
+                const { data: rows } = await supabase.from('keuangan').select('kategori, tipe');
+                
+                const uniqueIn = rows ? [...new Set(rows.filter(x => x.tipe === 'pemasukan').map(x => x.kategori))].filter(Boolean) : [];
+                const uniqueOut = rows ? [...new Set(rows.filter(x => x.tipe === 'pengeluaran').map(x => x.kategori))].filter(Boolean) : [];
+
+                officialKatIn = [...new Set([...defIn, ...uniqueIn])].filter(x => x !== 'Lainnya (Tulis Sendiri)');
+                officialKatOut = [...new Set([...defOut, ...uniqueOut])].filter(x => x !== 'Lainnya (Tulis Sendiri)');
+
+                // Simpan ke database
+                await supabase.from('master_data').upsert([
+                    { id: 'ID-KAT-KEU-IN', key: 'KAT_KEU_IN', val: officialKatIn },
+                    { id: 'ID-KAT-KEU-OUT', key: 'KAT_KEU_OUT', val: officialKatOut }
+                ], { onConflict: 'key' });
+                console.log('[Migration] Kategori berhasil dimigrasi.');
+            } else {
+                officialKatIn = catIn.val;
+                officialKatOut = catOut.val;
+            }
+        } catch (e) {
+            console.error("Error categories sync:", e);
+        }
+    };
+
     const getKeuanganData = async () => {
         const { data, error } = await supabase.from('keuangan').select('*');
         if(error) { console.error("Error fetching keuangan:", error); return []; }
@@ -384,6 +423,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(kat === 'Lainnya (Tulis Sendiri)') {
             finalKat = kategoriLainInput.value.trim();
             if(!finalKat) return window.showAlert('Tuliskan nama kategori baru!', 'warning');
+
+            // AUTO-REGISTER CATEGORY
+            const list = tipe === 'pemasukan' ? officialKatIn : officialKatOut;
+            if (!list.includes(finalKat)) {
+                list.push(finalKat);
+                const key = tipe === 'pemasukan' ? 'KAT_KEU_IN' : 'KAT_KEU_OUT';
+                await supabase.from('master_data').upsert({ id: 'ID-' + key, key, val: list }, { onConflict: 'key' });
+                console.log(`[Category] New category registered: ${finalKat}`);
+            }
         }
 
         if(tipe === 'mutasi') {
@@ -744,14 +792,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function populateKategori(tipe) {
         if(!kategoriInput) return;
         kategoriInput.innerHTML = '';
-        const katIn = ['Modal Awal','Terima Pelunasan','Penjualan Sapi','Jual Kambing','Kompensasi Supplier','Penerimaan Lainnya', 'Lainnya (Tulis Sendiri)'];
-        const katOut = ['Beli Kambing','Beban Pakan','Beban Operasional Kandang','Gaji & Bonus','Listrik & Air','Transportasi','Marketing / Iklan','Bayar Supplier','Pelunasan Supplier','Bagi Hasil (Investor)','Prive / Tarik Tunai','Biaya Lain-lain','Kerugian (Mati/Hilang)', 'Lainnya (Tulis Sendiri)'];
-        const list = tipe === 'pemasukan' ? katIn : katOut;
+        const list = [...(tipe === 'pemasukan' ? officialKatIn : officialKatOut), 'Lainnya (Tulis Sendiri)'];
         list.forEach(k => {
             const o = document.createElement('option'); o.value = k; o.textContent = k;
             kategoriInput.appendChild(o);
         });
     }
+
+    await loadAndSyncCategories();
 
     await renderApp();
 });

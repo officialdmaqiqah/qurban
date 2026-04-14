@@ -175,6 +175,7 @@
                                 <button class="tab-btn" data-target="tabUser">User</button>
                                 <button class="tab-btn" data-target="tabEditRequests" style="color:var(--warning); font-weight: 300;">📝 Approval</button>
                                 <button class="tab-btn" data-target="tabWA" style="color:var(--primary); font-weight: 300;">📲 WhatsApp</button>
+                                <button class="tab-btn" data-target="tabKategori" style="color:#f59e0b; font-weight: 300;">🏷️ Kategori Keuangan</button>
                                 <button class="tab-btn" data-target="tabBackup" style="background:rgba(16,185,129,0.1); color:var(--success);">📦 Backup</button>
                         </div>
 
@@ -457,6 +458,37 @@
                                                 </div>
                                         </div>
                                 </div>
+                                <div class="tab-content" id="tabKategori">
+                                        <div class="card-box">
+                                                <div class="flex-between" style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:1rem; margin-bottom:1.5rem;">
+                                                        <div>
+                                                                <h3 style="margin-bottom:0.25rem;">Manajemen Kategori Keuangan</h3>
+                                                                <p style="font-size:0.875rem; color:var(--text-muted);">Kelola daftar kategori yang muncul di menu Pencatatan Keuangan.</p>
+                                                        </div>
+                                                </div>
+                                                
+                                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+                                                        <!-- PEMASUKAN -->
+                                                        <div style="background:rgba(255,255,255,0.02); padding:1.5rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                                                                <div class="flex-between" style="margin-bottom:1rem;">
+                                                                        <h4 style="color:var(--success);">📥 Kategori Pemasukan</h4>
+                                                                        <button class="btn btn-sm" onclick="window.addCategory('IN')" style="background:var(--success); border:none; color:white;">+</button>
+                                                                </div>
+                                                                <div id="listKatIn" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+                                                        </div>
+
+                                                        <!-- PENGELUARAN -->
+                                                        <div style="background:rgba(255,255,255,0.02); padding:1.5rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                                                                <div class="flex-between" style="margin-bottom:1rem;">
+                                                                        <h4 style="color:var(--danger);">📤 Kategori Pengeluaran</h4>
+                                                                        <button class="btn btn-sm" onclick="window.addCategory('OUT')" style="background:var(--danger); border:none; color:white;">+</button>
+                                                                </div>
+                                                                <div id="listKatOut" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                </div>
+
                                 <div class="tab-content" id="tabBackup">
                                         <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:12px; padding:2rem; text-align:center;">
                                                 <div style="font-size:3rem; margin-bottom:1rem;">📦</div>

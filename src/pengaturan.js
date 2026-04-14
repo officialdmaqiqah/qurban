@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const target = btn.dataset.target;
             document.getElementById(target).classList.add('active');
             if(target === 'tabEditRequests') renderEditRequests();
+            if(target === 'tabKategori') renderKatFinance();
         });
     });
 
@@ -787,6 +788,62 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     };
+    // === FINANCE CATEGORIES LOGIC ===
+    async function renderKatFinance() {
+        const listIn = document.getElementById('listKatIn');
+        const listOut = document.getElementById('listKatOut');
+        if(!listIn || !listOut) return;
+
+        listIn.innerHTML = '<div class="spinner"></div>';
+        listOut.innerHTML = '<div class="spinner"></div>';
+
+        const { data: resIn } = await supabase.from('master_data').select('val').eq('key', 'KAT_KEU_IN').single();
+        const { data: resOut } = await supabase.from('master_data').select('val').eq('key', 'KAT_KEU_OUT').single();
+        
+        const catsIn = resIn?.val || [];
+        const catsOut = resOut?.val || [];
+
+        const renderItem = (name, type) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+                <span style="font-size:0.9rem;">${name}</span>
+                <button class="btn btn-sm" onclick="window.deleteCategory('${type}', '${name}')" style="background:transparent; color:var(--danger); border:none; opacity:0.6;">🗑️</button>
+            </div>
+        `;
+
+        listIn.innerHTML = catsIn.map(c => renderItem(c, 'IN')).join('') || '<p style="text-align:center; color:var(--text-muted); font-size:0.8rem;">Belum ada kategori.</p>';
+        listOut.innerHTML = catsOut.map(c => renderItem(c, 'OUT')).join('') || '<p style="text-align:center; color:var(--text-muted); font-size:0.8rem;">Belum ada kategori.</p>';
+    }
+
+    window.addCategory = async (type) => {
+        const title = type === 'IN' ? 'Kategori Pemasukan' : 'Kategori Pengeluaran';
+        const name = prompt(`Ketik nama ${title} baru:`);
+        if (!name || !name.trim()) return;
+
+        const key = type === 'IN' ? 'KAT_KEU_IN' : 'KAT_KEU_OUT';
+        const { data } = await supabase.from('master_data').select('val').eq('key', key).single();
+        const list = data?.val || [];
+
+        if (list.includes(name.trim())) return showAlert('Kategori sudah ada!', 'warning');
+        
+        list.push(toTitleCase(name.trim()));
+        await supabase.from('master_data').upsert({ id: 'ID-' + key, key, val: list }, { onConflict: 'key' });
+        
+        showToast('Kategori baru ditambahkan');
+        renderKatFinance();
+    };
+
+    window.deleteCategory = async (type, name) => {
+        showConfirm(`Hapus kategori "${name}"?`, async () => {
+            const key = type === 'IN' ? 'KAT_KEU_IN' : 'KAT_KEU_OUT';
+            const { data } = await supabase.from('master_data').select('val').eq('key', key).single();
+            const list = (data?.val || []).filter(c => c !== name);
+            
+            await supabase.from('master_data').upsert({ id: 'ID-' + key, key, val: list }, { onConflict: 'key' });
+            showToast('Kategori dihapus');
+            renderKatFinance();
+        });
+    };
+
     // --- AUTO-MIGRATION: BANK_ACCOUNTS -> REKENING ---
     const migrateBankData = async () => {
         const { data: oldData } = await supabase.from('master_data').select('val').eq('key', 'BANK_ACCOUNTS').single();
