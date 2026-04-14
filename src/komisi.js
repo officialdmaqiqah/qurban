@@ -212,6 +212,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 finalChan = 'TF ' + sel.options[sel.selectedIndex].textContent;
             }
 
+            let photoUrl = null;
+            if (inpBuktiKomisi && inpBuktiKomisi.files.length > 0) {
+                window.showToast('Mengompres & Mengunggah bukti...', 'info');
+                try {
+                    const b64 = await compressImage(inpBuktiKomisi.files[0]);
+                    photoUrl = await uploadToGDrive(b64, "BUKTI_KOMISI");
+                } catch (err) {
+                    console.error("Upload failed:", err);
+                    window.showToast('Gagal mengunggah foto, tapi data tetap disimpan.', 'warning');
+                }
+            }
+
             const trxs = await getTrxData();
             const trx = trxs.find(x => x.id === id);
             const totalDeal = parseFloat(trx.total_deal || trx.totalDeal || 0);
@@ -220,13 +232,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const updatedKomisi = { ...trx.komisi, status: 'lunas', tglBayar: tgl, isUpfront, buktiUrl: photoUrl };
             
-            let photoUrl = null;
-            if (inpBuktiKomisi && inpBuktiKomisi.files.length > 0) {
-                window.showToast('Mengompres & Mengunggah bukti...', 'info');
-                const b64 = await compressImage(inpBuktiKomisi.files.length > 0 ? inpBuktiKomisi.files[0] : null);
-                photoUrl = await uploadToGDrive(b64, "BUKTI_KOMISI");
-            }
-
             await supabase.from('transaksi').update({ komisi: updatedKomisi, updated_at: new Date().toISOString() }).eq('id', id);
             await supabase.from('keuangan').insert([{
                 id: 'KMS-'+Date.now().toString().slice(-6), tipe: 'pengeluaran', tanggal: tgl,
