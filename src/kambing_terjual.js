@@ -915,5 +915,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    if (inpGlobalSearch) {
+        inpGlobalSearch.addEventListener('input', () => {
+            renderTable();
+        });
+    }
+
     renderTable();
 });
