@@ -155,9 +155,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="color:#f59e0b; font-weight:800;">${window.formatRp(t.komisi.nominal)}</td>
                 <td><div style="font-size:0.8rem;">${t.komisi.metodePembayaran || 'Akhir'}</div></td>
                 <td><span class="badge ${isLunas ? 'badge-success' : 'badge-warning'}" style="font-size:0.7rem; padding:4px 8px;">${isLunas ? 'LUNAS' : 'OUTSTANDING'}</span></td>
-                <td style="text-align:right;">
+                <td style="text-align:right; white-space:nowrap;">
                     ${isLunas ? 
-                        `<button class="btn btn-sm btn-shimmer" style="background:rgba(244,63,94,0.1); color:var(--danger); border:1px solid rgba(244,63,94,0.2);" onclick="window.rollbackKomisi('${t.id}')">↩️</button>` : 
+                        `
+                        ${t.komisi.buktiUrl ? `
+                            <button class="btn btn-sm" onclick="window.viewPhoto('${t.komisi.buktiUrl}')" style="background:rgba(16,185,129,0.1); color:var(--success); border:1px solid rgba(16,185,129,0.2); margin-right:4px;" title="Lihat Bukti Transfer">🖼️</button>
+                        ` : ''}
+                        <button class="btn btn-sm btn-shimmer" style="background:rgba(244,63,94,0.1); color:var(--danger); border:1px solid rgba(244,63,94,0.2);" onclick="window.rollbackKomisi('${t.id}')">↩️</button>
+                        ` : 
                         `<button class="btn btn-sm btn-shimmer" ${!canPay ? 'disabled style="background:rgba(255,255,255,0.05); color:var(--text-muted);"' : 'style="background:var(--primary); color:#ffffff; font-size:0.75rem; border:none; padding:4px 10px;"'} onclick="window.openBayarKomisi('${t.id}')">
                             ${btnLabel}
                         </button>`
@@ -213,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const totalPaid = parseFloat(trx.total_paid || trx.totalPaid || 0);
             const isUpfront = (totalDeal - totalPaid) > 1000;
 
-            const updatedKomisi = { ...trx.komisi, status: 'lunas', tglBayar: tgl, isUpfront };
+            const updatedKomisi = { ...trx.komisi, status: 'lunas', tglBayar: tgl, isUpfront, buktiUrl: photoUrl };
             
             let photoUrl = null;
             if (inpBuktiKomisi && inpBuktiKomisi.files.length > 0) {
