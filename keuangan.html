@@ -119,6 +119,40 @@
 
             /* Filter bar compact */
             .filter-bar-keu { padding: 0.75rem !important; }
+
+            /* Premium Responsive Table (Card Layout) */
+            .data-table thead { display: none; }
+            .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
+            .data-table tr {
+                margin-bottom: 1.25rem;
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: var(--radius-lg);
+                padding: 1rem;
+                box-shadow: var(--shadow-sm);
+            }
+            .data-table td {
+                text-align: right !important;
+                padding: 0.6rem 0 !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.85rem !important;
+            }
+            .data-table td:last-child { border-bottom: none; margin-top: 0.5rem; justify-content: flex-end; }
+            .data-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 0.65rem;
+                color: var(--text-muted);
+                letter-spacing: 0.05em;
+            }
+            /* Styling specific columns for better readability on mobile */
+            .data-table td[data-label="NOMINAL"] { font-size: 1.1rem !important; font-weight: 700 !important; }
+            .data-table td[data-label="ID"] { display: none; } /* Hide ID on mobile to save space */
+            .data-table td[data-label="TIPE"] { display: none; } /* Hide Tipe as color + category is enough */
         }
     </style>
 </head>

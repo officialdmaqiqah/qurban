@@ -207,25 +207,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const isIncome = item.tipe === 'pemasukan';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="font-size:0.7rem; color:var(--text-muted)">${item.id || '-'}</td>
-                    <td>${formatDate(item.tanggal)}</td>
-                    <td style="font-size:0.85rem;">${item.transaksi?.customer?.nama || '<span style="opacity:0.3">-</span>'}</td>
-                    <td style="font-size:0.85rem;">${item.transaksi?.agen?.nama || '<span style="opacity:0.3">-</span>'}</td>
-                    <td><span class="badge ${isIncome ? 'badge-success' : 'badge-danger'}">${item.kategori}</span></td>
-                    <td style="font-size:0.85rem;">${item.keterangan || '-'}</td>
-                    <td style="color: ${isIncome ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">
+                    <td data-label="ID" style="font-size:0.7rem; color:var(--text-muted)">${item.id || '-'}</td>
+                    <td data-label="TANGGAL">${formatDate(item.tanggal)}</td>
+                    <td data-label="KONSUMEN" style="font-size:0.85rem;">${item.transaksi?.customer?.nama || '<span style="opacity:0.3">-</span>'}</td>
+                    <td data-label="AGEN" style="font-size:0.85rem;">${item.transaksi?.agen?.nama || '<span style="opacity:0.3">-</span>'}</td>
+                    <td data-label="KATEGORI"><span class="badge ${isIncome ? 'badge-success' : 'badge-danger'}">${item.kategori}</span></td>
+                    <td data-label="KETERANGAN" style="font-size:0.85rem;">${item.keterangan || '-'}</td>
+                    <td data-label="NOMINAL" style="color: ${isIncome ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">
                         ${isRestrictedFinance ? '***' : (isIncome ? '+' : '-') + ' ' + formatRp(item.nominal)}
                     </td>
-                    <td style="font-size:0.8rem; text-transform:capitalize;">${item.tipe}</td>
-                    <td style="font-size:0.8rem; color:var(--text-muted)">${item.channel || '-'}</td>
-                     <td style="text-align:center;">
+                    <td data-label="TIPE" style="font-size:0.8rem; text-transform:capitalize;">${item.tipe}</td>
+                    <td data-label="CHANNEL" style="font-size:0.8rem; color:var(--text-muted)">${item.channel || '-'}</td>
+                     <td data-label="PHOTO" style="text-align:center;">
                          ${item.bukti_url ? `
                              <button class="btn btn-sm" onclick="window.viewPhoto('${item.bukti_url}')" style="width:30px; height:30px; border-radius:4px; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
                                  <img src="${window.getDirectDriveLink(item.bukti_url)}" style="width:100%; height:100%; object-fit:cover; pointer-events:none;">
                              </button>
                          ` : '<span style="opacity:0.2">🚫</span>'}
                      </td>
-                     <td style="white-space:nowrap;">
+                     <td data-label="AKSI" style="white-space:nowrap;">
                         <button class="btn btn-sm btn-edit-action" data-id="${item.id}" title="Edit" style="background:rgba(168,85,247,0.1); color:#a855f7; margin-right:4px;">✏️</button>
                         <button class="btn btn-sm btn-delete-action" data-id="${item.id}" title="Hapus" style="background:rgba(239,68,68,0.1); color:var(--danger);">🗑️</button>
                     </td>
