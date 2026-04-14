@@ -61,6 +61,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: oldData } = await supabase.from('master_data').select('val').eq('key', 'BANK_ACCOUNTS').single();
         return oldData?.val || [];
     };
+
+    const inpBuktiKomisi = document.getElementById('inpBuktiKomisi');
+    const previewBuktiKomisi = document.getElementById('previewBuktiKomisi');
+    const imgPreviewKomisi = previewBuktiKomisi ? previewBuktiKomisi.querySelector('img') : null;
+    const btnRemoveKomisiPhoto = document.getElementById('btnRemoveKomisiPhoto');
+    const btnOpenCameraKomisi = document.getElementById('btnOpenCameraKomisi');
+
     let cachedCommissionTrxs = [];
 
     const getTrxData = async (force = false) => {
@@ -208,11 +215,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const updatedKomisi = { ...trx.komisi, status: 'lunas', tglBayar: tgl, isUpfront };
             
+            let photoUrl = null;
+            if (inpBuktiKomisi && inpBuktiKomisi.files.length > 0) {
+                window.showToast('Mengompres & Mengunggah bukti...', 'info');
+                const b64 = await compressImage(inpBuktiKomisi.files.length > 0 ? inpBuktiKomisi.files[0] : null);
+                photoUrl = await uploadToGDrive(b64, "BUKTI_KOMISI");
+            }
+
             await supabase.from('transaksi').update({ komisi: updatedKomisi, updated_at: new Date().toISOString() }).eq('id', id);
             await supabase.from('keuangan').insert([{
                 id: 'KMS-'+Date.now().toString().slice(-6), tipe: 'pengeluaran', tanggal: tgl,
                 kategori: 'Komisi Agen', nominal: nom, channel: finalChan, related_trx_id: id,
-                keterangan: `Bayar Komisi ${trx.agen.nama} (${id}) ${isUpfront ? '(Upfront)' : ''}`
+                keterangan: `Bayar Komisi ${trx.agen.nama} (${id}) ${isUpfront ? '(Upfront)' : ''}`,
+                bukti_url: photoUrl
             }]);
 
             showToast('✅ Komisi berhasil dicairkan!');
@@ -239,6 +254,43 @@ document.addEventListener('DOMContentLoaded', async () => {
             init();
         });
     };
+
+    const init = async () => {
+        const list = await getTrxData();
+        updateStatsKomisi(list);
+        renderTabel(list);
+    };
+
+    // Photo Listeners
+    inpBuktiKomisi?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if(imgPreviewKomisi) imgPreviewKomisi.src = ev.target.result;
+                if(previewBuktiKomisi) previewBuktiKomisi.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    btnRemoveKomisiPhoto?.addEventListener('click', () => {
+        if(inpBuktiKomisi) inpBuktiKomisi.value = '';
+        if(previewBuktiKomisi) previewBuktiKomisi.style.display = 'none';
+    });
+
+    btnOpenCameraKomisi?.addEventListener('click', () => {
+        if(window.openCameraUI) {
+            window.openCameraUI((file) => {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                if(inpBuktiKomisi) {
+                    inpBuktiKomisi.files = dt.files;
+                    inpBuktiKomisi.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+    });
 
     const init = async () => {
         const list = await getTrxData();
