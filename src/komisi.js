@@ -18,7 +18,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const loggedUser = profile;
-    const isAdmin = loggedUser.role === 'admin';
+    const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
+
+    // State
+    let cachedCommissionTrxs = [];
+    let selectedPhotoFile = null; // Sumber utama file bukti
 
     const formatTgl = (iso) => {
         if (!iso) return '-';
@@ -26,21 +30,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         return p.length >= 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
     };
 
-    const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
-
     async function compressImage(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader(); reader.readAsDataURL(file);
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader(); 
+            reader.readAsDataURL(file);
             reader.onload = (e) => {
-                const img = new Image(); img.src = e.target.result;
+                const img = new Image(); 
+                img.src = e.target.result;
                 img.onload = () => {
-                    const cv = document.createElement('canvas'); const ctx = cv.getContext('2d');
-                    let w = img.width, h = img.height; const max = 800;
-                    if (w > h) { if (w > max) { h *= max / w; w = max; } } else { if (h > max) { w *= max / h; h = max; } }
+                    const cv = document.createElement('canvas'); 
+                    const ctx = cv.getContext('2d');
+                    let w = img.width, h = img.height; 
+                    const max = 1200;
+                    if (w > h) { if (w > max) { h *= max / w; w = max; } } 
+                    else { if (h > max) { w *= max / h; h = max; } }
                     cv.width = w; cv.height = h; ctx.drawImage(img, 0, 0, w, h);
                     resolve(cv.toDataURL('image/jpeg', 0.6).split(',')[1]);
                 };
+                img.onerror = (err) => reject(err);
             };
+            reader.onerror = (err) => reject(err);
         });
     }
 
@@ -50,8 +59,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 method: 'POST',
                 body: JSON.stringify({ base64, mimeType: "image/jpeg", fileName: "kom_" + Date.now(), folderName })
             });
-            const res = await resp.json(); return res.success ? res.url : null;
-        } catch (e) { return null; }
+            const res = await resp.json(); 
+            return res.success ? res.url : null;
+        } catch (e) { 
+            console.error("GDrive Upload Error:", e);
+            return null; 
+        }
     }
 
     const getBankAccounts = async () => { 
@@ -67,8 +80,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const imgPreviewKomisi = previewBuktiKomisi ? previewBuktiKomisi.querySelector('img') : null;
     const btnRemoveKomisiPhoto = document.getElementById('btnRemoveKomisiPhoto');
     const btnOpenCameraKomisi = document.getElementById('btnOpenCameraKomisi');
-
-    let cachedCommissionTrxs = [];
 
     const getTrxData = async (force = false) => {
         if (!force && cachedCommissionTrxs.length > 0) return cachedCommissionTrxs;
@@ -86,7 +97,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const updateStatsKomisi = (list) => {
-        let total = 0, lunas = 0, belum = 0; const agens = new Set();
+        let total = 0, lunas = 0, belum = 0; 
+        const agens = new Set();
         list.forEach(t => {
             const n = parseFloat(t.komisi.nominal) || 0;
             total += n;
@@ -98,47 +110,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         const elLunas = document.getElementById('statKomisiLunas');
         const elBelum = document.getElementById('statKomisiBelum');
         const elJml = document.getElementById('statJmlAgen');
-
         if(elTotal) elTotal.textContent = window.formatRp(total);
         if(elLunas) elLunas.textContent = window.formatRp(lunas);
         if(elBelum) elBelum.textContent = window.formatRp(belum);
         if(elJml) elJml.textContent = agens.size;
     };
 
-    let currentSort = { column: 'id', direction: 'desc' };
-
     const renderTabel = (list) => {
         const tbody = document.getElementById('tableBodyKomisi');
-        if(!tbody) return; 
-        
-        const keyword = (document.getElementById('inpSearchKomisi')?.value || '').toLowerCase();
-        const statusFlt = document.getElementById('filterStatusKomisi')?.value;
+        if (!tbody) return;
+        tbody.innerHTML = '';
 
-        let filtered = [...list];
-        if(keyword) {
-            filtered = filtered.filter(t => 
-                t.id.toLowerCase().includes(keyword) || 
-                (t.agen?.nama||'').toLowerCase().includes(keyword) ||
-                (t.customer?.nama||'').toLowerCase().includes(keyword)
-            );
-        }
-        if(statusFlt) filtered = filtered.filter(t => t.komisi.status === statusFlt);
+        const searchQuery = document.getElementById('inpSearchKomisi')?.value.toLowerCase() || '';
+        const statusFilter = document.getElementById('filterStatusKomisi')?.value || '';
 
-        filtered.sort((a,b) => {
-            let vA = a[currentSort.column], vB = b[currentSort.column];
-            if (currentSort.column === 'tglTrx') {
-                vA = new Date(vA); vB = new Date(vB);
-            }
-            return currentSort.direction === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1);
+        const filtered = list.filter(t => {
+            const matchSearch = String(t.id).toLowerCase().includes(searchQuery) ||
+                              String(t.agen?.nama || '').toLowerCase().includes(searchQuery) ||
+                              String(t.customer?.nama || '').toLowerCase().includes(searchQuery);
+            const matchStatus = !statusFilter || t.komisi.status === statusFilter;
+            return matchSearch && matchStatus;
         });
 
-        tbody.innerHTML = '';
-        if(filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:3rem; color:var(--text-muted);">Tidak ada data komisi ditemukan.</td></tr>`;
-            return;
-        }
-
-        filtered.forEach(t => {
+        filtered.sort((a,b) => b.id.localeCompare(a.id)).forEach(t => {
             const tr = document.createElement('tr');
             const isLunas = t.komisi.status === 'lunas';
             const totalDeal = parseFloat(t.total_deal || t.totalDeal || 0);
@@ -178,6 +172,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const t = trxs.find(x => x.id === id);
         if(!t) return;
 
+        // Reset Photo State
+        selectedPhotoFile = null;
+        if(inpBuktiKomisi) inpBuktiKomisi.value = '';
+        if(previewBuktiKomisi) previewBuktiKomisi.style.display = 'none';
+
         const modal = document.getElementById('modalBayarKomisi');
         document.getElementById('bayarModalInfo').innerHTML = `
             <div style="background:rgba(255,255,255,0.02); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
@@ -197,7 +196,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('btnKonfirmasiBayar')?.addEventListener('click', async () => {
         const modal = document.getElementById('modalBayarKomisi');
-        const id = modal._trxId; const nom = modal._nom;
+        const id = modal._trxId; 
+        const nom = modal._nom;
         const tgl = document.getElementById('inpTglBayarKomisi').value;
         const chan = document.getElementById('inpChannelBayarKomisi').value;
         const btn = document.getElementById('btnKonfirmasiBayar');
@@ -206,22 +206,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span> Memproses...';
 
+            let photoUrl = null;
+            if (selectedPhotoFile) {
+                window.showToast('📸 Mengompres & Mengunggah bukti...', 'info');
+                try {
+                    const b64 = await compressImage(selectedPhotoFile);
+                    photoUrl = await uploadToGDrive(b64, "BUKTI_KOMISI");
+                } catch (err) {
+                    console.error("Upload failed details:", err);
+                    window.showToast('Gagal memproses foto, menggunakan data tanpa bukti.', 'warning');
+                }
+            }
+
             let finalChan = chan;
             if(chan === 'Transfer Bank') {
                 const sel = document.getElementById('inpRekIdKomisi');
                 finalChan = 'TF ' + sel.options[sel.selectedIndex].textContent;
-            }
-
-            let photoUrl = null;
-            if (inpBuktiKomisi && inpBuktiKomisi.files.length > 0) {
-                window.showToast('Mengompres & Mengunggah bukti...', 'info');
-                try {
-                    const b64 = await compressImage(inpBuktiKomisi.files[0]);
-                    photoUrl = await uploadToGDrive(b64, "BUKTI_KOMISI");
-                } catch (err) {
-                    console.error("Upload failed:", err);
-                    window.showToast('Gagal mengunggah foto, tapi data tetap disimpan.', 'warning');
-                }
             }
 
             const trxs = await getTrxData();
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             showAlert('Gagal mencairkan komisi: ' + e.message, 'danger');
         } finally {
             btn.disabled = false;
-            btn.textContent = 'Konfirmasi & Cairkan';
+            btn.textContent = '💾 Konfirmasi Pembayaran';
         }
     });
 
@@ -256,7 +256,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         showConfirm(`Batalkan status lunas komisi ${id}?`, async () => {
             const trxs = await getTrxData();
             const trx = trxs.find(x => x.id === id);
-            const updated = { ...trx.komisi, status: 'belum_bayar', tglBayar: null };
+            // Hapus buktiUrl juga saat rollback
+            const updated = { ...trx.komisi, status: 'belum_bayar', tglBayar: null, buktiUrl: null };
             await supabase.from('transaksi').update({ komisi: updated, updated_at: new Date().toISOString() }).eq('id', id);
             await supabase.from('keuangan').delete().eq('related_trx_id', id).eq('kategori', 'Komisi Agen');
             showToast('✅ Pembayaran komisi dibatalkan.');
@@ -265,16 +266,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    const init = async () => {
-        const list = await getTrxData();
-        updateStatsKomisi(list);
-        renderTabel(list);
-    };
-
     // Photo Listeners
     inpBuktiKomisi?.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if(file) {
+            selectedPhotoFile = file;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 if(imgPreviewKomisi) imgPreviewKomisi.src = ev.target.result;
@@ -285,6 +281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     btnRemoveKomisiPhoto?.addEventListener('click', () => {
+        selectedPhotoFile = null;
         if(inpBuktiKomisi) inpBuktiKomisi.value = '';
         if(previewBuktiKomisi) previewBuktiKomisi.style.display = 'none';
     });
@@ -292,27 +289,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnOpenCameraKomisi?.addEventListener('click', () => {
         if(window.openCameraUI) {
             window.openCameraUI((file) => {
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                if(inpBuktiKomisi) {
-                    inpBuktiKomisi.files = dt.files;
-                    inpBuktiKomisi.dispatchEvent(new Event('change'));
-                }
+                selectedPhotoFile = file;
+                // Tetap update preview UI
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    if(imgPreviewKomisi) imgPreviewKomisi.src = ev.target.result;
+                    if(previewBuktiKomisi) previewBuktiKomisi.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+                
+                // Opsional: sync ke input file (sering gagal di mobile, makanya kita pakai selectedPhotoFile)
+                try {
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    if(inpBuktiKomisi) {
+                        inpBuktiKomisi.files = dt.files;
+                    }
+                } catch(e) {}
             });
         }
     });
 
+    // Main Init
     const init = async () => {
         const list = await getTrxData();
         updateStatsKomisi(list);
         renderTabel(list);
     };
 
-    // Modal Close Listeners
+    // Event Listeners
     document.getElementById('btnCloseBayarModal')?.addEventListener('click', () => document.getElementById('modalBayarKomisi').classList.remove('active'));
     document.getElementById('btnBatalBayar')?.addEventListener('click', () => document.getElementById('modalBayarKomisi').classList.remove('active'));
 
-    // Channel Payment Listener
     document.getElementById('inpChannelBayarKomisi')?.addEventListener('change', async () => {
         const chan = document.getElementById('inpChannelBayarKomisi').value;
         const container = document.getElementById('containerRekKomisi');
@@ -333,10 +341,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    document.getElementById('inpSearchKomisi')?.addEventListener('input', async () => renderTabel(await getTrxData()));
-    document.getElementById('filterStatusKomisi')?.addEventListener('change', async () => renderTabel(await getTrxData()));
+    document.getElementById('inpSearchKomisi')?.addEventListener('input', () => renderTabel(cachedCommissionTrxs));
+    document.getElementById('filterStatusKomisi')?.addEventListener('change', () => renderTabel(cachedCommissionTrxs));
     
-    // --- TAB LOGIC ---
+    // Sorting
+    document.querySelectorAll('.sort-header').forEach(h => {
+        h.addEventListener('click', () => {
+            const col = h.getAttribute('data-column');
+            // Simple sorting implementation
+            const list = [...cachedCommissionTrxs].sort((a,b) => {
+                if(col === 'id') return b.id.localeCompare(a.id);
+                return 0;
+            });
+            renderTabel(list);
+        });
+    });
+
+    // Tab Logic
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
