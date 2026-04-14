@@ -92,6 +92,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    // --- PHOTO UTILITIES (Global Scope) ---
+    const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
+
+    async function compressImage(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    let width = img.width;
+                    let height = img.height;
+                    const max = 800;
+                    if (width > height) { if (width > max) { height *= max / width; width = max; } } 
+                    else { if (height > max) { width *= max / height; height = max; } }
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
+                };
+            };
+        });
+    }
+
+    async function uploadToGDrive(base64, folderName) {
+        try {
+            const response = await fetch(GDRIVE_PROXY_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    base64: base64,
+                    mimeType: "image/jpeg",
+                    fileName: "keuangan_" + Date.now() + ".jpg",
+                    folderName: folderName || "BUKTI_KEUANGAN"
+                })
+            });
+            const result = await response.json();
+            if(result.success) return window.getDirectDriveLink(result.url);
+            return null;
+        } catch (error) {
+            console.error('GDrive Upload failed:', error);
+            return null;
+        }
+    }
+
     const getKeuanganData = async () => {
         const { data, error } = await supabase.from('keuangan').select('*');
         if(error) { console.error("Error fetching keuangan:", error); return []; }
@@ -168,52 +215,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return currentSort.direction === 'asc' ? (valA < valB ? -1 : 1) : (valA > valB ? -1 : 1);
         });
 
-        // --- PHOTO UTILITIES (Reuse from kambing.js) ---
-        const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
-
-        async function compressImage(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        let width = img.width;
-                        let height = img.height;
-                        const max = 800;
-                        if (width > height) { if (width > max) { height *= max / width; width = max; } } 
-                        else { if (height > max) { width *= max / height; height = max; } }
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
-                    };
-                };
-            });
-        }
-
-        async function uploadToGDrive(base64, folderName) {
-            try {
-                const response = await fetch(GDRIVE_PROXY_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        base64: base64,
-                        mimeType: "image/jpeg",
-                        fileName: "keuangan_" + Date.now() + ".jpg",
-                        folderName: folderName || "BUKTI_KEUANGAN"
-                    })
-                });
-                const result = await response.json();
-                if(result.success) return window.getDirectDriveLink(result.url);
-                return null;
-            } catch (error) {
-                console.error('GDrive Upload failed:', error);
-                return null;
-            }
-        }
 
         const isVisible = processed.length > 0;
         if(tableBody) {
@@ -391,128 +392,150 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        const id = window.editingId || ('FIN-' + Date.now().toString().slice(-6));
-        const tipe = tipeInput.value;
-        const nominal = window.parseNum(nominalInput.value);
-        const tgl = tanggalInput.value;
-        const kat = kategoriInput.value;
-        const ket = keteranganInput.value;
-        const chan = transaksiChannel.value;
+        const btnSave = e.submitter || document.querySelector('#formKeuangan button[type="submit"]');
+        const originalText = btnSave ? btnSave.innerHTML : 'Simpan';
         
-        let finalChannel = chan;
-        if(chan === 'Transfer Bank' && transaksiRekId.value) {
-            const opt = transaksiRekId.options[transaksiRekId.selectedIndex];
-            finalChannel = `TF ${opt.textContent}`;
+        if (btnSave) {
+            btnSave.disabled = true;
+            btnSave.style.opacity = '0.7';
+            btnSave.innerText = 'Mengunggah...';
         }
 
-        if(tipe === 'pengeluaran' && !['Prive / Tarik Tunai'].includes(kat)) {
-            const checkNominal = window.editingId ? (nominal - window.oldNominal) : nominal;
-            if(checkNominal > 0) {
-                if(!await checkSaldoCukup(finalChannel, checkNominal, finalChannel)) return;
-            }
-        }
-
-        let buktiUrl = window.existingKeuBukti || null;
-        if(inpBuktiKeuangan && inpBuktiKeuangan.files.length > 0) {
-            window.showToast('Mengompres & Mengunggah bukti...', 'info');
-            const b64 = await compressImage(inpBuktiKeuangan.files[0]);
-            buktiUrl = await uploadToGDrive(b64, "BUKTI_KEUANGAN");
-        }
-
-        let finalKat = kat;
-        if(kat === 'Lainnya (Tulis Sendiri)') {
-            finalKat = kategoriLainInput.value.trim();
-            if(!finalKat) return window.showAlert('Tuliskan nama kategori baru!', 'warning');
-
-            // AUTO-REGISTER CATEGORY
-            const list = tipe === 'pemasukan' ? officialKatIn : officialKatOut;
-            if (!list.includes(finalKat)) {
-                list.push(finalKat);
-                const key = tipe === 'pemasukan' ? 'KAT_KEU_IN' : 'KAT_KEU_OUT';
-                await supabase.from('master_data').upsert({ id: 'ID-' + key, key, val: list }, { onConflict: 'key' });
-                console.log(`[Category] New category registered: ${finalKat}`);
-            }
-        }
-
-        if(tipe === 'mutasi') {
-            const dest = transaksiMutasiTujuan.value;
-            let destChannel = dest;
-            if(dest === 'Tunai') destChannel = 'Tunai / Cash';
-            else {
-                const opt = transaksiMutasiTujuan.options[transaksiMutasiTujuan.selectedIndex];
-                destChannel = opt.textContent;
-            }
-
-            if(finalChannel === destChannel) return window.showAlert('Sumber dan Tujuan tidak boleh sama!', 'warning');
+        try {
+            const id = window.editingId || ('FIN-' + Date.now().toString().slice(-6));
+            const tipe = tipeInput.value;
+            const nominal = window.parseNum(nominalInput.value);
+            const tgl = tanggalInput.value;
+            const kat = kategoriInput.value;
+            const ket = keteranganInput.value;
+            const chan = transaksiChannel.value;
             
-            window.showToast('Memproses Mutasi...', 'info');
-            const mutasiId = 'MUT-' + Date.now().toString().slice(-6);
-            
-            // 1. Record Pengeluaran (Out)
-            const pOut = {
-                id: mutasiId + '-OUT', tipe: 'pengeluaran', tanggal: tgl,
-                kategori: 'Mutasi Antar Rekening', nominal, keterangan: `Transfer ke ${destChannel} | ${ket}`,
-                channel: finalChannel, bukti_url: buktiUrl
-            };
-            
-            // 2. Record Pemasukan (In)
-            const pIn = {
-                id: mutasiId + '-IN', tipe: 'pemasukan', tanggal: tgl,
-                kategori: 'Mutasi Antar Rekening', nominal, keterangan: `Terima dari ${finalChannel} | ${ket}`,
-                channel: destChannel, bukti_url: buktiUrl
-            };
-
-            const { error: err1 } = await supabase.from('keuangan').insert([pOut]);
-            const { error: err2 } = await supabase.from('keuangan').insert([pIn]);
-
-            if(!err1 && !err2) {
-                window.showToast('Mutasi Saldo Berhasil!', 'success');
-                modalKeuangan.classList.remove('active');
-                renderApp();
-                return;
-            } else {
-                return window.showAlert('Gagal mutasi: ' + (err1?.message || err2?.message), 'danger');
+            let finalChannel = chan;
+            if(chan === 'Transfer Bank' && transaksiRekId.value) {
+                const opt = transaksiRekId.options[transaksiRekId.selectedIndex];
+                finalChannel = `TF ${opt.textContent}`;
             }
-        }
 
-        const payload = {
-            id, tipe, tanggal: tgl, kategori: finalKat, nominal, keterangan: ket, channel: finalChannel, bukti_url: buktiUrl
-        };
-
-        const { error } = await supabase.from('keuangan').upsert([payload]);
-
-        if(!error) {
-            // SYNC WITH TRANSAKSI IF RELATED
-            const currentTrxId = window.oldTrxId;
-            if (currentTrxId) {
-                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', currentTrxId).single();
-                if (trx) {
-                    let updatedPaid = (parseFloat(trx.total_paid) || 0);
-                    if (window.editingId) updatedPaid = updatedPaid - window.oldNominal + nominal;
-                    else updatedPaid += nominal;
-
-                    let history = trx.history_bayar || [];
-                    const hIdx = history.findIndex(h => h.payId === id);
-                    const hData = { payId: id, tgl, nominal, channel: finalChannel, buktiUrl };
-                    if (hIdx >= 0) history[hIdx] = hData;
-                    else history.push(hData);
-
-                    await supabase.from('transaksi').update({ 
-                        total_paid: Math.max(0, updatedPaid), 
-                        history_bayar: history 
-                    }).eq('id', currentTrxId);
+            if(tipe === 'pengeluaran' && !['Prive / Tarik Tunai'].includes(kat)) {
+                const checkNominal = window.editingId ? (nominal - window.oldNominal) : nominal;
+                if(checkNominal > 0) {
+                    if(!await checkSaldoCukup(finalChannel, checkNominal, finalChannel)) return;
                 }
             }
 
-            window.showToast('Data berhasil disimpan!', 'success');
-            modalKeuangan.classList.remove('active');
-            window.editingId = null;
-            window.oldNominal = 0;
-            window.oldTrxId = null;
-            window.existingKeuBukti = null;
-            renderApp();
-        } else {
-            window.showAlert('Gagal menyimpan data: ' + error.message, 'danger');
+            let buktiUrl = window.existingKeuBukti || null;
+            if(inpBuktiKeuangan && inpBuktiKeuangan.files.length > 0) {
+                if (btnSave) btnSave.innerText = 'Menyimpan Foto...';
+                window.showToast('Mengompres & Mengunggah bukti...', 'info');
+                const b64 = await compressImage(inpBuktiKeuangan.files[0]);
+                buktiUrl = await uploadToGDrive(b64, "BUKTI_KEUANGAN");
+                if (btnSave) btnSave.innerText = 'Menyimpan Data...';
+            }
+
+            let finalKat = kat;
+            if(kat === 'Lainnya (Tulis Sendiri)') {
+                finalKat = kategoriLainInput.value.trim();
+                if(!finalKat) return window.showAlert('Tuliskan nama kategori baru!', 'warning');
+
+                // AUTO-REGISTER CATEGORY
+                const list = tipe === 'pemasukan' ? officialKatIn : officialKatOut;
+                if (!list.includes(finalKat)) {
+                    list.push(finalKat);
+                    const key = tipe === 'pemasukan' ? 'KAT_KEU_IN' : 'KAT_KEU_OUT';
+                    await supabase.from('master_data').upsert({ id: 'ID-' + key, key, val: list }, { onConflict: 'key' });
+                    console.log(`[Category] New category registered: ${finalKat}`);
+                }
+            }
+
+            if(tipe === 'mutasi') {
+                const dest = transaksiMutasiTujuan.value;
+                let destChannel = dest;
+                if(dest === 'Tunai') destChannel = 'Tunai / Cash';
+                else {
+                    const opt = transaksiMutasiTujuan.options[transaksiMutasiTujuan.selectedIndex];
+                    destChannel = opt.textContent;
+                }
+
+                if(finalChannel === destChannel) return window.showAlert('Sumber dan Tujuan tidak boleh sama!', 'warning');
+                
+                window.showToast('Memproses Mutasi...', 'info');
+                const mutasiId = 'MUT-' + Date.now().toString().slice(-6);
+                
+                // 1. Record Pengeluaran (Out)
+                const pOut = {
+                    id: mutasiId + '-OUT', tipe: 'pengeluaran', tanggal: tgl,
+                    kategori: 'Mutasi Antar Rekening', nominal, keterangan: `Transfer ke ${destChannel} | ${ket}`,
+                    channel: finalChannel, bukti_url: buktiUrl
+                };
+                
+                // 2. Record Pemasukan (In)
+                const pIn = {
+                    id: mutasiId + '-IN', tipe: 'pemasukan', tanggal: tgl,
+                    kategori: 'Mutasi Antar Rekening', nominal, keterangan: `Terima dari ${finalChannel} | ${ket}`,
+                    channel: destChannel, bukti_url: buktiUrl
+                };
+
+                const { error: err1 } = await supabase.from('keuangan').insert([pOut]);
+                const { error: err2 } = await supabase.from('keuangan').insert([pIn]);
+
+                if(!err1 && !err2) {
+                    window.showToast('Mutasi Saldo Berhasil!', 'success');
+                    modalKeuangan.classList.remove('active');
+                    renderApp();
+                    return;
+                } else {
+                    return window.showAlert('Gagal mutasi: ' + (err1?.message || err2?.message), 'danger');
+                }
+            }
+
+            const payload = {
+                id, tipe, tanggal: tgl, kategori: finalKat, nominal, keterangan: ket, channel: finalChannel, bukti_url: buktiUrl
+            };
+
+            const { error } = await supabase.from('keuangan').upsert([payload]);
+
+            if(!error) {
+                // SYNC WITH TRANSAKSI IF RELATED
+                const currentTrxId = window.oldTrxId;
+                if (currentTrxId) {
+                    const { data: trx } = await supabase.from('transaksi').select('*').eq('id', currentTrxId).single();
+                    if (trx) {
+                        let updatedPaid = (parseFloat(trx.total_paid) || 0);
+                        if (window.editingId) updatedPaid = updatedPaid - window.oldNominal + nominal;
+                        else updatedPaid += nominal;
+
+                        let history = trx.history_bayar || [];
+                        const hIdx = history.findIndex(h => h.payId === id);
+                        const hData = { payId: id, tgl, nominal, channel: finalChannel, buktiUrl };
+                        if (hIdx >= 0) history[hIdx] = hData;
+                        else history.push(hData);
+
+                        await supabase.from('transaksi').update({ 
+                            total_paid: Math.max(0, updatedPaid), 
+                            history_bayar: history 
+                        }).eq('id', currentTrxId);
+                    }
+                }
+
+                window.showToast('Data berhasil disimpan!', 'success');
+                modalKeuangan.classList.remove('active');
+                window.editingId = null;
+                window.oldNominal = 0;
+                window.oldTrxId = null;
+                window.existingKeuBukti = null;
+                renderApp();
+            } else {
+                window.showAlert('Gagal menyimpan data: ' + error.message, 'danger');
+            }
+        } catch (err) {
+            console.error('Unhandled Error during save:', err);
+            window.showAlert('Terjadi kesalahan tidak terduga: ' + err.message, 'danger');
+        } finally {
+            if (btnSave) {
+                btnSave.disabled = false;
+                btnSave.style.opacity = '1';
+                btnSave.innerHTML = originalText;
+            }
         }
     };
 
