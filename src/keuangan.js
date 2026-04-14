@@ -59,6 +59,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return data || [];
     };
 
+    const getTransaksiMap = async () => {
+        const { data, error } = await supabase.from('transaksi').select('id, customer, agen');
+        if(error) return {};
+        const map = {};
+        (data || []).forEach(t => map[t.id] = t);
+        return map;
+    };
+
     const getBankAccounts = async () => {
         const { data } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single();
         if (data && data.val && data.val.length > 0) return data.val;
@@ -88,10 +96,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function renderApp() {
         let inTotal = 0;
         let outTotal = 0;
-        const data = await getKeuanganData();
+        const [data, trxMap] = await Promise.all([getKeuanganData(), getTransaksiMap()]);
         if(tableBody) tableBody.innerHTML = '';
         
-        let processed = [...data];
+        let processed = data.map(item => ({
+            ...item,
+            transaksi: item.related_trx_id ? trxMap[item.related_trx_id] : null
+        }));
 
         // Search Filter
         const searchInput = document.getElementById('inpSearchKeuangan');
@@ -101,7 +112,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 (item.id || '').toLowerCase().includes(searchKeyword) ||
                 (item.kategori || '').toLowerCase().includes(searchKeyword) ||
                 (item.keterangan || '').toLowerCase().includes(searchKeyword) ||
-                (item.channel || '').toLowerCase().includes(searchKeyword)
+                (item.channel || '').toLowerCase().includes(searchKeyword) ||
+                (item.transaksi?.customer?.nama || '').toLowerCase().includes(searchKeyword) ||
+                (item.transaksi?.agen?.nama || '').toLowerCase().includes(searchKeyword)
             );
         }
 
@@ -196,8 +209,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tr.innerHTML = `
                     <td style="font-size:0.7rem; color:var(--text-muted)">${item.id || '-'}</td>
                     <td>${formatDate(item.tanggal)}</td>
+                    <td style="font-size:0.85rem;">${item.transaksi?.customer?.nama || '<span style="opacity:0.3">-</span>'}</td>
+                    <td style="font-size:0.85rem;">${item.transaksi?.agen?.nama || '<span style="opacity:0.3">-</span>'}</td>
                     <td><span class="badge ${isIncome ? 'badge-success' : 'badge-danger'}">${item.kategori}</span></td>
-                    <td>${item.keterangan || '-'}</td>
+                    <td style="font-size:0.85rem;">${item.keterangan || '-'}</td>
                     <td style="color: ${isIncome ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">
                         ${isRestrictedFinance ? '***' : (isIncome ? '+' : '-') + ' ' + formatRp(item.nominal)}
                     </td>
