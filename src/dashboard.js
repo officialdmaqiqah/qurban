@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // 4. PROFIT CALCULATION (SEASONAL - SYNCED WITH REPORT)
-        let omzet = 0, hpp = 0, komisi = 0, saving = 0;
+        let omzet = 0, hpp = 0, komisi = 0, saving = 0, totalPaid = 0;
         
         (trxDbAll || []).forEach(t => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
@@ -138,6 +138,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             omzet += (parseFloat(t.total_deal || t.totalDeal) || 0);
             if(t.added_cost) omzet += parseFloat(t.added_cost);
             if(t.admin_fee) omzet += parseFloat(t.admin_fee);
+
+            // Total Paid untuk hitung Piutang
+            totalPaid += (parseFloat(t.total_paid || t.totalPaid) || 0);
 
             // HPP & Saving per Item
             if(t.items) {
@@ -179,12 +182,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         const netProfit = omzet - hpp - komisi - operatingExpenses - (deadLossRaw - deadKomp) - saving;
+        const piutang = omzet - totalPaid;
 
         // Update DOM
         document.getElementById('dashTotalSaldoKas').textContent = formatRp(totalSaldoKasBank);
         document.getElementById('dashHutangAgen').textContent = formatRp(totalHutangKomisi);
         document.getElementById('dashSaldoNetto').textContent = formatRp(totalSaldoKasBank - totalHutangKomisi);
         document.getElementById('dashNilaiAsetStok').textContent = formatRp(nilaiAsetStok);
+        document.getElementById('dashPiutang').textContent = formatRp(piutang);
         document.getElementById('dashPemasukan').textContent = formatRp(totalPemasukan);
         document.getElementById('dashPengeluaran').textContent = formatRp(totalPengeluaran);
         
