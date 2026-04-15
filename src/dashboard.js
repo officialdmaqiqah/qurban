@@ -127,65 +127,72 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // 4. PROFIT & PIUTANG CALCULATION (SEASONAL - SYNCED WITH REPORT)
-        let omzet = 0, hpp = 0, komisi = 0, saving = 0;
+        // 4. PROFIT & PIUTANG CALCULATION (SEASONAL - SYNCED WITH REPORT LOGIC)
+        const parseNum = (val) => {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            return parseFloat(String(val).replace(/[^0-9.-]+/g, "")) || 0;
+        };
+
+        let omzet = 0, hpp = 0, komisi = 0, saving = 0, totalPaidFinance = 0;
         
+        // 4.1 PENJUALAN & HPP
         (trxDbAll || []).forEach(t => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
             if (dt < startSeason || dt > endSeason) return;
 
-            // Omzet (Termasuk Added Cost & Admin Fee)
-            omzet += (parseFloat(t.total_deal || t.totalDeal) || 0);
-            if(t.added_cost) omzet += parseFloat(t.added_cost);
-            if(t.admin_fee) omzet += parseFloat(t.admin_fee);
+            // Omzet (Deal + Added Cost + Admin Fee)
+            omzet += parseNum(t.total_deal || t.totalDeal);
+            if(t.added_cost) omzet += parseNum(t.added_cost);
+            if(t.admin_fee) omzet += parseNum(t.admin_fee);
 
             // HPP & Saving per Item
             if(t.items) {
                 t.items.forEach(item => {
                     const g = goatsDb.find(x => x.id === item.goatId);
-                    hpp += (parseFloat(g?.harga_nota) || 0);
-                    saving += (parseFloat(g?.saving) || 0);
+                    hpp += parseNum(g?.harga_nota);
+                    saving += parseNum(g?.saving);
                 });
             }
 
             // Komisi
-            komisi += (parseFloat(t.komisi?.nominal) || 0);
+            komisi += parseNum(t.komisi?.nominal);
         });
 
-        // Hitung Total Terbayar dari Tabel Keuangan (Sesuai Laporan Strategis)
-        let totalPaidFinance = 0;
-        (keuanganDb || []).forEach(f => {
-            const dt = new Date(f.tanggal);
-            if (dt < startSeason || dt > endSeason) return;
-
-            const kat = f.kategori || '';
-            if (f.tipe === 'pemasukan' && (kat === 'Penjualan' || kat === 'Pelunasan Order' || kat === 'DP Order')) {
-                totalPaidFinance += (parseFloat(f.nominal) || 0);
-            }
-        });
-
+        // 4.2 BIAYA & PEMBAYARAN (KEUANGAN)
         let operatingExpenses = 0;
         let deadLossRaw = 0;
         let deadKomp = 0;
 
-        (keuanganDb || []).forEach(item => {
-            const dt = new Date(item.tanggal);
+        (keuanganDb || []).forEach(f => {
+            const dt = new Date(f.tanggal);
             if (dt < startSeason || dt > endSeason) return;
 
-            const kat = item.kategori || '';
-            const nom = parseFloat(item.nominal) || 0;
+            const katLine = (f.kategori || '').toLowerCase().trim();
+            const nom = parseNum(f.nominal);
 
-            if ((item.channel || '').toLowerCase().includes('non-kas')) {
-                if (item.tipe === 'pengeluaran') deadLossRaw += nom;
-                else if (item.tipe === 'pemasukan') deadKomp += nom;
+            if ((f.channel || '').toLowerCase().includes('non-kas')) {
+                // Logika Non-Kas (Rugi Mati)
+                if (f.tipe === 'pengeluaran') deadLossRaw += nom;
+                else if (f.tipe === 'pemasukan') deadKomp += nom;
             } else {
-                if (item.tipe === 'pengeluaran') {
-                    // SINKRONISASI KATEGORI SESUAI LAPORAN
-                    if (kat !== 'Bayar Supplier' && kat !== 'Pelunasan Supplier') {
+                // Logika Kas/Bank Real
+                if (f.tipe === 'pengeluaran') {
+                    // SINKRONISASI KATEGORI (Case-Insensitive)
+                    const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
+                    if (!isPurchasing) {
                         operatingExpenses += nom;
                     }
-                } else if (item.tipe === 'pemasukan') {
-                    if (kat === 'Kompensasi Supplier') deadKomp += nom;
+                } else if (f.tipe === 'pemasukan') {
+                    // SINKRONISASI PEMBAYARAN (Untuk Piutang)
+                    const isSalesPayment = katLine === 'penjualan' || katLine === 'pelunasan order' || katLine === 'dp order';
+                    if (isSalesPayment) {
+                        totalPaidFinance += nom;
+                    }
+                    // Kompensasi Supplier
+                    if (katLine === 'kompensasi supplier') {
+                        deadKomp += nom;
+                    }
                 }
             }
         });
