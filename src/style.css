@@ -2055,12 +2055,25 @@ body.light-mode .balance-card {
     }
 
     .filter-bar-keu {
-        padding: 1rem !important;
+        padding: 0.85rem !important;
         gap: 0.75rem !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
     }
     
     .filter-bar-keu > div {
-        flex: 1 1 100% !important;
+        min-width: 0 !important; /* Prevent grid breakout */
+    }
+
+    /* Kotak Pencarian tetap lebar penuh */
+    .filter-bar-keu > div:first-child {
+        grid-column: span 2 !important;
+    }
+
+    .form-label {
+        font-size: 0.7rem !important;
+        margin-bottom: 4px !important;
+        display: block !important;
     }
 }
 
