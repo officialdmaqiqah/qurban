@@ -376,10 +376,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const isBank = chan.toLowerCase().includes('tf ') || chan.toLowerCase().includes('bank');
                 const isKasOps = chan === 'Kas Operasional';
                 
-                // Clean label: Bank Mandiri - 1690004605256 (Husni Thamrin) -> Bank Mandiri - 1690004605256
+                // Clean label: Bank Mandiri - 1690004605256 (Husni Thamrin) -> Bank Mandiri
                 let label = chan.replace('TF ', 'Bank ');
-                if (label.includes('(')) {
+                if (label.includes(' (')) {
                     label = label.split(' (')[0];
+                }
+                if (label.includes(' - ')) {
+                    label = label.split(' - ')[0];
                 }
 
                 const isHighlighted = prevChannel && chan === prevChannel;
@@ -395,8 +398,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                             ${isRestrictedFinance ? '********' : formatRp(val)}
                         </div>
                         <div class="balance-subinfo">
-                            <span style="color:var(--success)">⬇️ ${formatRp(inVal)}</span>
-                            <span style="color:var(--danger)">⬆️ ${formatRp(outVal)}</span>
+                            <span style="color:var(--success)">
+                                <span class="icon-emoji">⬇️</span> ${formatRp(inVal)}
+                            </span>
+                            <span style="color:var(--danger)">
+                                <span class="icon-emoji">⬆️</span> ${formatRp(outVal)}
+                            </span>
                         </div>
                     </div>
                 </div>`;
