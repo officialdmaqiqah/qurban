@@ -344,7 +344,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             for (const [chan, val] of Object.entries(balances)) {
                 if(chan.toLowerCase().includes('non-kas') && val === 0) continue;
                 const isBank = chan.toLowerCase().includes('tf ') || chan.toLowerCase().includes('bank');
-                const icon = isBank ? '🏦' : '💵';
+                const isKasOps = chan === 'Kas Operasional';
+                const icon = isBank ? '🏦' : (isKasOps ? '🏷️' : '💵');
                 const label = chan.replace('TF ', 'Bank ');
                 const isHighlighted = prevChannel && chan === prevChannel;
                 containerBalance.innerHTML += `
@@ -440,6 +441,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if(o.textContent.includes(rekLabel)) o.selected = true;
                 transaksiRekId.appendChild(o);
             });
+        } else if (chan === 'Kas Operasional') {
+            transaksiChannel.value = 'Kas Operasional';
+            containerTransaksiRek.style.display = 'none';
         } else {
             transaksiChannel.value = (chan === 'QRIS') ? 'QRIS' : 'Tunai';
             containerTransaksiRek.style.display = 'none';
@@ -519,6 +523,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const dest = transaksiMutasiTujuan.value;
                 let destChannel = dest;
                 if(dest === 'Tunai') destChannel = 'Tunai / Cash';
+                else if(dest === 'Kas Operasional') destChannel = 'Kas Operasional';
                 else {
                     const opt = transaksiMutasiTujuan.options[transaksiMutasiTujuan.selectedIndex];
                     destChannel = opt.textContent;
@@ -713,7 +718,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         containerTransaksiRek.style.display = 'none';
         
         // Populate Tujuan
-        transaksiMutasiTujuan.innerHTML = '<option value="Tunai">Tunai / Cash</option>';
+        transaksiMutasiTujuan.innerHTML = '<option value="Tunai">💵 Tunai / Cash</option><option value="Kas Operasional">🏷️ Kas Operasional</option>';
         const reks = await getBankAccounts();
         reks.forEach(r => {
             const o = document.createElement('option');
