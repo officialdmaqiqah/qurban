@@ -114,6 +114,14 @@ a:hover {
   filter: brightness(1.2);
 }
 
+.text-right { text-align: right !important; }
+.text-success { color: var(--success) !important; }
+.text-danger { color: var(--danger) !important; }
+.text-warning { color: var(--warning) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-premium { color: var(--primary) !important; }
+.font-bold { font-weight: 700 !important; }
+
 /* ===== UTILITIES & COMPONENTS ===== */
 .btn {
   display: inline-flex;

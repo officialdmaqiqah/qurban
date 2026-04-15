@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const totalExp = Object.values(cats).reduce((s,v) => s+v, 0) || 1;
             Object.keys(cats).sort((a,b) => cats[b] - cats[a]).forEach(k => {
-                bodyCat.innerHTML += `<tr><td>${k}</td><td align="right">${formatRp(cats[k])}</td><td align="right">${(cats[k]/totalExp*100).toFixed(1)}%</td></tr>`;
+                bodyCat.innerHTML += `<tr><td>${k}</td><td class="text-right">${formatRp(cats[k])}</td><td class="text-right">${(cats[k]/totalExp*100).toFixed(1)}%</td></tr>`;
             });
         }
 
@@ -418,9 +418,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <tr>
                         <td><strong>${p.name}</strong></td>
                         <td><small>${p.type}</small></td>
-                        <td align="right">${p.count} Ekor</td>
-                        <td align="right" style="font-weight:600">${formatRp(p.deal)}</td>
-                        <td align="right" style="color:var(--success)">${formatRp(p.profit / (p.count || 1))}</td>
+                        <td class="text-right">${p.count} Ekor</td>
+                        <td class="text-right" style="font-weight:600">${formatRp(p.deal)}</td>
+                        <td class="text-right" style="color:var(--success)">${formatRp(p.profit / (p.count || 1))}</td>
                     </tr>
                 `;
             });
