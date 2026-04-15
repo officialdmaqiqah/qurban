@@ -127,21 +127,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // 4. PROFIT CALCULATION (SEASONAL - GLOBAL)
-        let grossProfitSales = 0;
+        // 4. PROFIT CALCULATION (SEASONAL - SYNCED WITH REPORT)
+        let omzet = 0, hpp = 0, komisi = 0, saving = 0;
+        
         (trxDbAll || []).forEach(t => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
             if (dt < startSeason || dt > endSeason) return;
 
+            // Omzet (Termasuk Added Cost & Admin Fee)
+            omzet += (parseFloat(t.total_deal || t.totalDeal) || 0);
+            if(t.added_cost) omzet += parseFloat(t.added_cost);
+            if(t.admin_fee) omzet += parseFloat(t.admin_fee);
+
+            // HPP & Saving per Item
             if(t.items) {
                 t.items.forEach(item => {
-                    const k = goatsDb.find(g => g.id === item.goatId);
-                    const nota = k ? (parseFloat(k.harga_nota) || 0) : 0;
-                    const saving = k ? (parseFloat(k.saving) || 0) : 0;
-                    grossProfitSales += ((parseFloat(item.hargaDeal) || 0) - nota - saving);
+                    const g = goatsDb.find(x => x.id === item.goatId);
+                    hpp += (parseFloat(g?.harga_nota) || 0);
+                    saving += (parseFloat(g?.saving) || 0);
                 });
             }
-            grossProfitSales -= (t.komisi ? (parseFloat(t.komisi.nominal) || 0) : 0);
+
+            // Komisi
+            komisi += (parseFloat(t.komisi?.nominal) || 0);
         });
 
         let operatingExpenses = 0;
@@ -156,24 +164,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             const nom = parseFloat(item.nominal) || 0;
 
             if ((item.channel || '').toLowerCase().includes('non-kas')) {
-                // Logika Non-Kas (Akuntansi Rugi Mati)
                 if (item.tipe === 'pengeluaran') deadLossRaw += nom;
                 else if (item.tipe === 'pemasukan') deadKomp += nom;
             } else {
-                // Logika Kas/Bank Real
                 if (item.tipe === 'pengeluaran') {
-                    // SINKRONISASI: Exclude pembayaran supplier agar tidak double counting (karena sudah masuk HPP)
+                    // SINKRONISASI KATEGORI SESUAI LAPORAN
                     if (kat !== 'Bayar Supplier' && kat !== 'Pelunasan Supplier') {
                         operatingExpenses += nom;
                     }
                 } else if (item.tipe === 'pemasukan') {
-                    // SINKRONISASI: Ambil kompensasi supplier untuk mengurangi nilai rugi mati
                     if (kat === 'Kompensasi Supplier') deadKomp += nom;
                 }
             }
         });
 
-        const netProfit = grossProfitSales - operatingExpenses - (deadLossRaw - deadKomp);
+        const netProfit = omzet - hpp - komisi - operatingExpenses - (deadLossRaw - deadKomp) - saving;
 
         // Update DOM
         document.getElementById('dashTotalSaldoKas').textContent = formatRp(totalSaldoKasBank);
