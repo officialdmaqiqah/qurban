@@ -860,7 +860,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             trxs.forEach(t => {
                 const sisa = (t.total_deal || 0) - (t.total_paid || 0);
                 // Pecah data per item (kambing)
-                (t.items || []).forEach(it => {
+                (t.items || []).forEach((it, idx) => {
                     const addr = t.customer?.alamat || {};
                     const fullAddress = `${addr.jalan || ''}, ${addr.desa || ''}, ${addr.kec || ''}, ${addr.kab || ''}`.replace(/^, |, $/g, '').replace(/, , /g, ', ');
                     
@@ -878,9 +878,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Batch': it.batch || '',
                         'Nama Sohibul': it.namaSohibul || '',
                         'Harga Deal Item': parseFloat(it.hargaDeal) || 0,
-                        'Total Nota': parseFloat(t.total_deal) || 0,
-                        'Total DP/Bayar': parseFloat(t.total_paid) || 0,
-                        'Sisa Tagihan Nota': parseFloat(sisa) || 0,
+                        'Total Nota': idx === 0 ? (parseFloat(t.total_deal) || 0) : 0,
+                        'Total DP/Bayar': idx === 0 ? (parseFloat(t.total_paid) || 0) : 0,
+                        'Sisa Tagihan Nota': idx === 0 ? (parseFloat(sisa) || 0) : 0,
                         'Status Komisi': t.komisi?.status || ''
                     });
                 });
