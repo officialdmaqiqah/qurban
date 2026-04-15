@@ -185,12 +185,67 @@ document.addEventListener('DOMContentLoaded', async () => {
         const [data, trxMap] = await Promise.all([getKeuanganData(), getTransaksiMap()]);
         if(tableBody) tableBody.innerHTML = '';
         
+        // ── Populate filter dropdowns dynamically ────────────────────
+        const filterChannel = document.getElementById('filterChannel');
+        const filterKategori = document.getElementById('filterKategori');
+        const filterTipe = document.getElementById('filterTipe');
+
+        const prevChannel = filterChannel ? filterChannel.value : '';
+        const prevKategori = filterKategori ? filterKategori.value : '';
+        const prevTipe = filterTipe ? filterTipe.value : '';
+
+        // Collect unique channels & categories from all data
+        const uniqueChannels = [...new Set(data.map(d => {
+            let ch = d.channel || 'Tunai / Cash';
+            if(['Cash','Tunai','-','Tunai/Lainnya'].includes(ch)) ch = 'Tunai / Cash';
+            return ch;
+        }))].sort();
+        const uniqueKategori = [...new Set(data.map(d => d.kategori).filter(Boolean))].sort();
+
+        if(filterChannel) {
+            filterChannel.innerHTML = '<option value="">Semua Channel</option>';
+            uniqueChannels.forEach(ch => {
+                const o = document.createElement('option'); o.value = ch; o.textContent = ch;
+                filterChannel.appendChild(o);
+            });
+            filterChannel.value = prevChannel; // restore selection
+        }
+        if(filterKategori) {
+            filterKategori.innerHTML = '<option value="">Semua Kategori</option>';
+            uniqueKategori.forEach(k => {
+                const o = document.createElement('option'); o.value = k; o.textContent = k;
+                filterKategori.appendChild(o);
+            });
+            filterKategori.value = prevKategori;
+        }
+
+        // ── Map transaksi ────────────────────────────────────────────
         let processed = data.map(item => ({
             ...item,
             transaksi: item.related_trx_id ? trxMap[item.related_trx_id] : null
         }));
 
-        // Search Filter
+        // ── FILTERS ──────────────────────────────────────────────────
+        // 1. Tipe filter
+        if (prevTipe) {
+            processed = processed.filter(item => item.tipe === prevTipe);
+        }
+
+        // 2. Channel filter
+        if (prevChannel) {
+            processed = processed.filter(item => {
+                let ch = item.channel || 'Tunai / Cash';
+                if(['Cash','Tunai','-','Tunai/Lainnya'].includes(ch)) ch = 'Tunai / Cash';
+                return ch === prevChannel;
+            });
+        }
+
+        // 3. Kategori filter
+        if (prevKategori) {
+            processed = processed.filter(item => item.kategori === prevKategori);
+        }
+
+        // 4. Search Filter
         const searchInput = document.getElementById('inpSearchKeuangan');
         const searchKeyword = (searchInput ? searchInput.value : '').toLowerCase();
         if (searchKeyword) {
@@ -222,6 +277,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(emptyState) emptyState.style.display = isVisible ? 'none' : 'block';
         }
 
+        // ── Hitung saldo per channel (dari SEMUA data, bukan filtered) ──
         let balances = { 'Tunai / Cash': 0 };
         const rekenings = await getBankAccounts();
         rekenings.forEach(acc => { balances[`TF ${acc.bank} - ${acc.norek} (${acc.an})`] = 0; });
@@ -230,14 +286,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             const channelRaw = item.channel || 'Tunai / Cash';
             let channelName = channelRaw;
             if(['Cash', 'Tunai', 'Tunai / Cash', '-', 'Tunai/Lainnya'].includes(channelName)) channelName = 'Tunai / Cash';
+            if(!balances.hasOwnProperty(channelName)) balances[channelName] = 0;
+            if (item.tipe === 'pemasukan') balances[channelName] += (parseFloat(item.nominal) || 0);
+            if (item.tipe === 'pengeluaran') balances[channelName] -= (parseFloat(item.nominal) || 0);
+        });
+
+        // ── Hitung total pemasukan/pengeluaran dari DATA YANG DIFILTER ──
+        const hasFilter = prevTipe || prevChannel || prevKategori || searchKeyword;
+        processed.forEach(item => {
+            const channelRaw = item.channel || 'Tunai / Cash';
+            let channelName = channelRaw;
+            if(['Cash', 'Tunai', 'Tunai / Cash', '-', 'Tunai/Lainnya'].includes(channelName)) channelName = 'Tunai / Cash';
             const isNonKas = channelName.toLowerCase().includes('non-kas') || channelName.toLowerCase().includes('lainnya');
             if (!isNonKas) {
                 if (item.tipe === 'pemasukan') inTotal += (parseFloat(item.nominal) || 0);
                 if (item.tipe === 'pengeluaran') outTotal += (parseFloat(item.nominal) || 0);
             }
-            if(!balances.hasOwnProperty(channelName)) balances[channelName] = 0;
-            if (item.tipe === 'pemasukan') balances[channelName] += (parseFloat(item.nominal) || 0);
-            if (item.tipe === 'pengeluaran') balances[channelName] -= (parseFloat(item.nominal) || 0);
         });
 
         const isRestrictedFinance = typeof window.isRestricted === 'function' ? window.isRestricted('hideKeuangan') : false;
@@ -282,8 +346,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const isBank = chan.toLowerCase().includes('tf ') || chan.toLowerCase().includes('bank');
                 const icon = isBank ? '🏦' : '💵';
                 const label = chan.replace('TF ', 'Bank ');
+                const isHighlighted = prevChannel && chan === prevChannel;
                 containerBalance.innerHTML += `
-                <div class="balance-card">
+                <div class="balance-card" style="${isHighlighted ? 'border-color:var(--primary); box-shadow:0 0 12px rgba(99,102,241,0.3);' : ''}">
                     <div class="balance-icon">${icon}</div>
                     <div class="balance-info">
                         <div class="balance-label">${label}</div>
@@ -294,8 +359,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>`;
             }
         }
-        if(totalPemasukanEl) totalPemasukanEl.textContent = isRestrictedFinance ? '********' : formatRp(inTotal);
-        if(totalPengeluaranEl) totalPengeluaranEl.textContent = isRestrictedFinance ? '********' : formatRp(outTotal);
+
+        // Summary header — show filter badge when active
+        const filterLabel = hasFilter ? ` <span style="font-size:0.7rem; background:rgba(99,102,241,0.15); color:#6366f1; padding:2px 8px; border-radius:20px; margin-left:6px;">Filter: ${processed.length} data</span>` : '';
+        if(totalPemasukanEl) totalPemasukanEl.innerHTML = (isRestrictedFinance ? '********' : formatRp(inTotal)) + (hasFilter && !isRestrictedFinance ? filterLabel : '');
+        if(totalPengeluaranEl) totalPengeluaranEl.innerHTML = (isRestrictedFinance ? '********' : formatRp(outTotal)) + (hasFilter && !isRestrictedFinance ? filterLabel : '');
 
         document.querySelectorAll('.btn-edit-action').forEach(btn => btn.onclick = () => handleEdit(btn.dataset.id));
         document.querySelectorAll('.btn-delete-action').forEach(btn => btn.onclick = () => handleDelete(btn.dataset.id));
@@ -744,6 +812,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.getElementById('inpSearchKeuangan')?.addEventListener('input', renderApp);
+    document.getElementById('filterTipe')?.addEventListener('change', renderApp);
+    document.getElementById('filterChannel')?.addEventListener('change', renderApp);
+    document.getElementById('filterKategori')?.addEventListener('change', renderApp);
     document.getElementById('btnCloseModal')?.addEventListener('click', () => modalKeuangan.classList.remove('active'));
     document.getElementById('btnCancelModal')?.addEventListener('click', () => modalKeuangan.classList.remove('active'));
 

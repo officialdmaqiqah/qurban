@@ -226,9 +226,29 @@
                     </div>
 
                     <div class="filter-bar-keu" style="display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; background:var(--bg-card); padding:1rem; border-radius:10px; border:1px solid var(--border-color, rgba(255,255,255,0.08));">
-                        <div style="flex:1; min-width:200px;">
+                        <div style="flex:2; min-width:180px;">
                             <label class="form-label">🔍 Cari Transaksi</label>
                             <input type="text" id="inpSearchKeuangan" class="form-control" placeholder="Cari ID, Kategori, Keterangan...">
+                        </div>
+                        <div style="flex:1; min-width:120px;">
+                            <label class="form-label">📊 Tipe</label>
+                            <select id="filterTipe" class="form-control">
+                                <option value="">Semua</option>
+                                <option value="pemasukan">Pemasukan</option>
+                                <option value="pengeluaran">Pengeluaran</option>
+                            </select>
+                        </div>
+                        <div style="flex:1; min-width:150px;">
+                            <label class="form-label">💳 Channel</label>
+                            <select id="filterChannel" class="form-control">
+                                <option value="">Semua Channel</option>
+                            </select>
+                        </div>
+                        <div style="flex:1; min-width:160px;">
+                            <label class="form-label">🏷️ Kategori</label>
+                            <select id="filterKategori" class="form-control">
+                                <option value="">Semua Kategori</option>
+                            </select>
                         </div>
                     </div>
 
