@@ -279,16 +279,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // ── Hitung saldo per channel (dari SEMUA data, bukan filtered) ──
         let balances = { 'Tunai / Cash': 0 };
+        let inByChannel = { 'Tunai / Cash': 0 };
+        let outByChannel = { 'Tunai / Cash': 0 };
         const rekenings = await getBankAccounts();
-        rekenings.forEach(acc => { balances[`TF ${acc.bank} - ${acc.norek} (${acc.an})`] = 0; });
+        rekenings.forEach(acc => { 
+            const k = `TF ${acc.bank} - ${acc.norek} (${acc.an})`;
+            balances[k] = 0; inByChannel[k] = 0; outByChannel[k] = 0; 
+        });
 
         data.forEach(item => {
             const channelRaw = item.channel || 'Tunai / Cash';
             let channelName = channelRaw;
             if(['Cash', 'Tunai', 'Tunai / Cash', '-', 'Tunai/Lainnya'].includes(channelName)) channelName = 'Tunai / Cash';
-            if(!balances.hasOwnProperty(channelName)) balances[channelName] = 0;
-            if (item.tipe === 'pemasukan') balances[channelName] += (parseFloat(item.nominal) || 0);
-            if (item.tipe === 'pengeluaran') balances[channelName] -= (parseFloat(item.nominal) || 0);
+            if(!balances.hasOwnProperty(channelName)) {
+                balances[channelName] = 0;
+                inByChannel[channelName] = 0;
+                outByChannel[channelName] = 0;
+            }
+            const nom = parseFloat(item.nominal) || 0;
+            if (item.tipe === 'pemasukan') {
+                balances[channelName] += nom;
+                inByChannel[channelName] += nom;
+            }
+            if (item.tipe === 'pengeluaran') {
+                balances[channelName] -= nom;
+                outByChannel[channelName] += nom;
+            }
         });
 
         // ── Hitung total pemasukan/pengeluaran dari DATA YANG DIFILTER ──
