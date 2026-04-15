@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audit Opex Detail</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="results">Loading...</div>
+    <script>
+        const supabaseUrl = 'https://juscihvfmgibmrhmclab.supabase.co';
+        const supabaseKey = 'sb_publishable_K6phM9DpcT4aqm1nvXdkYA_h9N1fQTQ';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey); // FIXED SYNTAX
+
+        async function audit() {
+            const { data: fin } = await supabase.from('keuangan').select('*');
+            if(!fin) { document.getElementById('results').innerHTML = 'No data'; return; }
+
+            const start = new Date('2026-01-01');
+            const end = new Date('2026-12-31');
+
+            const opexItems = fin.filter(f => {
+                const dt = new Date(f.tanggal);
+                return dt >= start && dt <= end && f.tipe === 'pengeluaran' && 
+                       f.kategori !== 'Bayar Supplier' && 
+                       f.kategori !== 'Pelunasan Supplier' && 
+                       f.kategori !== 'Kerugian (Mati/Hilang)';
+            });
+
+            let totalOpex = 0;
+            const byChannel = {};
+
+            opexItems.forEach(f => {
+                const nom = parseFloat(f.nominal || 0);
+                totalOpex += nom;
+                const chan = f.channel || 'Tunai';
+                if(!byChannel[chan]) byChannel[chan] = 0;
+                byChannel[chan] += nom;
+            });
+
+            let html = '<h2>Total Opex in Laba Rugi: ' + totalOpex.toLocaleString('id-ID') + '</h2>';
+            html += '<h3>Breakdown by Channel:</h3><ul>';
+            Object.keys(byChannel).forEach(c => {
+                html += `<li>${c}: Rp ${byChannel[c].toLocaleString('id-ID')}</li>`;
+            });
+            html += '</ul>';
+
+            html += '<h3>Full Transaction List (Opex Only):</h3><table border="1"><tr><th>Tgl</th><th>Kat</th><th>Nom</th><th>Channel</th><th>Ket</th></tr>';
+            opexItems.sort((a,b) => new Date(a.tgl) - new Date(b.tgl)).forEach(f => {
+                html += `<tr><td>${f.tanggal}</td><td>${f.kategori}</td><td>${f.nominal}</td><td>${f.channel}</td><td>${f.keterangan}</td></tr>`;
+            });
+            html += '</table>';
+            
+            document.getElementById('results').innerHTML = html;
+        }
+        audit();
+    </script>
+</body>
+</html>

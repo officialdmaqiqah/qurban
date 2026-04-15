@@ -191,7 +191,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (isInSeason) {
                         // SINKRONISASI KATEGORI (Case-Insensitive)
                         const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
-                        if (!isPurchasing) {
+                        const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil');
+                        
+                        if (!isExclusion) {
                             operatingExpenses += nom;
                         }
                     }
