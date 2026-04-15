@@ -89,7 +89,7 @@
         .report-table td.text-right { 
             width: 1%; 
             white-space: nowrap; 
-            padding-left: 2rem !important;
+            padding-left: 2rem;
         }
 
         @media (max-width: 768px) {
@@ -110,6 +110,8 @@
 
             /* Clean Slim Tables for Mobile */
             .report-table td, .report-table th { padding: 10px 8px !important; font-size: 0.8rem !important; }
+            .report-table th.text-right, 
+            .report-table td.text-right { padding-left: 0.75rem !important; }
             
             .table-responsive { 
                 width: 100%; 
@@ -222,23 +224,27 @@
                     <div id="secLR" class="report-section active">
                         <h3>Laporan Laba Rugi (Profit & Loss)</h3>
                         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Menampilkan profitabilitas berdasarkan pengakuan pendapatan & beban.</p>
-                        <table class="report-table" id="tableLR">
-                            <thead>
-                                <tr><th>KETERANGAN</th><th class="text-right">NOMINAL (IDR)</th></tr>
-                            </thead>
-                            <tbody>
-                                <!-- Data by JS -->
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="report-table" id="tableLR">
+                                <thead>
+                                    <tr><th>KETERANGAN</th><th class="text-right">NOMINAL (IDR)</th></tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data by JS -->
+                                </tbody>
+                            </table>
+                        </div>
 
                         <div id="containerSavingAudit" style="margin-top:2rem; padding:1.5rem; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.1); border-radius:12px; display:none;">
                             <h5 style="color:#f59e0b; margin-bottom:1rem;">🔍 Rincian Audit Dana Saving</h5>
-                            <table class="report-table" id="tableSavingAudit" style="background:transparent;">
-                                <thead>
-                                    <tr><th>TRX ID</th><th>NO TALI</th><th>KONSUMEN</th><th class="text-right">NILAI SAVING</th></tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="report-table" id="tableSavingAudit" style="background:transparent;">
+                                    <thead>
+                                        <tr><th>TRX ID</th><th>NO TALI</th><th>KONSUMEN</th><th class="text-right">NILAI SAVING</th></tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
