@@ -822,7 +822,221 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ============================================================
+    // EXPORT EXCEL
+    // ============================================================
+    async function handleExport() {
+        const btn = document.getElementById('btnExportKeuangan');
+        if(btn) { btn.disabled = true; btn.textContent = '⏳ Memproses...'; }
+
+        try {
+            window.showToast('Mengambil data untuk export...', 'info');
+
+            // 1. Ambil semua data keuangan
+            const { data: keuData } = await supabase.from('keuangan').select('*').order('tanggal', { ascending: false });
+            if(!keuData || keuData.length === 0) {
+                window.showAlert('Tidak ada data untuk di-export.', 'warning');
+                return;
+            }
+
+            // 2. Ambil semua transaksi (penjualan kambing) yang terkait
+            const relatedTrxIds = [...new Set(keuData.map(k => k.related_trx_id).filter(Boolean))];
+            let trxMap = {};
+            if(relatedTrxIds.length > 0) {
+                const { data: trxData } = await supabase.from('transaksi').select('*').in('id', relatedTrxIds);
+                (trxData || []).forEach(t => trxMap[t.id] = t);
+            }
+
+            // 3. Ambil data agen dari master_data
+            const { data: agenMaster } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single();
+            const allAgens = agenMaster?.val || [];
+            const agenMap = {};
+            allAgens.forEach(a => agenMap[a.nama] = a);
+
+            // 4. Ambil semua kambing yang terkait (goatIds dari items transaksi)
+            const allGoatIds = [];
+            Object.values(trxMap).forEach(t => {
+                (t.items || []).forEach(item => { if(item.goatId) allGoatIds.push(item.goatId); });
+            });
+            let kambingMap = {};
+            if(allGoatIds.length > 0) {
+                const { data: kambingData } = await supabase.from('stok_kambing').select('*').in('id', allGoatIds);
+                (kambingData || []).forEach(k => kambingMap[k.id] = k);
+            }
+
+            // ── SHEET 1: Semua Transaksi ─────────────────────────────────
+            const sheet1Rows = keuData.map(item => {
+                const trx = item.related_trx_id ? trxMap[item.related_trx_id] : null;
+                const agenNama = trx?.agen?.nama || '';
+                const agenInfo = agenNama ? agenMap[agenNama] : null;
+
+                return {
+                    'ID Keuangan':      item.id || '',
+                    'Tanggal':          item.tanggal || '',
+                    'Tipe':             item.tipe ? item.tipe.toUpperCase() : '',
+                    'Kategori':         item.kategori || '',
+                    'Keterangan':       item.keterangan || '',
+                    'Nominal (Rp)':     parseFloat(item.nominal) || 0,
+                    'Channel':          item.channel || 'Tunai',
+                    'Nama Konsumen':    trx?.customer?.nama || '',
+                    'WA Konsumen':      trx?.customer?.wa1 || '',
+                    'Nama Marketing':   agenNama,
+                    'Jenis Marketing':  trx?.agen?.tipe || agenInfo?.jenis || '',
+                    'WA Marketing':     agenInfo?.wa || '',
+                    'ID Transaksi':     item.related_trx_id || '',
+                    'Bukti Foto URL':   item.bukti_url || '',
+                };
+            });
+
+            // ── SHEET 2: Detail Penjualan Kambing ────────────────────────
+            // Satu baris per kambing per transaksi (dengan info marketing & bayar)
+            const sheet2Rows = [];
+            for(const item of keuData) {
+                if(!item.related_trx_id) continue;
+                const trx = trxMap[item.related_trx_id];
+                if(!trx) continue;
+
+                const agenNama = trx.agen?.nama || '';
+                const agenInfo = agenNama ? agenMap[agenNama] : null;
+                const items = trx.items || [];
+
+                if(items.length === 0) {
+                    // Transaksi tanpa item (edge case)
+                    sheet2Rows.push({
+                        'ID Keuangan':        item.id || '',
+                        'Tanggal Bayar':      item.tanggal || '',
+                        'Jenis Bayaran':      item.kategori || '',
+                        'Nominal Bayar (Rp)': parseFloat(item.nominal) || 0,
+                        'Channel Bayar':      item.channel || 'Tunai',
+                        'ID Transaksi':       trx.id || '',
+                        'Tanggal Order':      trx.tgl_trx || '',
+                        'Total Deal (Rp)':    parseFloat(trx.total_deal) || 0,
+                        'Total Bayar (Rp)':   parseFloat(trx.total_paid) || 0,
+                        'Sisa (Rp)':          (parseFloat(trx.total_deal) || 0) - (parseFloat(trx.total_paid) || 0),
+                        // Konsumen
+                        'Nama Konsumen':      trx.customer?.nama || '',
+                        'WA Konsumen':        trx.customer?.wa1 || '',
+                        'Alamat Kabupaten':   trx.customer?.alamat?.kab || '',
+                        'Alamat Kecamatan':   trx.customer?.alamat?.kec || '',
+                        'Alamat Desa':        trx.customer?.alamat?.desa || '',
+                        'Alamat Jalan':       trx.customer?.alamat?.jalan || '',
+                        'Maps Link':          trx.customer?.alamat?.maps || '',
+                        // Marketing / Agen
+                        'Nama Marketing':     agenNama,
+                        'Jenis Marketing':    trx.agen?.tipe || agenInfo?.jenis || '',
+                        'WA Marketing':       agenInfo?.wa || '',
+                        'Komisi Marketing (Rp)': trx.komisi?.nominal || 0,
+                        'Status Komisi':      trx.komisi?.status || '',
+                        // Delivery
+                        'Tipe Delivery':      trx.delivery?.tipe || '',
+                        'Tgl Delivery':       trx.delivery?.tgl || '',
+                        // Kambing
+                        'No Tali':            '',
+                        'Batch/Kiriman':      '',
+                        'Warna Tali':         '',
+                        'Nama Sohibul':       '',
+                        'Jenis Kelamin':      '',
+                        'Berat (Kg)':         '',
+                        'Harga Kandang (Rp)': '',
+                        'Harga Deal (Rp)':    '',
+                        'Status Kesehatan':   '',
+                        'Catatan Kambing':    '',
+                    });
+                } else {
+                    // Satu baris per kambing
+                    for(const it of items) {
+                        const mb = kambingMap[it.goatId] || {};
+                        sheet2Rows.push({
+                            'ID Keuangan':        item.id || '',
+                            'Tanggal Bayar':      item.tanggal || '',
+                            'Jenis Bayaran':      item.kategori || '',
+                            'Nominal Bayar (Rp)': parseFloat(item.nominal) || 0,
+                            'Channel Bayar':      item.channel || 'Tunai',
+                            'ID Transaksi':       trx.id || '',
+                            'Tanggal Order':      trx.tgl_trx || '',
+                            'Total Deal (Rp)':    parseFloat(trx.total_deal) || 0,
+                            'Total Bayar (Rp)':   parseFloat(trx.total_paid) || 0,
+                            'Sisa (Rp)':          (parseFloat(trx.total_deal) || 0) - (parseFloat(trx.total_paid) || 0),
+                            // Konsumen
+                            'Nama Konsumen':      trx.customer?.nama || '',
+                            'WA Konsumen':        trx.customer?.wa1 || '',
+                            'Alamat Kabupaten':   trx.customer?.alamat?.kab || '',
+                            'Alamat Kecamatan':   trx.customer?.alamat?.kec || '',
+                            'Alamat Desa':        trx.customer?.alamat?.desa || '',
+                            'Alamat Jalan':       trx.customer?.alamat?.jalan || '',
+                            'Maps Link':          trx.customer?.alamat?.maps || '',
+                            // Marketing / Agen
+                            'Nama Marketing':     agenNama,
+                            'Jenis Marketing':    trx.agen?.tipe || agenInfo?.jenis || '',
+                            'WA Marketing':       agenInfo?.wa || '',
+                            'Komisi Marketing (Rp)': trx.komisi?.nominal || 0,
+                            'Status Komisi':      trx.komisi?.status || '',
+                            // Delivery
+                            'Tipe Delivery':      trx.delivery?.tipe || '',
+                            'Tgl Delivery':       trx.delivery?.tgl || '',
+                            // Kambing
+                            'No Tali':            it.noTali || mb.no_tali || '',
+                            'Batch/Kiriman':      it.batch || mb.batch || '',
+                            'Warna Tali':         it.warnaTali || mb.warna_tali || '',
+                            'Nama Sohibul':       it.namaSohibul || '',
+                            'Jenis Kelamin':      mb.jenis_kelamin || '',
+                            'Berat (Kg)':         mb.berat_kg || '',
+                            'Harga Kandang (Rp)': parseFloat(it.hargaKandang || mb.harga_kandang) || 0,
+                            'Harga Deal (Rp)':    parseFloat(it.hargaDeal) || 0,
+                            'Status Kesehatan':   mb.status_kesehatan || '',
+                            'Catatan Kambing':    mb.catatan || '',
+                        });
+                    }
+                }
+            }
+
+            // ── BUILD WORKBOOK ───────────────────────────────────────────
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1
+            const ws1 = XLSX.utils.json_to_sheet(sheet1Rows);
+            // Set column widths sheet 1
+            ws1['!cols'] = [
+                {wch:16},{wch:12},{wch:13},{wch:22},{wch:35},{wch:18},{wch:20},
+                {wch:22},{wch:16},{wch:22},{wch:20},{wch:16},{wch:14},{wch:40}
+            ];
+            XLSX.utils.book_append_sheet(wb, ws1, 'Semua Transaksi');
+
+            // Sheet 2
+            if(sheet2Rows.length > 0) {
+                const ws2 = XLSX.utils.json_to_sheet(sheet2Rows);
+                ws2['!cols'] = [
+                    {wch:16},{wch:12},{wch:20},{wch:18},{wch:16},{wch:14},{wch:12},
+                    {wch:18},{wch:18},{wch:14},{wch:22},{wch:16},{wch:20},{wch:20},
+                    {wch:16},{wch:30},{wch:35},{wch:22},{wch:20},{wch:16},{wch:20},
+                    {wch:18},{wch:16},{wch:14},{wch:14},{wch:14},{wch:16},{wch:12},
+                    {wch:10},{wch:18},{wch:16},{wch:18},{wch:30}
+                ];
+                XLSX.utils.book_append_sheet(wb, ws2, 'Detail Penjualan Kambing');
+            }
+
+            // ── DOWNLOAD ─────────────────────────────────────────────────
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+            const fileName = `Keuangan_Qurban_${dateStr}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            window.showToast(`✅ Export berhasil! File: ${fileName}`, 'success');
+
+        } catch(err) {
+            console.error('Export error:', err);
+            window.showAlert('Gagal export: ' + err.message, 'danger');
+        } finally {
+            if(btn) { btn.disabled = false; btn.innerHTML = '📥 Export Excel'; }
+        }
+    }
+
+    document.getElementById('btnExportKeuangan')?.addEventListener('click', handleExport);
+
+    // ============================================================
+
     await loadAndSyncCategories();
 
     await renderApp();
 });
+

@@ -6,6 +6,7 @@
     <title>Keuangan - Qurban Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700" rel="stylesheet">
     <link rel="stylesheet" href="src/style.css?v=3.9">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
     <style>
         .summary-grid {
@@ -216,10 +217,11 @@
                             <h3 style="margin-bottom: 0.25rem;">Riwayat Transaksi</h3>
                             <p style="font-size: 0.875rem; color: var(--text-muted);">Catatan keluar masuk dana kandang.</p>
                         </div>
-                        <div class="header-actions" style="display: flex; gap: 0.5rem; align-items:center;">
+                        <div class="header-actions" style="display: flex; gap: 0.5rem; align-items:center; flex-wrap:wrap;">
                             <button class="btn btn-primary" id="btnTambahPemasukan" style="color:#ffffff; font-weight: 300;">+ Pemasukan</button>
                             <button class="btn" style="background-color: transparent; border: 1px solid var(--danger); color: var(--danger); font-weight: 300;" id="btnTambahPengeluaran">- Pengeluaran</button>
                             <button class="btn" id="btnTambahMutasi" style="background:rgba(99,102,241,0.1); color:#6366f1; border:1px solid rgba(99,102,241,0.2); font-weight: 300;">⇄ Mutasi Saldo</button>
+                            <button class="btn" id="btnExportKeuangan" style="background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.3); font-weight: 300;">📥 Export Excel</button>
                         </div>
                     </div>
 
