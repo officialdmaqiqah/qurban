@@ -81,6 +81,16 @@
         
         .text-premium { font-weight: 600; color: var(--text-main); }
         .negative { color: #ef4444; }
+        .text-right { text-align: right !important; }
+        .text-center { text-align: center !important; }
+
+        /* Compact Column logic */
+        .report-table th.text-right, 
+        .report-table td.text-right { 
+            width: 1%; 
+            white-space: nowrap; 
+            padding-left: 2rem !important;
+        }
 
         @media (max-width: 768px) {
             .report-section { max-width: 100%; }
@@ -214,7 +224,7 @@
                         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Menampilkan profitabilitas berdasarkan pengakuan pendapatan & beban.</p>
                         <table class="report-table" id="tableLR">
                             <thead>
-                                <tr><th>KETERANGAN</th><th style="text-align:right">NOMINAL (IDR)</th></tr>
+                                <tr><th>KETERANGAN</th><th class="text-right">NOMINAL (IDR)</th></tr>
                             </thead>
                             <tbody>
                                 <!-- Data by JS -->
@@ -225,7 +235,7 @@
                             <h5 style="color:#f59e0b; margin-bottom:1rem;">🔍 Rincian Audit Dana Saving</h5>
                             <table class="report-table" id="tableSavingAudit" style="background:transparent;">
                                 <thead>
-                                    <tr><th>TRX ID</th><th>NO TALI</th><th>KONSUMEN</th><th style="text-align:right">NILAI SAVING</th></tr>
+                                    <tr><th>TRX ID</th><th>NO TALI</th><th>KONSUMEN</th><th class="text-right">NILAI SAVING</th></tr>
                                 </thead>
                                 <tbody></tbody>
                             </table>
@@ -267,7 +277,7 @@
                                         <th>ITEM (NO TALI)</th>
                                         <th>KONSUMEN & ALAMAT</th>
                                         <th>STATUS</th>
-                                        <th style="text-align:center">FOTO BUKTI</th>
+                                        <th class="text-center">FOTO BUKTI</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -285,14 +295,14 @@
                             <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px;">
                                 <h5 style="color: var(--primary); margin-bottom: 1rem; letter-spacing: 0.1em;">AKTIVA (HARTA)</h5>
                                 <table class="report-table" id="tableNR_Aktiva">
-                                    <thead><tr><th>ASET</th><th style="text-align:right">NOMINAL</th></tr></thead>
+                                    <thead><tr><th>ASET</th><th class="text-right">NOMINAL</th></tr></thead>
                                     <tbody></tbody>
                                 </table>
                             </div>
                             <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px;">
                                 <h5 style="color: var(--warning); margin-bottom: 1rem; letter-spacing: 0.1em;">PASIVA (KEWAJIBAN + MODAL)</h5>
                                 <table class="report-table" id="tableNR_Pasiva">
-                                    <thead><tr><th>SUMBER</th><th style="text-align:right">NOMINAL</th></tr></thead>
+                                    <thead><tr><th>SUMBER</th><th class="text-right">NOMINAL</th></tr></thead>
                                     <tbody></tbody>
                                 </table>
                             </div>
@@ -317,7 +327,7 @@
                                     <thead style="background: rgba(255,255,255,0.02);">
                                         <tr>
                                             <th>Keterangan Komponen</th>
-                                            <th style="text-align:right">Nilai (Rp)</th>
+                                            <th class="text-right">Nilai (Rp)</th>
                                         </tr>
                                     </thead>
                                     <tbody>
