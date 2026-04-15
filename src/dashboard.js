@@ -163,39 +163,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         let operatingExpenses = 0;
         let deadLossRaw = 0;
         let deadKomp = 0;
+        let totalPaidInFinance = 0;
+
+        // Identifikasi ID Transaksi Musim Ini untuk sinkronisasi Piutang
+        const seasonTrxIds = (trxDbAll || [])
+            .filter(t => {
+                const dtTrx = new Date(t.tgl_trx || t.tglTrx);
+                return dtTrx >= startSeason && dtTrx <= endSeason;
+            })
+            .map(t => t.id);
 
         (keuanganDb || []).forEach(f => {
             const dt = new Date(f.tanggal);
-            if (dt < startSeason || dt > endSeason) return;
-
+            const isInSeason = dt >= startSeason && dt <= endSeason;
             const katLine = (f.kategori || '').toLowerCase().trim();
             const nom = parseNum(f.nominal);
 
             if ((f.channel || '').toLowerCase().includes('non-kas')) {
-                // Logika Non-Kas (Rugi Mati)
-                if (f.tipe === 'pengeluaran') deadLossRaw += nom;
-                else if (f.tipe === 'pemasukan') deadKomp += nom;
+                // Logika Non-Kas (Rugi Mati) - Hanya jika terjadi di musim ini
+                if (isInSeason) {
+                    if (f.tipe === 'pengeluaran') deadLossRaw += nom;
+                    else if (f.tipe === 'pemasukan') deadKomp += nom;
+                }
             } else {
                 // Logika Kas/Bank Real
                 if (f.tipe === 'pengeluaran') {
-                    // SINKRONISASI KATEGORI (Case-Insensitive)
-                    const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
-                    if (!isPurchasing) {
-                        operatingExpenses += nom;
+                    if (isInSeason) {
+                        // SINKRONISASI KATEGORI (Case-Insensitive)
+                        const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
+                        if (!isPurchasing) {
+                            operatingExpenses += nom;
+                        }
                     }
                 } else if (f.tipe === 'pemasukan') {
-                    // SINKRONISASI PEMBAYARAN (Lebih Fleksibel agar tidak meleset)
-                    const isSalesPayment = katLine.includes('jual') || 
-                                         katLine.includes('lunas') || 
-                                         katLine.includes('dp') || 
-                                         katLine.includes('order');
-                                         
-                    if (isSalesPayment && !katLine.includes('kompensasi')) {
-                        totalPaidFinance += nom;
-                    }
+                    // SINKRONISASI PEMBAYARAN (Piutang)
+                    const isSalesPayment = katLine.includes('jual') || katLine.includes('lunas') || katLine.includes('dp') || katLine.includes('order');
                     
-                    // Kompensasi Supplier (Tetap spesifik)
-                    if (katLine.includes('kompensasi')) {
+                    if (isSalesPayment) {
+                        // Jika pembayaran terhubung ke Transaksi Musim Ini, hitung (abaikan tanggal bayar, misal DP 2025 untuk 2026)
+                        if (f.related_trx_id && seasonTrxIds.includes(f.related_trx_id)) {
+                            totalPaidInFinance += nom;
+                        } 
+                        // Jika tidak terhubung tapi terjadi di Musim Ini, hitung sebagai fallback
+                        else if (isInSeason) {
+                            totalPaidInFinance += nom;
+                        }
+                    }
+
+                    // Kompensasi Supplier (Hanya jika di musim ini)
+                    if (isInSeason && katLine.includes('kompensasi')) {
                         deadKomp += nom;
                     }
                 }
@@ -203,7 +219,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         const netProfit = omzet - hpp - komisi - operatingExpenses - (deadLossRaw - deadKomp) - saving;
-        const piutang = omzet - totalPaidFinance;
+        const piutang = omzet - totalPaidInFinance;
 
         // Update DOM
         document.getElementById('dashTotalSaldoKas').textContent = formatRp(totalSaldoKasBank);
