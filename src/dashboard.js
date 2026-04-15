@@ -61,24 +61,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // 1. KAS & LIKUIDITAS
-        const getSaldoChannel = (target) => {
-            let s = 0;
-            const targetClean = (target || '').toLowerCase().trim();
-            (keuanganDb || []).forEach(item => {
-                const ch = (item.channel || 'Tunai').toLowerCase().trim();
-                const isMatch = (targetClean === 'tunai') ? (ch === 'tunai' || ch.includes('cash')) : (ch === targetClean || ch.includes(targetClean));
-                if(isMatch) {
-                    if(item.tipe === 'pemasukan') s += (parseFloat(item.nominal) || 0);
-                    if(item.tipe === 'pengeluaran') s -= (parseFloat(item.nominal) || 0);
-                }
-            });
-            return s;
-        };
-
-        let totalSaldoKasBank = getSaldoChannel('Tunai');
-        rekeningDb.forEach(acc => {
-            totalSaldoKasBank += getSaldoChannel(`${acc.bank} - ${acc.norek}`);
-        });
+        let totalSaldoKasBank = (keuanganDb || []).reduce((acc, item) => {
+            const ch = (item.channel || 'Tunai').toLowerCase();
+            if (ch.includes('non-kas')) return acc;
+            const nom = parseFloat(item.nominal) || 0;
+            return acc + (item.tipe === 'pemasukan' ? nom : -nom);
+        }, 0);
 
         // 1.1 HUTANG KOMISI
         let totalHutangKomisi = 0;

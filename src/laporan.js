@@ -221,6 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         fin.forEach(f => {
             const dt = new Date(f.tanggal);
             const chan = f.channel || 'Tunai';
+            if (chan.toLowerCase().includes('non-kas')) return;
             const nom = parseFloat(f.nominal || 0);
             if(!channels[chan]) channels[chan] = { in: 0, out: 0, saldo: 0, show: false };
             
@@ -260,10 +261,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         let totalCash = 0;
         const chans = {};
         fin.forEach(f => {
-            const c = f.channel || 'Tunai';
+            const chan = f.channel || 'Tunai';
+            if (chan.toLowerCase().includes('non-kas')) return; // Abaikan channel akuntansi
+            
             const nom = f.nominal || 0;
-            if(!chans[c]) chans[c] = 0;
-            chans[c] += (f.tipe === 'pemasukan' ? 1 : -1) * nom;
+            if(!chans[chan]) chans[chan] = 0;
+            chans[chan] += (f.tipe === 'pemasukan' ? 1 : -1) * nom;
         });
         Object.keys(chans).forEach(k => {
             if(chans[k] === 0) return;
