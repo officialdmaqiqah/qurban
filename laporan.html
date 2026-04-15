@@ -42,19 +42,48 @@
             border: 1px solid var(--border-color); box-shadow: var(--shadow-md);
         }
 
-        /* Table Elegance */
-        .report-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 1rem; font-size: 0.85rem; }
-        .report-table th, .report-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .report-table th { white-space: nowrap; background: rgba(255,255,255,0.02); color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.08em; border-top: 1px solid rgba(255,255,255,0.03); }
-        .report-table th:first-child { border-top-left-radius: 8px; }
-        .report-table th:last-child { border-top-right-radius: 8px; }
-        .report-table tr:hover { background: rgba(255,255,255,0.02); }
-        .report-table td { font-variant-numeric: tabular-nums; }
-        .row-total { font-weight: 600; background: rgba(16, 185, 129, 0.05) !important; color: var(--primary); }
-        .row-grand-total { font-weight: 600; background: rgba(16, 185, 129, 0.1) !important; font-size: 1rem; border-top: 2px dashed rgba(16, 185, 129, 0.3); }
+        /* Table Elegance & Desktop Compact Mode */
+        .report-section { max-width: 950px; margin: 0 auto; }
+        
+        .report-table { 
+            width: 100%; border-collapse: separate; border-spacing: 0; 
+            margin-top: 1rem; font-size: 0.875rem; 
+            background: var(--bg-card); border-radius: 12px;
+            overflow: hidden; border: 1px solid rgba(255,255,255,0.03);
+        }
+        
+        .report-table th, .report-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .report-table th { 
+            white-space: nowrap; background: rgba(255,255,255,0.04); 
+            color: var(--text-muted); font-weight: 600; text-transform: uppercase; 
+            font-size: 0.65rem; letter-spacing: 0.1em; 
+        }
+        
+        .report-table tr:hover { background: rgba(255,255,255,0.015); }
+        .report-table td { font-variant-numeric: tabular-nums; line-height: 1.4; }
+        
+        .row-total { 
+            font-weight: 600; 
+            background: rgba(16, 185, 129, 0.03) !important; 
+            color: var(--primary); 
+            border-top: 1px solid rgba(16, 185, 129, 0.1);
+            border-bottom: 1px solid rgba(16, 185, 129, 0.1) !important;
+        }
+        
+        .row-grand-total { 
+            font-weight: 700; 
+            background: rgba(16, 185, 129, 0.08) !important; 
+            font-size: 1.1rem; 
+            border-top: 2px solid var(--primary); 
+            border-bottom: 2px solid var(--primary) !important;
+            color: var(--primary);
+        }
+        
+        .text-premium { font-weight: 600; color: var(--text-main); }
         .negative { color: #ef4444; }
 
         @media (max-width: 768px) {
+            .report-section { max-width: 100%; }
             .filter-bar { flex-direction: column; align-items: stretch; padding: 1rem; gap: 1rem; }
             .btn-group-mobile { display: flex; gap: 0.5rem; width: 100%; }
             .btn-group-mobile > button { flex: 1; padding: 0.5rem; font-size: 0.85rem !important; height: 42px !important; min-width: 0 !important; }
@@ -69,27 +98,8 @@
                 gap: 1.5rem !important;
             }
 
-            /* Premium Bagi Hasil Stacking */
-            #sectionBagiHasil div[style*="grid-template-columns: 1fr 1fr"] {
-                grid-template-columns: 1fr !important;
-            }
-
-            /* Clean Slim Tables for Mobile (Premium Glass Effect) */
-            .report-table {
-                width: 100%; border-radius: 12px;
-                overflow: hidden;
-                border: 1px solid rgba(255,255,255,0.05);
-            }
-            .report-table td {
-                padding: 10px 8px !important;
-                font-size: 0.8rem !important;
-                background: rgba(255,255,255,0.01) !important;
-            }
-            .report-table th { 
-                padding: 10px 8px !important;
-                font-size: 0.7rem !important; 
-                background: rgba(255,255,255,0.05) !important; 
-            }
+            /* Clean Slim Tables for Mobile */
+            .report-table td, .report-table th { padding: 10px 8px !important; font-size: 0.8rem !important; }
             
             .table-responsive { 
                 width: 100%; 
@@ -98,7 +108,6 @@
                 padding-bottom: 0.5rem;
             }
 
-            /* High Contrast for Interactive Elements */
             .tab-item.active { 
                 color: #ffffff !important; 
                 font-weight: 700; 
