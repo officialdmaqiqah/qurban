@@ -1994,30 +1994,44 @@ body.light-mode .balance-card {
 /* Mobile Responsiveness for Finance Grid */
 @media (max-width: 850px) {
     .premium-grid {
-        grid-template-columns: 1fr !important;
-        gap: 1rem !important;
+        /* Kembali ke 2 kolom agar tidak terlalu besar */
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
     }
     
     .balance-card {
-        padding: 1.5rem !important;
+        padding: 1rem !important;
+        min-height: 110px !important;
     }
     
+    .balance-label {
+        font-size: 0.6rem !important;
+    }
+
     .balance-value {
-        font-size: 1.5rem !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 0.35rem !important;
+    }
+
+    .balance-subinfo {
+        flex-direction: column !important; /* Susun vertikal agar ikon & angka tetap sejajar horizontal */
+        gap: 2px !important;
+        font-size: 0.75rem !important;
+    }
+
+    .balance-subinfo span {
+        width: 100%;
+        justify-content: flex-start;
+        white-space: nowrap; /* Mencegah ikon naik ke atas angka */
     }
 
     .filter-bar-keu {
-        padding: 1.25rem !important;
-        gap: 1rem !important;
+        padding: 1rem !important;
+        gap: 0.75rem !important;
     }
     
     .filter-bar-keu > div {
         flex: 1 1 100% !important;
-    }
-
-    .balance-subinfo {
-        gap: 15px !important;
-        font-size: 0.85rem !important;
     }
 }
 
