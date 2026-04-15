@@ -1923,3 +1923,101 @@ body.light-mode #lightboxLoading {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
+
+/* Finance Page Enhancements */
+.balance-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+body.light-mode .balance-card {
+    background: #ffffff;
+    border-color: rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
+}
+
+.balance-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+    background: var(--primary);
+    opacity: 0.5;
+}
+
+.balance-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.35rem;
+}
+
+.balance-value {
+    font-size: 1.35rem;
+    font-weight: 300;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.01em;
+}
+
+.balance-subinfo {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+    font-weight: 400;
+    flex-wrap: wrap;
+}
+
+.balance-subinfo span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.active-filter {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Mobile Responsiveness for Finance Grid */
+@media (max-width: 850px) {
+    .premium-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .balance-card {
+        padding: 1.5rem !important;
+    }
+    
+    .balance-value {
+        font-size: 1.5rem !important;
+    }
+
+    .filter-bar-keu {
+        padding: 1.25rem !important;
+        gap: 1rem !important;
+    }
+    
+    .filter-bar-keu > div {
+        flex: 1 1 100% !important;
+    }
+
+    .balance-subinfo {
+        gap: 15px !important;
+        font-size: 0.85rem !important;
+    }
+}
+
