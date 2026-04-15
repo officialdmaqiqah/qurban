@@ -223,6 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Update DOM
         document.getElementById('dashTotalSaldoKas').textContent = formatRp(totalSaldoKasBank);
+        document.getElementById('dashTotalTerbayar').textContent = formatRp(totalPaidInFinance);
         document.getElementById('dashHutangAgen').textContent = formatRp(totalHutangKomisi);
         document.getElementById('dashSaldoNetto').textContent = formatRp(totalSaldoKasBank - totalHutangKomisi);
         document.getElementById('dashNilaiAsetStok').textContent = formatRp(nilaiAsetStok);
