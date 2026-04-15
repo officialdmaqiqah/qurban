@@ -1993,15 +1993,21 @@ body.light-mode .balance-card {
 
 /* Mobile Responsiveness for Finance Grid */
 @media (max-width: 850px) {
+    /* Ringkasan Utama (Total) dibuat besar & penuh */
     .premium-grid {
-        /* Kembali ke 2 kolom agar tidak terlalu besar */
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    /* Rincian Channel tetap 2 kolom agar hemat tempat */
+    #containerRealtimeBalance {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 0.75rem !important;
     }
     
     .balance-card {
-        padding: 1rem !important;
-        min-height: 110px !important;
+        padding: 0.85rem !important;
+        min-height: 100px !important;
     }
     
     .balance-label {
@@ -2014,7 +2020,7 @@ body.light-mode .balance-card {
     }
 
     .balance-subinfo {
-        flex-direction: column !important; /* Susun vertikal agar ikon & angka tetap sejajar horizontal */
+        flex-direction: column !important;
         gap: 2px !important;
         font-size: 0.75rem !important;
     }
@@ -2022,7 +2028,7 @@ body.light-mode .balance-card {
     .balance-subinfo span {
         width: 100%;
         justify-content: flex-start;
-        white-space: nowrap; /* Mencegah ikon naik ke atas angka */
+        white-space: nowrap;
     }
 
     .filter-bar-keu {
