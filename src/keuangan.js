@@ -362,6 +362,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const icon = isBank ? '🏦' : (isKasOps ? '🏷️' : '💵');
                 const label = chan.replace('TF ', 'Bank ');
                 const isHighlighted = prevChannel && chan === prevChannel;
+                
+                const inVal = inByChannel[chan] || 0;
+                const outVal = outByChannel[chan] || 0;
+
                 containerBalance.innerHTML += `
                 <div class="balance-card" style="${isHighlighted ? 'border-color:var(--primary); box-shadow:0 0 12px rgba(99,102,241,0.3);' : ''}">
                     <div class="balance-icon">${icon}</div>
@@ -369,6 +373,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="balance-label">${label}</div>
                         <div class="balance-value" style="color:${val < 0 ? 'var(--danger)' : 'var(--success)'}">
                             ${isRestrictedFinance ? '********' : formatRp(val)}
+                        </div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); display:flex; gap:8px; margin-top:4px;">
+                            <span style="color:var(--success)">⬇️ ${formatRp(inVal)}</span>
+                            <span style="color:var(--danger)">⬆️ ${formatRp(outVal)}</span>
                         </div>
                     </div>
                 </div>`;
