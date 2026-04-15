@@ -1990,6 +1990,26 @@ body.light-mode .balance-card {
     border-color: var(--primary) !important;
     box-shadow: 0 0 12px rgba(99, 102, 241, 0.3) !important;
 }
+/* Filter Bar Styling */
+.filter-bar-keu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    background: var(--bg-card);
+    padding: 1.25rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    align-items: flex-end;
+}
+
+.filter-bar-keu > div {
+    flex: 1;
+}
+
+.filter-bar-keu > div:first-child {
+    flex: 2; /* Search input gets more space */
+}
 
 /* Mobile Responsiveness for Finance Grid */
 @media (max-width: 850px) {
