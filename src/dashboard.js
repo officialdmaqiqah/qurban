@@ -184,13 +184,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                         operatingExpenses += nom;
                     }
                 } else if (f.tipe === 'pemasukan') {
-                    // SINKRONISASI PEMBAYARAN (Untuk Piutang)
-                    const isSalesPayment = katLine === 'penjualan' || katLine === 'pelunasan order' || katLine === 'dp order';
-                    if (isSalesPayment) {
+                    // SINKRONISASI PEMBAYARAN (Lebih Fleksibel agar tidak meleset)
+                    const isSalesPayment = katLine.includes('jual') || 
+                                         katLine.includes('lunas') || 
+                                         katLine.includes('dp') || 
+                                         katLine.includes('order');
+                                         
+                    if (isSalesPayment && !katLine.includes('kompensasi')) {
                         totalPaidFinance += nom;
                     }
-                    // Kompensasi Supplier
-                    if (katLine === 'kompensasi supplier') {
+                    
+                    // Kompensasi Supplier (Tetap spesifik)
+                    if (katLine.includes('kompensasi')) {
                         deadKomp += nom;
                     }
                 }
