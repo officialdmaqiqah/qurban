@@ -21,6 +21,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
     };
 
+    const debounce = (func, wait) => {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    };
+
     const tableBody = document.getElementById('tableBodyKeuangan');
     const emptyState = document.getElementById('emptyState');
     const totalPemasukanEl = document.getElementById('totalPemasukan');
@@ -865,7 +877,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    document.getElementById('inpSearchKeuangan')?.addEventListener('input', renderApp);
+    document.getElementById('inpSearchKeuangan')?.addEventListener('input', debounce(() => renderApp(), 250));
     document.getElementById('filterTipe')?.addEventListener('change', renderApp);
     document.getElementById('filterChannel')?.addEventListener('change', renderApp);
     document.getElementById('filterKategori')?.addEventListener('change', renderApp);

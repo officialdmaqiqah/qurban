@@ -1925,6 +1925,11 @@ body.light-mode #lightboxLoading {
 }
 
 /* Finance Page Enhancements */
+#containerRealtimeBalance {
+    min-height: 120px; /* Mencegah layar goyang saat filter kosong */
+    transition: all 0.3s ease;
+}
+
 .balance-card {
     background: var(--bg-card);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -1932,11 +1937,17 @@ body.light-mode #lightboxLoading {
     padding: 1.25rem;
     position: relative;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease, transform 0.2s ease;
     min-height: 100px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    animation: fadeInSlide 0.4s ease-out forwards;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 body.light-mode .balance-card {
