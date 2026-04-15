@@ -341,7 +341,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const containerBalance = document.getElementById('containerRealtimeBalance');
         if(containerBalance) {
             containerBalance.innerHTML = '';
-            for (const [chan, val] of Object.entries(balances)) {
+
+            // Sort logic as requested: 1. Kas Operasional, 2. Tunai, 3. Mandiri, 4. BSI, others
+            const sortedEntries = Object.entries(balances).sort(([nameA], [nameB]) => {
+                const getPriority = (name) => {
+                    const low = name.toLowerCase();
+                    if(low === 'kas operasional') return 1;
+                    if(low.includes('tunai') || low.includes('cash')) return 2;
+                    if(low.includes('mandiri')) return 3;
+                    if(low.includes('bsi')) return 4;
+                    return 99;
+                };
+                return getPriority(nameA) - getPriority(nameB);
+            });
+
+            for (const [chan, val] of sortedEntries) {
                 if(chan.toLowerCase().includes('non-kas') && val === 0) continue;
                 const isBank = chan.toLowerCase().includes('tf ') || chan.toLowerCase().includes('bank');
                 const isKasOps = chan === 'Kas Operasional';
