@@ -499,7 +499,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initial Load
     const today = new Date();
     if(!document.getElementById('inpStartDate').value) {
-        document.getElementById('inpStartDate').value = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+        document.getElementById('inpStartDate').value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
     }
     if(!document.getElementById('inpEndDate').value) {
         document.getElementById('inpEndDate').value = today.toISOString().split('T')[0];

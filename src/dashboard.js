@@ -104,19 +104,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // 3. CASH FLOW
+        // 3. DASHBOARD FILTER PERIODE (MUSIM BERJALAN)
+        const today = new Date();
+        const startSeason = new Date(today.getFullYear(), 0, 1);
+        const endSeason = new Date(today.getFullYear(), 11, 31, 23, 59, 59);
+        const seasonYear = today.getFullYear();
+
+        // Update UI Labels
+        const elLabelPerforma = document.querySelector('h3[style*="margin-top: 2rem"]');
+        if(elLabelPerforma) elLabelPerforma.innerHTML = `📈 Performa & Profitabilitas <span style="font-size:0.75rem; background:var(--primary-transparent); color:var(--primary); padding:2px 10px; border-radius:30px; margin-left:10px; border:1px solid var(--primary);">Musim ${seasonYear}</span>`;
+
+        // 3. CASH FLOW (SEASONAL)
         let totalPemasukan = 0;
         let totalPengeluaran = 0;
         (keuanganDb || []).forEach(item => {
+            const dt = new Date(item.tanggal);
+            if (dt < startSeason || dt > endSeason) return;
+
             if(!(item.channel || '').toLowerCase().includes('non-kas')) {
                 if (item.tipe === 'pemasukan') totalPemasukan += (parseFloat(item.nominal) || 0);
                 if (item.tipe === 'pengeluaran') totalPengeluaran += (parseFloat(item.nominal) || 0);
             }
         });
 
-        // 4. PROFIT CALCULATION
+        // 4. PROFIT CALCULATION (SEASONAL)
         let grossProfitSales = 0;
         trxDb.forEach(t => {
+            const dt = new Date(t.tgl_trx || t.tglTrx);
+            if (dt < startSeason || dt > endSeason) return;
+
             if(t.items) {
                 t.items.forEach(item => {
                     const k = goatsDb.find(g => g.id === item.goatId);
@@ -131,6 +147,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let operatingExpenses = 0;
         let netLossKematian = 0;
         (keuanganDb || []).forEach(item => {
+            const dt = new Date(item.tanggal);
+            if (dt < startSeason || dt > endSeason) return;
+
             const kat = (item.kategori || '').toLowerCase();
             if((item.channel || '').toLowerCase().includes('non-kas')) {
                 if(item.tipe === 'pengeluaran') netLossKematian += (parseFloat(item.nominal) || 0);
