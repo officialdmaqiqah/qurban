@@ -127,9 +127,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // 4. PROFIT CALCULATION (SEASONAL)
+        // 4. PROFIT CALCULATION (SEASONAL - GLOBAL)
         let grossProfitSales = 0;
-        trxDb.forEach(t => {
+        (trxDbAll || []).forEach(t => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
             if (dt < startSeason || dt > endSeason) return;
 
@@ -145,23 +145,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         let operatingExpenses = 0;
-        let netLossKematian = 0;
+        let deadLossRaw = 0;
+        let deadKomp = 0;
+
         (keuanganDb || []).forEach(item => {
             const dt = new Date(item.tanggal);
             if (dt < startSeason || dt > endSeason) return;
 
-            const kat = (item.kategori || '').toLowerCase();
-            if((item.channel || '').toLowerCase().includes('non-kas')) {
-                if(item.tipe === 'pengeluaran') netLossKematian += (parseFloat(item.nominal) || 0);
-                else if(item.tipe === 'pemasukan') netLossKematian -= (parseFloat(item.nominal) || 0);
+            const kat = item.kategori || '';
+            const nom = parseFloat(item.nominal) || 0;
+
+            if ((item.channel || '').toLowerCase().includes('non-kas')) {
+                // Logika Non-Kas (Akuntansi Rugi Mati)
+                if (item.tipe === 'pengeluaran') deadLossRaw += nom;
+                else if (item.tipe === 'pemasukan') deadKomp += nom;
             } else {
-                if(item.tipe === 'pengeluaran' && !kat.includes('beli kambing') && !kat.includes('pelunasan supplier')) {
-                    operatingExpenses += (parseFloat(item.nominal) || 0);
+                // Logika Kas/Bank Real
+                if (item.tipe === 'pengeluaran') {
+                    // SINKRONISASI: Exclude pembayaran supplier agar tidak double counting (karena sudah masuk HPP)
+                    if (kat !== 'Bayar Supplier' && kat !== 'Pelunasan Supplier') {
+                        operatingExpenses += nom;
+                    }
+                } else if (item.tipe === 'pemasukan') {
+                    // SINKRONISASI: Ambil kompensasi supplier untuk mengurangi nilai rugi mati
+                    if (kat === 'Kompensasi Supplier') deadKomp += nom;
                 }
             }
         });
 
-        const netProfit = grossProfitSales - operatingExpenses - netLossKematian;
+        const netProfit = grossProfitSales - operatingExpenses - (deadLossRaw - deadKomp);
 
         // Update DOM
         document.getElementById('dashTotalSaldoKas').textContent = formatRp(totalSaldoKasBank);
