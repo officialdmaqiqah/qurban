@@ -128,8 +128,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).forEach(f => {
             const nom = parseFloat(f.nominal || 0);
             if(f.tipe === 'pengeluaran') {
+                const katLine = (f.kategori || '').toLowerCase();
                 if(f.kategori === 'Kerugian (Mati/Hilang)') deadLossRaw += nom;
-                else if(f.kategori !== 'Bayar Supplier' && f.kategori !== 'Pelunasan Supplier') opex += nom;
+                else if(
+                    !katLine.includes('bayar supplier') && 
+                    !katLine.includes('pelunasan supplier') && 
+                    !katLine.includes('komisi') && 
+                    !katLine.includes('bagi hasil')
+                ) {
+                    opex += nom;
+                }
             } else if(f.tipe === 'pemasukan') {
                 if(f.kategori === 'Kompensasi Supplier') deadKomp += nom;
             }
