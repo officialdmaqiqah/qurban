@@ -375,8 +375,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if(chan.toLowerCase().includes('non-kas') && val === 0) continue;
                 const isBank = chan.toLowerCase().includes('tf ') || chan.toLowerCase().includes('bank');
                 const isKasOps = chan === 'Kas Operasional';
-                const icon = isBank ? '🏦' : (isKasOps ? '🏷️' : '💵');
-                const label = chan.replace('TF ', 'Bank ');
+                
+                // Clean label: Bank Mandiri - 1690004605256 (Husni Thamrin) -> Bank Mandiri - 1690004605256
+                let label = chan.replace('TF ', 'Bank ');
+                if (label.includes('(')) {
+                    label = label.split(' (')[0];
+                }
+
                 const isHighlighted = prevChannel && chan === prevChannel;
                 
                 const inVal = inByChannel[chan] || 0;
@@ -384,15 +389,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 containerBalance.innerHTML += `
                 <div class="balance-card" style="${isHighlighted ? 'border-color:var(--primary); box-shadow:0 0 12px rgba(99,102,241,0.3);' : ''}">
-                    <div class="balance-icon">${icon}</div>
-                    <div class="balance-info">
-                        <div class="balance-label">${label}</div>
-                        <div class="balance-value" style="color:${val < 0 ? 'var(--danger)' : 'var(--success)'}">
+                    <div class="balance-info" style="padding-left: 5px;">
+                        <div class="balance-label">${label.toUpperCase()}</div>
+                        <div class="balance-value" style="color:${val < 0 ? 'var(--danger)' : 'var(--success)'}; font-size: 1.25rem;">
                             ${isRestrictedFinance ? '********' : formatRp(val)}
                         </div>
-                        <div style="font-size:0.65rem; color:var(--text-muted); display:flex; gap:8px; margin-top:4px;">
-                            <span style="color:var(--success)">⬇️ ${formatRp(inVal)}</span>
-                            <span style="color:var(--danger)">⬆️ ${formatRp(outVal)}</span>
+                        <div style="font-size:0.75rem; color:var(--text-muted); display:flex; gap:12px; margin-top:6px; font-weight: 300;">
+                            <span style="display:inline-flex; align-items:center; gap:4px; color:var(--success)">
+                                <span style="opacity:0.8;">⬇️</span> ${formatRp(inVal)}
+                            </span>
+                            <span style="display:inline-flex; align-items:center; gap:4px; color:var(--danger)">
+                                <span style="opacity:0.8;">⬆️</span> ${formatRp(outVal)}
+                            </span>
                         </div>
                     </div>
                 </div>`;
