@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const floatingWa = document.getElementById('floatingWa');
     const navToggle = document.getElementById('navToggle');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const heroConsultation = document.getElementById('heroConsultation');
     
     // 1. Affiliate & Contact Sync
     const urlParams = new URLSearchParams(window.location.search);
@@ -70,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function syncContactUI() {
         const waLink = `https://wa.me/${currentAgent.wa}?text=Halo ${currentAgent.name}, saya ingin bertanya tentang Qurban.`;
         if (floatingWa) floatingWa.href = waLink;
+        if (heroConsultation) heroConsultation.href = waLink;
         if (footerWa) {
             const formatted = currentAgent.wa.startsWith('62') ? '0' + currentAgent.wa.slice(2) : currentAgent.wa;
             footerWa.textContent = formatted.replace(/(\d{4})(\d{4})(\d+)/, '$1-$2-$3');
