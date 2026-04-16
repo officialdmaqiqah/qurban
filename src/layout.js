@@ -459,13 +459,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (emailDisplay) emailDisplay.textContent = profile.email;
 
         // Branding
-        const { data: qProfil } = await supabase.from('master_data').select('val').eq('key', 'PROFILE').single();
         const sideHeader = document.getElementById('sidebarHeaderWrapper');
-        if (sideHeader && qProfil?.val) {
+        if (sideHeader) {
             sideHeader.innerHTML = `
                 <div class="sidebar-logo">
-                    ${qProfil.val.logo ? `<img src="${qProfil.val.logo}">` : '🐐'}
-                    <span>${qProfil.val.nama}</span>
+                    <span style="font-weight: 600;">Daarul Mahabbah Qurban</span>
                 </div>`;
         }
 
