@@ -289,7 +289,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // --- AFFILIATE LINK LOGIC ---
-        const isAgen = userRole === 'agen' || !!linkedAgen;
+        const isMarketing = ['marketing_dm', 'marketing_ext', 'marketing_kandang', 'reseller'].includes(userRole);
+        const isAgen = userRole === 'agen' || !!linkedAgen || isMarketing;
         const affiliateCard = document.getElementById('affiliateCard');
         if (isAgen && affiliateCard) {
             affiliateCard.style.display = 'block';
