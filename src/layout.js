@@ -519,9 +519,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // --- GLOBAL AFFILIATE LINK INJECTOR (FOR AGENTS/MARKETING) ---
         const isMarketingRole = ['marketing_dm', 'marketing_ext', 'marketing_kandang', 'reseller', 'agen'].includes(userRole);
+        const isMasterDataPage = window.location.pathname.includes('kambing.html');
         const contentArea = document.querySelector('.content-area');
 
-        if (isMarketingRole && contentArea) {
+        if (isMarketingRole && contentArea && isMasterDataPage) {
             const username = (profile.email || '').split('@')[0];
             const baseUrl = 'dmqurban.com/etalase.html';
             const fullLink = `${baseUrl}?ref=${username}`;
