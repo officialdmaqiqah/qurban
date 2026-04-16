@@ -8,6 +8,14 @@
     
     <link rel="stylesheet" href="src/website.css">
     
+    <script>
+        // Subdomain routing: Redirect app users to the login page immediately
+        if (window.location.hostname === 'app.dmqurban.com' && 
+            (window.location.pathname === '/' || window.location.pathname.endsWith('index.html'))) {
+            window.location.replace('login.html');
+        }
+    </script>
+    
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
