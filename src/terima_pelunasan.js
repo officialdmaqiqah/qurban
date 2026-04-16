@@ -67,6 +67,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     const getAgenDb = async () => { const { data } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single(); return data?.val || []; };
 
+    const getAgentSaldo = async (agenName) => {
+        if (!agenName) return 0;
+        const { data } = await supabase.from('keuangan').select('nominal, tipe, kategori').eq('agen_name', agenName);
+        let saldo = 0;
+        (data || []).forEach(f => {
+            const isOut = f.kategori !== 'Titipan Dana Agen' || f.tipe === 'pengeluaran';
+            saldo += (isOut ? -1 : 1) * (parseFloat(f.nominal) || 0);
+        });
+        return saldo;
+    };
+
     const selOrder = document.getElementById('selOrder');
     const boxInfoOrder = document.getElementById('boxInfoOrder');
     const gridInfoOrder = document.getElementById('gridInfoOrder');
@@ -248,7 +259,40 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const updatedHistory = [...(trx.history_bayar || []), { payId, tgl, nominal, channel: finalChannel, buktiUrl }];
         await supabase.from('transaksi').update({ total_paid: trx.total_paid + realPay, total_overpaid: (trx.total_overpaid || 0) + over, history_bayar: updatedHistory }).eq('id', trxId);
-        await supabase.from('keuangan').insert([{ id: payId, tipe: 'pemasukan', tanggal: tgl, kategori: 'Pelunasan Order', nominal, channel: finalChannel, related_trx_id: trxId, bukti_url: buktiUrl }]);
+        
+        if (chan === 'Saldo Titipan Agen') {
+            const agenName = trx.agen.nama;
+            const currentSaldo = await getAgentSaldo(agenName);
+            if (currentSaldo < nominal) throw new Error(`Saldo Titipan Agen tidak cukup. Tersedia: ${window.formatRp(currentSaldo)}`);
+
+            const payIdCommon = 'PAY-' + Date.now();
+            await supabase.from('keuangan').insert([
+                { 
+                    id: payIdCommon + '-OUT', 
+                    tipe: 'pengeluaran', 
+                    tanggal: tgl, 
+                    kategori: 'Pemakaian Titipan Agen', 
+                    nominal, 
+                    channel: 'Saldo Titipan', 
+                    related_trx_id: trxId, 
+                    agen_name: agenName,
+                    keterangan: `Pemakaian titipan untuk Pelunasan Order ${trxId}`
+                },
+                { 
+                    id: payIdCommon + '-IN', 
+                    tipe: 'pemasukan', 
+                    tanggal: tgl, 
+                    kategori: 'Pelunasan Order', 
+                    nominal, 
+                    channel: 'Saldo Titipan', 
+                    related_trx_id: trxId, 
+                    agen_name: agenName,
+                    keterangan: `Pelunasan via Titipan Agen`
+                }
+            ]);
+        } else {
+            await supabase.from('keuangan').insert([{ id: payId, tipe: 'pemasukan', tanggal: tgl, kategori: 'Pelunasan Order', nominal, channel: finalChannel, related_trx_id: trxId, bukti_url: buktiUrl }]);
+        }
 
         if (sendWA && typeof window.sendWa === 'function') {
             try {
@@ -273,6 +317,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const resA = await window.sendWa(matchedAgen.wa, msgAgen);
                     if (!resA.success) {
                         window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
+                    }
+
+                    // Kirim Notifikasi Saldo Terpotong jika pakai Titipan
+                    if (chan === 'Saldo Titipan Agen') {
+                        const currentSaldo = await getAgentSaldo(matchedAgen.nama);
+                        const msgSaldo = `*NOTIFIKASI SALDO TITIPAN*\n\nHalo ${matchedAgen.nama},\nSaldo titipan Anda telah terpotong sebesar *${formatRp(nominal)}* untuk pelunasan *${trxId}*.\n\nSisa saldo titipan Anda saat ini: *${formatRp(currentSaldo)}*.\n\nTerima kasih.`;
+                        await window.sendWa(matchedAgen.wa, msgSaldo);
                     }
                 }
             } catch (e) {
@@ -329,11 +380,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnSimpanBayar.onclick = () => showChoice("Kirim WA resi?", [{ text: "Ya, Kirim", callback: () => performSaveLunas(true) }, { text: "Simpan Saja", callback: () => performSaveLunas(false) }]);
 
     inpChannelBayar.addEventListener('change', async () => {
+        const infoDiv = document.getElementById('infoSaldoTitipan');
+        const valSpan = document.getElementById('valSaldoTitipan');
+        if (infoDiv) infoDiv.style.display = 'none';
+
         if(inpChannelBayar.value === 'Transfer Bank') {
             const reks = await getBankAccounts();
             containerRekBayar.style.display = 'block';
             inpRekIdBayar.innerHTML = '<option value="">-- Pilih --</option>';
             reks.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = `${r.bank} - ${r.norek} (${r.an})`; inpRekIdBayar.appendChild(o); });
+        } else if (inpChannelBayar.value === 'Saldo Titipan Agen') {
+            containerRekBayar.style.display = 'none';
+            const trxId = selOrder.value;
+            if (!trxId) {
+                window.showToast('Pilih Order Terlebih Dahulu', 'warning');
+                inpChannelBayar.value = 'Tunai';
+                return;
+            }
+            const { data: trx } = await supabase.from('transaksi').select('agen').eq('id', trxId).single();
+            const agenName = trx?.agen?.nama || '';
+            
+            if (infoDiv && valSpan && agenName) {
+                infoDiv.style.display = 'block';
+                valSpan.textContent = 'Memuat...';
+                const saldo = await getAgentSaldo(agenName);
+                valSpan.textContent = window.formatRp(saldo);
+            }
         } else containerRekBayar.style.display = 'none';
     });
 

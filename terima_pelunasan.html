@@ -224,10 +224,14 @@
                                     <select id="inpChannelBayar" class="form-control">
                                         <option value="Tunai">💵 Tunai</option>
                                         <option value="Transfer Bank">🏦 Transfer Bank</option>
+                                        <option value="Saldo Titipan Agen">💰 Saldo Titipan Agen</option>
                                         <option value="QRIS">📱 QRIS</option>
                                         <option value="Kas Operasional">🏷️ Kas Operasional</option>
                                         <option value="Lainnya">Lainnya</option>
                                     </select>
+                                    <div id="infoSaldoTitipan" style="display:none; margin-top:0.5rem; font-size:0.85rem; color:var(--primary); font-weight:600;">
+                                        Saldo Tersedia: <span id="valSaldoTitipan">Rp 0</span>
+                                    </div>
                                     <div id="containerRekBayar" style="display:none; margin-top:0.5rem;">
                                         <label class="form-label" style="font-size:0.7rem; color:var(--primary);">💳 Rekening Tujuan</label>
                                         <select id="inpRekIdBayar" class="form-control" style="font-size:0.8rem;"></select>

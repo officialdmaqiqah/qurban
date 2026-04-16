@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit Agen - Qurban Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/style.css?v=4.4">
+    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header" id="sidebarHeaderWrapper">
+                <h2 id="sidebarTitleGlobal">Qurban Manager</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
+                <div class="nav-header">💼 DATA STOCK</div>
+                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
+                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
+                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
+                <div class="nav-header">💰 DATA FINANCE</div>
+                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
+                <a href="deposit_agen.html" class="nav-item active">&bull; Titipan Dana Agen</a>
+                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
+                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">Titipan Dana Agen</div>
+                <div class="user-menu">
+                    <span id="userEmailDisplay">admin@qurban.com</span>
+                </div>
+            </header>
+
+            <div class="content-area fade-in text-center">
+                <div class="status-grid premium-grid" style="margin-bottom: 2rem;">
+                    <div class="premium-card rose">
+                        <div class="premium-label">Total Saldo Titipan</div>
+                        <div class="premium-value" id="statsTotalTitipan">Rp 0</div>
+                        <div class="premium-icon-box">💰</div>
+                    </div>
+                    <div class="premium-card indigo">
+                        <div class="premium-label">Total Penggunaan</div>
+                        <div class="premium-value" id="statsTotalTerpakai">Rp 0</div>
+                        <div class="premium-icon-box">📉</div>
+                    </div>
+                    <div class="premium-card emerald">
+                        <div class="premium-label">Saldo Aktif Saat Ini</div>
+                        <div class="premium-value" id="statsTotalAktif">Rp 0</div>
+                        <div class="premium-icon-box">✨</div>
+                    </div>
+                </div>
+
+                <div class="card-box tall-header">
+                    <div class="flex-between" style="margin-bottom: 1.5rem;">
+                        <h3 style="margin:0;">👥 Saldo Per Agen</h3>
+                        <button class="btn btn-primary" id="btnTambahDeposit">
+                            <span>➕</span> Tambah Titipan Dana
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama Agen</th>
+                                    <th class="text-right">Total Masuk</th>
+                                    <th class="text-right">Total Pakai/Tarik</th>
+                                    <th class="text-right">Saldo Saat Ini</th>
+                                    <th class="text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodySaldoAgen">
+                                <tr><td colspan="5" class="text-center">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <h3 style="margin-bottom: 1.5rem;">📜 Riwayat Transaksi Titipan</h3>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Nama Agen</th>
+                                    <th>Kategori</th>
+                                    <th>Keterangan</th>
+                                    <th>Metode</th>
+                                    <th class="text-right">Nominal</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyRiwayat">
+                                <tr><td colspan="7" class="text-center">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL TAMBAH DEPOSIT -->
+    <div class="modal fade" id="modalDeposit" style="z-index: 10000;">
+        <div class="modal-dialog" style="max-width: 500px;">
+            <div class="modal-content card-box">
+                <div class="modal-header flex-between">
+                    <h3 id="modalTitle">Tambah Titipan Dana</h3>
+                    <button class="btn-close" id="btnCloseModal">&times;</button>
+                </div>
+                <form id="formDeposit">
+                    <div class="modal-body" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <input type="hidden" id="editId">
+                        
+                        <div class="form-group">
+                            <label>Tanggal</label>
+                            <input type="date" id="inpTgl" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Nama Agen</label>
+                            <select id="inpAgenName" class="form-control" required>
+                                <option value="">-- Pilih Agen --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Kategori</label>
+                            <select id="inpKategori" class="form-control" required>
+                                <option value="Titipan Dana Agen">Pemasukan (Titipan Baru)</option>
+                                <option value="Penarikan Titipan Agen">Pengeluaran (Tarik Dana)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nominal (Rp)</label>
+                            <input type="text" id="inpNominal" class="form-control money-input" placeholder="0" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Metode / Channel</label>
+                            <select id="inpChannel" class="form-control" required>
+                                <option value="Tunai">Tunai / Cash</option>
+                                <option value="Transfer Bank">Transfer Bank</option>
+                            </select>
+                        </div>
+
+                        <div id="containerRek" style="display: none;">
+                            <label>Rekening</label>
+                            <select id="inpRekId" class="form-control">
+                                <option value="">-- Pilih Rekening --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Keterangan (Opsional)</label>
+                            <textarea id="inpKeterangan" class="form-control" rows="2" placeholder="Contoh: Titipan untuk 10 ekor kambing..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="margin-top: 2rem; display: flex; gap: 1rem;">
+                        <button type="button" class="btn btn-block" id="btnCancelModal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-block">Simpan Transaksi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="src/layout.js?v=4.4"></script>
+    <script type="module" src="src/deposit_agen.js"></script>
+</body>
+</html>

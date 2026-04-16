@@ -87,6 +87,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         return oldData?.val || [];
     };
 
+    const getAgentSaldo = async (agenName) => {
+        if (!agenName) return 0;
+        const { data } = await supabase.from('keuangan').select('nominal, tipe, kategori').eq('agen_name', agenName);
+        let saldo = 0;
+        (data || []).forEach(f => {
+            const isOut = f.kategori !== 'Titipan Dana Agen' || f.tipe === 'pengeluaran';
+            saldo += (isOut ? -1 : 1) * (parseFloat(f.nominal) || 0);
+        });
+        return saldo;
+    };
+
     const tableBody = document.getElementById('tableBodyTransaksi');
     const modalKeluar = document.getElementById('modalKeluar');
     const formTerjual = document.getElementById('formTerjual');
@@ -287,7 +298,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         sectionKomisi.classList.add('visible');
     };
 
-    const handleChannelChangeLocal = async (channelVal, container, selectEl) => {
+    const handleChannelChangeLocal = async (channelVal, container, selectEl, suffix = '') => {
+        const infoDiv = document.getElementById('infoSaldoTitipan' + suffix);
+        const valSpan = document.getElementById('valSaldoTitipan' + suffix);
+        
+        if (infoDiv) infoDiv.style.display = 'none';
+
         if (channelVal === 'Transfer Bank') {
             const reks = await getRekeningDb();
             if(reks && reks.length > 0) {
@@ -295,6 +311,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                 selectEl.innerHTML = '<option value="">-- Pilih Rekening --</option>';
                 reks.forEach(r => { const opt = document.createElement('option'); opt.value = r.id; opt.textContent = `${r.bank} - ${r.norek} (${r.an})`; selectEl.appendChild(opt); });
             } else { container.style.display = 'none'; }
+        } else if (channelVal === 'Saldo Titipan Agen') {
+            container.style.display = 'none';
+            if (infoDiv && valSpan) {
+                let agenName = '';
+                if (suffix === 'DP') {
+                    // Ambil dari inpAgenId. Nilainya "Nama - Jenis"
+                    const raw = inpAgenId.value;
+                    agenName = raw ? raw.split(' - ')[0] : '';
+                } else {
+                    // Ambil dari order yang terpilih di modal lunas
+                    const trxId = selOrderLunas.value;
+                    if (trxId) {
+                        const { data: trx } = await supabase.from('transaksi').select('agen').eq('id', trxId).single();
+                        agenName = trx?.agen?.nama || '';
+                    }
+                }
+                
+                if (agenName) {
+                    infoDiv.style.display = 'block';
+                    valSpan.textContent = 'Memuat...';
+                    const saldo = await getAgentSaldo(agenName);
+                    valSpan.textContent = window.formatRp(saldo);
+                } else {
+                    window.showToast('Pilih Agen/Order Terlebih Dahulu', 'warning');
+                    if (suffix === 'DP') inpChannelDP.value = 'Tunai';
+                    else inpChannelLunas.value = 'Tunai';
+                }
+            }
         } else { container.style.display = 'none'; }
     };
 
@@ -516,7 +560,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                     .eq('id', it.goatId);
                 if (stokErr) console.error('Gagal update stok kambing ID:', it.goatId, stokErr);
             }
-            if(paidNow > 0) await supabase.from('keuangan').insert([{ id: 'PAY-'+Date.now(), tipe: 'pemasukan', tanggal: newTrx.tgl_trx, kategori: 'Jual Kambing', nominal: paidNow, channel: finalChannelDP, related_trx_id: trxId, bukti_url: buktiUrl }]);
+            if(paidNow > 0) {
+                if (inpChannelDP.value === 'Saldo Titipan Agen') {
+                    const agenName = matchedAgen?.nama || '';
+                    if (!agenName) throw new Error('Agen tidak ditemukan.');
+                    const currentSaldo = await getAgentSaldo(agenName);
+                    if (currentSaldo < paidNow) throw new Error(`Saldo Titipan Agen tidak cukup. Tersedia: ${window.formatRp(currentSaldo)}`);
+
+                    // Record Wash Entry (Out from Deposit, In to Sales)
+                    const payIdCommon = 'PAY-' + Date.now();
+                    await supabase.from('keuangan').insert([
+                        { 
+                            id: payIdCommon + '-OUT', 
+                            tipe: 'pengeluaran', 
+                            tanggal: newTrx.tgl_trx, 
+                            kategori: 'Pemakaian Titipan Agen', 
+                            nominal: paidNow, 
+                            channel: 'Saldo Titipan', 
+                            related_trx_id: trxId, 
+                            agen_name: agenName,
+                            keterangan: `Pemakaian titipan untuk DP Order ${trxId}`
+                        },
+                        { 
+                            id: payIdCommon + '-IN', 
+                            tipe: 'pemasukan', 
+                            tanggal: newTrx.tgl_trx, 
+                            kategori: 'Jual Kambing', 
+                            nominal: paidNow, 
+                            channel: 'Saldo Titipan', 
+                            related_trx_id: trxId, 
+                            agen_name: agenName,
+                            keterangan: `DP via Titipan Agen`
+                        }
+                    ]);
+                } else {
+                    await supabase.from('keuangan').insert([{ id: 'PAY-'+Date.now(), tipe: 'pemasukan', tanggal: newTrx.tgl_trx, kategori: 'Jual Kambing', nominal: paidNow, channel: finalChannelDP, related_trx_id: trxId, bukti_url: buktiUrl }]);
+                }
+            }
 
             if (sendWA && typeof window.sendWa === 'function') {
                 try {
@@ -565,6 +645,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const resA = await window.sendWa(agenData.wa, msgAgenParsed);
                         if (!resA.success) {
                             window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
+                        }
+
+                        // Kirim Notifikasi Saldo Terpotong jika pakai Titipan
+                        if (inpChannelDP.value === 'Saldo Titipan Agen') {
+                            const currentSaldo = await getAgentSaldo(agenData.nama);
+                            const msgSaldo = `*NOTIFIKASI SALDO TITIPAN*\n\nHalo ${agenData.nama},\nSaldo titipan Anda telah terpotong sebesar *${formatRp(paidNow)}* untuk pembayaran DP *${trxId}*.\n\nSisa saldo titipan Anda saat ini: *${formatRp(currentSaldo)}*.\n\nTerima kasih.`;
+                            await window.sendWa(agenData.wa, msgSaldo);
                         }
                     } else {
                         console.warn('[WA] Data Agen/WA tidak ditemukan untuk:', inpAgenId.value);
@@ -629,7 +716,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         const totalPaidNew = (trx.total_paid || 0) + nominal;
         
         await supabase.from('transaksi').update({ total_paid: totalPaidNew, history_bayar: updatedHistory }).eq('id', trxId);
-        await supabase.from('keuangan').insert([{ id: payId, tipe: 'pemasukan', tanggal: tgl, kategori: 'Pelunasan Order', nominal, channel, related_trx_id: trxId }]);
+        
+        if (channel === 'Saldo Titipan Agen') {
+            const agenName = trx.agen.nama;
+            const currentSaldo = await getAgentSaldo(agenName);
+            if (currentSaldo < nominal) throw new Error(`Saldo Titipan Agen tidak cukup. Tersedia: ${window.formatRp(currentSaldo)}`);
+
+            const payIdCommon = 'PAY-' + Date.now();
+            await supabase.from('keuangan').insert([
+                { 
+                    id: payIdCommon + '-OUT', 
+                    tipe: 'pengeluaran', 
+                    tanggal: tgl, 
+                    kategori: 'Pemakaian Titipan Agen', 
+                    nominal, 
+                    channel: 'Saldo Titipan', 
+                    related_trx_id: trxId, 
+                    agen_name: agenName,
+                    keterangan: `Pemakaian titipan untuk Pelunasan Order ${trxId}`
+                },
+                { 
+                    id: payIdCommon + '-IN', 
+                    tipe: 'pemasukan', 
+                    tanggal: tgl, 
+                    kategori: 'Pelunasan Order', 
+                    nominal, 
+                    channel: 'Saldo Titipan', 
+                    related_trx_id: trxId, 
+                    agen_name: agenName,
+                    keterangan: `Pelunasan via Titipan Agen`
+                }
+            ]);
+        } else {
+            await supabase.from('keuangan').insert([{ id: payId, tipe: 'pemasukan', tanggal: tgl, kategori: 'Pelunasan Order', nominal, channel, related_trx_id: trxId }]);
+        }
         
         if (kirimWA && typeof window.sendWa === 'function') {
             try {
@@ -790,8 +910,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (inpSearchKambing) inpSearchKambing.addEventListener('change', async () => { await addKambingToCart(); });
     if (btnAddKambing) btnAddKambing.addEventListener('click', async () => { await addKambingToCart(); });
     if (inpAgenId) inpAgenId.addEventListener('change', async () => { await handleAgenChange(); });
-    if (inpChannelDP) inpChannelDP.addEventListener('change', () => handleChannelChangeLocal(inpChannelDP.value, containerRekDP, inpRekIdDP));
-    if (inpChannelLunas) inpChannelLunas.addEventListener('change', () => handleChannelChangeLocal(inpChannelLunas.value, containerRekLunas, inpRekIdLunas));
+    if (inpChannelDP) inpChannelDP.addEventListener('change', () => handleChannelChangeLocal(inpChannelDP.value, containerRekDP, inpRekIdDP, 'DP'));
+    if (inpChannelLunas) inpChannelLunas.addEventListener('change', () => handleChannelChangeLocal(inpChannelLunas.value, containerRekLunas, inpRekIdLunas, 'Lunas'));
 
     const addKambingToCart = async () => {
         const db = await getKambingDb();

@@ -68,11 +68,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             return acc + (item.tipe === 'pemasukan' ? nom : -nom);
         }, 0);
 
-        // 1.1 HUTANG KOMISI
+        // 1.1 HUTANG & TITIPAN
         let totalHutangKomisi = 0;
+        let totalTitipanAgen = 0;
+
         trxDb.forEach(t => {
             if(t.komisi && t.komisi.status === 'belum_bayar' && t.komisi.berhak === true) {
                 totalHutangKomisi += (parseFloat(t.komisi.nominal) || 0);
+            }
+        });
+
+        (keuanganDb || []).forEach(f => {
+            const kat = (f.kategori || '').toLowerCase();
+            const nom = parseFloat(f.nominal) || 0;
+            if (kat.includes('titipan dana agen')) {
+                totalTitipanAgen += (f.tipe === 'pemasukan' ? nom : -nom);
+            } else if (kat.includes('pemakaian titipan') || kat.includes('penarikan titipan')) {
+                // Pemakaian biasanya dicatat sebagai pengeluaran (tipe='pengeluaran')
+                if (f.tipe === 'pengeluaran') totalTitipanAgen -= nom;
+                else if (f.tipe === 'pemasukan') totalTitipanAgen += nom; // Fallback jika salah input tipe
             }
         });
 
@@ -227,7 +241,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('dashTotalSaldoKas').textContent = formatRp(totalSaldoKasBank);
         document.getElementById('dashTotalTerbayar').textContent = formatRp(totalPaidInFinance);
         document.getElementById('dashHutangAgen').textContent = formatRp(totalHutangKomisi);
-        document.getElementById('dashSaldoNetto').textContent = formatRp(totalSaldoKasBank - totalHutangKomisi);
+        document.getElementById('dashTotalTitipan').textContent = formatRp(totalTitipanAgen);
+        document.getElementById('dashSaldoNetto').textContent = formatRp(totalSaldoKasBank - totalHutangKomisi - totalTitipanAgen);
         document.getElementById('dashNilaiAsetStok').textContent = formatRp(nilaiAsetStok);
         document.getElementById('dashPiutang').textContent = formatRp(piutang);
         document.getElementById('dashPemasukan').textContent = formatRp(totalPemasukan);
