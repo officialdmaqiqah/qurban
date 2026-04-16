@@ -155,16 +155,16 @@ nav {
     padding: 0.75rem 0;
     transition: var(--transition-smooth);
     border-radius: 999px;
-    background: rgba(10, 25, 20, 0.5);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: #000000;
+    backdrop-filter: none; /* Removed blur since it's solid black */
+    -webkit-backdrop-filter: none;
     border: 1px solid var(--glass-border);
 }
 
 nav.scrolled {
     top: 1rem;
-    background: rgba(10, 25, 20, 0.85);
-    box-shadow: var(--shadow-premium);
+    background: #000000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     padding: 0.6rem 0;
 }
 
@@ -263,8 +263,8 @@ nav.scrolled {
     right: -300px;
     width: 280px;
     height: 100vh;
-    background: rgba(10, 25, 20, 0.98);
-    backdrop-filter: blur(20px);
+    background: #000000;
+    backdrop-filter: none;
     z-index: 1100;
     padding: 100px 2rem 2rem;
     display: flex;
