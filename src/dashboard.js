@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const permissions = profile.permissions || {};
+        const linkedAgen = profile.linked_agen_nama || permissions.linkedAgen || '';
+        const agenLinkedId = profile.linked_agen_id || permissions.linkedAgenId || '';
 
         let trxDb = trxDbAll || [];
         const isStrict = permissions.strictAgen;
