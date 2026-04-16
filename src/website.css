@@ -797,7 +797,7 @@ footer {
 
 .search-input {
     width: 100%;
-    padding: 1.1rem 1.5rem 1.1rem 3.8rem;
+    padding: 1.1rem 7rem 1.1rem 3.8rem;
     background: transparent;
     border: none;
     color: white;
@@ -807,7 +807,33 @@ footer {
 }
 
 .search-input::placeholder {
-    color: #475569;
+    color: #94a3b8; /* Lighter color for better visibility */
+    opacity: 0.6;
+}
+
+.search-btn {
+    position: absolute;
+    right: 8px;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, hsl(var(--emerald-500)), hsl(var(--emerald-600)));
+    border: none;
+    border-radius: 99px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition-spring);
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+}
+
+.search-btn:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.search-btn:active {
+    transform: scale(0.95);
 }
 
 /* --- AFFILIATE BANNER --- */

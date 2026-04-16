@@ -151,6 +151,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             renderGoats(filtered, query.length > 0);
         });
+
+        const searchBtn = document.getElementById('searchBtn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                const query = searchInput.value.toLowerCase().trim();
+                const filtered = allGoatsData.filter(goat => {
+                    const tagNum = (goat.no_tali || '').toString().toLowerCase();
+                    const color = (goat.warna_tali || '').toLowerCase();
+                    return tagNum.includes(query) || color.includes(query);
+                });
+                renderGoats(filtered, query.length > 0);
+            });
+        }
     }
 
     function cleanUrl(url) {
