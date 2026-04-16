@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
     let currentAgent = {
-        name: 'Admin Daerah',
-        wa: '6281234567890',
+        name: 'Admin Pusat',
+        wa: '6285335150001',
         isAffiliate: false
     };
 
