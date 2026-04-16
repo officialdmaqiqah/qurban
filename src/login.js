@@ -16,7 +16,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Local Bypass: Allow entry if on localhost regardless of status
         if (profile && (profile.status === 'approved' || isLocal)) {
-            window.location.href = 'dashboard.html';
+            const userRole = (profile.role || 'staff').toLowerCase().trim();
+            const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+            window.location.href = isAdmin ? 'dashboard.html' : 'kambing.html';
             return;
         } else if (profile && profile.status !== 'approved' && !isLocal) {
             // Logout if not approved and not on localhost
@@ -116,8 +118,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnText.textContent = 'Berhasil Masuk...';
             
             setTimeout(() => {
-                // Redirect will be handled naturally by layout.js logic or we can force it here
-                window.location.href = 'dashboard.html';
+                const userRole = (profile.role || 'staff').toLowerCase().trim();
+                const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+                window.location.href = isAdmin ? 'dashboard.html' : 'kambing.html';
             }, 500);
 
         } catch (err) {

@@ -475,10 +475,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const allowedMenus = profile.allowed_menus || [];
         
         if (!isAdmin) {
+            // FORCE: Redirect away from dashboard if not admin
+            if (window.location.pathname.includes('dashboard.html')) {
+                window.location.href = 'kambing.html';
+                return;
+            }
+
             document.querySelectorAll('.nav-item').forEach(item => {
                 const href = item.getAttribute('href');
+                // Force hide dashboard for non-admins
+                if (href && href.includes('dashboard.html')) {
+                    item.style.display = 'none';
+                }
                 // Hide if not in allowed menus OR if it's the settings page
-                if (href && (!allowedMenus.includes(href) || href === 'pengaturan.html')) {
+                else if (href && (!allowedMenus.includes(href) || href === 'pengaturan.html')) {
                     item.style.display = 'none';
                 }
             });

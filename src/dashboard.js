@@ -32,8 +32,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const rekeningDb = reksData?.val || [];
         const userRole = (profile.role || 'staff').toLowerCase().trim();
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+        
+        // --- REDUNDANT SAFETY REDIRECT ---
+        if (!isAdmin) {
+            window.location.href = 'kambing.html';
+            return;
+        }
+
         const permissions = profile.permissions || {};
-        const linkedAgen = profile.permissions?.linkedAgen || '';
 
         let trxDb = trxDbAll || [];
         const isStrict = permissions.strictAgen;
