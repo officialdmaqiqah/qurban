@@ -518,8 +518,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         // --- GLOBAL AFFILIATE LINK INJECTOR (FOR AGENTS/MARKETING) ---
-        const isMarketingRole = ['marketing_dm', 'marketing_ext', 'marketing_kandang', 'reseller', 'agen'].includes(userRole);
-        const isMasterDataPage = window.location.pathname.includes('kambing.html');
+        const isMarketingRole = ['marketing_dm', 'marketing_ext', 'marketing_kandang', 'reseller', 'agen', 'staf', 'admin', 'office', 'operator'].includes(userRole);
+        const isMasterDataPage = window.location.pathname.toLowerCase().includes('kambing.html') || window.location.pathname.toLowerCase().endsWith('/kambing');
         const contentArea = document.querySelector('.content-area');
 
         if (isMarketingRole && contentArea && isMasterDataPage) {
