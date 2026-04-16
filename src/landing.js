@@ -45,6 +45,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (e) {
             console.error('Branding Load Error:', e);
+        } finally {
+            const container = document.getElementById('brandingContainer');
+            if (container) container.style.opacity = '1';
         }
     }
     loadBranding();
