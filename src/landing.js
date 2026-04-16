@@ -10,15 +10,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // 1. Affiliate & Contact Sync
     const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
+    const urlRef = urlParams.get('ref');
+    
+    // Consistency: Store in localStorage if present, otherwise try to retrieve it
+    if (urlRef) localStorage.setItem('qurban_ref', urlRef);
+    const ref = urlRef || localStorage.getItem('qurban_ref');
+
     let currentAgent = {
         name: 'Mimin Qurban',
         wa: '6285335150001',
         isAffiliate: false
     };
 
-    if (ref) await lookupAgent(ref.toLowerCase());
-    else syncContactUI(); // Initial sync for default admin
+    if (ref) {
+        await lookupAgent(ref.toLowerCase());
+        updateNavLinks(ref.toLowerCase());
+    } else {
+        syncContactUI();
+    }
+
+    function updateNavLinks(refValue) {
+        document.querySelectorAll('a').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && (href.includes('etalase.html') || href.includes('index.html'))) {
+                const url = new URL(href, window.location.origin);
+                url.searchParams.set('ref', refValue);
+                link.setAttribute('href', url.pathname + url.search + url.hash);
+            }
+        });
+    }
 
     async function lookupAgent(username) {
         try {
