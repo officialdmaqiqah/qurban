@@ -136,6 +136,24 @@
     <script type="module" src="src/etalase.js"></script>
     <script>
         lucide.createIcons();
+
+        // Goat Welcome Sound Effect
+        document.addEventListener('DOMContentLoaded', () => {
+            const playGoatSound = () => {
+                const audio = new Audio('src/assets/goat.mp3');
+                audio.volume = 0.4; // Volume moderat agar tidak mengagetkan
+                audio.play().catch(e => {
+                    console.log('Autoplay dicegah browser, akan diputar saat interaksi pertama.');
+                    document.body.addEventListener('click', function playOnce() {
+                        audio.play().catch(console.error);
+                        document.body.removeEventListener('click', playOnce);
+                    }, { once: true });
+                });
+            };
+            
+            // Beri sedikit delay (1 detik) sebelum suara muncul agar lebih natural
+            setTimeout(playGoatSound, 1000);
+        });
     </script>
 </body>
 </html>
