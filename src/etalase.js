@@ -244,4 +244,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     fetchGoats();
+
+    // 6. Sync Target Logo dengan Logo Profil
+    async function syncProfileLogo() {
+        try {
+            const { data } = await supabase.from('master_data').select('val').eq('key', 'PROFILE').maybeSingle();
+            if (data && data.val && data.val.logo) {
+                const navbarLogo = document.getElementById('navbarLogoImgEtalase');
+                const footerLogo = document.getElementById('footerLogoImgEtalase');
+                if (navbarLogo) navbarLogo.src = data.val.logo;
+                if (footerLogo) footerLogo.src = data.val.logo;
+            }
+        } catch (e) {
+            console.error('Gagal mengambil logo profil:', e);
+        }
+    }
+    syncProfileLogo();
 });
