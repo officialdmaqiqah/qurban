@@ -89,6 +89,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('statTotalHutang').textContent = formatRp(totalHutang);
         document.getElementById('statTotalTerbayar').textContent = formatRp(totalPaid);
+        if (document.getElementById('statTotalKomp')) {
+            document.getElementById('statTotalKomp').textContent = formatRp(totalKomp);
+        }
         document.getElementById('statSisaHutang').textContent = formatRp(Math.max(0, sisaHutang));
     };
 
