@@ -710,10 +710,11 @@ footer {
     display: block;
     color: white;
     text-decoration: none;
-    font-size: 2rem;
-    font-weight: 800;
-    margin: 2rem 0;
+    font-size: 1.35rem; /* Reduced from 2rem */
+    font-weight: 600; /* Reduced from 800 */
+    margin: 1.25rem 0; /* Reduced from 2rem 0 */
     font-family: var(--font-heading);
+    letter-spacing: 0.02em;
 }
 
 /* --- LIGHTBOX & MISC --- */
