@@ -3,65 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Qurban Manager</title>
-    <meta name="description" content="Aplikasi Manajemen Kandang Qurban - Login">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700" rel="stylesheet">
-    <link rel="stylesheet" href="src/style.css">
-    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+    <title>Daarul Mahabbah Qurban | Menunaikan Qurban, Menyempurnakan Cinta</title>
+    <meta name="description" content="Penyedia hewan qurban premium dengan kualitas terbaik, sehat, dan sesuai syariat. Gratis biaya perawatan dan pengiriman.">
+    
+    <link rel="stylesheet" href="src/website.css">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="login-body">
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="logo">
-                    <div style="width: 100px; height: 100px; margin: 0 auto 1.5rem; position: relative;">
-                        <img id="loginLogo" src="https://cdn-icons-png.flaticon.com/512/3222/3222718.png" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 3px solid var(--primary); box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);">
-                    </div>
-                    <h1 id="loginTitle">Qurban<span>Manager</span></h1>
-                </div>
-                <p>Menunaikan Qurban, Menyempurnakan Cinta.</p>
+<body>
+    <nav id="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="nav-logo">
+                <span>Daarul</span> Mahabbah Qurban
+            </a>
+            <div class="nav-links">
+                <a href="#home">Beranda</a>
+                <a href="#features">Tentang Kami</a>
+                <a href="etalase.html">Etalase Kambing</a>
+                <a href="#contact">Kontak</a>
+                <a href="login.html" class="btn-outline" style="padding: 0.5rem 1.5rem;">Portal Agen</a>
             </div>
-            <form id="loginForm" class="login-form">
-                <div class="input-group">
-                    <label for="email">Username</label>
-                    <input type="text" id="email" name="email" placeholder="Masukkan username" required autocomplete="username">
-                </div>
-                <div class="input-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="⬢⬢⬢⬢⬢⬢⬢⬢" required autocomplete="current-password">
-                </div>
-                
-                <div class="error-message" id="errorMessage"></div>
-                
-                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
-                    <span>Masuk</span>
-                    <div class="spinner" id="loginSpinner" style="display: none;"></div>
-                </button>
-            </form>
-            
-            <div id="devQuickLogin" style="display: none; flex-direction: column; gap: 0.75rem; margin-top: 1rem; padding: 1rem; border: 1px dashed var(--primary); border-radius: 8px; background: rgba(16, 185, 129, 0.05);">
-                <p style="font-size: 0.75rem; color: var(--primary); font-weight: 600; margin: 0; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">Developer Mode</p>
-                <button type="button" class="btn btn-block" id="quickLoginBtn" style="background: var(--primary); color: white; border: none; padding: 0.6rem; font-size: 0.85rem;">
-                    🚀 Quick Login (Local Admin)
-                </button>
-            </div>
+            <!-- Mobile Toggle -->
+            <button class="nav-toggle" id="navToggle" style="position: absolute; right: 2rem;">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
 
-            <div class="login-footer" style="text-align: center; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;">
-                <a href="forgot_password.html" style="color: var(--primary); text-decoration: none;">Lupa Password?</a>
-                <div>Belum punya akun? <a href="register.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Daftar Disini</a></div>
+    <!-- Mobile Sidebar -->
+    <div class="sidebar-overlay" id="sidebarMenu">
+        <a href="#home">Beranda</a>
+        <a href="#features">Tentang Kami</a>
+        <a href="etalase.html">Etalase Kambing</a>
+        <a href="#contact">Kontak</a>
+        <a href="login.html" class="btn-premium">Portal Agen</a>
+    </div>
+
+    <!-- Floating WhatsApp -->
+    <a href="https://wa.me/6281234567890" class="floating-wa" id="floatingWa" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <section class="hero" id="home">
+        <div class="hero-content-wrapper">
+            <div class="hero-content">
+                <div class="hero-logo reveal" style="margin-bottom: 2rem;">
+                    <span>Daarul Mahabbah</span> Qurban
+                </div>
+                <div class="hero-badge reveal">Penyedia Hewan Qurban Premium</div>
+                <div class="hero-badge">Pilihan Qurban Terbaik 2026</div>
+                <h1>Qurban <span>Premium</span> Tanpa Was-was.</h1>
+                <p>Dapatkan hewan qurban terbaik langsung dari kandang spesialis. Sehat, gemuk, dan terawat dengan pengawasan medis berkala. Kami pastikan ibadah qurban Anda sempurna.</p>
+                <div style="display: flex; gap: 1rem;">
+                    <a href="etalase.html" class="btn-premium">Lihat Stok Kambing</a>
+                    <a href="https://wa.me/6281234567890" id="heroConsultBtn" class="btn-outline">Konsultasi Qurban</a>
+                </div>
             </div>
         </div>
-    </div>
-    <script type="module" src="src/login.js"></script>
+        <div class="hero-image">
+            <img src="src/assets/majestic_goat.png" alt="Majestic Goat">
+        </div>
+    </section>
+
+    <section class="section-padding" id="about">
+        <div class="container">
+            <div class="section-header">
+                <h2>Kenapa Memilih Kami?</h2>
+                <p>Kami mendedikasikan diri untuk memberikan pelayanan terbaik bagi ibadah qurban Anda.</p>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i data-lucide="shield-check"></i></div>
+                    <h3>Sesuai Syariat</h3>
+                    <p>Semua hewan kami telah memenuhi syarat sah qurban baik dari segi umur maupun kondisi fisik.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i data-lucide="activity"></i></div>
+                    <h3>Kesehatan Terjamin</h3>
+                    <p>Dipantau langsung oleh tim medis hewan berpengalaman secara rutin setiap minggunya.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i data-lucide="truck"></i></div>
+                    <h3>Gratis Pengiriman</h3>
+                    <p>Layanan pengiriman gratis sampai ke depan rumah atau lokasi penyembelihan Anda.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" style="background: var(--dark-surface);">
+        <div class="container">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 3rem;">
+                <h2>Stok Unggulan Tersedia</h2>
+                <a href="etalase.html" class="text-emerald" style="text-decoration: none;">Lihat Semua &rarr;</a>
+            </div>
+            <div class="etalase-grid" id="featuredGoats">
+                <!-- Data will be injected from Supabase by landing.js -->
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-info">
+                    <div class="footer-logo" style="margin-bottom: 1.5rem; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: white;">
+                        <span style="color: var(--emerald-500);">Daarul Mahabbah</span> Qurban
+                    </div>
+                    <p>Daarul Mahabbah Qurban berkomitmen menghadirkan hewan qurban berkualitas dengan kemudahan transaksi digital. Ibadah tenang, hati senang.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Navigasi</h4>
+                    <ul>
+                        <li><a href="#home">Beranda</a></li>
+                        <li><a href="#about">Tentang Kami</a></li>
+                        <li><a href="etalase.html">Etalase</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Bantuan</h4>
+                    <ul>
+                        <li><a href="#">Cara Pemesanan</a></li>
+                        <li><a href="#">Syarat & Ketentuan</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                <h4>Kontak Kami</h4>
+                <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem;">Alamat:<br>Kandang Daarul Mahabbah,<br>Pangkalpinang - Bangka Belitung</p>
+                <p style="color: #94a3b8; font-size: 0.9rem;">WA: <span id="footerWa">0812-3456-7890</span></p>
+            </div>
+            </div>
+            <div class="bottom-footer">
+                &copy; 2026 Daarul Mahabbah Qurban. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
     <script>
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            document.getElementById('devQuickLogin').style.display = 'flex';
-        }
+        // Lucide icons initialization
+        lucide.createIcons();
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth Scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
     </script>
+    <script type="module" src="src/landing.js"></script>
 </body>
 </html>
-
-
-

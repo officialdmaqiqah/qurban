@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
         await supabase.auth.signOut();
         localStorage.clear();
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
     });
 
 

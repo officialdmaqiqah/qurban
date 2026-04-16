@@ -287,6 +287,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             const banner = document.querySelector('div[onclick*="laporan.html"]');
             if (banner) banner.style.display = 'none';
         }
+
+        // --- AFFILIATE LINK LOGIC ---
+        const isAgen = userRole === 'agen' || !!linkedAgen;
+        const affiliateCard = document.getElementById('affiliateCard');
+        if (isAgen && affiliateCard) {
+            affiliateCard.style.display = 'block';
+            const username = (profile.email || '').split('@')[0];
+            const baseUrl = 'dmqurban.com/etalase.html';
+            const fullLink = `${baseUrl}?ref=${username}`;
+            
+            const linkText = document.getElementById('affiliateLinkText');
+            if (linkText) linkText.textContent = fullLink;
+            
+            const copyBtn = document.getElementById('copyAffiliateBtn');
+            if (copyBtn) {
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText('https://' + fullLink);
+                    copyBtn.textContent = '✅ Tersalin!';
+                    setTimeout(() => { copyBtn.textContent = 'Salin Link'; }, 2000);
+                };
+            }
+        }
     };
 
     // Initial Load

@@ -330,7 +330,7 @@ window.checkSaldoCukup = async (channelKey, nominal, label) => {
 // --- CORE LAYOUT ENGINE ---
 document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    const isLoginPage = window.location.pathname.includes('index.html') || window.location.pathname === '/';
+    const isLoginPage = window.location.pathname.includes('login.html') || window.location.pathname === '/login';
 
     // 1. Theme Immediate Sync
     const applyTheme = () => {
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyTheme();
 
     if (!session) {
-        if (!isLoginPage) window.location.href = 'index.html';
+        if (!isLoginPage) window.location.href = 'login.html';
         return;
     }
 
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.showConfirm('Yakin ingin keluar?', async () => {
                 await supabase.auth.signOut();
                 localStorage.clear();
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
             });
         };
 

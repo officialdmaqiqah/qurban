@@ -5,7 +5,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
+        index: resolve(__dirname, 'index.html'),
+        login: resolve(__dirname, 'login.html'),
+        etalase: resolve(__dirname, 'etalase.html'),
         dashboard: resolve(__dirname, 'dashboard.html'),
         kambing: resolve(__dirname, 'kambing.html'),
         kambing_masuk: resolve(__dirname, 'kambing_masuk.html'),

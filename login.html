@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Qurban Manager</title>
+    <meta name="description" content="Aplikasi Manajemen Kandang Qurban - Login">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700" rel="stylesheet">
+    <link rel="stylesheet" href="src/style.css">
+    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo">
+                    <h1 id="loginTitle" style="font-family: var(--font-heading); font-size: 2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; text-align: center;">
+                        <span style="color: var(--primary);">Daarul Mahabbah</span> Qurban
+                    </h1>
+                </div>
+                <p>Menunaikan Qurban, Menyempurnakan Cinta.</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="input-group">
+                    <label for="email">Username</label>
+                    <input type="text" id="email" name="email" placeholder="Masukkan username" required autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="⬢⬢⬢⬢⬢⬢⬢⬢" required autocomplete="current-password">
+                </div>
+                
+                <div class="error-message" id="errorMessage"></div>
+                
+                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+                    <span>Masuk</span>
+                    <div class="spinner" id="loginSpinner" style="display: none;"></div>
+                </button>
+            </form>
+            
+            <div id="devQuickLogin" style="display: none; flex-direction: column; gap: 0.75rem; margin-top: 1rem; padding: 1rem; border: 1px dashed var(--primary); border-radius: 8px; background: rgba(16, 185, 129, 0.05);">
+                <p style="font-size: 0.75rem; color: var(--primary); font-weight: 600; margin: 0; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">Developer Mode</p>
+                <button type="button" class="btn btn-block" id="quickLoginBtn" style="background: var(--primary); color: white; border: none; padding: 0.6rem; font-size: 0.85rem;">
+                    🚀 Quick Login (Local Admin)
+                </button>
+            </div>
+
+            <div class="login-footer" style="text-align: center; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;">
+                <a href="forgot_password.html" style="color: var(--primary); text-decoration: none;">Lupa Password?</a>
+                <div>Belum punya akun? <a href="register.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Daftar Disini</a></div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="src/login.js"></script>
+    <script>
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            document.getElementById('devQuickLogin').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
+
+
+

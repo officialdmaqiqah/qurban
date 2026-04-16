@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Check Session & Profile
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
         await supabase.auth.signOut();
         localStorage.clear();
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
     });
 
     const formatTgl = (iso) => {
