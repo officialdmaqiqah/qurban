@@ -390,16 +390,40 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 else if(f.tipe === 'pengeluaran' && f.kategori === 'Bayar Supplier') {
                     supplierStats[sName].totalPaid += nom;
-                    if(bKey && supplierStats[sName].batches[bKey]) supplierStats[sName].batches[bKey].paid += nom;
+                    if(bKey && supplierStats[sName].batches[bKey]) {
+                        supplierStats[sName].batches[bKey].paid += nom;
+                    } else {
+                        if(!supplierStats[sName].globalUnallocated) supplierStats[sName].globalUnallocated = 0;
+                        supplierStats[sName].globalUnallocated += nom;
+                    }
                 }
             }
         });
 
         let csv = 'Batch;Tanggal Masuk;Supplier;Ekor;Tagihan;Kompensasi;Terbayar;Sisa Hutang\n';
         Object.values(supplierStats).forEach(s => {
-            Object.entries(s.batches).forEach(([batch, bData]) => {
-                const sisa = bData.tagihan - bData.komp - bData.paid;
-                csv += `${batch};${bData.tgl || '-'};${s.nama};${bData.ekor};${bData.tagihan};${bData.komp};${bData.paid};${sisa}\n`;
+            // Urutkan batch (FIFO)
+            const sortedBatches = Object.entries(s.batches).sort((a,b) => {
+                const dA = new Date(a[1].tgl || '2000-01-01');
+                const dB = new Date(b[1].tgl || '2000-01-01');
+                return dA - dB;
+            });
+
+            let unallocatedPool = s.globalUnallocated || 0;
+
+            sortedBatches.forEach(([batch, bData]) => {
+                const sisaSebelumGlobal = bData.tagihan - bData.komp - bData.paid;
+                
+                let fromGlobal = 0;
+                if(unallocatedPool > 0 && sisaSebelumGlobal > 0) {
+                    fromGlobal = Math.min(sisaSebelumGlobal, unallocatedPool);
+                    unallocatedPool -= fromGlobal;
+                }
+
+                const totalPaidFormatted = bData.paid + fromGlobal;
+                const sisaFinal = sisaSebelumGlobal - fromGlobal;
+
+                csv += `${batch};${bData.tgl || '-'};${s.nama};${bData.ekor};${bData.tagihan};${bData.komp};${totalPaidFormatted};${sisaFinal}\n`;
             });
         });
         
