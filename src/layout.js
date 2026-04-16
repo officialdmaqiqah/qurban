@@ -539,7 +539,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div style="font-size:1.1rem; font-weight:600; color:var(--text-main); word-break: break-all; margin: 0.25rem 0;">${fullLink}</div>
                         <p style="margin:0.1rem 0 0; font-size:0.8rem; color:var(--text-muted);">Bagikan link ini. Chat WA pembeli akan masuk ke nomor Anda!</p>
                     </div>
-                    <button id="copyAffBtnGlobal" class="btn btn-sm" style="background:var(--emerald-500); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer; min-width:120px; transition: 0.3s;">Salin Link</button>
+                    <button id="copyAffBtnGlobal" class="btn btn-sm" style="background:#10b981; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer; min-width:120px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); transition: 0.3s;">Salin Link</button>
                 </div>
             `;
             
@@ -553,10 +553,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     navigator.clipboard.writeText('https://' + fullLink);
                     const originalText = copyBtn.textContent;
                     copyBtn.textContent = '✅ Tersalin!';
-                    copyBtn.style.background = 'var(--success)';
+                    copyBtn.style.background = '#059669';
                     setTimeout(() => { 
                         copyBtn.textContent = originalText;
-                        copyBtn.style.background = 'var(--emerald-500)';
+                        copyBtn.style.background = '#10b981';
                     }, 2000);
                 };
             }

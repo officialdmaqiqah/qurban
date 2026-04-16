@@ -36,9 +36,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .maybeSingle();
 
             if (data && !error) {
+                let wa = data.wa ? data.wa.replace(/\D/g, '') : '';
+                // Auto-fix format: 08xx -> 628xx atau 8xx -> 628xx
+                if (wa.startsWith('0')) wa = '62' + wa.substring(1);
+                else if (wa.startsWith('8')) wa = '62' + wa;
+
                 currentAgent = {
                     name: data.full_name,
-                    wa: data.wa.replace(/\D/g, ''),
+                    wa: wa,
                     isAffiliate: true
                 };
                 
