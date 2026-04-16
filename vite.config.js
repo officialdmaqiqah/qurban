@@ -24,7 +24,8 @@ export default defineConfig({
         cek_laporan: resolve(__dirname, 'cek_laporan.html'),
         tes_laporan: resolve(__dirname, 'tes_laporan.html'),
         register: resolve(__dirname, 'register.html'),
-        forgot_password: resolve(__dirname, 'forgot_password.html')
+        forgot_password: resolve(__dirname, 'forgot_password.html'),
+        deposit_agen: resolve(__dirname, 'deposit_agen.html')
       }
     }
   },
