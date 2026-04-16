@@ -28,75 +28,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         syncContactUI();
     }
 
-    // 0. Dynamic Branding from Supabase with Caching
+    // 0. Dynamic Branding from Supabase
     async function loadBranding() {
-        const brandingCont = document.getElementById('brandingContainer');
-        
-        // 1. Try Cache First (Immediate)
-        const cached = localStorage.getItem('QURBAN_BRANDING');
-        if (cached) {
-            try {
-                const b = JSON.parse(cached);
-                applyBranding(b);
-                if (brandingCont) brandingCont.style.opacity = '1';
-            } catch(e) {}
-        }
-
-        function applyBranding(b) {
-            if (b.logo) {
-                const logos = document.querySelectorAll('#brandingLogo, #brandingLogoFooter');
-                logos.forEach(img => img.src = b.logo);
-            }
-            if (b.nama) {
-                const names = document.querySelectorAll('#brandingName, #brandingNameFooter');
-                names.forEach(span => span.textContent = b.nama);
-            }
-        }
-
         try {
-            // 2. Fetch Fresh Data
             const { data } = await supabase.from('master_data').select('val').eq('key', 'PROFILE').single();
             if (data && data.val) {
                 const profile = data.val;
-                applyBranding(profile);
-                localStorage.setItem('QURBAN_BRANDING', JSON.stringify(profile));
+                if (profile.logo) {
+                    const logos = document.querySelectorAll('#brandingLogo, #brandingLogoFooter');
+                    logos.forEach(img => img.src = profile.logo);
+                }
+                if (profile.nama) {
+                    const names = document.querySelectorAll('#brandingName, #brandingNameFooter');
+                    names.forEach(span => span.textContent = profile.nama);
+                }
             }
         } catch (e) {
             console.error('Branding Load Error:', e);
-        } finally {
-            if (brandingCont) brandingCont.style.opacity = '1';
         }
     }
     loadBranding();
-
-    // Theme Logic
-    const themeBtns = document.querySelectorAll('#themeToggle, #themeToggleMobile');
-    const updateThemeIcon = (isLight) => {
-        themeBtns.forEach(btn => {
-            const icon = btn.querySelector('i');
-            if (icon) {
-                icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
-            }
-        });
-    };
-
-    const initTheme = () => {
-        const t = localStorage.getItem('QURBAN_THEME') || 'dark';
-        const isLight = t === 'light';
-        if (isLight) {
-            document.body.classList.add('light-mode');
-        }
-        updateThemeIcon(isLight);
-    };
-    initTheme();
-
-    themeBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const isLight = document.body.classList.toggle('light-mode');
-            localStorage.setItem('QURBAN_THEME', isLight ? 'light' : 'dark');
-            updateThemeIcon(isLight);
-        });
-    });
 
     function updateNavLinks(refValue) {
         document.querySelectorAll('a').forEach(link => {
