@@ -767,30 +767,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initial Load
     initPage();
 
-    // --- AFFILIATE LINK LOGIC ---
-    const isMarketing = ['marketing_dm', 'marketing_ext', 'marketing_kandang', 'reseller'].includes(userRole);
-    const isReallyAgen = userRole === 'agen' || !!profile.permissions?.linkedAgen || isMarketing;
-    const affiliateCard = document.getElementById('affiliateCard');
-    
-    if (isReallyAgen && affiliateCard) {
-        affiliateCard.style.display = 'block';
-        const username = (profile.email || '').split('@')[0];
-        const baseUrl = 'dmqurban.com/etalase.html';
-        const fullLink = `${baseUrl}?ref=${username}`;
-        
-        const linkText = document.getElementById('affiliateLinkText');
-        if (linkText) linkText.textContent = fullLink;
-        
-        const copyBtn = document.getElementById('copyAffiliateBtn');
-        if (copyBtn) {
-            copyBtn.onclick = () => {
-                navigator.clipboard.writeText('https://' + fullLink);
-                copyBtn.textContent = '✅ Tersalin!';
-                setTimeout(() => { copyBtn.textContent = 'Salin Link'; }, 2000);
-            };
-        }
-    }
-
     [inpSearch, selStatusTransaksi, selStatusKesehatan, selStatusFisik, inpMinHarga, inpMaxHarga].forEach(el => {
         if(el) el.addEventListener('change', renderTable);
         if(el === inpSearch || el === inpMinHarga || el === inpMaxHarga) el.addEventListener('input', renderTable);

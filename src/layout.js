@@ -504,6 +504,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Notif Bell Badge (Admin)
+        // Notif Bell Badge (Admin)
         if (isAdmin) {
             const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'pending');
             const { count: editCount } = await supabase.from('edit_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending');
@@ -513,6 +514,51 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const badge = document.createElement('span');
                 badge.className = 'badge-dot';
                 document.getElementById('notifBellIcon')?.appendChild(badge);
+            }
+        }
+        
+        // --- GLOBAL AFFILIATE LINK INJECTOR (FOR AGENTS/MARKETING) ---
+        const isMarketingRole = ['marketing_dm', 'marketing_ext', 'marketing_kandang', 'reseller', 'agen'].includes(userRole);
+        const contentArea = document.querySelector('.content-area');
+
+        if (isMarketingRole && contentArea) {
+            const username = (profile.email || '').split('@')[0];
+            const baseUrl = 'dmqurban.com/etalase.html';
+            const fullLink = `${baseUrl}?ref=${username}`;
+
+            // Create Affiliate Card Element
+            const affCard = document.createElement('div');
+            affCard.id = 'affiliateCardGlobal';
+            affCard.className = 'premium-card emerald';
+            affCard.style.cssText = 'margin-bottom: 2rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(234, 179, 8, 0.05)); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.5rem; border-radius: 12px;';
+            affCard.innerHTML = `
+                <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap: wrap;">
+                    <div class="premium-icon-box" style="position:static; width:46px; height:46px; flex-shrink:0; background:rgba(16, 185, 129, 0.1); color:var(--emerald-500); display:flex; align-items:center; justify-content:center; border-radius:12px; font-size:1.25rem;">🔗</div>
+                    <div style="text-align:left; flex:1; min-width: 200px;">
+                        <div class="premium-label" style="color:var(--emerald-500); margin-bottom:0.15rem; font-size:0.75rem; text-transform:uppercase; font-weight:700;">Link Etalase Affiliate Anda</div>
+                        <div style="font-size:1.1rem; font-weight:600; color:var(--text-main); word-break: break-all; margin: 0.25rem 0;">${fullLink}</div>
+                        <p style="margin:0.1rem 0 0; font-size:0.8rem; color:var(--text-muted);">Bagikan link ini. Chat WA pembeli akan masuk ke nomor Anda!</p>
+                    </div>
+                    <button id="copyAffBtnGlobal" class="btn btn-sm" style="background:var(--emerald-500); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer; min-width:120px; transition: 0.3s;">Salin Link</button>
+                </div>
+            `;
+            
+            // Prepend to content area (so it's always at the top)
+            contentArea.prepend(affCard);
+
+            // Copy logic
+            const copyBtn = affCard.querySelector('#copyAffBtnGlobal');
+            if (copyBtn) {
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText('https://' + fullLink);
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = '✅ Tersalin!';
+                    copyBtn.style.background = 'var(--success)';
+                    setTimeout(() => { 
+                        copyBtn.textContent = originalText;
+                        copyBtn.style.background = 'var(--emerald-500)';
+                    }, 2000);
+                };
             }
         }
     }
