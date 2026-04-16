@@ -49,6 +49,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     loadBranding();
 
+    // Theme Logic
+    const themeBtns = document.querySelectorAll('#themeToggle, #themeToggleMobile');
+    const updateThemeIcon = (isLight) => {
+        themeBtns.forEach(btn => {
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        });
+    };
+
+    const initTheme = () => {
+        const t = localStorage.getItem('QURBAN_THEME') || 'dark';
+        const isLight = t === 'light';
+        if (isLight) {
+            document.body.classList.add('light-mode');
+        }
+        updateThemeIcon(isLight);
+    };
+    initTheme();
+
+    themeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const isLight = document.body.classList.toggle('light-mode');
+            localStorage.setItem('QURBAN_THEME', isLight ? 'light' : 'dark');
+            updateThemeIcon(isLight);
+        });
+    });
+
     function updateNavLinks(refValue) {
         document.querySelectorAll('a').forEach(link => {
             const href = link.getAttribute('href');
@@ -194,7 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span><i class="fas fa-palette"></i> ${goat.warna_tali || 'Putih'}</span>
                         <span><i class="fas fa-heartbeat"></i> Prima</span>
                     </div>
-                    <a href="${etalaseUrl}" class="btn-premium" style="width:100%; border-radius: 12px; font-size: 0.85rem; justify-content:center; padding: 0.8rem;">Cek Detail &rarr;</a>
+                    <a href="${etalaseUrl}" class="btn-premium" style="width:100%; border-radius: 12px; font-size: 0.85rem; justify-content:center; padding: 0.6rem 0;">Cek Detail &rarr;</a>
                 </div>
             `;
             featuredGrid.appendChild(card);

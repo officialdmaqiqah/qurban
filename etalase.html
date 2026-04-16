@@ -6,8 +6,7 @@
     <title>Etalase Kambing | Daarul Mahabbah Qurban</title>
     
     <link rel="stylesheet" href="src/website.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
+    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');if(t==='light')document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('light-mode'));})();</script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -23,6 +22,9 @@
                 <a href="index.html#about">Mengapa Kami</a>
                 <a href="etalase.html" class="text-emerald">Etalase Kambing</a>
                 <a href="index.html#contact">Kontak</a>
+                <button id="themeToggle" class="theme-btn-nav" title="Ganti Tema">
+                    <i class="fas fa-moon"></i>
+                </button>
                 <a href="login.html" class="btn-outline" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;">Portal Agen</a>
             </div>
             <!-- Mobile Toggle -->
@@ -41,6 +43,11 @@
             <a href="index.html#about">Mengapa Kami</a>
             <a href="etalase.html">Etalase</a>
             <a href="index.html#contact">Kontak</a>
+            <div style="margin: 1rem 0;">
+                <button id="themeToggleMobile" class="theme-btn-nav" style="margin: 0 auto; width: 50px; height: 50px; font-size: 1.5rem;">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
             <a href="login.html" class="btn-premium">Portal Agen</a>
         </div>
     </div>

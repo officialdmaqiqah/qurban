@@ -58,6 +58,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     loadBranding();
 
+    // Theme Logic
+    const themeBtns = document.querySelectorAll('#themeToggle, #themeToggleMobile');
+    const updateThemeIcon = (isLight) => {
+        themeBtns.forEach(btn => {
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        });
+    };
+
+    const initTheme = () => {
+        const t = localStorage.getItem('QURBAN_THEME') || 'dark';
+        const isLight = t === 'light';
+        if (isLight) {
+            document.body.classList.add('light-mode');
+        }
+        updateThemeIcon(isLight);
+    };
+    initTheme();
+
+    themeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const isLight = document.body.classList.toggle('light-mode');
+            localStorage.setItem('QURBAN_THEME', isLight ? 'light' : 'dark');
+            updateThemeIcon(isLight);
+        });
+    });
+
     function updateNavLinks(refValue) {
         document.querySelectorAll('a').forEach(link => {
             const href = link.getAttribute('href');

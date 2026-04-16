@@ -7,6 +7,7 @@
     <meta name="description" content="Penyedia hewan qurban premium dengan kualitas terbaik, sehat, dan sesuai syariat. Gratis biaya perawatan dan pengiriman.">
     
     <link rel="stylesheet" href="src/website.css">
+    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'dark';if(t==='light')document.documentElement.classList.add('light-mode');if(t==='light')document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('light-mode'));})();</script>
     
     <script>
         // Subdomain routing: Redirect app users to the login page immediately
@@ -29,9 +30,12 @@
             </a>
             <div class="nav-links">
                 <a href="#home">Beranda</a>
-                <a href="#about">Mengapa Kami</a>
-                <a href="etalase.html">Etalase Kambing</a>
-                <a href="#contact">Kontak</a>
+                <a href="#keunggulan">Keunggulan</a>
+                <a href="etalase.html">Pesan Sekarang</a>
+                <a href="#kontak">Hubungi Kami</a>
+                <button id="themeToggle" class="theme-btn-nav" title="Ganti Tema">
+                    <i class="fas fa-moon"></i>
+                </button>
                 <a href="login.html" class="btn-outline" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;">Portal Agen</a>
             </div>
             <!-- Mobile Toggle -->
@@ -50,6 +54,11 @@
             <a href="#about">Mengapa Kami</a>
             <a href="etalase.html">Etalase</a>
             <a href="#contact">Kontak</a>
+            <div style="margin: 1rem 0;">
+                <button id="themeToggleMobile" class="theme-btn-nav" style="margin: 0 auto; width: 50px; height: 50px; font-size: 1.5rem;">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
             <a href="login.html" class="btn-premium">Portal Agen</a>
         </div>
     </div>
