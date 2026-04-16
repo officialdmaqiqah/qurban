@@ -402,7 +402,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 csv += `${batch};${bData.tgl || '-'};${s.nama};${bData.ekor};${bData.tagihan};${bData.komp};${bData.paid};${sisa}\n`;
             });
         });
-
+        
+        // --- ADDED: DETAILED HISTORY SECTION ---
+        csv += '\n\nHISTORI PEMBAYARAN DETAIL\n';
+        csv += 'Tanggal;Supplier;Batch;Kategori;Nominal;Metode/Channel;Keterangan\n';
+        
+        const payKats = ['Bayar Supplier', 'Kompensasi Supplier'];
+        const detailedHistory = (finance || []).filter(f => payKats.includes(f.kategori))
+                                       .sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
+        
+        detailedHistory.forEach(h => {
+             csv += `${h.tanggal || '-'};${h.supplier || '-'};${h.batch || 'Global'};${h.kategori};${h.nominal};${h.channel || '-'};${(h.keterangan || '').replace(/;/g, ',')}\n`;
+        });
+        
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
