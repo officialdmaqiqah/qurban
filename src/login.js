@@ -42,21 +42,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (img) {
                             img.src = profile.logo;
                             img.style.display = 'block';
+                            img.style.opacity = '1';
                         }
                     });
                     
                     // Ensure the logo is visible if it was hidden or using a fallback icon
                     const defaultIcon = document.querySelector('.login-header .icon-box');
                     if (defaultIcon) defaultIcon.style.display = 'none';
+                } else {
+                    restoreLogosOpacity();
                 }
                 if (profile.nama && loginTitle) {
                     loginTitle.innerHTML = `<span style="color: var(--primary);">${profile.nama}</span> Qurban`;
                 }
+            } else {
+                restoreLogosOpacity();
             }
         } catch (e) {
             console.error('Branding Load Error:', e);
+            restoreLogosOpacity();
         }
     }
+    
+    function restoreLogosOpacity() {
+        ['loginLogo', 'registerLogo', 'forgotLogo'].forEach(id => {
+            const img = document.getElementById(id);
+            if (img) img.style.opacity = '1';
+        });
+    }
+
     loadBranding();
 
     const loginForm = document.getElementById('loginForm');

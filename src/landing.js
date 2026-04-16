@@ -185,16 +185,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 5. Sync Target Logo dengan Logo Profil
     async function syncProfileLogo() {
+        const navbarLogo = document.getElementById('navbarLogoImg');
+        const footerLogo = document.getElementById('footerLogoImg');
         try {
             const { data } = await supabase.from('master_data').select('val').eq('key', 'PROFILE').maybeSingle();
             if (data && data.val && data.val.logo) {
-                const navbarLogo = document.getElementById('navbarLogoImg');
-                const footerLogo = document.getElementById('footerLogoImg');
-                if (navbarLogo) navbarLogo.src = data.val.logo;
-                if (footerLogo) footerLogo.src = data.val.logo;
+                if (navbarLogo) { navbarLogo.src = data.val.logo; navbarLogo.style.opacity = '1'; }
+                if (footerLogo) { footerLogo.src = data.val.logo; footerLogo.style.opacity = '1'; }
+            } else {
+                if (navbarLogo) navbarLogo.style.opacity = '1';
+                if (footerLogo) footerLogo.style.opacity = '1';
             }
         } catch (e) {
             console.error('Gagal mengambil logo profil:', e);
+            if (navbarLogo) navbarLogo.style.opacity = '1';
+            if (footerLogo) footerLogo.style.opacity = '1';
         }
     }
     syncProfileLogo();
