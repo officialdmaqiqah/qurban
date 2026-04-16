@@ -139,20 +139,34 @@
 
         // Goat Welcome Sound Effect
         document.addEventListener('DOMContentLoaded', () => {
-            const playGoatSound = () => {
-                const audio = new Audio('src/assets/goat.mp3');
-                audio.volume = 0.4; // Volume moderat agar tidak mengagetkan
-                audio.play().catch(e => {
-                    console.log('Autoplay dicegah browser, akan diputar saat interaksi pertama.');
-                    document.body.addEventListener('click', function playOnce() {
-                        audio.play().catch(console.error);
-                        document.body.removeEventListener('click', playOnce);
-                    }, { once: true });
-                });
+            const audio = new Audio('src/assets/goat.mp3');
+            audio.volume = 0.8; // Besarkan sedikit
+
+            const tryPlay = () => {
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
+                        console.log('Autoplay dicegah browser, menunggu interaksi pengguna...');
+                        
+                        // Buat fungsi handler yang akan terus mencoba play sampai sukses
+                        const playOnInteraction = () => {
+                            audio.play().then(() => {
+                                // Jika sukses, langsung cabut semua listener agar tidak mengulang
+                                ['click', 'touchstart', 'keydown'].forEach(evt => 
+                                    document.removeEventListener(evt, playOnInteraction)
+                                );
+                            }).catch(err => {/* abaikan jika masih diblock */});
+                        };
+                        
+                        // Pasang ke body untuk menangkap sentuhan apa pun
+                        ['click', 'touchstart', 'keydown'].forEach(evt => 
+                            document.addEventListener(evt, playOnInteraction)
+                        );
+                    });
+                }
             };
             
-            // Beri sedikit delay (1 detik) sebelum suara muncul agar lebih natural
-            setTimeout(playGoatSound, 1000);
+            setTimeout(tryPlay, 1000);
         });
     </script>
 </body>
