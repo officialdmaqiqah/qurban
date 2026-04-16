@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${statusBayarBadge}</td>
                 <td style="text-align:center; vertical-align:middle;">
                     ${(item.foto_thumb || item.foto_fisik) 
-                        ? `<button class="btn btn-sm btn-view-photo" data-url="${getDirectDriveLink(item.foto_fisik)}" data-notali="${item.no_tali}" title="Klik untuk Perbesar" style="width:32px; height:32px; border-radius:50%; padding:0; overflow:hidden; border:2px solid var(--primary-transparent); background:rgba(255,255,255,0.05);">
+                        ? `<button class="btn btn-sm btn-view-photo" data-url="${getDirectDriveLink(item.foto_fisik)}" data-notali="${item.no_tali}" data-warna="${item.warna_tali || '-'}" title="Klik untuk Perbesar" style="width:32px; height:32px; border-radius:50%; padding:0; overflow:hidden; border:2px solid var(--primary-transparent); background:rgba(255,255,255,0.05);">
                              <img src="${getDirectDriveLink(item.foto_thumb || item.foto_fisik)}" style="width:100%; height:100%; object-fit:cover;">
                            </button>`
                         : `<span style="opacity:0.1; font-size:1rem;" title="Tanpa foto">🚫</span>`
@@ -321,6 +321,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     img.src = url;
                     modal.style.display = 'flex';
 
+                    // Get metadata from button
+                    const warnaTali = e.currentTarget.getAttribute('data-warna') || '-';
+
                     // Setup Download Button
                     if (btnDownload) {
                         btnDownload.onclick = async (ev) => {
@@ -337,12 +340,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 await new Promise((res, rej) => { tempImg.onload = res; tempImg.onerror = rej; });
 
                                 const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
                                 canvas.width = tempImg.naturalWidth;
                                 canvas.height = tempImg.naturalHeight;
-                                canvas.getContext('2d').drawImage(tempImg, 0, 0);
+                                ctx.drawImage(tempImg, 0, 0);
+
+                                // --- DRAW OVERLAY ---
+                                const fontSize = Math.round(canvas.width * 0.035); // Responsive font size
+                                const barHeight = fontSize * 2.2;
+                                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                                ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
+
+                                ctx.fillStyle = 'white';
+                                ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                                ctx.textBaseline = 'middle';
+                                const padding = fontSize * 0.8;
+                                ctx.fillText(`NO TALI: ${noTali}   |   WARNA: ${warnaTali}`, padding, canvas.height - (barHeight / 2));
                                 
                                 const a = document.createElement('a');
-                                a.href = canvas.toDataURL('image/jpeg', 0.9);
+                                a.href = canvas.toDataURL('image/jpeg', 0.95);
                                 a.download = `kambing_${noTali}.jpg`;
                                 a.click();
                                 

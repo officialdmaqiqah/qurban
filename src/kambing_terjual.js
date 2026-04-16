@@ -468,12 +468,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     window.viewGoatPhoto = async (id) => {
-        const { data: k } = await supabase.from('stok_kambing').select('foto_fisik, no_tali').eq('id', id).single();
+        const { data: k } = await supabase.from('stok_kambing').select('foto_fisik, no_tali, warna_tali').eq('id', id).single();
         if(!k || !k.foto_fisik) return window.showToast('Foto tidak tersedia.', 'warning');
         
         const lb = document.getElementById('photoLightbox');
         const img = document.getElementById('lightboxImg');
         const loader = document.getElementById('lightboxLoading');
+        const btnDownload = document.getElementById('btnDownloadLightbox');
         
         if(lb && img) {
             img.style.display = 'none';
@@ -485,6 +486,60 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             img.src = window.getDirectDriveLink(k.foto_fisik);
             lb.style.display = 'flex';
+
+            // Setup Overlay Download
+            if (btnDownload) {
+                btnDownload.onclick = async (ev) => {
+                    ev.stopPropagation();
+                    const noTali = k.no_tali || '-';
+                    const warnaTali = k.warna_tali || '-';
+                    const url = window.getDirectDriveLink(k.foto_fisik);
+
+                    try {
+                        const originalText = btnDownload.innerHTML;
+                        btnDownload.innerHTML = '⏳ Menyiapkan...';
+                        btnDownload.style.opacity = '0.7';
+                        btnDownload.style.pointerEvents = 'none';
+
+                        const tempImg = new Image();
+                        tempImg.crossOrigin = "anonymous";
+                        tempImg.src = url;
+                        await new Promise((res, rej) => { tempImg.onload = res; tempImg.onerror = rej; });
+
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = tempImg.naturalWidth;
+                        canvas.height = tempImg.naturalHeight;
+                        ctx.drawImage(tempImg, 0, 0);
+
+                        // --- DRAW OVERLAY ---
+                        const fontSize = Math.round(canvas.width * 0.035);
+                        const barHeight = fontSize * 2.2;
+                        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                        ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
+
+                        ctx.fillStyle = 'white';
+                        ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                        ctx.textBaseline = 'middle';
+                        const padding = fontSize * 0.8;
+                        ctx.fillText(`NO TALI: ${noTali}   |   WARNA: ${warnaTali}`, padding, canvas.height - (barHeight / 2));
+
+                        const a = document.createElement('a');
+                        a.href = canvas.toDataURL('image/jpeg', 0.95);
+                        a.download = `kambing_${noTali}.jpg`;
+                        a.click();
+
+                        if(window.showToast) window.showToast('Foto Berhasil Diunduh!');
+                        btnDownload.innerHTML = originalText;
+                    } catch (error) {
+                        console.error('Download failed:', error);
+                        window.open(url, '_blank');
+                    } finally {
+                        btnDownload.style.opacity = '1';
+                        btnDownload.style.pointerEvents = 'auto';
+                    }
+                };
+            }
             
             img.onerror = () => {
                 if(loader) {

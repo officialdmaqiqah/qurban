@@ -345,18 +345,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                                 // Draw to canvas
                                 const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
                                 canvas.width = tempImg.naturalWidth;
                                 canvas.height = tempImg.naturalHeight;
-                                const ctx = canvas.getContext('2d');
                                 ctx.drawImage(tempImg, 0, 0);
 
+                                // --- DRAW OVERLAY ---
+                                const fontSize = Math.round(canvas.width * 0.035);
+                                const barHeight = fontSize * 2.2;
+                                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                                ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
+
+                                ctx.fillStyle = 'white';
+                                ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                                ctx.textBaseline = 'middle';
+                                const padding = fontSize * 0.8;
+                                const noTali = item.noTali || '-';
+                                const warnaTali = item.warnaTali || '-';
+                                ctx.fillText(`NO TALI: ${noTali}   |   WARNA: ${warnaTali}`, padding, canvas.height - (barHeight / 2));
+
                                 // Convert to dataURL
-                                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
                                 // Trigger Download
                                 const a = document.createElement('a');
                                 a.href = dataUrl;
-                                a.download = `nota_${item.noTali || Date.now()}.jpg`;
+                                a.download = `kambing_${noTali}.jpg`;
                                 document.body.appendChild(a);
                                 a.click();
                                 document.body.removeChild(a);
