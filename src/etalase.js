@@ -37,6 +37,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         syncContactUI();
     }
 
+    // 0. Dynamic Branding from Supabase
+    async function loadBranding() {
+        try {
+            const { data } = await supabase.from('master_data').select('val').eq('key', 'PROFILE').single();
+            if (data && data.val) {
+                const profile = data.val;
+                if (profile.logo) {
+                    const logos = document.querySelectorAll('#brandingLogo, #brandingLogoFooter');
+                    logos.forEach(img => img.src = profile.logo);
+                }
+                if (profile.nama) {
+                    const names = document.querySelectorAll('#brandingName, #brandingNameFooter');
+                    names.forEach(span => span.textContent = profile.nama);
+                }
+            }
+        } catch (e) {
+            console.error('Branding Load Error:', e);
+        }
+    }
+    loadBranding();
+
     function updateNavLinks(refValue) {
         document.querySelectorAll('a').forEach(link => {
             const href = link.getAttribute('href');
