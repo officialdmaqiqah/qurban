@@ -163,7 +163,7 @@ nav.scrolled {
     justify-content: space-between; /* Space out logo and links */
     align-items: center;
     position: relative;
-    padding: 0;
+    padding: 0 2rem;
 }
 
 .nav-logo {
