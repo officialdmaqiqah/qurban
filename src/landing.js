@@ -2,17 +2,15 @@ import { supabase } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const featuredGrid = document.getElementById('featuredGoats');
-    const heroConsultBtn = document.getElementById('heroConsultBtn');
     const footerWa = document.getElementById('footerWa');
     const floatingWa = document.getElementById('floatingWa');
     const navToggle = document.getElementById('navToggle');
-    const sidebarMenu = document.getElementById('sidebarMenu');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
     
     // 1. Affiliate & Contact Sync
     const urlParams = new URLSearchParams(window.location.search);
     const urlRef = urlParams.get('ref');
     
-    // Consistency: Store in localStorage if present, otherwise try to retrieve it
     if (urlRef) localStorage.setItem('qurban_ref', urlRef);
     const ref = urlRef || localStorage.getItem('qurban_ref');
 
@@ -33,9 +31,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('a').forEach(link => {
             const href = link.getAttribute('href');
             if (href && (href.includes('etalase.html') || href.includes('index.html'))) {
-                const url = new URL(href, window.location.origin);
-                url.searchParams.set('ref', refValue);
-                link.setAttribute('href', url.pathname + url.search + url.hash);
+                try {
+                    const url = new URL(href, window.location.origin);
+                    url.searchParams.set('ref', refValue);
+                    link.setAttribute('href', url.pathname + url.search + url.hash);
+                } catch(e) {}
             }
         });
     }
@@ -69,52 +69,52 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function syncContactUI() {
         const waLink = `https://wa.me/${currentAgent.wa}?text=Halo ${currentAgent.name}, saya ingin bertanya tentang Qurban.`;
-        
-        if (heroConsultBtn) heroConsultBtn.href = waLink;
         if (floatingWa) floatingWa.href = waLink;
-        
         if (footerWa) {
             const formatted = currentAgent.wa.startsWith('62') ? '0' + currentAgent.wa.slice(2) : currentAgent.wa;
             footerWa.textContent = formatted.replace(/(\d{4})(\d{4})(\d+)/, '$1-$2-$3');
         }
     }
 
-    // 2. Mobile Menu Toggle
-    if (navToggle && sidebarMenu) {
+    // 2. Modern Mobile Menu Toggle
+    if (navToggle && sidebarOverlay) {
         navToggle.addEventListener('click', () => {
+            sidebarOverlay.classList.toggle('active');
             navToggle.classList.toggle('active');
-            sidebarMenu.classList.toggle('active');
+            document.body.style.overflow = sidebarOverlay.classList.contains('active') ? 'hidden' : '';
         });
 
-        // Close when clicking links
-        sidebarMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
+        // Close when clicking links or overlay
+        sidebarOverlay.addEventListener('click', (e) => {
+            if (e.target === sidebarOverlay || e.target.tagName === 'A') {
+                sidebarOverlay.classList.remove('active');
                 navToggle.classList.remove('active');
-                sidebarMenu.classList.remove('active');
-            });
+                document.body.style.overflow = '';
+            }
         });
     }
 
-    // 3. Scroll Reveal Animations
-    const observerOptions = { threshold: 0.1 };
+    // Navbar Scroll Effect
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) nav.classList.add('scrolled');
+        else nav.classList.remove('scrolled');
+    });
+
+    // 3. Smooth Scroll Reveal Animations
     const revealObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('active');
             }
         });
-    }, observerOptions);
+    }, { threshold: 0.1 });
 
-    // Apply reveal to sections
-    document.querySelectorAll('section, .feature-card, .section-header').forEach(el => {
-        el.classList.add('reveal');
-        revealObserver.observe(el);
-    });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
     // 4. Fetch Featured Stock
     async function fetchFeaturedGoats() {
         if (!featuredGrid) return;
-        featuredGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #94a3b8;">Memuat Stok Unggulan...</div>';
 
         const { data, error } = await supabase
             .from('stok_kambing')
@@ -124,19 +124,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             .order('created_at', { ascending: false });
 
         if (error || !data || data.length === 0) {
-            featuredGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #94a3b8;">Belum ada stok tersedia.</div>';
+            featuredGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #94a3b8;">Belum ada stok unggulan saat ini.</div>';
             return;
         }
 
         renderFeatured(data);
     }
 
-    function cleanGoogleDriveUrl(url) {
+    function cleanUrl(url) {
         if (!url) return '';
         const matches = (url || '').match(/[-\w]{25,50}/g);
         if (matches) {
-            const longest = matches.reduce((a, b) => a.length > b.length ? a : b);
-            return `https://drive.google.com/thumbnail?id=${longest}&sz=w800`;
+            const id = matches.reduce((a, b) => a.length > b.length ? a : b);
+            return `https://drive.google.com/thumbnail?id=${id}&sz=w800`;
         }
         return url;
     }
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             card.className = 'goat-card reveal';
             
             const rawImg = goat.foto_thumb || goat.foto_fisik;
-            const goatImg = cleanGoogleDriveUrl(rawImg);
+            const goatImg = cleanUrl(rawImg);
             const tagNum = goat.no_tali || '??';
             const fallbackImg = `https://ui-avatars.com/api/?name=${tagNum}&background=random&color=fff&size=512`;
             const finalImg = goatImg || fallbackImg;
@@ -166,15 +166,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span class="goat-badge">${category}</span>
                 </div>
                 <div class="goat-info">
-                    <div class="goat-title">Tag #${tagNum} - ${goat.warna_tali || 'Kambing Qurban'}</div>
+                    <div class="goat-title">Tag #${tagNum}</div>
                     <div class="goat-meta">
-                        <span>Sehat & Terawat</span>
+                        <span><i class="fas fa-palette"></i> ${goat.warna_tali || 'Putih'}</span>
+                        <span><i class="fas fa-heartbeat"></i> Prima</span>
                     </div>
-                    <a href="${etalaseUrl}" class="btn-premium" style="width:100%; font-size: 0.85rem; justify-content:center;">Cek Detail</a>
+                    <a href="${etalaseUrl}" class="btn-premium" style="width:100%; border-radius: 12px; font-size: 0.85rem; justify-content:center; padding: 0.8rem;">Cek Detail &rarr;</a>
                 </div>
             `;
             featuredGrid.appendChild(card);
-            revealObserver.observe(card);
+            setTimeout(() => card.classList.add('active'), 50);
         });
     }
 

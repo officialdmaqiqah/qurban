@@ -7,28 +7,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     const agentNameEl = document.getElementById('agentName');
     const agentInitialEl = document.getElementById('agentInitial');
     const floatingWa = document.getElementById('floatingWa');
+    
+    // Modern Mobile Navigation
     const navToggle = document.getElementById('navToggle');
-    const sidebarMenu = document.getElementById('sidebarMenu');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
     
     // Lightbox elements
     const lightbox = document.getElementById('photoLightbox');
     const lightboxImg = document.getElementById('lightboxImg');
     const searchInput = document.getElementById('searchInput');
     let allGoatsData = [];
-
-    // 1. Affiliate & Contact Sync
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlRef = urlParams.get('ref');
-    
-    // Consistency: Store in localStorage if present, otherwise try to retrieve it
-    if (urlRef) localStorage.setItem('qurban_ref', urlRef);
-    const ref = urlRef || localStorage.getItem('qurban_ref');
-
     let currentAgent = {
         name: 'Mimin Qurban',
         wa: '6285335150001',
         isAffiliate: false
     };
+
+    // 1. Affiliate & Contact Sync
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlRef = urlParams.get('ref');
+    
+    if (urlRef) localStorage.setItem('qurban_ref', urlRef);
+    const ref = urlRef || localStorage.getItem('qurban_ref');
 
     if (ref) {
         await lookupAgent(ref.toLowerCase());
@@ -41,9 +41,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('a').forEach(link => {
             const href = link.getAttribute('href');
             if (href && (href.includes('etalase.html') || href.includes('index.html'))) {
-                const url = new URL(href, window.location.origin);
-                url.searchParams.set('ref', refValue);
-                link.setAttribute('href', url.pathname + url.search + url.hash);
+                try {
+                    const url = new URL(href, window.location.origin);
+                    url.searchParams.set('ref', refValue);
+                    link.setAttribute('href', url.pathname + url.search + url.hash);
+                } catch(e) {}
             }
         });
     }
@@ -59,7 +61,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (data && !error && data.wa) {
                 let wa = data.wa.replace(/\D/g, '');
-                // Auto-fix format: 08xx -> 628xx atau 8xx -> 628xx
                 if (wa.startsWith('0')) wa = '62' + wa.substring(1);
                 else if (wa.startsWith('8')) wa = '62' + wa;
 
@@ -78,13 +79,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
             console.error('Affiliate check error:', e);
         } finally {
-            syncContactUI(); // Always sync, using defaults if agent not found
+            syncContactUI();
         }
     }
 
     function syncContactUI() {
         const waLink = `https://wa.me/${currentAgent.wa}?text=Halo ${currentAgent.name}, saya tertarik dengan hewan qurban di etalase.`;
-        
         if (floatingWa) floatingWa.href = waLink;
         
         const footerWa = document.getElementById('footerWa');
@@ -94,33 +94,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 2. Mobile Menu Logic
-    if (navToggle && sidebarMenu) {
+    // 2. Modern Mobile Menu Toggle
+    if (navToggle && sidebarOverlay) {
         navToggle.addEventListener('click', () => {
+            sidebarOverlay.classList.toggle('active');
             navToggle.classList.toggle('active');
-            sidebarMenu.classList.toggle('active');
+            document.body.style.overflow = sidebarOverlay.classList.contains('active') ? 'hidden' : '';
         });
-        sidebarMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
+
+        sidebarOverlay.addEventListener('click', (e) => {
+            if (e.target === sidebarOverlay || e.target.tagName === 'A') {
+                sidebarOverlay.classList.remove('active');
                 navToggle.classList.remove('active');
-                sidebarMenu.classList.remove('active');
-            });
+                document.body.style.overflow = '';
+            }
         });
     }
 
-    // 3. Scroll Reveal Animations
+    // 3. Smooth Scroll Reveal Animations
     const revealObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-            }
+            if (entry.isIntersecting) entry.target.classList.add('active');
         });
     }, { threshold: 0.1 });
 
-    document.querySelectorAll('section, .section-header').forEach(el => {
-        el.classList.add('reveal');
-        revealObserver.observe(el);
-    });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
     // 4. Fetch & Render Stock
     async function fetchGoats() {
@@ -170,10 +168,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (goats.length === 0) {
             goatGrid.innerHTML = `
-                <div class="no-results">
-                    <i class="fas fa-search"></i>
-                    <h3>Hewan Tidak Ditemukan</h3>
-                    <p>Mohon maaf, nomor tag atau kriteria yang Anda cari tidak tersedia di stok kami saat ini.</p>
+                <div class="no-results reveal active" style="grid-column: 1/-1; text-align: center; padding: 5rem 2rem; border-radius: 24px; border: 1px dashed var(--glass-border);">
+                    <i class="fas fa-search" style="font-size: 3rem; color: #475569; margin-bottom: 1.5rem;"></i>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #f1f5f9;">Hewan Tidak Ditemukan</h3>
+                    <p style="color: #94a3b8;">Mohon maaf, nomor tag atau kriteria yang Anda cari tidak tersedia saat ini.</p>
                 </div>
             `;
             return;
@@ -202,38 +200,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span class="goat-badge">${category}</span>
                 </div>
                 <div class="goat-info">
-                    <div class="goat-title">Tag #${tagNum} - ${goat.warna_tali || 'Kambing Qurban'}</div>
+                    <div class="goat-title">Tag #${tagNum}</div>
                     <div class="goat-meta">
-                        <span title="Warna Tali"><i class="fas fa-tag" style="font-size: 0.8rem"></i> Warna Tali: ${goat.warna_tali || ''}</span>
+                        <span><i class="fas fa-palette"></i> ${goat.warna_tali || 'Putih'}</span>
+                        <span><i class="fas fa-check-circle"></i> Sehat & Terawat</span>
                     </div>
-                    <a href="${waLink}" target="_blank" class="btn-premium" style="width:100%; font-size: 0.85rem; justify-content:center;">
-                        <i class="fab fa-whatsapp" style="margin-right: 8px"></i> Pesan via WhatsApp
+                    <a href="${waLink}" target="_blank" class="btn-premium" style="width:100%; border-radius: 12px; font-size: 0.85rem; justify-content:center; padding: 0.8rem;">
+                        <i class="fab fa-whatsapp"></i> Pesan via WhatsApp
                     </a>
                 </div>
             `;
             
-            // Image Preview logic
-            const imgContainer = card.querySelector('.goat-img');
-            imgContainer.addEventListener('click', () => {
+            card.querySelector('.goat-img').addEventListener('click', () => {
                 const fullId = (rawImg || '').match(/[-\w]{25,50}/g);
                 if (fullId && lightbox && lightboxImg) {
                     const id = fullId.reduce((a, b) => a.length > b.length ? a : b);
-                    // Use high-res thumbnail to avoid Google Drive view blocks
                     lightboxImg.src = `https://drive.google.com/thumbnail?id=${id}&sz=w2000`;
                     lightbox.classList.add('active');
                 }
             });
 
             goatGrid.appendChild(card);
-            revealObserver.observe(card);
+            setTimeout(() => card.classList.add('active'), 10);
         });
     }
 
     // Lightbox Close
     if (lightbox) {
-        lightbox.addEventListener('click', () => {
-            lightbox.classList.remove('active');
-        });
+        lightbox.addEventListener('click', () => lightbox.classList.remove('active'));
     }
 
     fetchGoats();

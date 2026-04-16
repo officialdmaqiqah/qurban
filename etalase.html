@@ -12,20 +12,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <nav class="scrolled"> <!-- Always scrolled style for subpages -->
+    <nav class="scrolled">
         <div class="container nav-content">
             <a href="index.html" class="nav-logo">
-                <span>Daarul</span> Mahabbah Qurban
+                <i class="fas fa-hand-holding-heart text-emerald"></i>
+                <span>Daarul Mahabbah</span>
             </a>
             <div class="nav-links">
                 <a href="index.html">Beranda</a>
-                <a href="index.html#about">Tentang Kami</a>
+                <a href="index.html#about">Mengapa Kami</a>
                 <a href="etalase.html" class="text-emerald">Etalase Kambing</a>
                 <a href="index.html#contact">Kontak</a>
-                <a href="login.html" class="btn-outline" style="padding: 0.5rem 1.5rem;">Portal Agen</a>
+                <a href="login.html" class="btn-outline" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;">Portal Agen</a>
             </div>
             <!-- Mobile Toggle -->
-            <button class="nav-toggle" id="navToggle" style="position: absolute; right: 2rem;">
+            <button class="nav-toggle" id="navToggle">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -33,48 +34,45 @@
         </div>
     </nav>
 
-    <!-- Mobile Sidebar -->
-    <div class="sidebar-overlay" id="sidebarMenu">
-        <a href="index.html">Beranda</a>
-        <a href="index.html#about">Tentang Kami</a>
-        <a href="etalase.html">Etalase Kambing</a>
-        <a href="index.html#contact">Kontak</a>
-        <a href="login.html" class="btn-premium">Portal Agen</a>
+    <!-- Modern Mobile Sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay">
+        <div class="sidebar-menu">
+            <a href="index.html">Beranda</a>
+            <a href="index.html#about">Mengapa Kami</a>
+            <a href="etalase.html">Etalase</a>
+            <a href="index.html#contact">Kontak</a>
+            <a href="login.html" class="btn-premium">Portal Agen</a>
+        </div>
     </div>
-
-    <!-- Floating WhatsApp -->
-    <a href="https://wa.me/6281234567890" class="floating-wa" id="floatingWa" target="_blank">
-        <i class="fab fa-whatsapp"></i>
-    </a>
 
     <main class="container">
         <!-- Product Grid (Full Width) -->
-        <section style="padding-top: 120px; padding-bottom: 80px;">
-            <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
-                <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">Koleksi Hewan Qurban</h2>
-                <p style="max-width: 600px; margin: 0 auto;">Pilih hewan qurban terbaik Anda yang tersedia saat ini. Setiap stok dipantau secara medis dan dirawat dengan sepenuh hati.</p>
+        <section style="padding-top: 150px; padding-bottom: 80px;">
+            <div class="section-header reveal" style="text-align: center; margin-bottom: 4rem;">
+                <div class="hero-badge" style="margin-bottom: 1rem;">Koleksi 2026</div>
+                <h2 style="font-size: clamp(2.5rem, 5vw, 3.5rem); margin-bottom: 1.5rem;">Pilih Qurban <span class="gradient-text">Terbaik Anda</span></h2>
+                <p style="max-width: 600px; margin: 0 auto;">Setiap hewan dipantau secara medis dan dirawat dengan standar tertinggi untuk memastikan kualitas ibadah Anda.</p>
             </div>
 
-            <!-- Search Bar -->
-            <div class="search-container">
-                <div class="search-input-wrapper">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Cari nomor tag atau warna tali...">
+            <!-- Search & Filter Bar -->
+            <div class="search-container reveal">
+                <div class="search-input-wrapper glass-card" style="padding: 0.5rem; border-radius: 99px;">
+                    <i class="fas fa-search" style="left: 2rem;"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Cari nomor tag atau kriteria..." style="background: transparent; border: none; box-shadow: none;">
                 </div>
             </div>
 
-            <!-- Affiliate Banner -->
-            <div id="affiliateBanner" class="affiliate-banner">
-                <div class="avatar-mini" id="agentInitial">A</div>
+            <!-- Affiliate Banner (Premium Style) -->
+            <div id="affiliateBanner" class="affiliate-banner glass-card reveal" style="margin-top: -1rem; position: relative; z-index: 5;">
+                <div class="avatar-mini" id="agentInitial" style="background: linear-gradient(135deg, hsl(var(--emerald-500)), hsl(var(--emerald-600)));">A</div>
                 <div>
-                    <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Dilayani oleh Marketing Resmi:</div>
-                    <div style="font-weight: 700; color: white; font-size: 1.1rem;" id="agentName">Nama Agen</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Dilayani oleh Marketing</div>
+                    <div style="font-weight: 800; color: white; font-size: 1.2rem;" id="agentName">Mimin Qurban</div>
                 </div>
             </div>
 
-            <div id="loadingState" class="loading-shimmer">
-                <div class="spinner"></div>
-                <p style="margin-top: 1rem; color: #94a3b8;">Memuat Stok Kambing...</p>
+            <div id="loadingState" style="text-align: center; padding: 5rem 0;">
+                <div class="shimmer" style="height: 500px; border-radius: 24px; margin-bottom: 2rem;"></div>
             </div>
 
             <div class="etalase-grid" id="goatGrid">
@@ -83,27 +81,35 @@
         </section>
     </main>
 
-    <footer>
+    <footer id="contact">
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-info">
-                    <div class="footer-logo" style="margin-bottom: 1.5rem; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: white;">
-                        <span style="color: var(--emerald-500);">Daarul Mahabbah</span> Qurban
-                    </div>
-                    <p>Daarul Mahabbah Qurban berkomitmen menghadirkan hewan qurban berkualitas dengan kemudahan transaksi digital. Ibadah tenang, hati senang.</p>
+                    <a href="index.html" class="nav-logo" style="margin-bottom: 2rem; font-size: 1.5rem;">
+                        <i class="fas fa-hand-holding-heart text-emerald"></i>
+                        <span>Daarul Mahabbah</span>
+                    </a>
+                    <p>Berkomitmen menghadirkan hewan qurban berkualitas dengan kemudahan transaksi digital. Ibadah tenang, hati senang.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Navigasi</h4>
                     <ul>
                         <li><a href="index.html">Beranda</a></li>
-                        <li><a href="index.html#about">Tentang Kami</a></li>
+                        <li><a href="index.html#about">Mengapa Kami</a></li>
                         <li><a href="etalase.html" class="text-emerald">Etalase</a></li>
+                        <li><a href="login.html">Portal Agen</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
                     <h4>Kontak Kami</h4>
-                    <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem;">Alamat:<br>Kandang Daarul Mahabbah,<br>Pangkalpinang - Bangka Belitung</p>
-                    <p style="color: #94a3b8; font-size: 0.9rem;">WA: <span id="footerWa">0812-3456-7890</span></p>
+                    <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 1rem;">
+                        <i class="fas fa-map-marker-alt text-emerald" style="margin-right: 8px;"></i>
+                        Kandang Daarul Mahabbah,<br>Pangkalpinang - Bangka Belitung
+                    </p>
+                    <p style="color: #94a3b8; font-size: 0.95rem;">
+                        <i class="fas fa-phone-alt text-emerald" style="margin-right: 8px;"></i>
+                        WA: <span id="footerWa">0812-3456-7890</span>
+                    </p>
                 </div>
             </div>
             <div class="bottom-footer">
