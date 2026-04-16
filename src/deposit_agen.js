@@ -1,13 +1,6 @@
 import { supabase } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Check Session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-    if (!profile) return;
-
     // Elements
     const tableBodySaldo = document.getElementById('tableBodySaldoAgen');
     const tableBodyRiwayat = document.getElementById('tableBodyRiwayat');
@@ -27,6 +20,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inpChannel = document.getElementById('inpChannel');
     const containerRek = document.getElementById('containerRek');
     const inpRekId = document.getElementById('inpRekId');
+
+    // 1. Check Session (Must Have)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Load Profile (Optional for this page, don't return if fail)
+    try {
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        if (profile && document.getElementById('userEmailDisplay')) {
+            document.getElementById('userEmailDisplay').textContent = profile.email;
+        }
+    } catch (e) {
+        console.warn("Profil tidak dapat dimuat:", e);
+    }
 
     // DB Helpers
     const getAgens = async () => {
