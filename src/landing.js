@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
     let currentAgent = {
-        name: 'Admin Pusat',
+        name: 'Mimin Qurban',
         wa: '6285335150001',
         isAffiliate: false
     };
