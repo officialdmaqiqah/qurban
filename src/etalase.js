@@ -35,8 +35,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .limit(1)
                 .maybeSingle();
 
-            if (data && !error) {
-                let wa = data.wa ? data.wa.replace(/\D/g, '') : '';
+            if (data && !error && data.wa) {
+                let wa = data.wa.replace(/\D/g, '');
                 // Auto-fix format: 08xx -> 628xx atau 8xx -> 628xx
                 if (wa.startsWith('0')) wa = '62' + wa.substring(1);
                 else if (wa.startsWith('8')) wa = '62' + wa;
@@ -52,16 +52,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (agentNameEl) agentNameEl.textContent = data.full_name;
                     if (agentInitialEl) agentInitialEl.textContent = data.full_name.charAt(0).toUpperCase();
                 }
-                syncContactUI();
             }
         } catch (e) {
             console.error('Affiliate check error:', e);
+        } finally {
+            syncContactUI(); // Always sync, using defaults if agent not found
         }
     }
 
     function syncContactUI() {
-        if (floatingWa) {
-            floatingWa.href = `https://wa.me/${currentAgent.wa}?text=Halo ${currentAgent.name}, saya tertarik dengan hewan qurban di etalase.`;
+        const waLink = `https://wa.me/${currentAgent.wa}?text=Halo ${currentAgent.name}, saya tertarik dengan hewan qurban di etalase.`;
+        
+        if (floatingWa) floatingWa.href = waLink;
+        
+        const footerWa = document.getElementById('footerWa');
+        if (footerWa) {
+            const formatted = currentAgent.wa.startsWith('62') ? '0' + currentAgent.wa.slice(2) : currentAgent.wa;
+            footerWa.textContent = formatted.replace(/(\d{4})(\d{4})(\d+)/, '$1-$2-$3');
         }
     }
 

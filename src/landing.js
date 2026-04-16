@@ -29,16 +29,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .limit(1)
                 .maybeSingle();
 
-            if (data && !error) {
+            if (data && !error && data.wa) {
+                let wa = data.wa.replace(/\D/g, '');
+                if (wa.startsWith('0')) wa = '62' + wa.substring(1);
+                else if (wa.startsWith('8')) wa = '62' + wa;
+
                 currentAgent = {
                     name: data.full_name,
-                    wa: data.wa.replace(/\D/g, ''),
+                    wa: wa,
                     isAffiliate: true
                 };
-                syncContactUI();
             }
         } catch (e) {
             console.error('Affiliate lookup failed', e);
+        } finally {
+            syncContactUI();
         }
     }
 
