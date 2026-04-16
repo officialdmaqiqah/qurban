@@ -358,11 +358,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                                 ctx.fillStyle = 'white';
                                 ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                                ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                const padding = fontSize * 0.8;
                                 const noTali = item.noTali || '-';
                                 const warnaTali = item.warnaTali || '-';
-                                ctx.fillText(`NO TALI: ${noTali}   |   WARNA: ${warnaTali}`, padding, canvas.height - (barHeight / 2));
+                                ctx.fillText(`No Tali : ${noTali} | Warna : ${warnaTali}`, canvas.width / 2, canvas.height - (barHeight / 2));
 
                                 // Convert to dataURL
                                 const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
