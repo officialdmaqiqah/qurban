@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Lightbox elements
     const lightbox = document.getElementById('photoLightbox');
     const lightboxImg = document.getElementById('lightboxImg');
+    const searchInput = document.getElementById('searchInput');
+    let allGoatsData = [];
 
     // 1. Affiliate & Contact Sync
     const urlParams = new URLSearchParams(window.location.search);
@@ -136,7 +138,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        allGoatsData = data;
         renderGoats(data);
+    }
+
+    // 5. Search Filtering
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const filtered = allGoatsData.filter(goat => {
+                const tagNum = (goat.no_tali || '').toString().toLowerCase();
+                const color = (goat.warna_tali || '').toLowerCase();
+                return tagNum.includes(query) || color.includes(query);
+            });
+            renderGoats(filtered, query.length > 0);
+        });
     }
 
     function cleanUrl(url) {
@@ -149,8 +165,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         return url;
     }
 
-    function renderGoats(goats) {
+    function renderGoats(goats, isSearching = false) {
         goatGrid.innerHTML = '';
+
+        if (goats.length === 0) {
+            goatGrid.innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <h3>Hewan Tidak Ditemukan</h3>
+                    <p>Mohon maaf, nomor tag atau kriteria yang Anda cari tidak tersedia di stok kami saat ini.</p>
+                </div>
+            `;
+            return;
+        }
+
         goats.forEach(goat => {
             const card = document.createElement('div');
             card.className = 'goat-card reveal';
