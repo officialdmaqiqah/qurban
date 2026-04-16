@@ -249,5 +249,4 @@ document.addEventListener('DOMContentLoaded', async () => {
             else r.style.backgroundColor = '';
         });
     };
-    };
 });
