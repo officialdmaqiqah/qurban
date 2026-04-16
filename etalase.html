@@ -133,40 +133,45 @@
         <img id="lightboxImg" src="" alt="Full Preview" referrerpolicy="no-referrer">
     </div>
 
+    <!-- Audio Tag Native: Lebih support di mobile browser -->
+    <audio id="goatAudio" preload="auto" style="display: none;">
+        <source src="src/assets/goat.mp3" type="audio/mpeg">
+    </audio>
+
     <script type="module" src="src/etalase.js"></script>
     <script>
         lucide.createIcons();
 
         // Goat Welcome Sound Effect
         document.addEventListener('DOMContentLoaded', () => {
-            const audio = new Audio('src/assets/goat.mp3');
-            audio.volume = 0.8; // Besarkan sedikit
+            const audio = document.getElementById('goatAudio');
+            if (audio) {
+                audio.volume = 1.0; // Maksimal
+                audio.load();
 
-            const tryPlay = () => {
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(e => {
-                        console.log('Autoplay dicegah browser, menunggu interaksi pengguna...');
-                        
-                        // Buat fungsi handler yang akan terus mencoba play sampai sukses
-                        const playOnInteraction = () => {
-                            audio.play().then(() => {
-                                // Jika sukses, langsung cabut semua listener agar tidak mengulang
-                                ['click', 'touchstart', 'keydown'].forEach(evt => 
-                                    document.removeEventListener(evt, playOnInteraction)
-                                );
-                            }).catch(err => {/* abaikan jika masih diblock */});
-                        };
-                        
-                        // Pasang ke body untuk menangkap sentuhan apa pun
-                        ['click', 'touchstart', 'keydown'].forEach(evt => 
-                            document.addEventListener(evt, playOnInteraction)
-                        );
-                    });
-                }
-            };
-            
-            setTimeout(tryPlay, 1000);
+                const tryPlay = () => {
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(e => {
+                            console.log('Menunggu klik pengguna: ', e);
+                            
+                            const playOnInteraction = () => {
+                                audio.play().then(() => {
+                                    ['click', 'touchstart', 'keydown'].forEach(evt => 
+                                        document.removeEventListener(evt, playOnInteraction)
+                                    );
+                                }).catch(err => {});
+                            };
+                            
+                            ['click', 'touchstart', 'keydown'].forEach(evt => 
+                                document.addEventListener(evt, playOnInteraction, { passive: true })
+                            );
+                        });
+                    }
+                };
+                
+                setTimeout(tryPlay, 800);
+            }
         });
     </script>
 </body>
