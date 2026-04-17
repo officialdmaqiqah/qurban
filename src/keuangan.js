@@ -211,17 +211,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const containerBalance = document.getElementById('containerRealtimeBalance');
                 if(containerBalance) {
                     containerBalance.innerHTML = '';
-                    const sortedEntries = Object.entries(balances).sort(([nameA], [nameB]) => {
-                        const getPriority = (name) => {
+                    const sortedEntries = Object.entries(balances)
+                        .filter(([name]) => {
                             const low = name.toLowerCase();
-                            if(low === 'kas operasional') return 1;
-                            if(low.includes('tunai') || low.includes('cash')) return 2;
-                            if(low.includes('mandiri')) return 3;
-                            if(low.includes('bsi')) return 4;
-                            return 99;
-                        };
-                        return getPriority(nameA) - getPriority(nameB);
-                    });
+                            return !low.includes('non kas') && !low.includes('non-kas');
+                        })
+                        .sort(([nameA], [nameB]) => {
+                            const getPriority = (name) => {
+                                const low = name.toLowerCase();
+                                if(low === 'kas operasional') return 1;
+                                if(low.includes('tunai') || low.includes('cash')) return 2;
+                                if(low.includes('mandiri')) return 3;
+                                if(low.includes('bsi')) return 4;
+                                return 99;
+                            };
+                            return getPriority(nameA) - getPriority(nameB);
+                        });
 
                     for (const [chan, val] of sortedEntries) {
                         let label = chan.replace('TF ', 'Bank ');
