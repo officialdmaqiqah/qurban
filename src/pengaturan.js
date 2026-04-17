@@ -123,30 +123,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     loadProfil();
 
-    logoUploadBox?.addEventListener('click', () => logoInput.click());
-    logoInput?.addEventListener('change', (e) => {
+    logoInput?.addEventListener('change', async (e) => {
         const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            profileData.logo = ev.target.result;
-            logoPreview.src = ev.target.result;
-            logoPreview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
+        if (!file) return;
+        
+        showToast('Mengompres Logo...');
+        const compressedBase64 = await compressImage(file, 600, 600, 0.8);
+        profileData.logo = compressedBase64;
+        logoPreview.src = compressedBase64;
+        logoPreview.style.display = 'block';
+        if(logoText) logoText.style.display = 'none';
     });
 
-    formProfil?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Prevent saving if logo is too large (> 1MB approx)
-        if (profileData.logo && profileData.logo.length > 1500000) {
-            return showAlert('Ukuran logo terlalu besar! Harap gunakan file di bawah 1MB.', 'danger');
-        }
-
-        profileData.nama = namaKandangInput.value.trim();
-        profileData.kontak = kontakKandangInput.value.trim();
-        profileData.alamat = alamatKandangInput.value.trim();
-        
         const payload = { key: 'PROFILE', val: profileData };
         if (profileData.db_id) payload.id = profileData.db_id;
         else payload.id = 'ID-PROFILE';
@@ -184,26 +172,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadPersonalProfile();
 
     personalPhotoUploadBox?.addEventListener('click', () => personalPhotoInput.click());
-    personalPhotoInput?.addEventListener('change', (e) => {
+    personalPhotoInput?.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            personalPhotoBase64 = ev.target.result;
-            personalPhotoPreview.src = ev.target.result;
-            personalPhotoPreview.style.display = 'block';
-            if (personalPhotoText) personalPhotoText.style.display = 'none';
-        };
-        reader.readAsDataURL(file);
+
+        showToast('Mengompres Foto...');
+        const compressedBase64 = await compressImage(file, 500, 500, 0.7);
+        personalPhotoBase64 = compressedBase64;
+        personalPhotoPreview.src = compressedBase64;
+        personalPhotoPreview.style.display = 'block';
+        if (personalPhotoText) personalPhotoText.style.display = 'none';
     });
 
     formProfilPersonal?.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        if (personalPhotoBase64 && personalPhotoBase64.length > 1500000) {
-            return showAlert('Ukuran foto terlalu besar! Harap gunakan file di bawah 1MB.', 'danger');
-        }
-
         const newName = personalNameInput.value.trim();
         const { error } = await supabase.from('profiles').update({ 
             full_name: newName, 
@@ -222,6 +205,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     setupAutoClean('personalNameInput', 'name');
+
+    // === IMAGE COMPRESSION HELPER ===
+    const compressImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.7) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
 
     // === CRUD LOGIC MASTER DATA ===
     let modalState = { tipe: '', id: null };
