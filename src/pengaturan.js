@@ -135,6 +135,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(logoText) logoText.style.display = 'none';
     });
 
+    formProfil?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        profileData.nama = namaKandangInput.value.trim();
+        profileData.kontak = kontakKandangInput.value.trim();
+        profileData.alamat = alamatKandangInput.value.trim();
+        
         const payload = { key: 'PROFILE', val: profileData };
         if (profileData.db_id) payload.id = profileData.db_id;
         else payload.id = 'ID-PROFILE';
