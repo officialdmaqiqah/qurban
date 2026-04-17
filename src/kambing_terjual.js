@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Signature unik No Tali + Batch agar tidak tertukar
             const signature = `No.${k.no_tali} | ${k.batch}`;
             opt.value = signature;
-            opt.textContent = `${signature} - ${k.warna_tali}${extraStat} - ${formatNum(k.harga_kandang)}`;
+            opt.textContent = `No.${k.no_tali} - ${k.warna_tali}${extraStat} - ${formatNum(k.harga_kandang)}`;
             listKambing.appendChild(opt);
         });
     };
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             total += parseFloat(item.hargaDeal) || 0;
             const div = document.createElement('div'); div.className = 'cart-item';
             div.innerHTML = `
-                <div style="line-height: 1.2;"><strong style="font-size:1rem; color:var(--text-main);"># ${item.noTali}</strong><br><small style="color:var(--text-muted); font-size:0.75rem;">${item.warnaTali || ''} | ${item.batch}</small></div>
+                <div style="line-height: 1.2;"><strong style="font-size:1rem; color:var(--text-main);"># ${item.noTali}</strong><br><small style="color:var(--text-muted); font-size:0.75rem;">${item.warnaTali || ''}</small></div>
                 <div><label style="color:var(--text-muted); font-size:0.65rem;">Sohibul Qurban</label><input type="text" class="form-control inp-sohibul" data-index="${index}" value="${item.namaSohibul || ''}" placeholder="Nama pendaftar..."></div>
                 <div><label style="color:var(--text-muted); font-size:0.65rem;">Hrg Kandang</label><input type="text" class="form-control" style="background:rgba(0,0,0,0.15); color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);" value="${window.formatNum(item.hargaKandang)}" readonly></div>
                 <div><label style="color:var(--text-muted); font-size:0.65rem;">Hrg Deal</label><input type="text" class="form-control inp-deal money-input" data-index="${index}" value="${window.formatNum(item.hargaDeal)}"></div>
@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                          onmouseover="this.style.borderColor='${badgeColor}'; this.style.background='rgba(0,0,0,0.2)'" 
                          onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(255,255,255,0.05)'">
                         <span style="color:${badgeColor}; font-weight:600; margin-right:4px;">No.${item.noTali}</span>
-                        <span style="color:var(--text-muted); font-size:0.65rem;">${item.batch}</span>
+                        <span style="color:var(--text-muted); font-size:0.65rem;">${kMeta?.warna_tali || item.warnaTali || '-'}</span>
                     </div>`; 
             }).join('') + `</div>`;
             
@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (sendWA && typeof window.sendWa === 'function') {
                 try {
                     const config = await window.getWaConfig();
-                    const itemsStr = currentCart.map(it => `• No.${it.noTali} (${it.batch})`).join('\n');
+                    const itemsStr = currentCart.map(it => `• No.${it.noTali} (${it.warnaTali || '-'})`).join('\n');
                     const sohibulStr = currentCart.map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
                     
                     const isDMAgen = (newTrx.agen?.tipe || '').toUpperCase().includes('DM');
@@ -1050,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Tgl Deli': t.delivery?.tgl || '',
                         'Tipe Deli': t.delivery?.tipe || '',
                         'No Tali': it.noTali || '',
-                        'Batch': it.batch || '',
+                        'Warna Tali': it.warnaTali || '',
                         'Nama Sohibul': it.namaSohibul || '',
                         'Harga Deal Item': parseFloat(it.hargaDeal) || 0,
                         'Total Nota': idx === 0 ? (parseFloat(t.total_deal) || 0) : 0,
