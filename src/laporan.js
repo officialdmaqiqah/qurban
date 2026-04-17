@@ -134,7 +134,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     !katLine.includes('bayar supplier') && 
                     !katLine.includes('pelunasan supplier') && 
                     !katLine.includes('komisi') && 
-                    !katLine.includes('bagi hasil')
+                    !katLine.includes('bagi hasil') &&
+                    !katLine.includes('mutasi') &&
+                    !katLine.includes('titipan')
                 ) {
                     opex += nom;
                 }
