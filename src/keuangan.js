@@ -406,6 +406,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         window.setupMoneyMask('transaksiNominal');
         await loadAndSyncCategories();
+        
+        // --- ADD MISSING FILTER LISTENERS ---
+        document.getElementById('inpSearchKeuangan')?.addEventListener('input', debounce(() => renderApp(), 300));
+        document.getElementById('filterTipe')?.addEventListener('change', () => renderApp());
+        document.getElementById('filterChannel')?.addEventListener('change', () => renderApp());
+        document.getElementById('filterKategori')?.addEventListener('change', () => renderApp());
+
         await renderApp();
         window.showToast('Sistem Keuangan Siap', 'success');
 
