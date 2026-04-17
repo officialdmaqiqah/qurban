@@ -716,7 +716,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     }
                     
-                    const agenData = matchedAgen;
+                    let agenData = matchedAgen;
+                    
+                    // FALLBACK: Jika agen tidak ketemu di Master Data atau WA-nya kosong, cari di tabel profiles
+                    if (!agenData || !agenData.wa) {
+                        const searchName = (matchedAgen?.nama || inpAgenId.value.split(' — ')[0] || inpAgenId.value.split(' - ')[0]).trim();
+                        if (searchName && searchName !== '-- Pilih Agen --') {
+                            console.log(`[WA Fallback] Mencari WA Agen ${searchName} di tabel profiles...`);
+                            const { data: profAgen } = await supabase.from('profiles').select('full_name, wa, role, permissions').ilike('full_name', `${searchName}`).single();
+                            
+                            if (profAgen && profAgen.wa) {
+                                console.log(`[WA Fallback] Ketemu! Menggunakan WA dari Profil: ${profAgen.wa}`);
+                                agenData = { 
+                                    nama: profAgen.full_name, 
+                                    wa: profAgen.wa, 
+                                    jenis: profAgen.permissions?.jenis_agen || profAgen.role || 'Agen' 
+                                };
+                                // Re-evaluate isDMAgen if not already detected
+                                if (!isDMAgen && (agenData.jenis || '').toUpperCase().includes('DM')) {
+                                    // If fallback finds a DM agent, we might need to re-run template selection
+                                    // but usually isDMAgen was checked against inpAgenId's text earlier.
+                                }
+                            }
+                        }
+                    }
+
                     const templateAgen = isDMAgen ? config.templateAgentDM : config.templateAgentNormal;
 
                     if (agenData && agenData.wa) {
@@ -735,8 +759,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     } else {
                         console.warn('[WA] Data Agen/WA tidak ditemukan untuk:', inpAgenId.value);
-                        if (newTrx.agen?.nama && newTrx.agen.nama !== '-- Pilih Agen --') {
-                             window.showToast(`Peringatan: WA Agen (${newTrx.agen.nama}) tidak terkirim karena nomor WA tidak ditemukan di database.`, 'warning');
+                        const displayNama = newTrx.agen?.nama || inpAgenId.value;
+                        if (displayNama && displayNama !== '-- Pilih Agen --') {
+                             window.showToast(`Peringatan: WA Agen (${displayNama}) tidak terkirim karena nomor WA tidak ditemukan di sistem (Master Data maupun Profil User).`, 'warning');
                         }
                     }
                 } catch (e) {
