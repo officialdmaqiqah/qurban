@@ -348,11 +348,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             total += parseFloat(item.hargaDeal) || 0;
             const div = document.createElement('div'); div.className = 'cart-item';
             div.innerHTML = `
-                <div style="line-height: 1.2;"><strong style="font-size:1rem; color:var(--text-main);"># ${item.noTali}</strong><br><small style="color:var(--text-muted); font-size:0.75rem;">${item.warnaTali || ''}</small></div>
-                <div><label style="color:var(--text-muted); font-size:0.65rem;">Sohibul Qurban</label><input type="text" class="form-control inp-sohibul" data-index="${index}" value="${item.namaSohibul || ''}" placeholder="Nama pendaftar..."></div>
-                <div><label style="color:var(--text-muted); font-size:0.65rem;">Hrg Kandang</label><input type="text" class="form-control" style="background:rgba(0,0,0,0.15); color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);" value="${window.formatNum(item.hargaKandang)}" readonly></div>
-                <div><label style="color:var(--text-muted); font-size:0.65rem;">Hrg Deal</label><input type="text" class="form-control inp-deal money-input" data-index="${index}" value="${window.formatNum(item.hargaDeal)}"></div>
-                <div style="display:flex; justify-content:center;"><button type="button" class="btn btn-remove" data-index="${index}">&times;</button></div>
+                <div class="cart-item-header">
+                    <div class="cart-item-id">
+                        <span style="color:var(--primary);"># ${item.noTali}</span>
+                        <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${item.warnaTali || ''}</span>
+                        <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${item.batch}</span>
+                    </div>
+                    <button type="button" class="btn-remove" data-index="${index}" title="Hapus dari daftar">&times;</button>
+                </div>
+                <div class="cart-item-grid">
+                    <div class="form-group" style="margin-bottom:0.75rem;">
+                        <label class="form-label" style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:4px;">Sohibul Qurban / Pendaftar</label>
+                        <input type="text" class="form-control inp-sohibul" data-index="${index}" value="${item.namaSohibul || ''}" placeholder="Masukkan nama pendaftar...">
+                    </div>
+                    <div class="cart-item-prices">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:4px;">Harga Kandang</label>
+                            <div style="position:relative;">
+                                <span style="position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:0.75rem; opacity:0.5;">Rp</span>
+                                <input type="text" class="form-control" style="padding-left:28px; background:rgba(255,255,255,0.03); color:var(--text-muted); border-color:rgba(255,255,255,0.02);" value="${window.formatNum(item.hargaKandang)}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" style="font-size:0.7rem; color:var(--primary); display:block; margin-bottom:4px; font-weight:600;">Harga Deal</label>
+                            <div style="position:relative;">
+                                <span style="position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:0.75rem; color:var(--primary); opacity:0.7;">Rp</span>
+                                <input type="text" class="form-control inp-deal money-input" data-index="${index}" value="${window.formatNum(item.hargaDeal)}" style="padding-left:28px; border-color:rgba(var(--primary-rgb), 0.2); background:rgba(var(--primary-rgb), 0.05); color:var(--primary); font-weight:600;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
             cartContainer.appendChild(div);
         });

@@ -1,4 +1,14 @@
-<!DOCTYPE html> <html lang="id"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Manajemen Penjualan - Qurban Manager</title> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700" rel="stylesheet"> <link rel="stylesheet" href="src/style.css"> <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script> <style> .modal-content {
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Penjualan - Qurban Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700" rel="stylesheet">
+    <link rel="stylesheet" href="src/style.css">
+    <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+    <style>
+        .modal-content {
             max-width: 1200px;
             width: 95vw;
             display: flex;
@@ -6,14 +16,24 @@
             max-height: 96vh;
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: var(--bg-card);
+            border-radius: 20px;
+            overflow: hidden;
+            animation: modalSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
         .modal-body {
             max-height: calc(96vh - 140px);
             overflow-y: auto;
-            padding: 1.5rem;
+            padding: 2rem;
             display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 1.5rem;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 2rem;
             align-items: start;
         }
 
@@ -29,90 +49,112 @@
             .modal-body {
                 grid-template-columns: 1fr !important;
                 padding: 1rem !important;
-                gap: 1rem !important;
+                gap: 1.5rem !important;
                 max-height: calc(100vh - 130px) !important;
-            }
-            .form-section {
-                padding: 1rem !important;
-                margin-bottom: 1rem !important;
             }
             .full-width {
                 grid-column: 1 !important;
             }
-            .cart-item {
-                grid-template-columns: 1fr 1fr !important;
-                gap: 0.75rem !important;
-                padding: 1.25rem 1rem !important;
-            }
-            .cart-item > div:nth-child(1) { grid-column: span 2; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 4px; }
-            .cart-item > div:nth-child(2) { grid-column: span 2; }
-            .cart-item > div:nth-child(5) { grid-column: span 2; }
-            .cart-item > div:nth-child(5) .btn-remove { 
-                width: 100%; 
-                background: rgba(239, 68, 68, 0.1) !important; 
-                border: 1px solid rgba(239, 68, 68, 0.3) !important; 
-                color: #ef4444 !important;
-                margin-top: 5px;
-                height: 38px;
-            }
-            
-            /* Target all nested grid rows to stack in mobile */
-            .modal-body div[style*="display:grid"] {
-                grid-template-columns: 1fr !important;
-                gap: 1rem !important;
-            }
-            
-            .total-summary {
-                font-size: 1.1rem !important;
-                min-height: 60px !important;
-            }
-            .komisi-grid {
-                grid-template-columns: 1fr !important;
-            }
         }
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+
         .form-section {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            padding: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            margin-bottom: 0.5rem;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+            background: rgba(var(--bg-card-rgb), 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+        .form-section:hover {
+            border-color: rgba(var(--primary-rgb), 0.3);
+            background: rgba(var(--bg-card-rgb), 0.6);
         }
         .form-section-title {
-            font-size: 0.9rem;
-            font-weight: 300;
+            font-size: 0.85rem;
+            font-weight: 600;
             color: var(--primary);
+            letter-spacing: 0.05em;
             text-transform: uppercase;
-            margin-bottom: 0.75rem;
+            margin-bottom: 1.25rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            opacity: 0.9;
         }
         .full-width {
             grid-column: 1 / span 2;
         }
-        .form-group { margin-bottom: 0.75rem; }
-        .form-label { margin-bottom: 0.25rem; font-size: 0.8rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-label { margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+        
+        /* --- REDESIGNED CART ITEM (CARD STYLE) --- */
         .cart-item {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr 1.2fr 40px;
-            gap: 0.75rem;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            background: rgba(0,0,0,0.3);
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
+            display: block;
+            padding: 1rem;
+            background: rgba(0,0,0,0.25);
+            border-radius: 14px;
+            margin-bottom: 1rem;
             border: 1px solid rgba(255,255,255,0.05);
             transition: var(--transition);
+            position: relative;
         }
         .cart-item:hover {
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.35);
             border-color: var(--primary-transparent);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(0,0,0,0.5);
         }
+        .cart-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .cart-item-id {
+            font-weight: 700;
+            color: var(--text-main);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cart-item .btn-remove {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 0;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+        .cart-item .btn-remove:hover {
+            background: #ef4444;
+            color: white;
+            transform: rotate(90deg);
+        }
+        .cart-item-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        .cart-item-prices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
         .total-summary {
             background: linear-gradient(135deg, var(--primary), var(--primary-hover));
             color: white;
@@ -152,16 +194,22 @@
         }
         .komisi-badge .label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px; }
         .komisi-badge .value { font-size: 1.1rem; font-weight: 300; color: #f59e0b; }
-    </style> </head> <body> <div class="app-layout"> <aside class="sidebar"> <div class="sidebar-header">
-    <div class="sidebar-logo">
-        <span style="font-weight: 600;">Daarul Mahabbah Qurban</span>
-    </div>
-</div>            <nav class="sidebar-nav">
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <span style="font-weight: 600;">Daarul Mahabbah Qurban</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
                 <div class="nav-header">&#128188; DATA STOCK</div>
                 <a href="kambing.html" class="nav-item">&bull; Master Data</a>
                 <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
-                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                <a href="kambing_terjual.html" class="nav-item active">&bull; Kambing Terjual</a>
                 <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
                 <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
                 <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
@@ -170,252 +218,230 @@
                 <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
                 <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
                 <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
-                
-                                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight: 300; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
-
-            </nav> <div style="padding: 1.5rem;"> <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);"> Logout
-                </button> </div> </aside> <main class="main-content"> <header class="topbar"> <div class="page-title">Histori Penjualan</div> <div class="user-menu"> <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span> </div> </header> <div class="content-area"> <div class="card-box"> <div class="flex-between" style="margin-bottom: 1.5rem;"> <div> <h3 style="margin-bottom: 0;">Log Histori Penjualan</h3> <p style="font-size:0.875rem; color:var(--text-muted);">Manajemen transaksi penjualan kambing qurban.</p> </div> <div style="display:flex; gap:0.5rem; align-items:center;"> <button class="btn btn-primary" id="btnExportCsv" style="background:#10b981; border:none;">! Export CSV</button> <button class="btn btn-primary" id="btnTambahTerjual" style="display:none;">+ Order Baru</button> </div> </div> <div style="display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; background:rgba(0,0,0,0.15); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);"> <div style="flex:1; min-width:200px;"> <label class="form-label">Pencarian Transaksi</label> <input type="text" id="inpSearch" class="form-control" placeholder="Cari ID TRX, Nama Konsumen, Agen..."> </div> </div> <div class="table-responsive"> <table class="data-table"> <thead> <tr> <th class="sort-header" data-column="id">ID Trx / Tgl 🔽</th> <th class="sort-header" data-column="agen">Agen / Marketing ↕️</th> <th class="sort-header" data-column="customer">Konsumen &amp; WA ↕️</th> <th>Alamat &amp; Tujuan</th> <th class="sort-header" data-column="tglAntar">Tgl Antar / Tipe ↕️</th> <th>Items</th> <th class="sort-header" data-column="totalDeal">Total Deal ↕️</th> <th class="sort-header" data-column="totalPaid">DP Dibayar ↕️</th> <th class="sort-header" data-column="sisa">Sisa Tagihan ↕️</th> <th style="text-align: right;">Aksi</th> </tr> </thead> <tbody id="tableBodyTransaksi"> </tbody> </table> </div> </div> </div> </main> </div> <!-- MODAL CATAT PENJUALAN BARU -->
-<div class="modal-overlay" id="modalKeluar">
-    <div class="modal-content modal-xl">
-        <div class="modal-header">
-            <h3 class="modal-title">Form Order Baru</h3>
-            <button class="modal-close" id="btnCloseModal">&times;</button>
-        </div>
-        <form id="formTerjual">
-            <div class="modal-body">
-                <!-- ROW 1: AGEN & CUSTOMER -->
-                <div class="form-section">
-                    <div class="form-section-title">👨‍💼 Informasi Agen / Marketing</div>
-                    <div class="form-group">
-                        <label class="form-label">Pilih Agen / Marketing <span style="color:red">*</span></label>
-                        <select id="inpAgenId" class="form-control" required>
-                            <option value="">-- Pilih Agen --</option>
-                        </select>
-                    </div>
+                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight: 300; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+            </nav>
+            <div style="padding: 1.5rem;">
+                <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);"> Logout
+                </button>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">Histori Penjualan</div>
+                <div class="user-menu">
+                    <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
                 </div>
-
-                <div class="form-section">
-                    <div class="form-section-title">👤 Informasi Konsumen</div>
-                    <div class="form-group">
-                        <label class="form-label">Tanggal Order</label>
-                        <input type="date" id="inpTglOrder" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nama Lengkap Konsumen</label>
-                        <input type="text" id="inpCustNama" class="form-control" placeholder="Nama pembeli">
-                    </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
-                        <div class="form-group" style="margin-bottom:0">
-                            <label class="form-label">WA 1 (Utama)</label>
-                            <input type="text" id="inpCustWA1" class="form-control" placeholder="08xxxx">
+            </header>
+            <div class="content-area">
+                <div class="card-box">
+                    <div class="flex-between" style="margin-bottom: 1.5rem;">
+                        <div>
+                            <h3 style="margin-bottom: 0;">Log Histori Penjualan</h3>
+                            <p style="font-size:0.875rem; color:var(--text-muted);">Manajemen transaksi penjualan kambing qurban.</p>
                         </div>
-                        <div class="form-group" style="margin-bottom:0">
-                            <label class="form-label">WA 2</label>
-                            <input type="text" id="inpCustWA2" class="form-control" placeholder="Opsional">
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <button class="btn btn-primary" id="btnExportCsv" style="background:#10b981; border:none;">! Export CSV</button>
+                            <button class="btn btn-primary" id="btnTambahTerjual" style="display:none;">+ Order Baru</button>
                         </div>
                     </div>
+                    <div style="display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; background:rgba(0,0,0,0.15); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+                        <div style="flex:1; min-width:200px;">
+                            <label class="form-label">Pencarian Transaksi</label>
+                            <input type="text" id="inpSearch" class="form-control" placeholder="Cari ID TRX, Nama Konsumen, Agen...">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th class="sort-header" data-column="id">ID Trx / Tgl 🔽</th>
+                                    <th class="sort-header" data-column="agen">Agen / Marketing ↕️</th>
+                                    <th class="sort-header" data-column="customer">Konsumen &amp; WA ↕️</th>
+                                    <th>Alamat &amp; Tujuan</th>
+                                    <th class="sort-header" data-column="tglAntar">Tgl Antar / Tipe ↕️</th>
+                                    <th>Items</th>
+                                    <th class="sort-header" data-column="totalDeal">Total Deal ↕️</th>
+                                    <th class="sort-header" data-column="totalPaid">DP Dibayar ↕️</th>
+                                    <th class="sort-header" data-column="sisa">Sisa Tagihan ↕️</th>
+                                    <th style="text-align: right;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyTransaksi">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+            </div>
+        </main>
+    </div>
 
-                <!-- ROW 2: DELIVERY & CART -->
-                <div class="form-section">
-                    <div class="form-section-title">🚚 Informasi Pengantaran</div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+    <!-- MODAL CATAT PENJUALAN BARU -->
+    <div class="modal-overlay" id="modalKeluar">
+        <div class="modal-content modal-xl">
+            <div class="modal-header">
+                <h3 class="modal-title">Form Order Baru</h3>
+                <button class="modal-close" id="btnCloseModal">&times;</button>
+            </div>
+            <form id="formTerjual">
+                <div class="modal-body">
+                    <!-- ROW 1: AGEN & CUSTOMER -->
+                    <div class="form-section">
+                        <div class="form-section-title">👨‍💼 Informasi Agen / Marketing</div>
                         <div class="form-group">
-                            <label class="form-label">Tipe</label>
-                            <select id="inpDeliveryTipe" class="form-control">
-                                <option value="diantar" selected>Diantar</option>
-                                <option value="ambil_sendiri">Ambil Sendiri</option>
-                                <option value="titip_antar">Titip Antar</option>
+                            <label class="form-label">Pilih Agen / Marketing <span style="color:red">*</span></label>
+                            <select id="inpAgenId" class="form-control" required>
+                                <option value="">-- Pilih Agen --</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Tgl Antar</label>
-                            <input type="date" id="inpDeliveryTgl" class="form-control">
-                        </div>
                     </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+
+                    <div class="form-section">
+                        <div class="form-section-title">👤 Informasi Konsumen</div>
                         <div class="form-group">
-                            <label class="form-label">Kabupaten</label>
-                            <select id="inpCustKab" class="form-control" style="font-size:0.8rem"></select>
+                            <label class="form-label">Tanggal Order</label>
+                            <input type="date" id="inpTglOrder" class="form-control" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Kecamatan</label>
-                            <select id="inpCustKec" class="form-control" disabled style="font-size:0.8rem"></select>
+                            <label class="form-label">Nama Lengkap Konsumen</label>
+                            <input type="text" id="inpCustNama" class="form-control" placeholder="Nama pembeli">
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Desa / Dusun</label>
-                        <input type="text" id="inpCustDesa" class="form-control" placeholder="Nama desa / dusun">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Alamat / Jalan & G-Maps</label>
-                        <input type="text" id="inpCustAlamatJalan" class="form-control" placeholder="Jl. ... / Patokan" style="margin-bottom: 5px;">
-                        <input type="url" id="inpMapsLink" class="form-control" placeholder="Link Google Maps (Opsional)">
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <div class="form-section-title">🐑 Pilihan Kambing & Harga Deal</div>
-                    <div style="display:grid; grid-template-columns: 3fr 1fr; gap:0.5rem; margin-bottom:1rem;">
-                        <input type="text" id="inpSearchKambing" class="form-control" list="listKambing" placeholder="Cari No Tali..." autocomplete="off">
-                        <datalist id="listKambing"></datalist>
-                        <button type="button" class="btn btn-primary" id="btnAddKambing" style="height:100%">+ Add</button>
-                    </div>
-                    <div id="cartContainer" style="max-height: 200px; overflow-y: auto;"></div>
-                </div>
-
-                <!-- ROW 3: COMMISSION (Full Width) -->
-                <div id="sectionKomisi" class="full-width">
-                    <div class="form-section-title">💰 Komisi Agen <span id="labelKomisiAgen" style="font-size:0.75rem; font-weight:normal; text-transform:none; margin-left:0.5rem; opacity:0.8;"></span></div>
-                    <div class="komisi-grid">
-                        <div class="komisi-badge">
-                            <div class="label">Total Deal</div>
-                            <div class="value" id="komisiBaseDeal">Rp 0</div>
-                        </div>
-                        <div class="komisi-badge">
-                            <div class="label">Komisi 10%</div>
-                            <div class="value" id="komisiNominalDisplay">Rp 0</div>
-                        </div>
-                        <div class="komisi-badge" style="background:rgba(16,185,129,0.1); border-color:rgba(16,185,129,0.3);">
-                            <div class="label">Nett Masuk</div>
-                            <div class="value" id="komisiNettDisplay" style="color:var(--success);">Rp 0</div>
-                        </div>
-                    </div>
-                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:10px; font-style: italic;">
-                        * Order ini mengandung komisi untuk agen terkait (Marketing Kandang / Reseller).
-                    </div>
-                    <input type="hidden" id="inpKomisiNominal" value="0">
-                </div>
-
-                <!-- ROW 4: PAYMENT (Full Width) -->
-                <div class="form-section full-width" style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:1.5rem; align-items:stretch; background:rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.15); padding: 1.25rem;">
-                    <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label" style="color:var(--success); font-weight: 300; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Uang Muka / Bayar Awal (DP)</label>
-                        <div style="position:relative;">
-                            <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-weight: 300; color:var(--success); opacity:0.6;">Rp</span>
-                            <input type="text" id="inpTotalBayarAwal" class="form-control money-input" placeholder="0" style="padding-left:40px; font-size:1.25rem; font-weight: 300; color:var(--success); height:50px; background:rgba(255,255,255,0.05);">
-                        </div>
-                    </div>
-                    <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label" style="color:var(--success); font-weight: 300; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Channel Pembayaran</label>
-                        <select id="inpChannelDP" class="form-control" style="height:50px; font-size:1rem; font-weight:600; background:rgba(255,255,255,0.05);">
-                            <option value="Tunai">💵 Tunai</option>
-                            <option value="Transfer Bank">🏦 Transfer Bank</option>
-                            <option value="Saldo Titipan Agen">💰 Saldo Titipan Agen</option>
-                            <option value="QRIS">📱 QRIS</option>
-                            <option value="Lainnya">Lainnya</option>
-                        </select>
-                        <div id="infoSaldoTitipanDP" style="display:none; margin-top:0.5rem; font-size:0.85rem; color:var(--primary); font-weight:600;">
-                            Saldo Tersedia: <span id="valSaldoTitipanDP">Rp 0</span>
-                        </div>
-                        <div id="containerRekDP" style="display:none; margin-top:0.75rem; animation: slideDown 0.3s ease-out;">
-                            <label class="form-label" style="font-size:0.7rem; color:var(--primary); font-weight:600;">REKENING TUJUAN</label>
-                            <select id="inpRekIdDP" class="form-control" style="font-size:0.85rem;"></select>
-                        </div>
-                    </div>
-                    <div class="total-summary" id="displayTotalDeal">
-                        TOTAL: Rp 0
-                    </div>
-                </div>
-                
-                <!-- BUKTI BAYAR UPLOAD -->
-                <div class="form-section full-width" style="margin-top:-1rem; border-top:none; background:rgba(16, 185, 129, 0.02); border: 1px solid rgba(16, 185, 129, 0.1); border-top:none; padding: 0 1.25rem 1.25rem 1.25rem;">
-                    <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label" style="font-size:0.75rem; color:var(--text-muted);">📸 Bukti Bayar Awal (Opsional)</label>
-                        <div style="display:flex; gap:0.5rem; align-items:center;">
-                            <input type="file" id="inpBuktiDP" class="form-control" accept="image/*" style="flex:1;">
-                            <button type="button" id="btnOpenCameraDP" class="btn btn-sm" style="background:#4b5563; color:white; padding:8px 12px; height:40px; border-radius:8px; border:none; display:flex; align-items:center; gap:5px;" title="Ambil Foto Langsung dari Kamera">📸 Kamera</button>
-                        </div>
-                        <div id="previewBuktiDP" style="margin-top:0.75rem; display:none; align-items:center; gap:10px;">
-                            <div style="width:60px; height:60px; border-radius:6px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2);">
-                                <img id="imgPreviewDP" src="" style="width:100%; height:100%; object-fit:cover;">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                            <div class="form-group" style="margin-bottom:0">
+                                <label class="form-label">WA 1 (Utama)</label>
+                                <input type="text" id="inpCustWA1" class="form-control" placeholder="08xxxx">
                             </div>
-                            <button type="button" id="btnRemoveDP" class="btn btn-sm" style="background:#ef4444; color:white; border:none; border-radius:6px; padding:6px 10px;" title="Batalkan/Hapus Foto Pilihan">🗑️ Hapus</button>
+                            <div class="form-group" style="margin-bottom:0">
+                                <label class="form-label">WA 2</label>
+                                <input type="text" id="inpCustWA2" class="form-control" placeholder="Opsional">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ROW 2: DELIVERY & CART -->
+                    <div class="form-section">
+                        <div class="form-section-title">🚚 Informasi Pengantaran</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">Tipe</label>
+                                <select id="inpDeliveryTipe" class="form-control">
+                                    <option value="diantar" selected>Diantar</option>
+                                    <option value="ambil_sendiri">Ambil Sendiri</option>
+                                    <option value="titip_antar">Titip Antar</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tgl Antar</label>
+                                <input type="date" id="inpDeliveryTgl" class="form-control">
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">Kabupaten</label>
+                                <select id="inpCustKab" class="form-control" style="font-size:0.8rem"></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kecamatan</label>
+                                <select id="inpCustKec" class="form-control" disabled style="font-size:0.8rem"></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Desa / Dusun</label>
+                            <input type="text" id="inpCustDesa" class="form-control" placeholder="Nama desa / dusun">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Alamat / Jalan & G-Maps</label>
+                            <input type="text" id="inpCustAlamatJalan" class="form-control" placeholder="Jl. ... / Patokan" style="margin-bottom: 5px;">
+                            <input type="url" id="inpMapsLink" class="form-control" placeholder="Link Google Maps (Opsional)">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-title">🐑 Pilihan Kambing & Harga Deal</div>
+                        <div style="display:grid; grid-template-columns: 3fr 1fr; gap:0.5rem; margin-bottom:1rem;">
+                            <input type="text" id="inpSearchKambing" class="form-control" list="listKambing" placeholder="Cari No Tali..." autocomplete="off">
+                            <datalist id="listKambing"></datalist>
+                            <button type="button" class="btn btn-primary" id="btnAddKambing" style="height:100%">+ Add</button>
+                        </div>
+                        <div id="cartContainer" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
+                    </div>
+
+                    <!-- ROW 3: COMMISSION (Full Width) -->
+                    <div id="sectionKomisi" class="full-width">
+                        <div class="form-section-title">💰 Komisi Agen <span id="labelKomisiAgen" style="font-size:0.75rem; font-weight:normal; text-transform:none; margin-left:0.5rem; opacity:0.8;"></span></div>
+                        <div class="komisi-grid">
+                            <div class="komisi-badge">
+                                <div class="label">Total Deal</div>
+                                <div class="value" id="komisiBaseDeal">Rp 0</div>
+                            </div>
+                            <div class="komisi-badge">
+                                <div class="label">Komisi 10%</div>
+                                <div class="value" id="komisiNominalDisplay">Rp 0</div>
+                            </div>
+                            <div class="komisi-badge" style="background:rgba(16,185,129,0.1); border-color:rgba(16,185,129,0.3);">
+                                <div class="label">Nett Masuk</div>
+                                <div class="value" id="komisiNettDisplay" style="color:var(--success);">Rp 0</div>
+                            </div>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:10px; font-style: italic;">
+                            * Order ini mengandung komisi untuk agen terkait (Marketing Kandang / Reseller).
+                        </div>
+                        <input type="hidden" id="inpKomisiNominal" value="0">
+                    </div>
+
+                    <!-- ROW 4: PAYMENT (Full Width) -->
+                    <div class="form-section full-width" style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:1.5rem; align-items:stretch; background:rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.15); padding: 1.25rem;">
+                        <div class="form-group" style="margin-bottom:0">
+                            <label class="form-label" style="color:var(--success); font-weight: 600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Uang Muka / Bayar Awal (DP)</label>
+                            <div style="position:relative;">
+                                <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-weight: 600; color:var(--success); opacity:0.6;">Rp</span>
+                                <input type="text" id="inpTotalBayarAwal" class="form-control money-input" placeholder="0" style="padding-left:40px; font-size:1.25rem; font-weight: 600; color:var(--success); height:50px; background:rgba(255,255,255,0.05);">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label class="form-label" style="color:var(--success); font-weight: 600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Channel Pembayaran</label>
+                            <select id="inpChannelDP" class="form-control" style="height:50px; font-size:1rem; font-weight:600; background:rgba(255,255,255,0.05);">
+                                <option value="Tunai">💵 Tunai</option>
+                                <option value="Transfer Bank">🏦 Transfer Bank</option>
+                                <option value="Saldo Titipan Agen">💰 Saldo Titipan Agen</option>
+                                <option value="QRIS">📱 QRIS</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                            <div id="infoSaldoTitipanDP" style="display:none; margin-top:0.5rem; font-size:0.85rem; color:var(--primary); font-weight:600;">
+                                Saldo Tersedia: <span id="valSaldoTitipanDP">Rp 0</span>
+                            </div>
+                            <div id="containerRekDP" style="display:none; margin-top:0.75rem;">
+                                <label class="form-label" style="font-size:0.7rem; color:var(--primary); font-weight:600;">REKENING TUJUAN</label>
+                                <select id="inpRekIdDP" class="form-control" style="font-size:0.85rem;"></select>
+                            </div>
+                        </div>
+                        <div class="total-summary" id="displayTotalDeal">
+                            TOTAL: Rp 0
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1);" id="btnCancelModal">Batal</button>
-                <button type="submit" class="btn btn-primary" id="btnSimpanTransaksi">Simpan Transaksi Penjualan</button>
-            </div>
-        </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1);" id="btnCancelModal">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btnSimpanTransaksi">Simpan Transaksi Penjualan</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+
     <!-- LIGHTBOX PHOTO VIEW -->
     <div id="photoLightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; flex-direction:column; align-items:center; justify-content:center; cursor:zoom-out; padding: 20px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);" onclick="this.style.display='none'">
         <div id="lightboxLoading" style="position:absolute; color:white; font-style:italic; top:50%; left:50%; transform:translate(-50%, -50%); z-index:100000;">Memuat Foto...</div>
-        
         <img id="lightboxImg" style="max-width:95vw; max-height:80vh; border-radius:12px; box-shadow:0 20px 50px rgba(0,0,0,0.7); object-fit:contain; display:none; border: 3px solid rgba(255,255,255,0.1);" onload="document.getElementById('lightboxLoading').style.display='none'; this.style.display='block';" onclick="event.stopPropagation()">
-        
-        <!-- Floating Download Bar -->
         <div style="position:absolute; bottom:30px; left:0; width:100%; display:flex; justify-content:center; pointer-events:none; z-index:100001;">
-            <button id="btnDownloadLightbox" class="btn" style="pointer-events:auto; background:#10b981 !important; color:white !important; border:none !important; padding:15px 30px !important; border-radius:50px !important; display:flex !important; align-items:center !important; gap:10px !important; font-weight: 300 !important; font-size:1rem !important; box-shadow:0 10px 30px rgba(0,0,0,0.5) !important; cursor:pointer;" onclick="event.stopPropagation()">
+            <button id="btnDownloadLightbox" class="btn" style="pointer-events:auto; background:#10b981 !important; color:white !important; border:none !important; padding:15px 30px !important; border-radius:50px !important; display:flex !important; align-items:center !important; gap:10px !important; font-weight: 600 !important; font-size:1rem !important; box-shadow:0 10px 30px rgba(0,0,0,0.5) !important;" onclick="event.stopPropagation()">
                 📥 Download Foto Kambing
             </button>
         </div>
-
         <div style="position:absolute; top:20px; right:20px; color:white; font-size:3rem; font-weight: 300; cursor:pointer; line-height:1; opacity:0.8; z-index:100002;" onclick="this.parentElement.style.display='none'">&times;</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
     <script type="module" src="src/layout.js?v=4.0"></script>
     <script type="module" src="src/kambing_terjual.js"></script>
-
-    <!-- MODAL TERIMA PELUNASAN --> 
-    <div class="modal-overlay" id="modalLunas"> 
-        <div class="modal-content" style="max-width:520px;"> 
-            <div class="modal-header"> 
-                <h3 class="modal-title">💳 Terima Pembayaran</h3> 
-                <button class="modal-close" id="btnCloseLunasModal">&times;</button> 
-            </div> 
-            <div class="modal-body" style="display:block;"> 
-                <div class="form-group"> 
-                    <label class="form-label">Pilih Order (Penjualan Belum Lunas)</label> 
-                    <select id="selOrderLunas" class="form-control"> 
-                        <option value="">-- Pilih Order --</option> 
-                    </select> 
-                </div> 
-                <div id="infoOrderLunas" style="display:none; background:rgba(0,0,0,0.25); border-radius:8px; padding:1rem; margin-bottom:1rem; font-size:0.85rem;"> 
-                    <div id="detailOrderLunas"></div> 
-                    <div id="historiPayLunas" style="margin-top:0.75rem;"></div> 
-                </div> 
-                <div id="formInputLunas" style="display:none;"> 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;"> 
-                        <div class="form-group" style="margin-bottom:0"> 
-                            <label class="form-label">Nominal Dibayar (Rp)</label> 
-                            <input type="text" id="inpNominalLunas" class="form-control money-input" placeholder="0" style="font-weight: 300; font-size:1rem;"> 
-                        </div> 
-                        <div class="form-group" style="margin-bottom:0"> 
-                            <label class="form-label">Channel</label> 
-                            <select id="inpChannelLunas" class="form-control"> 
-                                <option value="Tunai">💵 Tunai</option> 
-                                <option value="Transfer Bank">🏦 Transfer Bank</option> 
-                                <option value="Saldo Titipan Agen">💰 Saldo Titipan Agen</option>
-                                <option value="QRIS">📱 QRIS</option> 
-                                <option value="Lainnya">Lainnya</option> 
-                            </select> 
-                            <div id="infoSaldoTitipanLunas" style="display:none; margin-top:0.5rem; font-size:0.85rem; color:var(--primary); font-weight:600;">
-                                Saldo Tersedia: <span id="valSaldoTitipanLunas">Rp 0</span>
-                            </div>
-                            <div id="containerRekLunas" style="display:none; margin-top:0.5rem;"> 
-                                <label class="form-label" style="font-size:0.7rem; color:var(--primary);">💳 Rekening Tujuan</label> 
-                                <select id="inpRekIdLunas" class="form-control" style="font-size:0.8rem;"></select> 
-                            </div> 
-                        </div> 
-                    </div> 
-                    <div class="form-group" style="margin-bottom:0"> 
-                        <label class="form-label">Tanggal Pembayaran</label> 
-                        <input type="date" id="inpTglLunas" class="form-control"> 
-                    </div> 
-                </div> 
-            </div> 
-            <div class="modal-footer"> 
-                <button type="button" class="btn" style="background:transparent; border:1px solid rgba(255,255,255,0.1);" id="btnBatalLunas">Batal</button> 
-                <button type="button" class="btn btn-primary" id="btnSimpanLunas" disabled>Simpan Pembayaran</button> 
-            </div> 
-        </div> 
-    </div> 
-</body> 
+</body>
 </html>
