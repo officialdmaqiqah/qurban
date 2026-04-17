@@ -198,6 +198,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const TIPE_BERHAK_KOMISI_UPPER = ['MARKETING KANDANG', 'RESELLER'];
 
     const formatTgl = (iso) => { if(!iso) return '-'; const p = iso.split('-'); return p.length >= 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso; };
+    const formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
+    const formatNum = (v) => new Intl.NumberFormat('id-ID').format(v || 0);
+    const parseNum = (s) => { if(!s) return 0; return parseFloat(String(s).replace(/[^0-9]/g, '')) || 0; };
+    const debounce = (func, wait) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func(...args), wait); }; };
 
     const generateTrxId = async () => {
         const { data } = await supabase.from('transaksi').select('id').order('id', { ascending: false }).limit(1);
@@ -451,6 +455,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const linkedAgen = profile?.permissions?.linkedAgen || '';
         const profileName = (profile?.full_name || '').toLowerCase();
         
+        // 1. Fetch Trx Data only
         let query = supabase.from('transaksi').select('*');
         if (!isAdmin && !linkedAgen && !profileName) { 
             tableBody.innerHTML = '<tr><td colspan="10">Data tidak ditemukan.</td></tr>'; 
@@ -458,50 +463,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const { data: trxData, error } = await query;
-        if (error) {
-            console.error("Query Error:", error);
-            showAlert("Gagal memuat data transaksi: " + error.message, "danger");
-            return;
-        }
-        let trx = [...trxData];
-        const keyword = (inpGlobalSearch ? inpGlobalSearch.value : '').toLowerCase();
+        if (error) { console.error("Query Error:", error); return; }
+        
+        let trx = [...(trxData || [])];
+        const keyword = (inpGlobalSearch ? inpGlobalSearch.value : '').toLowerCase().trim();
 
-        const agenLinkedId = profile?.linked_agen_id || profile?.permissions?.linkedAgenId || '';
-        const agenLinkedName = (profile?.linked_agen_nama || profile?.permissions?.linkedAgen || '').toLowerCase().trim();
+        // 2. Fetch Support Data (Cached for this render)
+        const [editReqsRes, kambingDb] = await Promise.all([
+            supabase.from('edit_requests').select('*').eq('status', 'pending'),
+            getKambingDb()
+        ]);
+        const editReqs = editReqsRes.data || [];
 
-        console.log("[Trx Debug] Profile:", profile);
-        console.log("[Trx Debug] LinkedAgen:", linkedAgen);
-        console.log("[Trx Debug] Total Data Awal:", trxData ? trxData.length : 0);
-
+        // 3. Apply Filter Role
         if (!isAdmin) { 
             const clean = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-            if (linkedAgen) {
-                const search = clean(linkedAgen);
-                const beforeCount = trx.length;
-                trx = trx.filter(t => {
-                    if (!t.agen) return false;
-                    const name = clean(typeof t.agen === 'string' ? t.agen : (t.agen.nama || ''));
-                    const id = clean(t.agen.id || '');
-                    return name === search || id === search || name.includes(search) || search.includes(name);
-                });
-                console.log(`[Trx Debug] Search: "${search}", Found: ${trx.length} from ${beforeCount}`);
-            } else {
-                const search = clean(profileName);
-                trx = trx.filter(t => {
-                    if (!t.agen) return false;
-                    const name = clean(typeof t.agen === 'string' ? t.agen : (t.agen.nama || ''));
-                    return name === search || name.includes(search);
-                });
-                console.log(`[Trx Debug] Fallback Search: "${search}", Found: ${trx.length}`);
-            }
+            const search = clean(linkedAgen || profileName);
+            trx = trx.filter(t => {
+                const name = clean(typeof t.agen === 'string' ? t.agen : (t.agen?.nama || ''));
+                const id = clean(t.agen?.id || '');
+                return name === search || id === search || name.includes(search);
+            });
         }
-        if (keyword) { trx = trx.filter(t => t.id.toLowerCase().includes(keyword) || (t.customer?.nama || '').toLowerCase().includes(keyword) || (t.agen?.nama || '').toLowerCase().includes(keyword) || (t.customer?.wa1 || '').toLowerCase().includes(keyword)); }
-        trx.sort((a, b) => { let vA = a[currentSort.column], vB = b[currentSort.column]; if (currentSort.column === 'sisa') { vA = (a.total_deal || 0) - (a.total_paid || 0); vB = (b.total_deal || 0) - (b.total_paid || 0); } return currentSort.direction === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1); });
-        const { data: editReqs } = await supabase.from('edit_requests').select('*').eq('status', 'pending');
-        const kambingDb = await getKambingDb();
+
+        // 4. Apply Search Keyword
+        if (keyword) { 
+            trx = trx.filter(t => 
+                (t.id || '').toLowerCase().includes(keyword) || 
+                (t.customer?.nama || '').toLowerCase().includes(keyword) || 
+                (t.agen?.nama || '').toLowerCase().includes(keyword) || 
+                (t.customer?.wa1 || '').toLowerCase().includes(keyword)
+            ); 
+        }
+
+        // 5. Sort
+        trx.sort((a, b) => { 
+            let vA = a[currentSort.column], vB = b[currentSort.column]; 
+            if (currentSort.column === 'sisa') { vA = (a.total_deal || 0) - (a.total_paid || 0); vB = (b.total_deal || 0) - (b.total_paid || 0); } 
+            return currentSort.direction === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1); 
+        });
+
         tableBody.innerHTML = '';
         trx.forEach(t => {
-            const hasPendingEdit = editReqs?.find(r => r.trx_id === t.id);
+            const hasPendingEdit = editReqs.find(r => r.trx_id === t.id);
             const sisa = (t.total_deal || 0) - (t.total_paid || 0);
             const itemsHtml = `<div style="display:flex; flex-wrap:wrap; gap:6px;">` + (t.items || []).map(item => { 
                 const kMeta = kambingDb.find(k => k.id === item.goatId); 
@@ -511,17 +515,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 return `
                     <div style="display:inline-flex; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:4px 8px; font-size:0.75rem; transition: var(--transition); cursor:pointer;" 
-                         onclick="window.viewGoatPhoto('${item.goatId}')"
-                         onmouseover="this.style.borderColor='${badgeColor}'; this.style.background='rgba(0,0,0,0.2)'" 
-                         onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(255,255,255,0.05)'">
+                         onclick="window.viewGoatPhoto('${item.goatId}')">
                         <span style="color:${badgeColor}; font-weight:600; margin-right:4px;">No.${item.noTali}</span>
                         <span style="color:var(--text-muted); font-size:0.65rem;">${kMeta?.warna_tali || item.warnaTali || '-'}</span>
                     </div>`; 
             }).join('') + `</div>`;
             
             const tr = document.createElement('tr');
-            const isOwner = (agenLinkedId && t.agen?.id === agenLinkedId) || (agenLinkedName && (t.agen?.nama || '').toLowerCase() === agenLinkedName);
-            const canEdit = isAdmin || (isMarketingRole && isOwner);
+            const isOwner = (t.agen?.id === (profile?.linked_agen_id || '')) || ((t.agen?.nama || '').toLowerCase() === (profile?.linked_agen_nama || '').toLowerCase());
+            const canEdit = isAdmin || isOwner;
 
             tr.innerHTML = `
                 <td>
@@ -773,18 +775,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     if (agenData && agenData.wa) {
                         const msgAgenParsed = await window.parseWaTemplate(templateAgen, commonData);
-                        
-                        // DEBUG ALERT
-                        console.log(`[WA DEBUG] DEST: ${agenData.wa}, NAME: ${agenData.nama}, SOURCE: ${agenData.source}`);
+                        console.log(`[WA] Menyiapkan pengiriman Ke Agen: ${agenData.nama} (${agenData.wa})`);
                         
                         const resA = await window.sendWa(agenData.wa, msgAgenParsed);
                         
-                        if (resA.success) {
-                            window.showToast(`WA Agen (${agenData.nama}) Berhasil Terkirim!`, 'success');
-                        } else {
-                            // Tampilkan alert keras jika gagal agar kita tahu alasannya
-                            alert(`DEBUG FAIL (WA AGEN): \nNomor: ${agenData.wa}\nPesan: ${resA.msg || 'Unknown Error'}\nLink: ${resA.link || '-'}`);
-                            window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
+                        if (!resA.success) {
+                            window.showToast('WA ke Agen gagal dikirim otomatis. Menawarkan pengiriman manual...', 'warning');
+                            window.showConfirm(`WA Agen Gagal: ${resA.msg}\n\nIngin kirim manual?`, () => {
+                                window.open(resA.link, '_blank');
+                            }, null, 'WA Gateway Masalah', 'Kirim Manual', 'btn-primary');
                         }
 
                         // Kirim Notifikasi Saldo Terpotong jika pakai Titipan (Hanya jika WA utama sukses/manual)
@@ -794,12 +793,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                             await window.sendWa(agenData.wa, msgSaldo);
                         }
                     } else {
-                        const displayNama = newTrx.agen?.nama || inpAgenId.value;
-                        const debugMsg = `Peringatan: WA Agen (${displayNama}) tidak terkirim karena NOMOR WA TIDAK DITEMUKAN.\n\nSource: ${agenData ? agenData.source : 'Not Matched'}`;
-                        alert(debugMsg);
                         console.warn('[WA] Data Agen/WA tidak ditemukan untuk:', inpAgenId.value);
+                        const displayNama = newTrx.agen?.nama || inpAgenId.value;
                         if (displayNama && displayNama !== '-- Pilih Agen --') {
-                             window.showToast(debugMsg, 'warning');
+                             window.showToast(`Peringatan: WA Agen (${displayNama}) tidak terkirim karena nomor WA tidak ditemukan.`, 'warning');
                         }
                     }
                 } catch (e) {
@@ -1179,9 +1176,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (inpGlobalSearch) {
-        inpGlobalSearch.addEventListener('input', () => {
+        inpGlobalSearch.addEventListener('input', debounce(() => {
             renderTable();
-        });
+        }, 300));
     }
 
     renderTable();
