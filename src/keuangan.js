@@ -263,7 +263,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             keteranganInput.value = item.keterangan;
             await populateKategori(item.tipe);
             kategoriInput.value = item.kategori;
-            if(item.bukti_url) { imgPreviewKeu.src = window.getDirectDriveLink(item.bukti_url); previewBuktiKeuangan.style.display = 'flex'; }
+            
+            // Reset & Populate Photo
+            const pArea = document.getElementById('previewBuktiKeuangan');
+            const pImg = pArea?.querySelector('img');
+            if(item.bukti_url) { 
+                window.existingKeuBuktiUrl = item.bukti_url;
+                if(pImg) pImg.src = window.getDirectDriveLink(item.bukti_url); 
+                if(pArea) pArea.style.display = 'flex'; 
+            } else {
+                window.existingKeuBuktiUrl = null;
+                if(pArea) pArea.style.display = 'none';
+            }
+            
             modalKeuangan.classList.add('active');
         };
 
@@ -287,14 +299,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // LISTENERS
         document.getElementById('btnTambahPemasukan')?.addEventListener('click', () => { 
-            formKeuangan.reset(); window.editingId = null;
+            formKeuangan.reset(); window.editingId = null; window.existingKeuBuktiUrl = null;
+            document.getElementById('previewBuktiKeuangan').style.display = 'none';
             tipeInput.value = 'pemasukan'; modalTitle.textContent = 'Catat Pemasukan'; tanggalInput.value = window.getLocalDate(); 
             containerKategori.style.display = 'block'; containerMutasiTujuan.style.display = 'none'; 
             populateKategori('pemasukan'); modalKeuangan.classList.add('active'); 
         });
 
         document.getElementById('btnTambahPengeluaran')?.addEventListener('click', () => { 
-            formKeuangan.reset(); window.editingId = null;
+            formKeuangan.reset(); window.editingId = null; window.existingKeuBuktiUrl = null;
+            document.getElementById('previewBuktiKeuangan').style.display = 'none';
             tipeInput.value = 'pengeluaran'; modalTitle.textContent = 'Catat Pengeluaran'; tanggalInput.value = window.getLocalDate(); 
             containerKategori.style.display = 'block'; containerMutasiTujuan.style.display = 'none'; 
             populateKategori('pengeluaran'); modalKeuangan.classList.add('active'); 
@@ -336,9 +350,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ]);
                 } else {
                     let finalChannel = chan === 'Transfer Bank' ? `TF ${transaksiRekId.options[transaksiRekId.selectedIndex].textContent}` : chan;
+                    
+                    let finalBuktiUrl = window.existingKeuBuktiUrl || null;
+                    if (inpBukti?.files.length > 0) {
+                        const b64 = await compressImage(inpBukti.files[0]);
+                        finalBuktiUrl = await uploadToGDrive(b64, 'BUKTI_KEUANGAN');
+                    }
+
                     await supabase.from('keuangan').upsert([{ 
                         id: window.editingId || ('FIN-' + Date.now().toString().slice(-6)),
-                        tipe, tanggal: tgl, kategori: kat, nominal, keterangan: ket, channel: finalChannel
+                        tipe, tanggal: tgl, kategori: kat, nominal, keterangan: ket, channel: finalChannel,
+                        bukti_url: finalBuktiUrl
                     }]);
                 }
                 modalKeuangan.classList.remove('active');
@@ -412,6 +434,82 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.setupMoneyMask('transaksiNominal');
         await loadAndSyncCategories();
         
+        // --- PHOTO & CAMERA HANDLING ---
+        const inpBukti = document.getElementById('inpBuktiKeuangan');
+        const btnCamera = document.getElementById('btnOpenCameraKeu');
+        const btnRemovePhoto = document.getElementById('btnRemoveKeuPhoto');
+        const previewArea = document.getElementById('previewBuktiKeuangan');
+        const previewImg = previewArea?.querySelector('img');
+        const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
+
+        async function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        let width = img.width, height = img.height;
+                        const max = 800;
+                        if (width > height) { if (width > max) { height *= max / width; width = max; } } 
+                        else { if (height > max) { width *= max / height; height = max; } }
+                        canvas.width = width; canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
+                    };
+                };
+            });
+        }
+
+        async function uploadToGDrive(base64, folderName) {
+            try {
+                const response = await fetch(GDRIVE_PROXY_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ base64: base64, mimeType: "image/jpeg", fileName: "finance_" + Date.now(), folderName: folderName })
+                });
+                const result = await response.json();
+                return result.success ? window.getDirectDriveLink(result.url) : null;
+            } catch (error) { console.error('GDrive Upload failed:', error); return null; }
+        }
+
+        if (inpBukti) {
+            inpBukti.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (re) => {
+                        if(previewImg) previewImg.src = re.target.result;
+                        if(previewArea) previewArea.style.display = 'flex';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        if (btnCamera && window.openCameraUI) {
+            btnCamera.addEventListener('click', () => {
+                window.openCameraUI((file) => {
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    if (inpBukti) {
+                        inpBukti.files = dt.files;
+                        inpBukti.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+        }
+
+        if (btnRemovePhoto) {
+            btnRemovePhoto.addEventListener('click', () => {
+                if(inpBukti) inpBukti.value = '';
+                if(previewArea) previewArea.style.display = 'none';
+                window.existingKeuBuktiUrl = null;
+            });
+        }
+
         // --- ADD MISSING FILTER LISTENERS ---
         document.getElementById('inpSearchKeuangan')?.addEventListener('input', debounce(() => renderApp(), 300));
         document.getElementById('filterTipe')?.addEventListener('change', () => renderApp());
