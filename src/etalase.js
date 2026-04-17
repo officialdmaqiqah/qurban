@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('full_name, wa')
+                .select('full_name, wa, photo_url')
                 .or(`email.ilike.${username},email.ilike.${username}@%`)
                 .limit(1)
                 .maybeSingle();
@@ -67,13 +67,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 currentAgent = {
                     name: data.full_name,
                     wa: wa,
-                    isAffiliate: true
+                    isAffiliate: true,
+                    photo: data.photo_url
                 };
                 
                 if (affiliateBanner) {
                     affiliateBanner.classList.add('active');
                     if (agentNameEl) agentNameEl.textContent = data.full_name;
-                    if (agentInitialEl) agentInitialEl.textContent = data.full_name.charAt(0).toUpperCase();
+                    if (agentInitialEl) {
+                        if (data.photo_url) {
+                            agentInitialEl.innerHTML = `<img src="${data.photo_url}" alt="${data.full_name}">`;
+                        } else {
+                            agentInitialEl.textContent = data.full_name.charAt(0).toUpperCase();
+                        }
+                    }
                 }
             }
         } catch (e) {

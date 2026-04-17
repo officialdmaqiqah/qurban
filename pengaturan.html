@@ -3,7 +3,7 @@
 <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Pengaturan -  Qurban Manager</title>
+        <title>Pengaturan - Qurban Manager</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700" rel="stylesheet">
         <link rel="stylesheet" href="src/style.css">
         <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
@@ -30,7 +30,7 @@
                         transition: var(--transition);
                         white-space: nowrap;
                 }
-                .tab-btn:hover {  color: var(--text-main); }
+                .tab-btn:hover { color: var(--text-main); }
                 .tab-btn.active {
                         color: var(--primary);
                         border-bottom-color: var(--primary);
@@ -40,11 +40,11 @@
                         display: none;
                         animation: fadeIn 0.3s ease;
                 }
-                .tab-content.active {  display: block; }
+                .tab-content.active { display: block; }
                 
                 @keyframes fadeIn {
-                        from {  opacity: 0; transform: translateY(10px); }
-                        to {  opacity: 1; transform: translateY(0); }
+                        from { opacity: 0; transform: translateY(10px); }
+                        to { opacity: 1; transform: translateY(0); }
                 }
 
                 /* Profile Layout Premium Update */
@@ -119,7 +119,7 @@
                         left: 0;
                         z-index: 1;
                 }
-                .profile-upload-text {  text-align: center; color: var(--text-muted); font-size: 0.8rem; z-index: 2; position: relative;}
+                .profile-upload-text { text-align: center; color: var(--text-muted); font-size: 0.8rem; z-index: 2; position: relative;}
         </style>
 </head>
 <body>
@@ -127,10 +127,10 @@
                 <!-- Sidebar -->
                 <aside class="sidebar">
                         <div class="sidebar-header">
-    <div class="sidebar-logo">
-        <span style="font-weight: 600;">Daarul Mahabbah Qurban</span>
-    </div>
-</div>
+                            <div class="sidebar-logo">
+                                <span style="font-weight: 600;">Daarul Mahabbah Qurban</span>
+                            </div>
+                        </div>
                         <nav class="sidebar-nav">
                                 <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
                                 <div class="nav-header">&#128188; DATA STOCK</div>
@@ -142,12 +142,11 @@
                                 <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
                                 <div class="nav-header">&#128176; DATA FINANCE</div>
                                 <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
-                <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
+                                <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
                                 <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
                                 <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                                 <a href="komisi.html" class="nav-item"> Komisi Agen</a>
                                 <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight: 300; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
-                                
                         </nav>
                         <div style="padding: 1.5rem;">
                                 <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
@@ -166,20 +165,19 @@
                         </header>
 
                         <div class="content-area">
-                                
                                 <div class="tabs-header">
-                                <button class="tab-btn active" data-target="tabProfil">Profil</button>
-                                <button class="tab-btn" data-target="tabSupplier">Supplier</button>
-                                <button class="tab-btn" data-target="tabAgen">Agen</button>
-                                <button class="tab-btn" data-target="tabSopir">Sopir</button>
-                                <button class="tab-btn" data-target="tabRekening">Rekening</button>
-                                <button class="tab-btn" data-target="tabLokasi">Lokasi</button>
-                                <button class="tab-btn" data-target="tabUser">User</button>
-                                <button class="tab-btn" data-target="tabEditRequests" style="color:var(--warning); font-weight: 300;">📝 Approval</button>
-                                <button class="tab-btn" data-target="tabWA" style="color:var(--primary); font-weight: 300;">📲 WhatsApp</button>
-                                <button class="tab-btn" data-target="tabKategori" style="color:#f59e0b; font-weight: 300;">🏷️ Kategori Keuangan</button>
-                                <button class="tab-btn" data-target="tabBackup" style="background:rgba(16,185,129,0.1); color:var(--success);">📦 Backup</button>
-                        </div>
+                                        <button class="tab-btn active" data-target="tabProfil">Profil</button>
+                                        <button class="tab-btn" data-target="tabSupplier">Supplier</button>
+                                        <button class="tab-btn" data-target="tabAgen">Agen</button>
+                                        <button class="tab-btn" data-target="tabSopir">Sopir</button>
+                                        <button class="tab-btn" data-target="tabRekening">Rekening</button>
+                                        <button class="tab-btn" data-target="tabLokasi">Lokasi</button>
+                                        <button class="tab-btn" data-target="tabUser">User</button>
+                                        <button class="tab-btn" data-target="tabEditRequests" style="color:var(--warning); font-weight: 300;">📝 Approval</button>
+                                        <button class="tab-btn" data-target="tabWA" style="color:var(--primary); font-weight: 300;">📲 WhatsApp</button>
+                                        <button class="tab-btn" data-target="tabKategori" style="color:#f59e0b; font-weight: 300;">🏷️ Kategori Keuangan</button>
+                                        <button class="tab-btn" data-target="tabBackup" style="background:rgba(16,185,129,0.1); color:var(--success);">📦 Backup</button>
+                                </div>
 
                                 <!-- TAB: PROFIL -->
                                 <div id="tabProfil" class="tab-content active">
@@ -196,7 +194,7 @@
                                                                                 <div class="profile-upload-text" id="logoText">Klik untuk<br>Upload Logo</div>
                                                                                 <input type="file" id="logoInput" accept="image/*" style="display: none;">
                                                                         </div>
-                                                                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; text-align: center;">Maks 1  MB</p>
+                                                                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; text-align: center;">Maks 1 MB</p>
                                                                 </div>
                                                                 <div style="flex: 1;">
                                                                         <div class="form-group">
@@ -211,10 +209,41 @@
                                                                                 <label class="form-label">Alamat Lengkap</label>
                                                                                 <textarea id="alamatKandangInput" class="form-control" rows="3" placeholder="Jl. Raya Peternakan No. 1..." style="resize:vertical;"></textarea>
                                                                         </div>
-                                                                        <button type="submit" class="btn btn-primary" id="btnSaveProfil">Simpan Profil</button>
+                                                                        <button type="submit" class="btn btn-primary" id="btnSaveProfil">Simpan Profil Bisnis</button>
                                                                 </div>
                                                         </div>
                                                 </form>
+                                        </div>
+
+                                        <!-- PERSONAL PROFILE SECTION -->
+                                        <div class="card-box" style="max-width: 800px; padding: 2.5rem; margin-top: 2rem;">
+                                            <div style="margin-bottom: 2rem;">
+                                                <h3 style="margin-bottom: 0.5rem; font-size: 1.5rem;">Profil Personal Saya</h3>
+                                                <p style="color: var(--text-muted); font-size: 0.9rem;">Foto ini akan muncul sebagai wajah marketing Anda di halaman etalase.</p>
+                                            </div>
+                                            <form id="formProfilPersonal">
+                                                <div class="profile-container">
+                                                    <div>
+                                                        <div class="profile-upload" id="personalPhotoUploadBox" style="border-radius: 50%;">
+                                                            <img id="personalPhotoPreview" class="profile-preview" style="display: none;" src="" alt="Foto Profil">
+                                                            <div class="profile-upload-text" id="personalPhotoText">Klik untuk<br>Upload Foto</div>
+                                                            <input type="file" id="personalPhotoInput" accept="image/*" style="display: none;">
+                                                        </div>
+                                                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; text-align: center;">Maks 1 MB</p>
+                                                    </div>
+                                                    <div style="flex: 1;">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Nama Lengkap (Marketing)</label>
+                                                            <input type="text" id="personalNameInput" class="form-control" placeholder="Nama Anda" required>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label class="form-label">Email (Login)</label>
+                                                            <input type="text" id="personalEmailInput" class="form-control" readonly style="opacity: 0.7; background: rgba(255,255,255,0.05);">
+                                                        </div>
+                                                        <button type="submit" class="btn btn-primary" id="btnSaveProfilPersonal" style="background: var(--success);">Simpan Profil Personal</button>
+                                                    </div>
+                                                </div>
+                                            </form>
                                         </div>
                                 </div>
 
@@ -334,7 +363,6 @@
                                         </div>
                                 </div>
 
-
                                 <!-- TAB: AKSES USER -->
                                 <div id="tabUser" class="tab-content">
                                         <div class="card-box">
@@ -349,8 +377,8 @@
                                                         <table class="data-table" id="tableUser">
                                                                 <thead>
                                                                         <tr>
-                                                                                <th>Nama /  WA</th>
-                                                                                <th>Role /  Wewenang</th>
+                                                                                <th>Nama / WA</th>
+                                                                                <th>Role / Wewenang</th>
                                                                                 <th>Status Akun</th>
                                                                                 <th>Aksi</th>
                                                                         </tr>
@@ -360,6 +388,7 @@
                                                 </div>
                                         </div>
                                 </div>
+
                                 <!-- TAB: WHATSAPP GATEWAY -->
                                 <div id="tabWA" class="tab-content">
                                         <div class="card-box">
@@ -515,12 +544,11 @@
 
                                                 <div style="margin-top:2rem; padding:1rem; background:rgba(239,68,68,0.05); border-radius:8px; display:inline-block;">
                                                         <p style="margin:0; font-size:0.75rem; color:var(--danger); font-weight:600;">
-                                                                a️⚠️ PERINGATAN: Memulihkan data akan MENGHAPUS data lama di browser ini dan menggantinya dengan isi file cadangan.
+                                                                ⚠️ PERINGATAN: Memulihkan data akan MENGHAPUS data lama di browser ini dan menggantinya dengan isi file cadangan.
                                                         </p>
                                                 </div>
                                         </div>
                                 </div>
-
                         </div>
                 </main>
         </div>
@@ -548,5 +576,4 @@
         <script type="module" src="src/whatsapp.js"></script>
         <script type="module" src="src/pengaturan.js"></script>
 </body>
-
-
+</html>

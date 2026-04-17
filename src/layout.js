@@ -485,20 +485,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (href && href.includes('dashboard.html')) {
                     item.style.display = 'none';
                 }
-                // Hide if not in allowed menus OR if it's the settings page
-                else if (href && (!allowedMenus.includes(href) || href === 'pengaturan.html')) {
-                    item.style.display = 'none';
+                // Hide if not in allowed menus
+                else if (href && !allowedMenus.includes(href)) {
+                    // Kecuali pengaturan.html, kita ijinkan agar bisa edit profil personal
+                    if (href !== 'pengaturan.html') {
+                        item.style.display = 'none';
+                    }
                 }
             });
             
             // Special handling for nav-headers (hide if all items below it are hidden)
             // But for now, just filtering individual items is enough for the user.
-        } else {
-            // Show Admin-only topbar actions
-            if (window.actionsDiv) {
-                if (window.bellIcon) window.actionsDiv.prepend(window.bellIcon);
-                if (window.gearIcon) window.actionsDiv.insertBefore(window.gearIcon, window.actionsDiv.children[1]);
-            }
+        }
+
+        // Show topbar actions
+        if (window.actionsDiv) {
+            if (isAdmin && window.bellIcon) window.actionsDiv.prepend(window.bellIcon);
+            if (window.gearIcon) window.actionsDiv.insertBefore(window.gearIcon, window.actionsDiv.children[1]);
         }
 
         // Notif Bell Badge (Admin)

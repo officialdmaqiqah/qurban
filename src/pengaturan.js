@@ -44,6 +44,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(sec) sec.style.display = (role === 'agen') ? 'block' : 'none';
     };
 
+    // === ROLE BASED UI FILTERING ===
+    if (!isAdmin) {
+        // Sembunyikan tab selain Profil
+        tabBtns.forEach(btn => {
+            if (btn.dataset.target !== 'tabProfil') {
+                btn.style.display = 'none';
+            }
+        });
+
+        // Sembunyikan bagian Profil Bisnis (Identitas Bisnis)
+        const businessProfileSection = document.getElementById('formProfil')?.closest('.card-box');
+        if (businessProfileSection) {
+            businessProfileSection.style.display = 'none';
+        }
+        
+        // Pastikan tab Profil aktif jika agen masuk
+        const profilBtn = document.querySelector('[data-target="tabProfil"]');
+        if (profilBtn) profilBtn.click();
+    }
+
     const smartToTitleCase = (str) => {
         if (!str) return '';
         // Proteksi Link: Jika ada URL (http/https), jangan ubah hurufnya
@@ -140,6 +160,68 @@ document.addEventListener('DOMContentLoaded', async () => {
             showAlert('Profil Berhasil Diperbarui ke Cloud!', 'success');
         }
     });
+
+    // === PERSONAL PROFILE LOGIC ===
+    const formProfilPersonal = document.getElementById('formProfilPersonal');
+    const personalNameInput = document.getElementById('personalNameInput');
+    const personalEmailInput = document.getElementById('personalEmailInput');
+    const personalPhotoInput = document.getElementById('personalPhotoInput');
+    const personalPhotoPreview = document.getElementById('personalPhotoPreview');
+    const personalPhotoUploadBox = document.getElementById('personalPhotoUploadBox');
+    const personalPhotoText = document.getElementById('personalPhotoText');
+
+    let personalPhotoBase64 = user.photo_url || '';
+
+    async function loadPersonalProfile() {
+        personalNameInput.value = user.full_name || '';
+        personalEmailInput.value = user.email || '';
+        if (user.photo_url) {
+            personalPhotoPreview.src = user.photo_url;
+            personalPhotoPreview.style.display = 'block';
+            if (personalPhotoText) personalPhotoText.style.display = 'none';
+        }
+    }
+    loadPersonalProfile();
+
+    personalPhotoUploadBox?.addEventListener('click', () => personalPhotoInput.click());
+    personalPhotoInput?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            personalPhotoBase64 = ev.target.result;
+            personalPhotoPreview.src = ev.target.result;
+            personalPhotoPreview.style.display = 'block';
+            if (personalPhotoText) personalPhotoText.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    });
+
+    formProfilPersonal?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (personalPhotoBase64 && personalPhotoBase64.length > 1500000) {
+            return showAlert('Ukuran foto terlalu besar! Harap gunakan file di bawah 1MB.', 'danger');
+        }
+
+        const newName = personalNameInput.value.trim();
+        const { error } = await supabase.from('profiles').update({ 
+            full_name: newName, 
+            photo_url: personalPhotoBase64 
+        }).eq('id', user.id);
+        
+        if (error) {
+            console.error('Save Personal Profile Error:', error);
+            showAlert('Gagal menyimpan profil personal: ' + error.message, 'danger');
+        } else {
+            showAlert('Profil Personal Berhasil Diperbarui!', 'success');
+            // Update local object to reflect changes without reload if possible
+            user.full_name = newName;
+            user.photo_url = personalPhotoBase64;
+        }
+    });
+
+    setupAutoClean('personalNameInput', 'name');
 
     // === CRUD LOGIC MASTER DATA ===
     let modalState = { tipe: '', id: null };
