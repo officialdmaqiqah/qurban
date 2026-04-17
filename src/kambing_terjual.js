@@ -722,20 +722,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!agenData || !agenData.wa) {
                         const searchName = (matchedAgen?.nama || inpAgenId.value.split(' — ')[0] || inpAgenId.value.split(' - ')[0]).trim();
                         if (searchName && searchName !== '-- Pilih Agen --') {
-                            console.log(`[WA Fallback] Mencari WA Agen ${searchName} di tabel profiles...`);
-                            const { data: profAgen } = await supabase.from('profiles').select('full_name, wa, role, permissions').ilike('full_name', `${searchName}`).single();
+                            console.log(`[WA Fallback] Mencari WA Agen ${searchName} di tabel profiles (Flex Search)...`);
+                            // Gunakan pencarian fleksibel %nama% untuk menghindari masalah karakter tak terlihat atau perbedaan spasi
+                            const { data: profResults, error: profErr } = await supabase.from('profiles').select('full_name, wa, role, permissions').ilike('full_name', `%${searchName}%`);
                             
-                            if (profAgen && profAgen.wa) {
+                            if (profErr) {
+                                console.error('[WA Fallback] Profil query error:', profErr);
+                            }
+
+                            if (profResults && profResults.length > 0) {
+                                const profAgen = profResults[0]; // Ambil hasil pertama
                                 console.log(`[WA Fallback] Ketemu! Menggunakan WA dari Profil: ${profAgen.wa}`);
+                                window.showToast(`Info: Menggunakan nomor WA dari Profil User untuk ${profAgen.full_name}`, 'info');
+                                
                                 agenData = { 
                                     nama: profAgen.full_name, 
                                     wa: profAgen.wa, 
                                     jenis: profAgen.permissions?.jenis_agen || profAgen.role || 'Agen' 
                                 };
-                                // Re-evaluate isDMAgen if not already detected
-                                if (!isDMAgen && (agenData.jenis || '').toUpperCase().includes('DM')) {
-                                    // If fallback finds a DM agent, we might need to re-run template selection
-                                    // but usually isDMAgen was checked against inpAgenId's text earlier.
+                                
+                                // Re-evaluate isDMAgen
+                                if ((agenData.jenis || '').toUpperCase().includes('DM')) {
+                                    isDMAgen = true;
                                 }
                             }
                         }
@@ -748,7 +756,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         console.log(`[WA] Menyiapkan pengiriman Ke Agen: ${agenData.nama} (${agenData.wa})`);
                         const resA = await window.sendWa(agenData.wa, msgAgenParsed);
                         if (!resA.success) {
-                            window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
+                            window.showToast('WA ke Agen gagal dikirim otomatis. Menawarkan pengiriman manual...', 'warning');
                         }
 
                         // Kirim Notifikasi Saldo Terpotong jika pakai Titipan
