@@ -735,8 +735,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const itemsStr = currentCart.map(it => `• No.${it.noTali} (${it.warnaTali || '-'})`).join('\n');
                     const sohibulStr = currentCart.map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
                     
-                    const isDMAgen = (newTrx.agen?.tipe || '').toUpperCase().includes('DM');
-                    const calculatedKomisi = isDMAgen ? 0 : Math.round(total * 0.10);
+                    const agentTipe = (newTrx.agen?.tipe || '').toUpperCase();
+                    const skipCustWA = agentTipe.includes('DM') || agentTipe.includes('EXT');
+                    const calculatedKomisi = skipCustWA ? 0 : Math.round(total * 0.10);
                     
                     const commonData = { 
                         nama: newTrx.customer?.nama || '-', 
@@ -754,11 +755,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         komisi: formatRp(calculatedKomisi)
                     };
                     
-                    const templateCust = isDMAgen ? config.templateOrderDM : config.templateOrderNormal;
+                    const templateCust = skipCustWA ? config.templateOrderDM : config.templateOrderNormal;
                     const msgCust = await window.parseWaTemplate(templateCust, commonData);
                     
-                    // Notif Ke Konsumen (Hanya jika BUKAN agen DM)
-                    if (newTrx.customer?.wa1 && !isDMAgen) {
+                    // Notif Ke Konsumen (Hanya jika BUKAN agen DM/EXT)
+                    if (newTrx.customer?.wa1 && !skipCustWA) {
                         const res = await window.sendWa(newTrx.customer.wa1, msgCust);
                         if (!res.success) {
                             window.showConfirm(`WA Konsumen Gagal: ${res.msg}\n\nIngin kirim manual?`, () => {
@@ -768,28 +769,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     
                     const agenData = matchedAgen;
-
-                    const templateAgen = isDMAgen ? config.templateAgentDM : config.templateAgentNormal;
+                    const templateAgen = skipCustWA ? config.templateAgentDM : config.templateAgentNormal;
 
                     if (agenData && agenData.wa) {
                         const msgAgenParsed = await window.parseWaTemplate(templateAgen, commonData);
-                        console.log(`[WA] Menyiapkan pengiriman Ke Agen: ${agenData.nama} (${agenData.wa})`);
+                        
+                        // DEBUG ALERT
+                        console.log(`[WA DEBUG] DEST: ${agenData.wa}, NAME: ${agenData.nama}, SOURCE: ${agenData.source}`);
+                        
                         const resA = await window.sendWa(agenData.wa, msgAgenParsed);
-                        if (!resA.success) {
-                            window.showToast('WA ke Agen gagal dikirim otomatis. Menawarkan pengiriman manual...', 'warning');
+                        
+                        if (resA.success) {
+                            window.showToast(`WA Agen (${agenData.nama}) Berhasil Terkirim!`, 'success');
+                        } else {
+                            // Tampilkan alert keras jika gagal agar kita tahu alasannya
+                            alert(`DEBUG FAIL (WA AGEN): \nNomor: ${agenData.wa}\nPesan: ${resA.msg || 'Unknown Error'}\nLink: ${resA.link || '-'}`);
+                            window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
                         }
 
-                        // Kirim Notifikasi Saldo Terpotong jika pakai Titipan
+                        // Kirim Notifikasi Saldo Terpotong jika pakai Titipan (Hanya jika WA utama sukses/manual)
                         if (inpChannelDP.value === 'Saldo Titipan Agen') {
                             const currentSaldo = await getAgentSaldo(agenData.nama);
                             const msgSaldo = `*NOTIFIKASI SALDO TITIPAN*\n\nHalo ${agenData.nama},\nSaldo titipan Anda telah terpotong sebesar *${formatRp(paidNow)}* untuk pembayaran DP *${trxId}*.\n\nSisa saldo titipan Anda saat ini: *${formatRp(currentSaldo)}*.\n\nTerima kasih.`;
                             await window.sendWa(agenData.wa, msgSaldo);
                         }
                     } else {
-                        console.warn('[WA] Data Agen/WA tidak ditemukan untuk:', inpAgenId.value);
                         const displayNama = newTrx.agen?.nama || inpAgenId.value;
+                        const debugMsg = `Peringatan: WA Agen (${displayNama}) tidak terkirim karena NOMOR WA TIDAK DITEMUKAN.\n\nSource: ${agenData ? agenData.source : 'Not Matched'}`;
+                        alert(debugMsg);
+                        console.warn('[WA] Data Agen/WA tidak ditemukan untuk:', inpAgenId.value);
                         if (displayNama && displayNama !== '-- Pilih Agen --') {
-                             window.showToast(`Peringatan: WA Agen (${displayNama}) tidak terkirim karena nomor WA tidak ditemukan di sistem (Master Data maupun Profil User).`, 'warning');
+                             window.showToast(debugMsg, 'warning');
                         }
                     }
                 } catch (e) {

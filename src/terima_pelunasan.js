@@ -300,9 +300,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const waTarget = trx.customer.wa1 || trx.customer.wa2;
                 const agens = await getAgenDb();
                 const matchedAgen = agens.find(a => a.id === trx.agen.id || a.nama === trx.agen.nama);
+                const agentTipe = (trx.agen?.tipe || matchedAgen?.jenis || '').toUpperCase();
+                const skipCustWA = agentTipe.includes('DM') || agentTipe.includes('EXT');
                 const commonData = { nama: trx.customer.nama, id: trx.id, nominal: formatRp(nominal), sisa: formatRp(sisa - realPay) };
 
-                if (waTarget) {
+                // Hanya kirim ke Konsumen jika BUKAN agen DM/EXT
+                if (waTarget && !skipCustWA) {
                     const msgCust = await window.parseWaTemplate(config.templateLunas, commonData);
                     const res = await window.sendWa(waTarget, msgCust);
                     if (!res.success) {
