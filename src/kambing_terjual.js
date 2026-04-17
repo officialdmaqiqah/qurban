@@ -78,7 +78,58 @@ document.addEventListener('DOMContentLoaded', async () => {
     // DB Helpers
     const getKambingDb = async () => { const { data } = await supabase.from('stok_kambing').select('*'); return data || []; };
     const getTrxDb = async () => { const { data } = await supabase.from('transaksi').select('*'); return data || []; };
-    const getAgenDb = async () => { const { data } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single(); return data?.val || []; };
+    const getAgenDb = async () => { 
+        try {
+            // 1. Ambil dari Master Data Agen
+            const { data: md } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single();
+            const mdAgens = md?.val || [];
+
+            // 2. Ambil dari Tabel Profiles (User yg punya role agen/marketing)
+            const marketingRoles = ['agen', 'reseller', 'marketing dm', 'marketing ext', 'marketing kandang', 'emarketing kandang', 'marketing luar', 'marketing', 'staf', 'office'];
+            const { data: profs } = await supabase.from('profiles').select('full_name, wa, role, permissions').in('role', ['agen', 'marketing', 'staf', 'office', 'reseller']);
+            
+            // 3. Gabungkan (Merge)
+            const map = new Map();
+            
+            // Masukkan dari Master Data dulu
+            mdAgens.forEach(a => {
+                if (a.nama) map.set(a.nama.toLowerCase().trim(), { ...a, source: 'master_data' });
+            });
+
+            // Masukkan/Update dari Profiles (Profile lebih update biasanya)
+            (profs || []).forEach(p => {
+                const nameKey = (p.full_name || "").toLowerCase().trim();
+                if (!nameKey) return;
+
+                const existing = map.get(nameKey);
+                const jenis = p.permissions?.jenis_agen || p.role || 'Agen';
+                
+                if (existing) {
+                    // Jika sudah ada, update WA dan jenis jika dari profile lebih lengkap
+                    map.set(nameKey, { 
+                        ...existing, 
+                        wa: p.wa || existing.wa, 
+                        jenis: jenis || existing.jenis,
+                        source: 'merged'
+                    });
+                } else {
+                    // Jika belum ada, tambahkan baru
+                    map.set(nameKey, {
+                        id: 'USER-' + nameKey.replace(/\s+/g, '-'),
+                        nama: p.full_name,
+                        wa: p.wa,
+                        jenis: jenis,
+                        source: 'profiles'
+                    });
+                }
+            });
+
+            return Array.from(map.values());
+        } catch (err) {
+            console.error('Error in getAgenDb:', err);
+            return [];
+        }
+    };
     const getRekeningDb = async () => { 
         const { data } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single(); 
         if (data && data.val && data.val.length > 0) return data.val;
@@ -716,38 +767,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     }
                     
-                    let agenData = matchedAgen;
-                    
-                    // FALLBACK: Jika agen tidak ketemu di Master Data atau WA-nya kosong, cari di tabel profiles
-                    if (!agenData || !agenData.wa) {
-                        const searchName = (matchedAgen?.nama || inpAgenId.value.split(' — ')[0] || inpAgenId.value.split(' - ')[0]).trim();
-                        if (searchName && searchName !== '-- Pilih Agen --') {
-                            console.log(`[WA Fallback] Mencari WA Agen ${searchName} di tabel profiles (Flex Search)...`);
-                            // Gunakan pencarian fleksibel %nama% untuk menghindari masalah karakter tak terlihat atau perbedaan spasi
-                            const { data: profResults, error: profErr } = await supabase.from('profiles').select('full_name, wa, role, permissions').ilike('full_name', `%${searchName}%`);
-                            
-                            if (profErr) {
-                                console.error('[WA Fallback] Profil query error:', profErr);
-                            }
-
-                            if (profResults && profResults.length > 0) {
-                                const profAgen = profResults[0]; // Ambil hasil pertama
-                                console.log(`[WA Fallback] Ketemu! Menggunakan WA dari Profil: ${profAgen.wa}`);
-                                window.showToast(`Info: Menggunakan nomor WA dari Profil User untuk ${profAgen.full_name}`, 'info');
-                                
-                                agenData = { 
-                                    nama: profAgen.full_name, 
-                                    wa: profAgen.wa, 
-                                    jenis: profAgen.permissions?.jenis_agen || profAgen.role || 'Agen' 
-                                };
-                                
-                                // Re-evaluate isDMAgen
-                                if ((agenData.jenis || '').toUpperCase().includes('DM')) {
-                                    isDMAgen = true;
-                                }
-                            }
-                        }
-                    }
+                    const agenData = matchedAgen;
 
                     const templateAgen = isDMAgen ? config.templateAgentDM : config.templateAgentNormal;
 
