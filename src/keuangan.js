@@ -533,6 +533,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnSave.style.opacity = '0.7';
             btnSave.innerText = 'Mengunggah...';
         }
+        window.showToast('Memulai proses simpan...', 'info');
 
         try {
             const id = window.editingId || ('FIN-' + Date.now().toString().slice(-6));
@@ -540,11 +541,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             const nominal = window.parseNum(nominalInput.value);
             const tgl = tanggalInput.value;
             const kat = kategoriInput.value;
-            const ket = keteranganInput.value;
+            const ket = (keteranganInput.value || '').trim();
             const chan = transaksiChannel.value;
             
+            // --- VALIDASI MANUAL ---
+            if (!tgl) throw new Error('Tanggal transaksi wajib diisi.');
+            if (nominal <= 0) throw new Error('Nominal harus lebih dari 0.');
+            if (tipe !== 'mutasi' && !kat) throw new Error('Kategori wajib dipilih.');
+            if (!ket) throw new Error('Keterangan singkat wajib diisi.');
+
             let finalChannel = chan;
-            if(chan === 'Transfer Bank' && transaksiRekId.value) {
+            if(chan === 'Transfer Bank') {
+                if(!transaksiRekId.value) throw new Error('Silakan pilih rekening bank sumber.');
                 const opt = transaksiRekId.options[transaksiRekId.selectedIndex];
                 finalChannel = `TF ${opt.textContent}`;
             }
@@ -582,6 +590,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if(tipe === 'mutasi') {
                 const dest = transaksiMutasiTujuan.value;
+                if(!dest) throw new Error('Silakan pilih tujuan mutasi.');
                 let destChannel = dest;
                 if(dest === 'Tunai') destChannel = 'Tunai / Cash';
                 else if(dest === 'Kas Operasional') destChannel = 'Kas Operasional';
@@ -609,16 +618,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     channel: destChannel, bukti_url: buktiUrl
                 };
 
-                const { error: err1 } = await supabase.from('keuangan').insert([pOut]);
-                const { error: err2 } = await supabase.from('keuangan').insert([pIn]);
+                const { error: errMut } = await supabase.from('keuangan').insert([pOut, pIn]);
 
-                if(!err1 && !err2) {
+                if(!errMut) {
                     window.showToast('Mutasi Saldo Berhasil!', 'success');
                     modalKeuangan.classList.remove('active');
                     renderApp();
                     return;
                 } else {
-                    return window.showAlert('Gagal mutasi: ' + (err1?.message || err2?.message), 'danger');
+                    console.error('Mutation Error:', errMut);
+                    return window.showAlert('Gagal mutasi: ' + errMut.message, 'danger');
                 }
             }
 
@@ -663,7 +672,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (err) {
             console.error('Unhandled Error during save:', err);
-            window.showAlert('Terjadi kesalahan tidak terduga: ' + err.message, 'danger');
+            window.showAlert(err.message, 'danger');
         } finally {
             if (btnSave) {
                 btnSave.disabled = false;
@@ -737,6 +746,24 @@ document.addEventListener('DOMContentLoaded', async () => {
          }
      });
 
+    document.getElementById('btnTambahPemasukan')?.addEventListener('click', () => {
+        window.editingId = null;
+        window.oldNominal = 0;
+        window.oldTrxId = null;
+        window.existingKeuBukti = null;
+        formKeuangan.reset();
+        
+        containerKategori.style.display = 'block';
+        containerKategoriLain.style.display = 'none';
+        containerMutasiTujuan.style.display = 'none';
+
+        tipeInput.value = 'pemasukan';
+        modalTitle.textContent = 'Catat Pemasukan';
+        tanggalInput.value = window.getLocalDate();
+        populateKategori('pemasukan');
+        modalKeuangan.classList.add('active');
+    });
+
     document.getElementById('btnTambahPengeluaran')?.addEventListener('click', () => {
         window.editingId = null;
         window.oldNominal = 0;
@@ -747,8 +774,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         containerKategori.style.display = 'block';
         containerKategoriLain.style.display = 'none';
         containerMutasiTujuan.style.display = 'none';
-        const lblSumber = document.querySelector('#containerTransaksiRek .form-label');
-        if(lblSumber) lblSumber.textContent = 'Pilih Rekening';
 
         tipeInput.value = 'pengeluaran';
         modalTitle.textContent = 'Catat Pengeluaran';
@@ -779,7 +804,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         containerTransaksiRek.style.display = 'none';
         
         // Populate Tujuan
-        transaksiMutasiTujuan.innerHTML = '<option value="Tunai">💵 Tunai / Cash</option><option value="Kas Operasional">🏷️ Kas Operasional</option>';
+        transaksiMutasiTujuan.innerHTML = '<option value="">-- Pilih Tujuan --</option><option value="Tunai">💵 Tunai / Cash</option><option value="Kas Operasional">🏷️ Kas Operasional</option>';
         const reks = await getBankAccounts();
         reks.forEach(r => {
             const o = document.createElement('option');

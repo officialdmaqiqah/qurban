@@ -297,7 +297,7 @@
                     <div class="form-2col" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
                         <div class="form-group">
                             <label class="form-label">Tanggal</label>
-                            <input type="date" id="transaksiTanggal" class="form-control" required>
+                            <input type="date" id="transaksiTanggal" class="form-control">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Channel</label>
@@ -315,7 +315,7 @@
                     </div>
                     <div class="form-group" id="containerKategori">
                         <label class="form-label">Kategori</label>
-                        <select id="transaksiKategori" class="form-control" required></select>
+                        <select id="transaksiKategori" class="form-control"></select>
                     </div>
                     <div class="form-group" id="containerKategoriLain" style="display:none;">
                         <label class="form-label">Tulis Kategori Baru</label>
@@ -329,11 +329,11 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Nominal (Rp)</label>
-                        <input type="text" id="transaksiNominal" class="form-control money-input" required placeholder="Contoh: 1.000.000">
+                        <input type="text" id="transaksiNominal" class="form-control money-input" placeholder="Contoh: 1.000.000">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Keterangan</label>
-                        <input type="text" id="transaksiKeterangan" class="form-control" required>
+                        <input type="text" id="transaksiKeterangan" class="form-control">
                     </div>
                         <div class="form-group">
                             <label class="form-label">📸 Bukti Foto</label>
@@ -389,6 +389,6 @@
     </div>
 
     <script type="module" src="src/layout.js?v=4.0"></script>
-    <script type="module" src="src/keuangan.js"></script>
+    <script type="module" src="src/keuangan.js?v=4.8"></script>
 </body>
 </html>
