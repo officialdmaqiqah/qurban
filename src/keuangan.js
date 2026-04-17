@@ -1,24 +1,21 @@
 import { supabase } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Check Session & Profile
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return; 
 
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
     if (!profile) return;
 
-    const email = profile.email;
-    if(email) {
+    if(profile.email) {
         const emailDisplay = document.getElementById('userEmailDisplay');
-        if(emailDisplay) emailDisplay.textContent = email;
+        if(emailDisplay) emailDisplay.textContent = profile.email;
     }
 
     // --- ELEMENT SELECTORS ---
     const modalKeuangan = document.getElementById('modalKeuangan');
     const formKeuangan = document.getElementById('formKeuangan');
     const modalTitle = document.getElementById('modalTitle');
-    const originalIdInput = document.getElementById('transaksiIdOriginal');
     const tipeInput = document.getElementById('transaksiTipe');
     const tanggalInput = document.getElementById('transaksiTanggal');
     const kategoriInput = document.getElementById('transaksiKategori');
@@ -35,8 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inpBuktiKeuangan = document.getElementById('inpBuktiKeuangan');
     const previewBuktiKeuangan = document.getElementById('previewBuktiKeuangan');
     const imgPreviewKeu = previewBuktiKeuangan ? previewBuktiKeuangan.querySelector('img') : null;
-    const btnRemoveKeuPhoto = document.getElementById('btnRemoveKeuPhoto');
-    const btnOpenCameraKeu = document.getElementById('btnOpenCameraKeu');
     const btnSaveModal = document.getElementById('btnSaveModal');
 
     const tableBody = document.getElementById('tableBodyKeuangan');
@@ -68,28 +63,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const { data: catIn } = await supabase.from('master_data').select('val').eq('key', 'KAT_KEU_IN').single();
             const { data: catOut } = await supabase.from('master_data').select('val').eq('key', 'KAT_KEU_OUT').single();
-            const defIn = ['Modal Awal','Terima Pelunasan','Penjualan Sapi','Jual Kambing','Kompensasi Supplier','Penerimaan Lainnya'];
-            const defOut = ['Beli Kambing','Beban Pakan','Beban Operasional Kandang','Gaji & Bonus','Listrik & Air','Transportasi','Marketing / Iklan','Bayar Supplier','Pelunasan Supplier','Bagi Hasil (Investor)','Prive / Tarik Tunai','Biaya Lain-lain','Kerugian (Mati/Hilang)'];
-
-            if (!catIn || !catOut) {
-                const { data: rows } = await supabase.from('keuangan').select('kategori, tipe');
-                const uniqueIn = rows ? [...new Set(rows.filter(x => x.tipe === 'pemasukan').map(x => x.kategori))].filter(Boolean) : [];
-                const uniqueOut = rows ? [...new Set(rows.filter(x => x.tipe === 'pengeluaran').map(x => x.kategori))].filter(Boolean) : [];
-                officialKatIn = [...new Set([...defIn, ...uniqueIn])].filter(x => x !== 'Lainnya (Tulis Sendiri)');
-                officialKatOut = [...new Set([...defOut, ...uniqueOut])].filter(x => x !== 'Lainnya (Tulis Sendiri)');
-                await supabase.from('master_data').upsert([
-                    { id: 'ID-KAT-KEU-IN', key: 'KAT_KEU_IN', val: officialKatIn },
-                    { id: 'ID-KAT-KEU-OUT', key: 'KAT_KEU_OUT', val: officialKatOut }
-                ], { onConflict: 'key' });
-            } else {
-                officialKatIn = catIn.val;
-                officialKatOut = catOut.val;
-            }
+            if (catIn) officialKatIn = catIn.val;
+            if (catOut) officialKatOut = catOut.val;
         } catch (e) { console.error("Error categories sync:", e); }
     };
 
     const getKeuanganData = async () => {
-        const { data, error } = await supabase.from('keuangan').select('*');
+        const { data } = await supabase.from('keuangan').select('*');
         return data || [];
     };
 
@@ -107,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return oldData?.val || [];
     };
 
-    const checkSaldoCukup = async (channel, nominal, label) => {
+    async function checkSaldoCukup(channel, nominal, label) {
         const data = await getKeuanganData();
         let s = 0;
         const target = (channel || '').toLowerCase().trim();
@@ -119,11 +99,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         if(s < nominal) {
-            window.showAlert(`ss- <b>Saldo Tidak Cukup!</b><br><br>Saldo di <b>${label}</b> saat ini: <b>${formatRp(s)}</b>.`, 'warning');
+            window.showAlert(`⚠️ <b>Saldo Tidak Cukup!</b><br><br>Saldo di <b>${label}</b> saat ini: <b>${formatRp(s)}</b>.`, 'warning');
             return false;
         }
         return true;
-    };
+    }
 
     const populateKategori = async (tipe) => {
         if(!kategoriInput) return;
@@ -145,11 +125,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filterTipe = document.getElementById('filterTipe');
         const searchInput = document.getElementById('inpSearchKeuangan');
 
-        const uniqueChannels = [...new Set(data.map(d => {
-            let ch = d.channel || 'Tunai / Cash';
-            if(['Cash','Tunai','-','Tunai/Lainnya'].includes(ch)) ch = 'Tunai / Cash';
-            return ch;
-        }))].sort();
+        // Populate Filters
+        const uniqueChannels = [...new Set(data.map(d => d.channel || 'Tunai / Cash'))].sort();
         const uniqueKategori = [...new Set(data.map(d => d.kategori).filter(Boolean))].sort();
 
         if(filterChannel) {
@@ -171,6 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             filterKategori.value = prev;
         }
 
+        // Process Data
         let processed = data.map(item => ({ ...item, transaksi: item.related_trx_id ? trxMap[item.related_trx_id] : null }));
         if (filterTipe?.value) processed = processed.filter(item => item.tipe === filterTipe.value);
         if (filterChannel?.value) processed = processed.filter(item => (item.channel || 'Tunai / Cash') === filterChannel.value);
@@ -192,6 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return currentSort.direction === 'asc' ? (valA < valB ? -1 : 1) : (valA > valB ? -1 : 1);
         });
 
+        // ── Render Table ──
         if(tableBody) {
             tableBody.closest('table').style.display = processed.length > 0 ? 'table' : 'none';
             if(emptyState) emptyState.style.display = processed.length > 0 ? 'none' : 'block';
@@ -201,17 +180,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tr.innerHTML = `
                     <td data-label="ID" style="font-size:0.7rem; color:var(--text-muted)">${item.id || '-'}</td>
                     <td data-label="TANGGAL">${formatDate(item.tanggal)}</td>
-                    <td data-label="KONSUMEN">${item.transaksi?.customer?.nama || '-'}</td>
-                    <td data-label="AGEN">${item.transaksi?.agen?.nama || '-'}</td>
+                    <td data-label="KONSUMEN" style="font-size:0.85rem;">${item.transaksi?.customer?.nama || '-'}</td>
+                    <td data-label="AGEN" style="font-size:0.85rem;">${item.transaksi?.agen?.nama || '-'}</td>
                     <td data-label="KATEGORI"><span class="badge ${isIncome ? 'badge-success' : 'badge-danger'}">${item.kategori}</span></td>
-                    <td data-label="KETERANGAN">${item.keterangan || '-'}</td>
+                    <td data-label="KETERANGAN" style="font-size:0.85rem;">${item.keterangan || '-'}</td>
                     <td data-label="NOMINAL" style="color:${isIncome ? 'var(--success)' : 'var(--danger)'}; font-weight:600;">${formatRp(item.nominal)}</td>
                     <td data-label="TIPE">${item.tipe}</td>
                     <td data-label="CHANNEL">${item.channel || '-'}</td>
                     <td data-label="PHOTO" style="text-align:center;">
                         ${item.bukti_url ? `<button class="btn btn-sm" onclick="window.viewPhoto('${item.bukti_url}')"><img src="${window.getDirectDriveLink(item.bukti_url)}" style="width:24px; height:24px; object-fit:cover;"></button>` : '🚫'}
                     </td>
-                    <td data-label="AKSI">
+                    <td data-label="AKSI" style="white-space:nowrap;">
                         <button class="btn btn-sm btn-edit-action" data-id="${item.id}">✏️</button>
                         <button class="btn btn-sm btn-delete-action" data-id="${item.id}">🗑️</button>
                     </td>
@@ -220,105 +199,106 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        // Summary calculations
+        // ── BALANCES WIDGET ──
+        let balances = { 'Tunai / Cash': 0 };
+        const rekenings = await getBankAccounts();
+        rekenings.forEach(acc => { balances[`TF ${acc.bank} - ${acc.norek} (${acc.an})`] = 0; });
+
         data.forEach(item => {
-            if(item.tipe === 'pemasukan') inTotal += parseFloat(item.nominal || 0);
-            else if(item.tipe === 'pengeluaran') outTotal += parseFloat(item.nominal || 0);
+            const ch = item.channel || 'Tunai / Cash';
+            if (item.tipe === 'pemasukan') {
+                balances[ch] = (balances[ch] || 0) + parseFloat(item.nominal || 0);
+                inTotal += parseFloat(item.nominal || 0);
+            } else if (item.tipe === 'pengeluaran') {
+                balances[ch] = (balances[ch] || 0) - parseFloat(item.nominal || 0);
+                outTotal += parseFloat(item.nominal || 0);
+            }
         });
+
         if(totalPemasukanEl) totalPemasukanEl.textContent = formatRp(inTotal);
         if(totalPengeluaranEl) totalPengeluaranEl.textContent = formatRp(outTotal);
+
+        const containerBalance = document.getElementById('containerRealtimeBalance');
+        if(containerBalance) {
+            containerBalance.innerHTML = '';
+            Object.entries(balances).sort().forEach(([chan, val]) => {
+                let label = chan.replace('TF ', 'Bank ');
+                if (label.includes(' (')) label = label.split(' (')[0];
+                containerBalance.innerHTML += `
+                <div class="balance-card">
+                    <div class="balance-info">
+                        <div class="balance-label">${label.toUpperCase()}</div>
+                        <div class="balance-value" style="color:${val < 0 ? 'var(--danger)' : 'var(--success)'}">
+                            ${formatRp(val)}
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
 
         document.querySelectorAll('.btn-edit-action').forEach(btn => btn.onclick = () => handleEdit(btn.dataset.id));
         document.querySelectorAll('.btn-delete-action').forEach(btn => btn.onclick = () => handleDelete(btn.dataset.id));
     };
 
-    // --- BUTTON HANDLERS ---
-    const resetModal = () => {
-        window.editingId = null;
-        window.oldNominal = 0;
-        window.oldTrxId = null;
-        window.existingKeuBukti = null;
-        formKeuangan.reset();
-        previewBuktiKeuangan.style.display = 'none';
-        containerKategoriLain.style.display = 'none';
+    // --- EXPORT & SYNC ---
+    const handleSyncAll = async () => {
+        window.showConfirm('Sinkronkan saldo transaksi?', async () => {
+            window.showToast('Memulai...', 'info');
+            const { data: trxs } = await supabase.from('transaksi').select('id');
+            const { data: fins } = await supabase.from('keuangan').select('*');
+            for (const trx of (trxs || [])) {
+                const rel = (fins || []).filter(f => f.related_trx_id === trx.id);
+                const total = rel.reduce((s, f) => s + (parseFloat(f.nominal) || 0), 0);
+                const history = rel.map(f => ({ payId: f.id, tgl: f.tanggal, nominal: parseFloat(f.nominal), channel: f.channel, buktiUrl: f.bukti_url }));
+                await supabase.from('transaksi').update({ total_paid: total, history_bayar: history }).eq('id', trx.id);
+            }
+            window.showAlert('Sinkron Berhasil!', 'success', () => window.location.reload());
+        });
     };
 
-    document.getElementById('btnTambahPemasukan')?.addEventListener('click', () => {
-        resetModal();
-        tipeInput.value = 'pemasukan';
-        modalTitle.textContent = 'Catat Pemasukan';
-        tanggalInput.value = window.getLocalDate();
-        containerKategori.style.display = 'block';
-        containerMutasiTujuan.style.display = 'none';
-        populateKategori('pemasukan');
-        modalKeuangan.classList.add('active');
-    });
+    const handleExport = async () => {
+        const btn = document.getElementById('btnExportKeuangan');
+        if(btn) { btn.disabled = true; btn.innerText = 'Memproses...'; }
+        try {
+            const { data: keuData } = await supabase.from('keuangan').select('*').order('tanggal', { ascending: false });
+            if(!keuData || keuData.length === 0) return window.showAlert('Tidak ada data.', 'warning');
+            const ws = XLSX.utils.json_to_sheet(keuData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Keuangan');
+            XLSX.writeFile(wb, `Keuangan_Qurban_${new Date().toISOString().slice(0,10)}.xlsx`);
+            window.showToast('Export Berhasil!', 'success');
+        } catch(err) { window.showAlert('Gagal: ' + err.message, 'danger'); }
+        finally { if(btn) { btn.disabled = false; btn.innerText = '📥 Export Excel'; } }
+    };
 
-    document.getElementById('btnTambahPengeluaran')?.addEventListener('click', () => {
-        resetModal();
-        tipeInput.value = 'pengeluaran';
-        modalTitle.textContent = 'Catat Pengeluaran';
-        tanggalInput.value = window.getLocalDate();
-        containerKategori.style.display = 'block';
-        containerMutasiTujuan.style.display = 'none';
-        populateKategori('pengeluaran');
-        modalKeuangan.classList.add('active');
-    });
+    // --- MODAL HELPERS ---
+    const resetModal = () => {
+        window.editingId = null; window.oldNominal = 0; window.oldTrxId = null; window.existingKeuBukti = null;
+        formKeuangan.reset();
+        if(previewBuktiKeuangan) previewBuktiKeuangan.style.display = 'none';
+        if(containerKategoriLain) containerKategoriLain.style.display = 'none';
+        if(containerTransaksiRek) containerTransaksiRek.style.display = 'none';
+    };
 
+    // --- ATTACH LISTENERS ---
+    document.getElementById('btnTambahPemasukan')?.addEventListener('click', () => { resetModal(); tipeInput.value = 'pemasukan'; modalTitle.textContent = 'Catat Pemasukan'; tanggalInput.value = window.getLocalDate(); containerKategori.style.display = 'block'; containerMutasiTujuan.style.display = 'none'; populateKategori('pemasukan'); modalKeuangan.classList.add('active'); });
+    document.getElementById('btnTambahPengeluaran')?.addEventListener('click', () => { resetModal(); tipeInput.value = 'pengeluaran'; modalTitle.textContent = 'Catat Pengeluaran'; tanggalInput.value = window.getLocalDate(); containerKategori.style.display = 'block'; containerMutasiTujuan.style.display = 'none'; populateKategori('pengeluaran'); modalKeuangan.classList.add('active'); });
     document.getElementById('btnTambahMutasi')?.addEventListener('click', async () => {
-        resetModal();
-        tipeInput.value = 'mutasi';
-        modalTitle.textContent = '⇄ Mutasi Antar Rekening';
-        tanggalInput.value = window.getLocalDate();
-        containerKategori.style.display = 'none';
-        containerMutasiTujuan.style.display = 'block';
-        transaksiChannel.value = 'Tunai';
-        containerTransaksiRek.style.display = 'none';
-        
+        resetModal(); tipeInput.value = 'mutasi'; modalTitle.textContent = '⇄ Mutasi Antar Rekening'; tanggalInput.value = window.getLocalDate(); containerKategori.style.display = 'none'; containerMutasiTujuan.style.display = 'block'; 
         transaksiMutasiTujuan.innerHTML = '<option value="">-- Pilih Tujuan --</option><option value="Tunai">💵 Tunai / Cash</option><option value="Kas Operasional">🏷️ Kas Operasional</option>';
         const reks = await getBankAccounts();
         reks.forEach(r => {
-            const o = document.createElement('option');
-            o.value = r.id; o.textContent = `TF ${r.bank} - ${r.norek} (${r.an})`;
+            const o = document.createElement('option'); o.value = r.id; o.textContent = `TF ${r.bank} - ${r.norek} (${r.an})`;
             transaksiMutasiTujuan.appendChild(o);
         });
         modalKeuangan.classList.add('active');
     });
 
-    const handleEdit = async (id) => {
-        const { data: item } = await supabase.from('keuangan').select('*').eq('id', id).single();
-        if(!item) return;
-        resetModal();
-        window.editingId = item.id;
-        window.oldNominal = parseFloat(item.nominal);
-        window.oldTrxId = item.related_trx_id;
-        modalTitle.textContent = 'Edit Transaksi';
-        tipeInput.value = item.tipe;
-        tanggalInput.value = item.tanggal;
-        nominalInput.value = item.nominal;
-        keteranganInput.value = item.keterangan;
-        await populateKategori(item.tipe);
-        kategoriInput.value = item.kategori;
-        if(item.bukti_url) { imgPreviewKeu.src = window.getDirectDriveLink(item.bukti_url); previewBuktiKeuangan.style.display = 'flex'; window.existingKeuBukti = item.bukti_url; }
-        modalKeuangan.classList.add('active');
-    };
-
-    const handleDelete = async (id) => {
-        window.showConfirm('Hapus transaksi ini?', async () => {
-            await supabase.from('keuangan').delete().eq('id', id);
-            renderApp();
-            window.showToast('Data dihapus', 'success');
-        });
-    };
-
-    // --- SAVE LOGIC ---
-    const handleSave = async (e) => {
-        if(e) e.preventDefault();
-        
+    formKeuangan?.addEventListener('submit', async (e) => {
+        e.preventDefault();
         const originalText = btnSaveModal ? btnSaveModal.innerHTML : 'Simpan';
         if (btnSaveModal) { btnSaveModal.disabled = true; btnSaveModal.innerText = 'Menyimpan...'; }
-        
-        window.showToast('Memulai proses simpan...', 'info');
+        window.showToast('Memproses...', 'info');
 
         try {
             const nominal = window.parseNum(nominalInput.value);
@@ -328,11 +308,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tipe = tipeInput.value;
             const chan = transaksiChannel.value;
 
-            if (!tgl) throw new Error('Pilih tanggal!');
-            if (nominal <= 0) throw new Error('Isi nominal!');
-            if (!ket) throw new Error('Isi keterangan!');
-            if (tipe !== 'mutasi' && !kat) throw new Error('Pilih kategori!');
-
+            if(!tgl || nominal <= 0 || !ket) throw new Error('Cek kembali tanggal, nominal, dan keterangan.');
+            
             let finalChannel = chan;
             if(chan === 'Transfer Bank') {
                 const opt = transaksiRekId.options[transaksiRekId.selectedIndex];
@@ -341,38 +318,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if(tipe === 'mutasi') {
                 const dest = transaksiMutasiTujuan.value;
-                if(!dest) throw new Error('Pilih tujuan mutasi!');
-                let destChannel = dest === 'Tunai' ? 'Tunai / Cash' : (dest === 'Kas Operasional' ? 'Kas Operasional' : transaksiMutasiTujuan.options[transaksiMutasiTujuan.selectedIndex].textContent);
-                
+                if(!dest) throw new Error('Pilih tujuan!');
+                let destChannel = (dest === 'Tunai') ? 'Tunai / Cash' : (dest === 'Kas Operasional' ? 'Kas Operasional' : transaksiMutasiTujuan.options[transaksiMutasiTujuan.selectedIndex].textContent);
                 const mid = 'MUT-' + Date.now().toString().slice(-6);
-                const payload = [
-                    { id: mid + '-O', tipe: 'pengeluaran', tanggal: tgl, kategori: 'Mutasi Antar Rekening', nominal, keterangan: 'Mutasi Ke ' + destChannel + ' | ' + ket, channel: finalChannel },
-                    { id: mid + '-I', tipe: 'pemasukan', tanggal: tgl, kategori: 'Mutasi Antar Rekening', nominal, keterangan: 'Mutasi Dari ' + finalChannel + ' | ' + ket, channel: destChannel }
-                ];
-                const { error } = await supabase.from('keuangan').insert(payload);
-                if(error) throw error;
+                await supabase.from('keuangan').insert([
+                    { id: mid + '-O', tipe: 'pengeluaran', tanggal: tgl, kategori: 'Mutasi Antar Rekening', nominal, keterangan: 'Simpan Ke ' + destChannel + ' | ' + ket, channel: finalChannel },
+                    { id: mid + '-I', tipe: 'pemasukan', tanggal: tgl, kategori: 'Mutasi Antar Rekening', nominal, keterangan: 'Terima Dari ' + finalChannel + ' | ' + ket, channel: destChannel }
+                ]);
             } else {
-                const payload = { 
+                await supabase.from('keuangan').upsert([{ 
                     id: window.editingId || ('FIN-' + Date.now().toString().slice(-6)),
-                    tipe, tanggal: tgl, kategori: kat === 'Lainnya (Tulis Sendiri)' ? kategoriLainInput.value : kat,
-                    nominal, keterangan: ket, channel: finalChannel
-                };
-                const { error } = await supabase.from('keuangan').upsert([payload]);
-                if(error) throw error;
+                    tipe, tanggal: tgl, kategori: kat, nominal, keterangan: ket, channel: finalChannel
+                }]);
             }
-
-            window.showToast('Berhasil disimpan!', 'success');
+            window.showToast('Berhasil!', 'success');
             modalKeuangan.classList.remove('active');
             renderApp();
-        } catch (err) {
-            window.showAlert(err.message, 'danger');
-        } finally {
-            if (btnSaveModal) { btnSaveModal.disabled = false; btnSaveModal.innerHTML = originalText; }
-        }
-    };
+        } catch (err) { window.showAlert(err.message, 'danger'); }
+        finally { if (btnSaveModal) { btnSaveModal.disabled = false; btnSaveModal.innerHTML = originalText; } }
+    });
 
-    // --- ATTACH LISTENERS ---
-    formKeuangan?.addEventListener('submit', handleSave);
     if(btnSaveModal) btnSaveModal.onclick = () => formKeuangan?.requestSubmit();
 
     transaksiChannel?.addEventListener('change', async () => {
@@ -384,16 +349,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const o = document.createElement('option'); o.value = r.id; o.textContent = `${r.bank} - ${r.norek} (${r.an})`;
                 transaksiRekId.appendChild(o);
             });
-        } else { containerTransaksiRek.style.display = 'none'; }
+        } else containerTransaksiRek.style.display = 'none';
     });
 
     document.getElementById('btnCloseModal')?.addEventListener('click', () => modalKeuangan.classList.remove('active'));
     document.getElementById('btnCancelModal')?.addEventListener('click', () => modalKeuangan.classList.remove('active'));
+    document.getElementById('btnExportKeuangan')?.addEventListener('click', handleExport);
     
-    // Initial load
+    // Auth & Init
+    const isAuthorized = ['admin', 'office', 'staf', 'operator'].includes((profile.role || '').toLowerCase().trim());
+    if (isAuthorized) {
+        const actionContainer = document.querySelector('.card-box .flex-between div:last-child');
+        if (actionContainer && !document.getElementById('btnSyncKeuangan')) {
+            const btnSync = document.createElement('button');
+            btnSync.id = 'btnSyncKeuangan'; btnSync.className = 'btn';
+            btnSync.style.cssText = 'background:rgba(16,185,129,0.1); color:#10b981; margin-right: 0.5rem;';
+            btnSync.innerHTML = '🔄 Sinkron Data'; btnSync.onclick = handleSyncAll;
+            actionContainer.prepend(btnSync);
+        }
+    }
+
     window.setupMoneyMask('transaksiNominal');
     await loadAndSyncCategories();
     await renderApp();
-    
     window.showToast('Sistem Keuangan Siap', 'success');
 });
