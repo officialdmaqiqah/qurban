@@ -813,29 +813,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     if (agenData && agenData.wa) {
                         const msgAgenParsed = await window.parseWaTemplate(templateAgen, commonData);
-                        console.log(`[WA] Menyiapkan pengiriman Ke Agen: ${agenData.nama} (${agenData.wa})`);
-                        
-                        const resA = await window.sendWa(agenData.wa, msgAgenParsed);
-                        
-                        if (!resA.success) {
-                            window.showToast('WA ke Agen gagal dikirim otomatis. Menawarkan pengiriman manual...', 'warning');
-                            window.showConfirm(`WA Agen Gagal: ${resA.msg}\n\nIngin kirim manual?`, () => {
-                                window.open(resA.link, '_blank');
-                            }, null, 'WA Gateway Masalah', 'Kirim Manual', 'btn-primary');
-                        }
+                        if (!msgAgenParsed || msgAgenParsed.trim() === "") {
+                            window.showToast('Gagal: Isi pesan WA Agen kosong. Cek Template WA!', 'danger');
+                        } else {
+                            console.log(`[WA] Menyiapkan pengiriman Ke Agen: ${agenData.nama} (${agenData.wa})`);
+                            const resA = await window.sendWa(agenData.wa, msgAgenParsed);
+                            
+                            if (!resA.success) {
+                                window.showToast('WA ke Agen gagal otomatis. Menawarkan manual...', 'warning');
+                                window.showConfirm(`WA Agen Gagal: ${resA.msg}\n\nIngin kirim manual?`, () => {
+                                    window.open(resA.link, '_blank');
+                                }, null, 'WA Gateway Masalah', 'Kirim Manual', 'btn-primary');
+                            } else {
+                                window.showToast('WA Agen Berhasil Terkirim!', 'success');
+                            }
 
-                        // Kirim Notifikasi Saldo Terpotong jika pakai Titipan (Hanya jika WA utama sukses/manual)
-                        if (inpChannelDP.value === 'Saldo Titipan Agen') {
-                            const currentSaldo = await getAgentSaldo(agenData.nama);
-                            const msgSaldo = `*NOTIFIKASI SALDO TITIPAN*\n\nHalo ${agenData.nama},\nSaldo titipan Anda telah terpotong sebesar *${formatRp(paidNow)}* untuk pembayaran DP *${trxId}*.\n\nSisa saldo titipan Anda saat ini: *${formatRp(currentSaldo)}*.\n\nTerima kasih.`;
-                            await window.sendWa(agenData.wa, msgSaldo);
+                            // Kirim Notifikasi Saldo Terpotong jika pakai Titipan
+                            if (inpChannelDP.value === 'Saldo Titipan Agen') {
+                                const currentSaldo = await getAgentSaldo(agenData.nama);
+                                const msgSaldo = `*NOTIFIKASI SALDO TITIPAN*\n\nHalo ${agenData.nama},\nSaldo titipan Anda telah terpotong sebesar *${formatRp(paidNow)}* untuk pembayaran DP *${trxId}*.\n\nSisa saldo titipan Anda saat ini: *${formatRp(currentSaldo)}*.\n\nTerima kasih.`;
+                                await window.sendWa(agenData.wa, msgSaldo);
+                            }
                         }
                     } else {
                         console.warn('[WA] Data Agen/WA tidak ditemukan untuk:', inpAgenId.value);
-                        const displayNama = newTrx.agen?.nama || inpAgenId.value;
-                        if (displayNama && displayNama !== '-- Pilih Agen --') {
-                             window.showToast(`Peringatan: WA Agen (${displayNama}) tidak terkirim karena nomor WA tidak ditemukan.`, 'warning');
-                        }
+                        const displayNama = matchedAgen?.nama || newTrx.agen?.nama || inpAgenId.value;
+                        window.showToast(`Peringatan: Nomor WA untuk agen "${displayNama}" tidak ditemukan!`, 'danger');
                     }
                 } catch (e) {
                     console.error('WA Err:', e);
