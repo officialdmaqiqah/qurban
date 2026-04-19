@@ -789,11 +789,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         jadwal: formatTgl(newTrx.delivery?.tgl),
                         komisi: formatRp(calculatedKomisi)
                     };
-
-                    const msgCust = await window.parseWaTemplate(templateCust, commonData);
                     
                     // Notif Ke Konsumen (Hanya jika BUKAN agen DM/EXT)
                     if (newTrx.customer?.wa1 && !skipCustWA) {
+                        const templateCust = newTrx.delivery?.tipe === 'ambil_sendiri' ? config.templateOrderDM : config.templateOrderNormal;
+                        const msgCust = await window.parseWaTemplate(templateCust, commonData);
+                        
                         const res = await window.sendWa(newTrx.customer.wa1, msgCust);
                         if (!res.success) {
                             window.showConfirm(`WA Konsumen Gagal: ${res.msg}\n\nIngin kirim manual?`, () => {

@@ -591,10 +591,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (sidebar) {
         const verTag = document.createElement('div');
         verTag.style.cssText = 'padding: 10px 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.05); cursor: default;';
-        verTag.innerHTML = `System Version: <span style="color:var(--primary); font-weight:700;">v4.8 [LATEST]</span>`;
+        verTag.innerHTML = `System Version: <span style="color:var(--primary); font-weight:700;">v4.9 [LATEST]</span>`;
         sidebar.appendChild(verTag);
     }
-    console.log("%c>> DMQ SYSTEM ACTIVE: v4.8 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
+    console.log("%c>> DMQ SYSTEM ACTIVE: v4.9 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
 });
 
 // --- UNIVERSAL CAMERA UI (Webcam & Mobile) ---
