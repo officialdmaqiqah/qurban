@@ -814,21 +814,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (agenData && agenData.wa) {
                         const msgAgenParsed = await window.parseWaTemplate(templateAgen, commonData);
                         if (!msgAgenParsed || msgAgenParsed.trim() === "") {
-                            window.showToast('Gagal: Isi pesan WA Agen kosong. Cek Template WA!', 'danger');
+                            window.showAlert('⚠️ WA TIDAK TERKIRIM!<br><br>Penyebab: <b>Isi pesan Agen Kosong</b>. Silakan cek Template WA di Pengaturan.', 'warning');
                         } else {
                             console.log(`[WA] Menyiapkan pengiriman Ke Agen: ${agenData.nama} (${agenData.wa})`);
+                            // Debugging alert (Hanya untuk pelacakan, bisa dihapus nanti)
+                            // window.showToast('Mengirim WA ke ' + agenData.nama + '...', 'info');
+                            
                             const resA = await window.sendWa(agenData.wa, msgAgenParsed);
                             
                             if (!resA.success) {
-                                window.showToast('WA ke Agen gagal otomatis. Menawarkan manual...', 'warning');
-                                window.showConfirm(`WA Agen Gagal: ${resA.msg}\n\nIngin kirim manual?`, () => {
-                                    window.open(resA.link, '_blank');
-                                }, null, 'WA Gateway Masalah', 'Kirim Manual', 'btn-primary');
+                                window.showAlert(`⚠️ WA AGEN GAGAL OTOMATIS<br><br>Error: ${resA.msg}<br><br>Kami menawarkan opsi manual...`, 'warning', () => {
+                                    window.showConfirm(`Gagal otomatis. Ingin kirim lewat WA Web/Aplikasi?`, () => {
+                                        window.open(resA.link, '_blank');
+                                    });
+                                });
                             } else {
-                                window.showToast('WA Agen Berhasil Terkirim!', 'success');
+                                window.showToast('✅ WA Agen Berhasil Terkirim!', 'success');
                             }
 
-                            // Kirim Notifikasi Saldo Terpotong jika pakai Titipan
+                            // Notifikasi Saldo Terpotong
                             if (inpChannelDP.value === 'Saldo Titipan Agen') {
                                 const currentSaldo = await getAgentSaldo(agenData.nama);
                                 const msgSaldo = `*NOTIFIKASI SALDO TITIPAN*\n\nHalo ${agenData.nama},\nSaldo titipan Anda telah terpotong sebesar *${formatRp(paidNow)}* untuk pembayaran DP *${trxId}*.\n\nSisa saldo titipan Anda saat ini: *${formatRp(currentSaldo)}*.\n\nTerima kasih.`;
@@ -836,12 +840,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                         }
                     } else {
-                        console.warn('[WA] Data Agen/WA tidak ditemukan untuk:', inpAgenId.value);
                         const displayNama = matchedAgen?.nama || newTrx.agen?.nama || inpAgenId.value;
-                        window.showToast(`Peringatan: Nomor WA untuk agen "${displayNama}" tidak ditemukan!`, 'danger');
+                        console.warn('[WA] Data Agen/WA tidak ditemukan untuk:', displayNama);
+                        window.showAlert(`⚠️ WA AGEN TIDAK TERKIRIM!<br><br>Penyebab: <b>Nomor WA untuk agen "${displayNama}" tidak ditemukan</b> atau data tidak cocok.<br><br>Pastikan nomor di Pengaturan sudah benar.`, 'danger');
                     }
                 } catch (e) {
                     console.error('WA Err:', e);
+                    window.showAlert(`⚠️ SYSTEM ERROR (WA)<br><br>Terjadi kesalahan teknis saat mengirim WA: ${e.message}`, 'danger');
                 }
             }
             
