@@ -302,7 +302,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const matchedAgen = agens.find(a => a.id === trx.agen.id || a.nama === trx.agen.nama);
                 const agentTipe = (trx.agen?.tipe || matchedAgen?.jenis || '').toUpperCase();
                 const skipCustWA = agentTipe.includes('DM') || agentTipe.includes('EXT');
-                const commonData = { nama: trx.customer.nama, id: trx.id, nominal: formatRp(nominal), sisa: formatRp(sisa - realPay) };
+                // Fetch Official Accounts
+                const reks = await getBankAccounts();
+                const rekStr = (reks || []).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
+
+                const infoAgen = matchedAgen ? `${matchedAgen.nama} (${matchedAgen.wa || '-'})` : (trx.agen?.nama || '-');
+                const commonData = { 
+                    nama: trx.customer.nama, 
+                    id: trx.id, 
+                    nominal: formatRp(nominal), 
+                    sisa: formatRp(sisa - realPay),
+                    rekening: rekStr || '-',
+                    info_agen: infoAgen
+                };
 
                 // Hanya kirim ke Konsumen jika BUKAN agen DM/EXT
                 if (waTarget && !skipCustWA) {

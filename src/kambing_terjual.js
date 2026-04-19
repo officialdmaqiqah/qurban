@@ -737,9 +737,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const itemsStr = currentCart.map(it => `• No.${it.noTali} (${it.warnaTali || '-'})`).join('\n');
                     const sohibulStr = currentCart.map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
                     
+                    // Fetch Goat Photos
+                    const goatIds = currentCart.map(it => it.goatId);
+                    const { data: goatsData } = await supabase.from('stok_kambing').select('id, foto_fisik').in('id', goatIds);
+                    const fotoStr = (goatsData || [])
+                        .filter(g => g.foto_fisik)
+                        .map(g => window.getDirectDriveLink(g.foto_fisik))
+                        .join('\n');
+
+                    // Fetch Official Accounts
+                    const reks = await getRekeningDb();
+                    const rekStr = (reks || []).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
+
                     const agentTipe = (newTrx.agen?.tipe || '').toUpperCase();
                     const skipCustWA = agentTipe.includes('DM') || agentTipe.includes('EXT');
                     const calculatedKomisi = skipCustWA ? 0 : Math.round(total * 0.10);
+
+                    const infoAgen = matchedAgen ? `${matchedAgen.nama} (${matchedAgen.wa || '-'})` : (newTrx.agen?.nama || '-');
                     
                     const commonData = { 
                         nama: newTrx.customer?.nama || '-', 
@@ -750,6 +764,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         sisa: formatRp(total - newTrx.total_paid), 
                         items: itemsStr, 
                         sohibul: sohibulStr, 
+                        foto: fotoStr || '-',
+                        rekening: rekStr || '-',
+                        info_agen: infoAgen,
                         alamat: (newTrx.customer?.alamat?.jalan || '') + ', ' + (newTrx.customer?.alamat?.kec || ''), 
                         wa_konsumen: newTrx.customer?.wa1 || '-', 
                         nama_agen: newTrx.agen?.nama || '-', 

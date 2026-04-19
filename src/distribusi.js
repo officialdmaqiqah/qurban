@@ -224,13 +224,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const config = await window.getWaConfig();
                 const { data: trx } = await supabase.from('transaksi').select('*, customer').contains('items', [{ goatId: modal._goatId }]).single();
                 if (trx && trx.customer?.wa1) {
+                    // Fetch Official Accounts
+                    const { data: mdRek } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single();
+                    const reks = mdRek?.val || [];
+                    const rekStr = reks.map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
+
                     const commonData = {
                         nama: trx.customer.nama,
                         id: trx.id,
                         tgl: new Date().toLocaleDateString('id-ID'),
                         items: trips[tIdx].items[iIdx].noTali,
                         sisa: formatRp((trx.total_deal || 0) - (trx.total_paid || 0)),
-                        nama_agen: trips[tIdx].sopirNama
+                        nama_agen: trips[tIdx].sopirNama,
+                        rekening: rekStr || '-'
                     };
                     const msg = await window.parseWaTemplate(config.templateDistribusiTerkirim, commonData);
                     const res = await window.sendWa(trx.customer.wa1, msg);
