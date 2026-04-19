@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const saldo = await getAgentSaldo(agenName);
                     valSpan.textContent = window.formatRp(saldo);
                 } else {
-                    window.showToast('Pilih Agen/Order Terlebih Dahulu', 'warning');
+                    await window.showAlert('Pilih Agen/Order Terlebih Dahulu', 'warning');
                     if (suffix === 'DP') inpChannelDP.value = 'Tunai';
                     else inpChannelLunas.value = 'Tunai';
                 }
@@ -823,10 +823,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const resA = await window.sendWa(agenData.wa, msgAgenParsed);
                             
                             if (!resA.success) {
-                                window.showAlert(`⚠️ WA AGEN GAGAL OTOMATIS<br><br>Error: ${resA.msg}<br><br>Kami menawarkan opsi manual...`, 'warning', () => {
-                                    window.showConfirm(`Gagal otomatis. Ingin kirim lewat WA Web/Aplikasi?`, () => {
-                                        window.open(resA.link, '_blank');
-                                    });
+                                await window.showAlert(`⚠️ WA AGEN GAGAL OTOMATIS<br><br>Error: ${resA.msg}<br><br>Kami menawarkan opsi manual...`, 'warning');
+                                await window.showConfirm(`Gagal otomatis. Ingin kirim lewat WA Web/Aplikasi?`, () => {
+                                    window.open(resA.link, '_blank');
                                 });
                             } else {
                                 window.showToast('✅ WA Agen Berhasil Terkirim!', 'success');
@@ -842,11 +841,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     } else {
                         const displayNama = matchedAgen?.nama || newTrx.agen?.nama || inpAgenId.value;
                         console.warn('[WA] Data Agen/WA tidak ditemukan untuk:', displayNama);
-                        window.showAlert(`⚠️ WA AGEN TIDAK TERKIRIM!<br><br>Penyebab: <b>Nomor WA untuk agen "${displayNama}" tidak ditemukan</b> atau data tidak cocok.<br><br>Pastikan nomor di Pengaturan sudah benar.`, 'danger');
+                        await window.showAlert(`⚠️ WA AGEN TIDAK TERKIRIM!<br><br>Penyebab: <b>Nomor WA untuk agen "${displayNama}" tidak ditemukan</b> atau data tidak cocok.<br><br>Pastikan nomor di Pengaturan sudah benar.`, 'danger');
                     }
                 } catch (e) {
                     console.error('WA Err:', e);
-                    window.showAlert(`⚠️ SYSTEM ERROR (WA)<br><br>Terjadi kesalahan teknis saat mengirim WA: ${e.message}`, 'danger');
+                    await window.showAlert(`⚠️ SYSTEM ERROR (WA)<br><br>Terjadi kesalahan teknis saat mengirim WA: ${e.message}`, 'danger');
                 }
             }
             

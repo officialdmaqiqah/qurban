@@ -157,8 +157,10 @@ window.showToast = function(message, type = 'info', duration = 3000) {
 };
 
 window.showAlert = function(message, type = 'info', onOk = null) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay-custom';
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay-custom';
+        overlay.style.zIndex = '100005'; // Ensure on top
     
     let iconHtml = '', color = 'var(--primary)', bg = 'rgba(var(--primary-rgb), 0.1)', titleText = 'Pemberitahuan';
     
@@ -176,50 +178,66 @@ window.showAlert = function(message, type = 'info', onOk = null) {
         color = 'var(--primary)'; bg = 'rgba(var(--primary-rgb), 0.1)'; titleText = 'Informasi';
     }
 
-    overlay.innerHTML = `
-        <div class="modal-custom">
-            <div class="modal-custom-header">
-                <div class="modal-custom-icon" style="background:${bg}; color:${color};">
-                    ${iconHtml}
+        overlay.innerHTML = `
+            <div class="modal-custom">
+                <div class="modal-custom-header">
+                    <div class="modal-custom-icon" style="background:${bg}; color:${color};">
+                        ${iconHtml}
+                    </div>
+                    <div class="modal-custom-title">${titleText}</div>
                 </div>
-                <div class="modal-custom-title">${titleText}</div>
+                <div class="modal-custom-body">${message}</div>
+                <div class="modal-custom-footer">
+                    <button class="btn btn-primary" id="modalOkBtn" style="background:${color}; box-shadow: 0 4px 14px 0 ${bg.replace('0.1', '0.4')};">OKE, MENGERTI</button>
+                </div>
             </div>
-            <div class="modal-custom-body">${message}</div>
-            <div class="modal-custom-footer">
-                <button class="btn btn-primary" id="modalOkBtn" style="background:${color}; box-shadow: 0 4px 14px 0 ${bg.replace('0.1', '0.4')};">OKE, MENGERTI</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-    document.getElementById('modalOkBtn').onclick = () => { overlay.remove(); if(onOk) onOk(); };
+        `;
+        document.body.appendChild(overlay);
+        document.getElementById('modalOkBtn').onclick = () => { 
+            overlay.remove(); 
+            if(onOk) onOk(); 
+            resolve(true); 
+        };
+    });
 };
 
 window.showConfirm = function(message, onConfirm, onCancel, title = 'Konfirmasi', confirmText = 'Ya, Lanjutkan', confirmClass = 'btn-primary') {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay-custom';
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay-custom';
+        overlay.style.zIndex = '100006';
     
     let color = 'var(--primary)';
     if (confirmClass.includes('danger')) color = 'var(--danger)';
     else if (confirmClass.includes('warning')) color = 'var(--warning)';
 
-    overlay.innerHTML = `
-        <div class="modal-custom">
-            <div class="modal-custom-header">
-                <div class="modal-custom-icon" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary);">
-                    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        overlay.innerHTML = `
+            <div class="modal-custom">
+                <div class="modal-custom-header">
+                    <div class="modal-custom-icon" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary);">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                    <div class="modal-custom-title">${title}</div>
                 </div>
-                <div class="modal-custom-title">${title}</div>
+                <div class="modal-custom-body">${message}</div>
+                <div class="modal-custom-footer">
+                    <button class="btn" id="modalConfirmCancelBtn" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">Batal</button>
+                    <button class="btn ${confirmClass}" id="modalConfirmOkBtn" style="${confirmClass === 'btn-primary' ? '' : `background:${color};`}">${confirmText}</button>
+                </div>
             </div>
-            <div class="modal-custom-body">${message}</div>
-            <div class="modal-custom-footer">
-                <button class="btn" id="modalConfirmCancelBtn" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">Batal</button>
-                <button class="btn ${confirmClass}" id="modalConfirmOkBtn" style="${confirmClass === 'btn-primary' ? '' : `background:${color};`}">${confirmText}</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-    document.getElementById('modalConfirmOkBtn').onclick = () => { overlay.remove(); if(onConfirm) onConfirm(); };
-    document.getElementById('modalConfirmCancelBtn').onclick = () => { overlay.remove(); if(onCancel) onCancel(); };
+        `;
+        document.body.appendChild(overlay);
+        document.getElementById('modalConfirmOkBtn').onclick = () => { 
+            overlay.remove(); 
+            if(onConfirm) onConfirm(); 
+            resolve(true); 
+        };
+        document.getElementById('modalConfirmCancelBtn').onclick = () => { 
+            overlay.remove(); 
+            if(onCancel) onCancel(); 
+            resolve(false); 
+        };
+    });
 };
 
 window.showInput = function(message, defaultValue = '', onOk = null, onCancel = null, title = 'Input Data', placeholder = 'Masukkan data...') {
@@ -573,10 +591,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (sidebar) {
         const verTag = document.createElement('div');
         verTag.style.cssText = 'padding: 10px 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.05); cursor: default;';
-        verTag.innerHTML = `System Version: <span style="color:var(--primary); font-weight:700;">v4.7 [LATEST]</span>`;
+        verTag.innerHTML = `System Version: <span style="color:var(--primary); font-weight:700;">v4.8 [LATEST]</span>`;
         sidebar.appendChild(verTag);
     }
-    console.log("%c>> DMQ SYSTEM ACTIVE: v4.7 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
+    console.log("%c>> DMQ SYSTEM ACTIVE: v4.8 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
 });
 
 // --- UNIVERSAL CAMERA UI (Webcam & Mobile) ---
