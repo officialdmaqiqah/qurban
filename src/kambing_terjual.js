@@ -636,7 +636,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const matchedAgen = agens.find(a => 
             a.nama === inpAgenId.value || 
             `${a.nama} - ${a.tipe || 'Agen'}` === inpAgenId.value ||
-            (inpAgenId.value && inpAgenId.value.startsWith(a.nama + ' -'))
+            (inpAgenId.value && inpAgenId.value.toLowerCase().startsWith(a.nama.toLowerCase()))
         );
         const trxId = window.editingTrxId || await generateTrxId();
         const total = currentCart.reduce((sum, i) => sum + (parseFloat(i.hargaDeal) || 0), 0);
@@ -1151,10 +1151,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             let exportData = [];
+            
+            // Fix: Ambil data kambing terbaru untuk fallback Warna Tali/Batch yang kosong di transaksi lama
+            const allGoats = await getKambingDb();
+            const goatMap = new Map(allGoats.map(g => [g.id, g]));
+
             trxs.forEach(t => {
                 const sisa = (t.total_deal || 0) - (t.total_paid || 0);
                 // Pecah data per item (kambing)
                 (t.items || []).forEach((it, idx) => {
+                    const dbGoat = goatMap.get(it.goatId);
+                    const warnaActual = it.warnaTali || dbGoat?.warna_tali || '';
+                    const batchActual = it.batch || dbGoat?.batch || '';
+                    
                     const addr = t.customer?.alamat || {};
                     const fullAddress = `${addr.jalan || ''}, ${addr.desa || ''}, ${addr.kec || ''}, ${addr.kab || ''}`.replace(/^, |, $/g, '').replace(/, , /g, ', ');
                     
@@ -1168,8 +1177,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Alamat Lengkap': fullAddress || '',
                         'Tgl Deli': t.delivery?.tgl || '',
                         'Tipe Deli': t.delivery?.tipe || '',
-                        'No Tali': it.noTali || '',
-                        'Warna Tali': it.warnaTali || '',
+                        'No Tali': it.noTali || dbGoat?.no_tali || '',
+                        'Warna Tali': warnaActual,
                         'Nama Sohibul': it.namaSohibul || '',
                         'Harga Deal Item': parseFloat(it.hargaDeal) || 0,
                         'Total Nota': idx === 0 ? (parseFloat(t.total_deal) || 0) : 0,
