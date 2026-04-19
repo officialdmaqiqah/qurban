@@ -109,11 +109,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const jenis = p.permissions?.jenis_agen || p.role || 'Agen';
                 
                 if (existing) {
-                    // Jika sudah ada, update WA dan jenis jika dari profile lebih lengkap
+                    // Cek tipe: Prioritaskan tipe spesifik dari Master Data (EXT/DM) daripada 'Agen' standar dari profil
+                    const isGeneric = (jenis === 'Agen' || jenis === 'marketing');
+                    const newTipe = (isGeneric && existing.tipe) ? existing.tipe : jenis;
+
                     map.set(nameKey, { 
                         ...existing, 
                         wa: p.wa || existing.wa, 
-                        jenis: jenis || existing.jenis,
+                        tipe: newTipe, 
                         source: 'merged'
                     });
                 } else {
