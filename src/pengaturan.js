@@ -460,6 +460,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const tr = document.createElement('tr');
                 if (t === 'lokasi') {
                     tr.innerHTML = `<td>${it.nama || '-'}</td><td>${it.kapasitas || '-'} Ekor</td><td><button class="btn btn-sm" onclick="window.editItem('${t}','${it.id}')">✏️</button><button class="btn btn-sm" onclick="window.deleteItem('${t}','${it.id}')">🗑️</button></td>`;
+                } else if (t === 'agen') {
+                    tr.innerHTML = `
+                        <td>${it.nama || '-'}</td>
+                        <td><span class="badge ${it.jenis?.includes('EXT') || it.jenis?.includes('DM') ? 'badge-primary' : 'badge-light'}" style="font-size:0.7rem; padding:2px 8px;">${it.jenis || 'Agen'}</span></td>
+                        <td>${it.wa || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm" onclick="window.editItem('${t}','${it.id}')">✏️</button>
+                            <button class="btn btn-sm" onclick="window.deleteItem('${t}','${it.id}')">🗑️</button>
+                        </td>`;
                 } else {
                     tr.innerHTML = `<td>${it.nama || it.bank || '-'}</td><td>${it.wa || it.norek || '-'}</td><td><button class="btn btn-sm" onclick="window.editItem('${t}','${it.id}')">✏️</button><button class="btn btn-sm" onclick="window.deleteItem('${t}','${it.id}')">🗑️</button></td>`;
                 }
