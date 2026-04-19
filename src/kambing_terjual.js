@@ -774,12 +774,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         komisi: formatRp(calculatedKomisi)
                     };
 
-                    console.log('WA Debug - commonData:', commonData);
-                    console.log('WA Debug - rekStr:', rekStr);
-                    console.log('WA Debug - fotoStr:', fotoStr);
-                    console.log('WA Debug - infoAgen:', infoAgen);
-                    
-                    const templateCust = skipCustWA ? config.templateOrderDM : config.templateOrderNormal;
                     const msgCust = await window.parseWaTemplate(templateCust, commonData);
                     
                     // Notif Ke Konsumen (Hanya jika BUKAN agen DM/EXT)

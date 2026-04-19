@@ -316,8 +316,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     info_agen: infoAgen
                 };
 
-                console.log('WA Debug Lunas - commonData:', commonData);
-
                 // Hanya kirim ke Konsumen jika BUKAN agen DM/EXT
                 if (waTarget && !skipCustWA) {
                     const msgCust = await window.parseWaTemplate(config.templateLunas, commonData);

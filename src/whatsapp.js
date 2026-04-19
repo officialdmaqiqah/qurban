@@ -93,7 +93,6 @@ window.saveWaConfig = saveWaConfig;
  */
 export const parseWaTemplate = async (template, data = {}) => {
     const config = await window.getWaConfig();
-    console.log('parseWaTemplate received data:', data);
     let msg = template || '';
     
     // Default placeholders
