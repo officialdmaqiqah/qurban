@@ -76,7 +76,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // DB Helpers
-    const getKambingDb = async () => { const { data } = await supabase.from('stok_kambing').select('*'); return data || []; };
+    const getKambingDb = async () => { 
+        const { data, error } = await supabase.from('stok_kambing').select('*').order('no_tali', { ascending: true }); 
+        if (error) console.error('Gagal mengambil data kambing:', error);
+        return data || []; 
+    };
     const getTrxDb = async () => { const { data } = await supabase.from('transaksi').select('*'); return data || []; };
     const getAgenDb = async () => { 
         try {
@@ -118,7 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         id: 'USER-' + nameKey.replace(/\s+/g, '-'),
                         nama: p.full_name,
                         wa: p.wa,
-                        jenis: jenis,
+                        tipe: jenis, // Gunakan 'tipe' agar sinkron dengan bagian kode lain
                         source: 'profiles'
                     });
                 }
@@ -405,9 +409,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             div.innerHTML = `
                 <div class="cart-item-header">
                     <div class="cart-item-id">
-                        <span style="color:var(--primary);"># ${item.noTali}</span>
+                        <span style="color:var(--primary);"># ${item.noTali || '?'}</span>
                         <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${item.warnaTali || ''}</span>
-                        <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${item.batch}</span>
+                        <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${String(item.batch || '-').replace('undefined', '-')}</span>
                     </div>
                     <button type="button" class="btn-remove" data-index="${index}" title="Hapus dari daftar">&times;</button>
                 </div>
@@ -631,8 +635,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const agens = await getAgenDb();
         const matchedAgen = agens.find(a => 
             a.nama === inpAgenId.value || 
-            `${a.nama} - ${a.jenis || 'Agen'}` === inpAgenId.value ||
-            (inpAgenId.value && inpAgenId.value.startsWith(a.nama + ' '))
+            `${a.nama} - ${a.tipe || 'Agen'}` === inpAgenId.value ||
+            (inpAgenId.value && inpAgenId.value.startsWith(a.nama + ' -'))
         );
         const trxId = window.editingTrxId || await generateTrxId();
         const total = currentCart.reduce((sum, i) => sum + (parseFloat(i.hargaDeal) || 0), 0);
@@ -651,7 +655,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const newTrx = {
                 id: trxId, tgl_trx: inpTglOrder.value || window.getLocalDate(),
-                agen: { id: matchedAgen?.id || '', nama: matchedAgen?.nama || inpAgenId.value, tipe: matchedAgen?.jenis || 'Agen' },
+                agen: { id: matchedAgen?.id || '', nama: matchedAgen?.nama || inpAgenId.value, tipe: matchedAgen?.tipe || 'Agen' },
                 customer: { nama: document.getElementById('inpCustNama').value, wa1: document.getElementById('inpCustWA1').value, wa2: document.getElementById('inpCustWA2').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 delivery: { tipe: document.getElementById('inpDeliveryTipe').value, tgl: document.getElementById('inpDeliveryTgl').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 items: currentCart, total_deal: total, total_paid: paidNow + (window.existingInstallmentsTotal || 0),
@@ -971,7 +975,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         inpAgenId.value = `${trx.agen.nama} - ${trx.agen.tipe || 'Agen'}`;
         await handleAgenChange();
         
-        currentCart = [...trx.items];
+        // Fix: Refresh metadata from DB when editing to capture latest goat info
+        const { data: currentGoats } = await supabase.from('stok_kambing').select('*').in('id', trx.items.map(i => i.goatId));
+        currentCart = trx.items.map(it => {
+            const dbRef = (currentGoats || []).find(g => g.id === it.goatId);
+            return {
+                ...it,
+                batch: dbRef?.batch || it.batch || '-',
+                noTali: dbRef?.no_tali || it.noTali || '?',
+                warnaTali: dbRef?.warna_tali || it.warnaTali || '-',
+                hargaKandang: dbRef?.harga_kandang || it.hargaKandang || 0
+            };
+        });
         renderCart();
         
         const firstPay = trx.history_bayar?.find(h => h.payId && h.payId.startsWith('PAY-'));
@@ -1076,7 +1091,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Cari kambing yang Tersedia dan cocok dengan signature (No.XX | Batch YY) 
         // ATAU cocok persis dengan No Tali jika hanya diketik angkanya
         const goat = db.find(k => {
-            if (k.status_transaksi !== 'Tersedia') return false;
+            // Perbaikan: Izinkan pencarian kambing Terjual JIKA ia milik transaksi yang sedang diedit
+            const isAssignedToThisTrx = k.transaction_id === window.editingTrxId;
+            if (k.status_transaksi !== 'Tersedia' && !isAssignedToThisTrx) return false;
+
             const signature = `No.${k.no_tali} | ${k.batch}`;
             return signature === searchVal || String(k.no_tali) === searchVal;
         });
