@@ -803,7 +803,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     
                     const agenData = matchedAgen;
-                    const templateAgen = skipCustWA ? config.templateAgentDM : config.templateAgentNormal;
+                    let templateAgen = skipCustWA ? config.templateAgentDM : config.templateAgentNormal;
+                    
+                    // FALLBACK: Jika template khusus DM/EXT kosong, gunakan template normal agar WA tetap terkirim
+                    if (skipCustWA && (!templateAgen || templateAgen.trim() === "")) {
+                        console.warn('[WA] Template DM/EXT kosong, menggunakan template Agent Normal sebagai cadangan.');
+                        templateAgen = config.templateAgentNormal;
+                    }
 
                     if (agenData && agenData.wa) {
                         const msgAgenParsed = await window.parseWaTemplate(templateAgen, commonData);
