@@ -636,11 +636,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const performSave = async (sendWA) => {
         const agens = await getAgenDb();
-        const matchedAgen = agens.find(a => 
-            a.nama === inpAgenId.value || 
-            `${a.nama} - ${a.tipe || 'Agen'}` === inpAgenId.value ||
-            (inpAgenId.value && inpAgenId.value.toLowerCase().startsWith(a.nama.toLowerCase()))
-        );
+        const searchVal = (inpAgenId.value || '').toLowerCase().trim();
+        const matchedAgen = agens.find(a => {
+            const fullLabel = `${a.nama} - ${a.tipe || 'Agen'}`.toLowerCase();
+            return a.nama.toLowerCase() === searchVal || 
+                   fullLabel === searchVal ||
+                   searchVal.startsWith(a.nama.toLowerCase() + ' -');
+        });
         const trxId = window.editingTrxId || await generateTrxId();
         const total = currentCart.reduce((sum, i) => sum + (parseFloat(i.hargaDeal) || 0), 0);
         const paidNow = parseNum(inpTotalBayarAwal.value);
@@ -656,9 +658,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 buktiUrl = await uploadToGDrive(b64, 'FOTO_BUKTI_DP'); 
             }
             
+            const dropdownVal = inpAgenId.value || '';
+            const fallbackTipe = dropdownVal.includes(' - ') ? dropdownVal.split(' - ').pop() : 'Agen';
+
             const newTrx = {
                 id: trxId, tgl_trx: inpTglOrder.value || window.getLocalDate(),
-                agen: { id: matchedAgen?.id || '', nama: matchedAgen?.nama || inpAgenId.value, tipe: matchedAgen?.tipe || 'Agen' },
+                agen: { 
+                    id: matchedAgen?.id || '', 
+                    nama: matchedAgen?.nama || dropdownVal.split(' - ')[0], 
+                    tipe: matchedAgen?.tipe || fallbackTipe 
+                },
                 customer: { nama: document.getElementById('inpCustNama').value, wa1: document.getElementById('inpCustWA1').value, wa2: document.getElementById('inpCustWA2').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 delivery: { tipe: document.getElementById('inpDeliveryTipe').value, tgl: document.getElementById('inpDeliveryTgl').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 items: currentCart, total_deal: total, total_paid: paidNow + (window.existingInstallmentsTotal || 0),
