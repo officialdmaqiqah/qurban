@@ -167,6 +167,11 @@
         <main class="main-content">
             <header class="topbar">
                 <div class="page-title">💳 Terima Pelunasan</div>
+                <div style="margin-left: 20px;">
+                    <button id="btnSyncBalances" class="btn btn-sm" style="background: var(--warning); color: #000; font-size: 0.7rem; padding: 4px 12px; font-weight: bold; border:none; border-radius: 4px; cursor: pointer;">
+                        🔄 PERBAIKI SALDO (SINKRON)
+                    </button>
+                </div>
                 <div class="user-menu">
                     <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
                 </div>
@@ -299,11 +304,6 @@
                         </div>
 
                         <div class="tab-content" id="tabOverpaid">
-                            <div style="margin-bottom: 10px; display: flex; justify-content: flex-end;">
-                                <button id="btnSyncBalances" class="btn btn-sm" style="background: rgba(var(--warning-rgb), 0.1); border: 1px solid var(--warning); color: var(--warning); font-size: 0.75rem; padding: 4px 10px;">
-                                    🔄 Perbaiki & Sinkron Saldo
-                                </button>
-                            </div>
                             <div class="table-responsive">
                                 <table class="data-table">
                                     <thead>
@@ -325,7 +325,7 @@
     </div>
 
     <script type="module" src="src/layout.js?v=4.0"></script>
-    <script type="module" src="src/terima_pelunasan.js?v=4.3"></script>
+    <script type="module" src="src/terima_pelunasan.js?v=5.0"></script>
 
     <!-- MODAL KEMBALIKAN KELEBIHAN BAYAR -->
     <div class="modal-overlay" id="modalRefundKelebihan">
