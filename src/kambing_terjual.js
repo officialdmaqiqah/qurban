@@ -589,7 +589,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return `
                     <div style="display:inline-flex; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:4px 8px; font-size:0.75rem; transition: var(--transition); cursor:pointer;" 
                          onclick="window.viewGoatPhoto('${item.goatId}')">
-                        <span style="color:${badgeColor}; font-weight:600; margin-right:4px;">No.${item.noTali}</span>
+                        <span style="color:${badgeColor}; font-weight:600; margin-right:4px;">No.${item.noTali} ${item.label_printed ? '<span title="Label Sudah Dicetak">🏷️</span>' : ''}</span>
                         <span style="color:var(--text-muted); font-size:0.65rem;">${kMeta?.warna_tali || item.warnaTali || '-'}</span>
                     </div>`; 
             }).join('') + `</div>`;
@@ -1344,29 +1344,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    window.printLabels = () => {
+    window.printLabels = async () => {
         const selectedIds = Array.from(document.querySelectorAll('.trx-checkbox:checked')).map(cb => cb.dataset.id);
         const selectedTrx = lastTrxData.filter(t => selectedIds.includes(t.id));
         
         const labelData = [];
-        selectedTrx.forEach(t => {
+        for (const t of selectedTrx) {
             (t.items || []).forEach(it => {
+                // FALLBACK LOGIC: Sohibul -> Buyer -> Agent
+                const name1 = (it.namaSohibul || t.customer?.nama || t.agen?.nama || '---').trim().toUpperCase();
+                
                 labelData.push({
-                    sohibul: String(it.namaSohibul || '---').toUpperCase(),
+                    sohibul: name1,
                     info: `No.${it.noTali} [${it.warnaTali || '-'}]`,
                     agen: t.agen?.nama || '-'
                 });
             });
-        });
+        }
 
         if (labelData.length === 0) return window.showToast('Tidak ada kambing yang dipilih.', 'warning');
 
+        // MARK AS PRINTED IN DB
+        try {
+            for (const trx of selectedTrx) {
+                const updatedItems = (trx.items || []).map(it => ({ ...it, label_printed: true }));
+                await supabase.from('transaksi').update({ items: updatedItems }).eq('id', trx.id);
+            }
+            // Trigger refresh so labels show up in UI
+            renderTable();
+        } catch (err) {
+            console.error('Failed to mark labels as printed:', err);
+        }
+
+        // OPEN PRINT WINDOW
         const printWindow = window.open('', '_blank');
         const labelsHtml = labelData.map(l => `
             <div class="label-box">
                 <div class="sohibul">${l.sohibul}</div>
                 <div class="divider"></div>
-                <div class="footer">${l.info} | ${l.agen}</div>
+                <div class="footer">
+                    <span>${l.info}</span>
+                    <span style="margin-left:auto; opacity:0.7;">${l.agen}</span>
+                </div>
             </div>
         `).join('');
 
@@ -1376,18 +1395,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <title>Cetak Label Kalung</title>
                 <style>
                     @page { size: A4; margin: 1cm; }
-                    body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+                    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
                     .page-grid { 
                         display: grid; 
                         grid-template-columns: 7.5cm 7.5cm; 
                         column-gap: 1cm;
-                        row-gap: 4px;
+                        row-gap: 2px;
                     }
                     .label-box {
                         width: 7.3cm; 
                         height: 1.3cm;
-                        border: 0.5pt solid #ccc;
-                        padding: 0.1cm;
+                        border: 0.3pt solid #ddd;
+                        padding: 0.1cm 0.3cm;
                         display: flex;
                         flex-direction: column;
                         justify-content: center;
@@ -1396,24 +1415,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                         margin-bottom: 2px;
                     }
                     .sohibul {
-                        font-weight: 800;
+                        font-weight: 900;
                         font-size: 11pt;
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
                         text-align: center;
+                        line-height: 1.2;
                     }
                     .divider {
-                        border-top: 0.5pt dashed #aaa;
+                        border-top: 0.5pt dashed #ccc;
                         margin: 2px 0;
                     }
                     .footer {
                         font-size: 8pt;
-                        color: #333;
+                        font-weight: 500;
+                        color: #444;
                         display: flex;
+                        align-items: center;
                         justify-content: space-between;
                         white-space: nowrap;
-                        overflow: hidden;
                     }
                 </style>
             </head>
