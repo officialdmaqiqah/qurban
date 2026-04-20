@@ -533,6 +533,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Event Search
     inpSearchOrder.addEventListener('input', renderList);
 
+    // --- REPAIR TOOL: SYNC BALANCES ---
+    const syncAllBalances = async () => {
+        window.showConfirm("🔄 Sinkronkan ulang seluruh saldo order berdasarkan riwayat pembayaran?<br><br><small>Ini akan memperbaiki data yang tidak sinkron (seperti data Aziz) akibat penghapusan transaksi manual sebelumnya.</small>", async () => {
+            window.showToast("Memulai sinkronisasi...", "info");
+            try {
+                const { data: trxs, error } = await supabase.from('transaksi').select('*');
+                if (error) throw error;
+
+                let updatedCount = 0;
+                for (const trx of trxs) {
+                    const history = trx.history_bayar || [];
+                    const calcPaid = history.reduce((s, h) => s + (parseFloat(h.nominal) || 0), 0);
+                    const calcOver = Math.max(0, calcPaid - (trx.total_deal || 0));
+
+                    if (calcPaid !== trx.total_paid || calcOver !== trx.total_overpaid) {
+                        await supabase.from('transaksi').update({
+                            total_paid: calcPaid,
+                            total_overpaid: calcOver,
+                            updated_at: new Date().toISOString()
+                        }).eq('id', trx.id);
+                        updatedCount++;
+                    }
+                }
+
+                window.showAlert(`Sinkronisasi selesai! <b>${updatedCount}</b> data berhasil diperbaiki.`, "success", () => {
+                    window.location.reload();
+                });
+            } catch (err) {
+                console.error("Sync Error:", err);
+                window.showAlert("Gagal sinkronisasi: " + err.message, "danger");
+            }
+        }, null, "Sinkronisasi Saldo", "Ya, Sinkronkan", "btn-warning");
+    };
+
+    document.getElementById('btnSyncBalances')?.addEventListener('click', syncAllBalances);
+
     window.setupMoneyMask('inpNominalBayar');
     window.setupMoneyMask('inpNominalRefund');
 
