@@ -200,6 +200,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inpKomisiNominal = document.getElementById('inpKomisiNominal');
 
     let currentSort = { column: 'id', direction: 'desc' };
+
+    // --- SORTING HANDLER ---
+    document.querySelectorAll('.sort-header').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const column = th.dataset.column;
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+
+            // Update UI Icons
+            document.querySelectorAll('.sort-header').forEach(h => {
+                const col = h.dataset.column;
+                let label = h.textContent.replace(/[🔼🔽↕️]/g, '').trim();
+                if (col === currentSort.column) {
+                    label += (currentSort.direction === 'asc' ? ' 🔼' : ' 🔽');
+                } else {
+                    label += ' ↕️';
+                }
+                h.textContent = label;
+            });
+
+            renderTable();
+        });
+    });
     let currentCart = [];
     let currentAgenTipeKomisi = false;
     const TIPE_BERHAK_KOMISI_UPPER = ['MARKETING KANDANG', 'RESELLER'];
@@ -505,9 +533,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // 5. Sort
         trx.sort((a, b) => { 
-            let vA = a[currentSort.column], vB = b[currentSort.column]; 
-            if (currentSort.column === 'sisa') { vA = (a.total_deal || 0) - (a.total_paid || 0); vB = (b.total_deal || 0) - (b.total_paid || 0); } 
-            return currentSort.direction === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1); 
+            let vA, vB;
+            
+            // Mapping column to values
+            switch(currentSort.column) {
+                case 'sisa':
+                    vA = (a.total_deal || 0) - (a.total_paid || 0);
+                    vB = (b.total_deal || 0) - (b.total_paid || 0);
+                    break;
+                case 'totalDeal':
+                    vA = a.total_deal || 0;
+                    vB = b.total_deal || 0;
+                    break;
+                case 'totalPaid':
+                    vA = a.total_paid || 0;
+                    vB = b.total_paid || 0;
+                    break;
+                case 'agen':
+                    vA = (a.agen?.nama || '').toLowerCase();
+                    vB = (b.agen?.nama || '').toLowerCase();
+                    break;
+                case 'customer':
+                    vA = (a.customer?.nama || '').toLowerCase();
+                    vB = (b.customer?.nama || '').toLowerCase();
+                    break;
+                case 'tglAntar':
+                    vA = a.delivery?.tgl || '';
+                    vB = b.delivery?.tgl || '';
+                    break;
+                case 'id':
+                default:
+                    vA = a.id || '';
+                    vB = b.id || '';
+            }
+
+            if (currentSort.direction === 'asc') {
+                return vA < vB ? -1 : (vA > vB ? 1 : 0);
+            } else {
+                return vA > vB ? -1 : (vA < vB ? 1 : 0);
+            }
         });
 
         tableBody.innerHTML = '';
