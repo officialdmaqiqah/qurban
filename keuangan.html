@@ -155,6 +155,34 @@
             .data-table td[data-label="ID"] { display: none; } /* Hide ID on mobile to save space */
             .data-table td[data-label="TIPE"] { display: none; } /* Hide Tipe as color + category is enough */
         }
+
+        /* Financial Safeguards Styles */
+        .safeguard-warning {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            color: #ef4444;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .restricted-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -292,6 +320,9 @@
             </div>
             <form id="formKeuangan">
                 <div class="modal-body">
+                    <div id="safeguardWarning" class="safeguard-warning">
+                        <span id="safeguardText"></span>
+                    </div>
                     <input type="hidden" id="transaksiIdOriginal" value="">
                     <input type="hidden" id="transaksiTipe" value="pemasukan">
                     <div class="form-2col" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">

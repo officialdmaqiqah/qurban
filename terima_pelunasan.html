@@ -326,10 +326,13 @@
     <div class="modal-overlay" id="modalRefundKelebihan">
         <div class="modal-content" style="max-width:480px;">
             <div class="modal-header">
-                <h3 class="modal-title">&#x21A9;&#xFE0F; Catat Pengembalian Dana</h3>
+                <h3 class="modal-title">↩️ Catat Pengembalian Dana</h3>
                 <button class="modal-close" id="btnCloseRefund">&times;</button>
             </div>
             <div class="modal-body" style="display:block; padding:1.25rem;">
+                <div id="safeguardRefund" style="display:none; background:rgba(239, 68, 68, 0.1); border:1px solid var(--danger); border-radius:6px; padding:8px 12px; color:#ef4444; margin-bottom:12px; font-size:0.85rem; font-weight:600;">
+                    ⚠️ PERINGATAN: Kelebihan bayar tidak boleh dikembalikan menggunakan Kas Operasional!
+                </div>
                 <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:1rem; margin-bottom:1rem; font-size:0.85rem;">
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
                         <span style="color:var(--text-muted);">ID Order:</span><span id="refundTrxId" style="font-weight: 300;"></span>
@@ -356,20 +359,17 @@
                         <option value="Lainnya">🧩 Lainnya</option>
                     </select>
                     <div id="containerRekRefund" style="display:none; margin-top:0.4rem;">
-                        <label class="form-label" style="font-size:0.7rem;">&#x1F4B3; Rekening Sumber</label>
+                        <label class="form-label" style="font-size:0.7rem;">💳 Rekening Sumber</label>
                         <select id="inpRekIdRefund" class="form-control" style="font-size:0.8rem;"></select>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn" id="btnCancelRefund" style="background:transparent; border:1px solid rgba(255,255,255,0.1);">Batal</button>
-                <button type="button" class="btn btn-primary" id="btnSimpanRefund" style="background:#f59e0b; color:#000; font-weight: 300;">&#x21A9; Catat Pengembalian</button>
+                <button type="button" class="btn btn-primary" id="btnSimpanRefund" style="background:#f59e0b; color:#000; font-weight: 300;">↩️ Catat Pengembalian</button>
             </div>
         </div>
     </div>
 
 </body>
 </html>
-
-
-

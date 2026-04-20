@@ -7,6 +7,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/style.css?v=4.4">
     <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
+    <style>
+        .safeguard-notice {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            text-align: left;
+            color: var(--text-main);
+        }
+        .safeguard-notice .icon { font-size: 1.5rem; line-height: 1; }
+        .safeguard-notice .text h4 { margin: 0 0 4px 0; color: var(--warning); font-size: 0.9rem; }
+        .safeguard-notice .text p { margin: 0; font-size: 0.8rem; opacity: 0.8; }
+    </style>
 </head>
 <body>
     <div class="app-layout">
@@ -42,6 +59,13 @@
             </header>
 
             <div class="content-area fade-in text-center">
+                <div class="safeguard-notice">
+                    <div class="icon">🛡️</div>
+                    <div class="text">
+                        <h4>Kebijakan Dana Titipan</h4>
+                        <p>Seluruh dana yang masuk ke kategori <b>Titipan Dana Agen</b> adalah dana terikat yang hanya diperuntukkan bagi transaksi agen terkait. Hindari penggunaan dana ini untuk biaya operasional kandang atau keperluan lainnya.</p>
+                    </div>
+                </div>
                 <div class="status-grid premium-grid" style="margin-bottom: 2rem;">
                     <div class="premium-card rose">
                         <div class="premium-label">Total Saldo Titipan</div>
@@ -119,6 +143,9 @@
                 </div>
                 <form id="formDeposit">
                     <div class="modal-body" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div id="safeguardWarning" style="display:none; background:rgba(239, 68, 68, 0.1); border:1px solid var(--danger); border-radius:8px; padding:0.75rem; color:#ef4444; font-size:0.8rem;">
+                            ⚠️ <b>PERINGATAN:</b> Pastikan channel pengeluaran bukan berasal dari Kas Operasional jika ini adalah pengembalian/tarik dana titipan.
+                        </div>
                         <input type="hidden" id="editId">
                         
                         <div class="form-group">

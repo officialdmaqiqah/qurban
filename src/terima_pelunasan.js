@@ -460,6 +460,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         showAlert('Refund Berhasil!', 'success', () => { renderStats(); renderList(); });
     });
 
+    const inpChannelRefund = document.getElementById('inpChannelRefund');
+    if (inpChannelRefund) {
+        inpChannelRefund.onchange = () => {
+            const safeguard = document.getElementById('safeguardRefund');
+            if (safeguard) {
+                safeguard.style.display = (inpChannelRefund.value === 'Kas Operasional') ? 'block' : 'none';
+            }
+        };
+    }
+
+    const inpChannelBayar = document.getElementById('inpChannelBayar');
+    if (inpChannelBayar) {
+        inpChannelBayar.onchange = () => {
+            const safeguard = document.getElementById('safeguardPay');
+            if (safeguard) {
+                safeguard.style.display = (inpChannelBayar.value === 'Kas Operasional') ? 'block' : 'none';
+            }
+            // Original logic for Saldo Titipan info
+            const boxSaldo = document.getElementById('infoSaldoTitipan');
+            if (inpChannelBayar.value === 'Saldo Titipan Agen') {
+                if (boxSaldo) boxSaldo.style.display = 'block';
+            } else {
+                if (boxSaldo) boxSaldo.style.display = 'none';
+            }
+        };
+    }
+
     // Populate Datalist
     const trxsAll = await getTrxData();
     const listOrders = document.getElementById('listOrders');

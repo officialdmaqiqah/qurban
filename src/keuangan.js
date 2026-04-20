@@ -44,6 +44,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         let officialKatOut = [];
         let currentSort = { column: 'tanggal', direction: 'desc' };
 
+        const RESTRICTED_CHANNELS = ['Saldo Titipan', 'Saldo Titipan Agen'];
+        const RESTRICTED_CATEGORIES = ['Titipan Dana Agen', 'Pemakaian Titipan Agen', 'Penarikan Titipan Agen', 'Pengembalian Dana'];
+        // Operational categories that are common "misuse" targets
+        const OPERATIONAL_CATEGORIES = ['Operasional Kandang', 'Pakan', 'Gaji', 'Sewa', 'Listrik', 'Obat', 'Transport'];
+
         // --- UTILITIES ---
         const formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
         const formatDate = (dateString) => {
@@ -58,6 +63,41 @@ document.addEventListener('DOMContentLoaded', async () => {
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
             };
+        };
+
+        const checkSafeguards = () => {
+            const safeguardWarning = document.getElementById('safeguardWarning');
+            const safeguardText = document.getElementById('safeguardText');
+            if (!safeguardWarning || !safeguardText) return;
+
+            const chan = transaksiChannel.value;
+            const kat = kategoriInput.value;
+            const tipe = tipeInput.value;
+            const selRek = transaksiRekId.options[transaksiRekId.selectedIndex]?.textContent || '';
+            
+            const isRestrictedChannel = RESTRICTED_CHANNELS.some(rc => chan.includes(rc) || selRek.includes(rc));
+            const isRestrictedCategory = RESTRICTED_CATEGORIES.some(rc => kat.includes(rc));
+            const isOperationalCategory = OPERATIONAL_CATEGORIES.some(oc => kat.toLowerCase().includes(oc.toLowerCase()));
+
+            let warningMsg = '';
+            if (tipe === 'pengeluaran') {
+                if (isRestrictedChannel && isOperationalCategory) {
+                    warningMsg = `⚠️ <b>PERINGATAN KERAS:</b> Dana Titipan Agen tidak boleh digunakan untuk biaya operasional (${kat})!`;
+                } else if (isRestrictedChannel && !isRestrictedCategory) {
+                    warningMsg = `⚠️ <b>PERINGATAN:</b> Anda menggunakan Dana Titipan untuk kategori "${kat}". Pastikan penggunaan ini sudah sesuai peruntukannya!`;
+                }
+            } else if (tipe === 'pemasukan') {
+                if (isRestrictedCategory && !isRestrictedChannel && chan !== 'Transfer Bank') {
+                    warningMsg = `⚠️ <b>INFO:</b> Pemasukan kategori "${kat}" biasanya masuk ke Saldo Titipan. Mohon verifikasi Channel yang dipilih.`;
+                }
+            }
+
+            if (warningMsg) {
+                safeguardText.innerHTML = warningMsg;
+                safeguardWarning.style.display = 'block';
+            } else {
+                safeguardWarning.style.display = 'none';
+            }
         };
 
         const loadAndSyncCategories = async () => {
@@ -234,10 +274,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (label.includes(' - ')) label = label.split(' - ')[0];
                         const inVal = inByChannel[chan] || 0;
                         const outVal = outByChannel[chan] || 0;
+                        const lowChan = chan.toLowerCase();
+                        const isRestricted = lowChan.includes('titipan') || lowChan.includes('overpaid') || lowChan.includes('kelebihan');
+                        
                         containerBalance.innerHTML += `
-                        <div class="balance-card">
+                        <div class="balance-card ${isRestricted ? 'restricted-border' : ''}">
                             <div class="balance-info">
-                                <div class="balance-label">${label.toUpperCase()}</div>
+                                <div class="balance-label">
+                                    ${label.toUpperCase()}
+                                    ${isRestricted ? '<span class="restricted-badge">🔐 TERIKAT</span>' : ''}
+                                </div>
                                 <div class="balance-value" style="color:${val < 0 ? 'var(--danger)' : 'var(--success)'}">${formatRp(val)}</div>
                                 <div class="balance-subinfo">
                                     <span style="color:var(--success)"><span class="icon-emoji">⬇️</span> ${formatRp(inVal)}</span>
@@ -515,6 +561,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('filterTipe')?.addEventListener('change', () => renderApp());
         document.getElementById('filterChannel')?.addEventListener('change', () => renderApp());
         document.getElementById('filterKategori')?.addEventListener('change', () => renderApp());
+
+        // Safeguard listeners
+        transaksiChannel?.addEventListener('change', checkSafeguards);
+        kategoriInput?.addEventListener('change', checkSafeguards);
+        tipeInput?.addEventListener('change', checkSafeguards);
+        transaksiRekId?.addEventListener('change', checkSafeguards);
 
         await renderApp();
         window.showToast('Sistem Keuangan Siap', 'success');

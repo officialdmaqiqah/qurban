@@ -49,6 +49,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
+    const inpKategori = document.getElementById('inpKategori');
+    if (inpKategori) {
+        inpKategori.onchange = () => {
+            const safeguard = document.getElementById('safeguardWarning');
+            if (safeguard) {
+                safeguard.style.display = (inpKategori.value === 'Penarikan Titipan Agen') ? 'block' : 'none';
+            }
+        };
+    }
+
     if (formDeposit) {
         formDeposit.onsubmit = async (e) => {
             e.preventDefault();
