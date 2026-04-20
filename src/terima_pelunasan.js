@@ -103,8 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set default date
     if(inpTglBayar) inpTglBayar.value = window.getLocalDate();
 
-    window.setupMoneyMask(inpNominalBayar);
-    window.setupMoneyMask('inpNominalRefund');
+    // setupMoneyMask will be called at the end of file for all IDs
 
     const renderStats = async () => {
         const { data: trxs } = await supabase.from('transaksi').select('*');
@@ -174,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="font-weight:600;">${t.customer.nama || '-'}</div>
                     <div style="font-size:0.7rem; color:var(--text-muted);">${formatTgl(t.tgl_trx)}</div>
                 </td>
-                <td style="font-weight:700; color:var(--warning);">${formatRp(sisa)}</td>
+                <td style="font-weight:700; color:var(--warning);">${window.formatRp(sisa)}</td>
                 <td style="min-width:100px;">
                     <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Terbayar ${pct}%</div>
                     <div style="background:rgba(255,255,255,0.06); height:6px; border-radius:4px; width:100%;">
@@ -200,7 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td style="font-weight:700; color:var(--primary);">${t.id}</td>
                 <td>${t.customer.nama || '-'}</td>
-                <td style="font-weight:700; color:var(--warning);">${formatRp((t.total_overpaid || 0) + Math.max(0, t.total_paid - t.total_deal))}</td>
+                <td style="font-weight:700; color:var(--warning);">${window.formatRp((t.total_overpaid || 0) + Math.max(0, t.total_paid - t.total_deal))}</td>
                 <td><button class="btn btn-sm" style="padding:4px 10px; font-size:0.75rem; background:rgba(245,158,11,0.15); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">Refund</button></td>
             `;
             tr.onclick = () => openRefundModal(t);
@@ -214,14 +213,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sisa = trx.total_deal - trx.total_paid;
         gridInfoOrder.innerHTML = `
             <div class="info-card"><div class="label">Konsumen</div><div class="value">${trx.customer.nama}</div></div>
-            <div class="info-card"><div class="label">Total Deal</div><div class="value">${formatRp(trx.total_deal)}</div></div>
-            <div class="info-card"><div class="label">Pernah Bayar</div><div class="value">${formatRp(trx.total_paid)}</div></div>
+            <div class="info-card"><div class="label">Total Deal</div><div class="value">${window.formatRp(trx.total_deal)}</div></div>
+            <div class="info-card"><div class="label">Pernah Bayar</div><div class="value">${window.formatRp(trx.total_paid)}</div></div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;">SALDO SISA:</div>
+            <div class="sisa-big" id="displaySisa">${window.formatRp(sisa)}</div>
         `;
-        displaySisa.textContent = formatRp(sisa);
         listHistoriPay.innerHTML = '';
         (trx.history_bayar || []).forEach(h => {
              const div = document.createElement('div'); div.className = 'history-item';
-             div.innerHTML = `<div><strong>${formatRp(h.nominal)}</strong> via ${h.channel}<br><small>${formatTgl(h.tgl)}</small></div> <button class="btn-sm" onclick="window.deleteHistoryItem('${trx.id}', '${h.payId}', ${h.nominal})">🗑️</button>`;
+             div.innerHTML = `<div><strong>${window.formatRp(h.nominal)}</strong> via ${h.channel}<br><small>${formatTgl(h.tgl)}</small></div> <button class="btn-sm" onclick="window.deleteHistoryItem('${trx.id}', '${h.payId}', ${h.nominal})">🗑️</button>`;
              listHistoriPay.appendChild(div);
         });
         boxHistoriPay.style.display = (trx.history_bayar?.length > 0) ? 'block' : 'none';
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     window.deleteHistoryItem = async (trxId, payId, nominal) => {
-        showConfirm('Hapus riwayat?', async () => {
+        window.showConfirm('Hapus riwayat?', async () => {
             const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
             const updatedHistory = trx.history_bayar.filter(h => h.payId !== payId);
             await supabase.from('transaksi').update({ total_paid: trx.total_paid - nominal, history_bayar: updatedHistory }).eq('id', trxId);
