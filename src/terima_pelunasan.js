@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
-        const overpaid = filtered.filter(t => (t.total_overpaid || 0) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
+        const overpaid = filtered.filter(t => (t.total_overpaid || 0) > 0 || (t.total_paid > t.total_deal)).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
 
         tableBodyBelumLunas.innerHTML = belumLunas.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:1.5rem; font-size:0.8rem; color:var(--text-muted);">Semua lunas!</td></tr>' : '';
         belumLunas.forEach(t => tableBodyBelumLunas.appendChild(createOrderRow(t, 'belum')));
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td style="font-weight:700; color:var(--primary);">${t.id}</td>
                 <td>${t.customer.nama || '-'}</td>
-                <td style="font-weight:700; color:var(--warning);">${formatRp(t.total_overpaid)}</td>
+                <td style="font-weight:700; color:var(--warning);">${formatRp((t.total_overpaid || 0) + Math.max(0, t.total_paid - t.total_deal))}</td>
                 <td><button class="btn btn-sm" style="padding:4px 10px; font-size:0.75rem; background:rgba(245,158,11,0.15); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">Refund</button></td>
             `;
             tr.onclick = () => openRefundModal(t);
@@ -426,10 +426,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const openRefundModal = (trx) => {
         const modal = document.getElementById('modalRefundKelebihan');
+        const surplus = (trx.total_overpaid || 0) + Math.max(0, trx.total_paid - trx.total_deal);
         document.getElementById('refundTrxId').textContent = trx.id;
         document.getElementById('refundKonsumen').textContent = trx.customer.nama;
-        document.getElementById('refundNominal').textContent = window.formatRp(trx.total_overpaid);
-        document.getElementById('inpNominalRefund').value = window.formatNum(trx.total_overpaid);
+        document.getElementById('refundNominal').textContent = window.formatRp(surplus);
+        document.getElementById('inpNominalRefund').value = window.formatNum(surplus);
         modal._trx = trx; modal.classList.add('active');
     };
 
@@ -441,7 +442,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const chan = document.getElementById('inpChannelRefund').value;
         const refId = 'REF-' + Date.now().toString().slice(-6);
 
-        await supabase.from('transaksi').update({ total_overpaid: trx.total_overpaid - nominal }).eq('id', trx.id);
+        const oldOver = (trx.total_overpaid || 0);
+        const oldPaid = (trx.total_paid || 0);
+        const deal = (trx.total_deal || 0);
+
+        let fromOver = Math.min(nominal, oldOver);
+        let remaining = nominal - fromOver;
+        let fromPaid = Math.min(remaining, Math.max(0, oldPaid - deal));
+
+        await supabase.from('transaksi').update({ 
+            total_overpaid: oldOver - fromOver,
+            total_paid: oldPaid - fromPaid
+        }).eq('id', trx.id);
         await supabase.from('keuangan').insert([{ id: refId, tipe: 'pengeluaran', tanggal: tgl, kategori: 'Pengembalian Dana', nominal, channel: chan, related_trx_id: trx.id, keterangan: 'Refund kelebihan '+trx.id }]);
         
         modal.classList.remove('active');
