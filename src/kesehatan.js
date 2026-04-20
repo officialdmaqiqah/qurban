@@ -260,9 +260,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     formSakit?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const rawVal = selectTarget.value;
-        // Ambil hanya angka/nomor di depan (menghilangkan [Warna] dll jika terbawa)
-        const noTali = rawVal.split(' ')[0].replace('No', '').trim();
+        const rawVal = selectTarget.value.trim();
+        // Menghilangkan "No " di depan jika ada, lalu ambil kata pertama saja
+        const noTali = rawVal.replace(/^No\s+/i, '').split(' ')[0];
         const note = document.getElementById('inpCatatan').value;
         const tgl = document.getElementById('inpTglKeluar').value || new Date().toISOString().split('T')[0];
         const sttInp = document.getElementById('inpTargetStatus').value;
