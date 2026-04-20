@@ -260,15 +260,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     formSakit?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        // Logika Ekstra Robust untuk mengambil No Tali
         const rawVal = selectTarget.value.trim();
-        // Menghilangkan "No " di depan jika ada, lalu ambil kata pertama saja
-        const noTali = rawVal.replace(/^No\s+/i, '').split(' ')[0];
-        const note = document.getElementById('inpCatatan').value;
-        const tgl = document.getElementById('inpTglKeluar').value || new Date().toISOString().split('T')[0];
-        const sttInp = document.getElementById('inpTargetStatus').value;
+        let noTali = rawVal.replace(/^No\s+/i, '').split(' ')[0].split('[')[0].trim();
+        
+        console.log("Mencari Kambing:", noTali);
 
-        const { data: goat } = await supabase.from('stok_kambing').select('*').eq('no_tali', noTali).eq('status_fisik', 'Ada').single();
-        if(!goat) return window.showAlert('Kambing tidak ditemukan!', 'warning');
+        // 1. Cari kambing yang 'Ada' (Case-Insensitive)
+        const { data: goats, error } = await supabase
+            .from('stok_kambing')
+            .select('*')
+            .ilike('no_tali', noTali) 
+            .eq('status_fisik', 'Ada')
+            .limit(1);
+
+        let goat = (goats && goats.length > 0) ? goats[0] : null;
+
+        // 2. Jika tidak ketemu, coba cari tanpa filter 'Ada' untuk diagnosa
+        if (!goat) {
+            const { data: checkAny } = await supabase.from('stok_kambing').select('id, no_tali, status_fisik').ilike('no_tali', noTali).limit(1);
+            if (checkAny && checkAny.length > 0) {
+                return window.showAlert(`Kambing <b>${noTali}</b> ditemukan, tapi statusnya <b>${checkAny[0].status_fisik}</b> (Bukan 'Ada').`, 'warning');
+            }
+            return window.showAlert(`Kambing <b>${noTali}</b> benar-benar tidak ditemukan di database. Tolong cek nomornya lagi.`, 'danger');
+        }
 
         const updates = { updated_at: new Date().toISOString(), catatan_keluar: note, tgl_keluar: tgl };
         
