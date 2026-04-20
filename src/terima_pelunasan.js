@@ -118,8 +118,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const totalPaid = filtered.reduce((s, t) => s + (t.total_paid || 0), 0);
 
         document.getElementById('statJmlBelumLunas').textContent = belumLunas.length + ' Order';
-        document.getElementById('statTotalSisa').textContent = formatRp(totalSisa);
-        document.getElementById('statTotalPaid').textContent = formatRp(totalPaid);
+        document.getElementById('statTotalSisa').textContent = window.formatRp(totalSisa);
+        document.getElementById('statTotalPaid').textContent = window.formatRp(totalPaid);
     };
 
     const renderList = async () => {
@@ -310,8 +310,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const commonData = { 
                     nama: trx.customer.nama, 
                     id: trx.id, 
-                    nominal: formatRp(nominal), 
-                    sisa: formatRp(sisa - realPay),
+                    nominal: window.formatRp(nominal), 
+                    sisa: window.formatRp(sisa - realPay),
                     rekening: rekStr || '-',
                     info_agen: infoAgen
                 };
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Kirim Notifikasi Saldo Terpotong jika pakai Titipan
                     if (chan === 'Saldo Titipan Agen') {
                         const currentSaldo = await getAgentSaldo(matchedAgen.nama);
-                        const msgSaldo = `*NOTIFIKASI SALDO TITIPAN*\n\nHalo ${matchedAgen.nama},\nSaldo titipan Anda telah terpotong sebesar *${formatRp(nominal)}* untuk pelunasan *${trxId}*.\n\nSisa saldo titipan Anda saat ini: *${formatRp(currentSaldo)}*.\n\nTerima kasih.`;
+                        const msgSaldo = `*NOTIFIKASI SALDO TITIPAN*\n\nHalo ${matchedAgen.nama},\nSaldo titipan Anda telah terpotong sebesar *${window.formatRp(nominal)}* untuk pelunasan *${trxId}*.\n\nSisa saldo titipan Anda saat ini: *${window.formatRp(currentSaldo)}*.\n\nTerima kasih.`;
                         await window.sendWa(matchedAgen.wa, msgSaldo);
                     }
                 }
@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        showAlert('Pembayaran Berhasil!', 'success', () => { selOrder.value = ''; boxInfoOrder.style.display = 'none'; formBayar.style.display = 'none'; renderStats(); renderList(); });
+        window.showAlert('Pembayaran Berhasil!', 'success', () => { selOrder.value = ''; boxInfoOrder.style.display = 'none'; formBayar.style.display = 'none'; renderStats(); renderList(); });
     };
 
     // --- CAMERA & BUKTI BAYAR LOGIC ---
@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    btnSimpanBayar.onclick = () => showChoice("Kirim WA resi?", [{ text: "Ya, Kirim", callback: () => performSaveLunas(true) }, { text: "Simpan Saja", callback: () => performSaveLunas(false) }]);
+    btnSimpanBayar.onclick = () => window.showChoice("Kirim WA resi?", [{ text: "Ya, Kirim", callback: () => performSaveLunas(true) }, { text: "Simpan Saja", callback: () => performSaveLunas(false) }]);
 
     inpChannelBayar.addEventListener('change', async () => {
         const infoDiv = document.getElementById('infoSaldoTitipan');
@@ -434,6 +434,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         modal._trx = trx; modal.classList.add('active');
     };
 
+    document.getElementById('btnCloseRefund')?.addEventListener('click', () => {
+        document.getElementById('modalRefundKelebihan').classList.remove('active');
+    });
+    document.getElementById('btnCancelRefund')?.addEventListener('click', () => {
+        document.getElementById('modalRefundKelebihan').classList.remove('active');
+    });
+
     document.getElementById('btnSimpanRefund')?.addEventListener('click', async () => {
         const modal = document.getElementById('modalRefundKelebihan');
         const trx = modal._trx;
@@ -457,7 +464,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await supabase.from('keuangan').insert([{ id: refId, tipe: 'pengeluaran', tanggal: tgl, kategori: 'Pengembalian Dana', nominal, channel: chan, related_trx_id: trx.id, keterangan: 'Refund kelebihan '+trx.id }]);
         
         modal.classList.remove('active');
-        showAlert('Refund Berhasil!', 'success', () => { renderStats(); renderList(); });
+        window.showAlert('Refund Berhasil!', 'success', () => { renderStats(); renderList(); });
     });
 
     const inpChannelRefund = document.getElementById('inpChannelRefund');
@@ -495,7 +502,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         trxsAll.forEach(t => { 
             const o = document.createElement('option'); 
             o.value = t.id; 
-            o.textContent = `${t.id} - ${t.customer?.nama || ''} [Agen: ${t.agen?.nama || '-'}] | Sisa: ${formatRp(t.total_deal - t.total_paid)}`; 
+            o.textContent = `${t.id} - ${t.customer?.nama || ''} [Agen: ${t.agen?.nama || '-'}] | Sisa: ${window.formatRp(t.total_deal - t.total_paid)}`; 
             listOrders.appendChild(o); 
         });
     }
@@ -525,6 +532,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Event Search
     inpSearchOrder.addEventListener('input', renderList);
+
+    window.setupMoneyMask('inpNominalBayar');
+    window.setupMoneyMask('inpNominalRefund');
 
     renderStats(); renderList();
 });
