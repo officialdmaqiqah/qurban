@@ -1345,111 +1345,136 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     window.printLabels = async () => {
-        const selectedIds = Array.from(document.querySelectorAll('.trx-checkbox:checked')).map(cb => cb.dataset.id);
-        const selectedTrx = lastTrxData.filter(t => selectedIds.includes(t.id));
+        const btn = document.getElementById('btnCetakLabel');
+        const originalHtml = btn.innerHTML;
         
-        const labelData = [];
-        for (const t of selectedTrx) {
-            (t.items || []).forEach(it => {
-                const name1 = (it.namaSohibul || t.customer?.nama || t.agen?.nama || '---').trim().toUpperCase();
-                labelData.push({
-                    sohibul: name1,
-                    info: `No.${it.noTali} [${it.warnaTali || '-'}]`,
-                    agen: t.agen?.nama || '-'
-                });
-            });
-        }
-
-        if (labelData.length === 0) return window.showToast('Tidak ada kambing yang dipilih.', 'warning');
-
-        // BUKA JENDELA CETAK DULU (Penting agar tidak diblokir browser!)
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return window.showAlert('⚠️ Jendela cetak diblokir oleh browser! Mohon izinkan popup untuk situs ini.', 'danger');
-        printWindow.document.write('<html><body style="font-family:sans-serif; display:flex; align-items:center; justify-content:center; height:100vh;"><h3>Menyiapkan Label...</h3></body></html>');
-
-        // MARK AS PRINTED IN DB
         try {
+            // 1. Ambil ID yang dicentang
+            const selectedIds = Array.from(document.querySelectorAll('.trx-checkbox:checked')).map(cb => cb.dataset.id);
+            if (selectedIds.length === 0) {
+                return window.showToast('Pilih setidaknya satu transaksi!', 'warning');
+            }
+
+            // 2. Feedback visual
+            btn.innerHTML = '⏳ Menyiapkan...';
+            btn.disabled = true;
+
+            // 3. Buka jendela SEGERA (User Gesture Context)
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                return window.showAlert('⚠️ Jendela cetak diblokir browser! Klik ikon "Popup Blocked" di address bar (kanan atas) dan pilih "Selalu Izinkan".', 'danger');
+            }
+            printWindow.document.write('<html><body style="font-family:sans-serif; text-align:center; padding-top:100px;"><h2>Sedang menyiapkan label...</h2><p>Mohon tunggu sebentar.</p></body></html>');
+
+            // 4. Tarik data segar dari Database
+            const { data: selectedTrx, error: trxErr } = await supabase.from('transaksi').select('*').in('id', selectedIds);
+            if (trxErr) throw trxErr;
+            if (!selectedTrx || selectedTrx.length === 0) throw new Error("Data transaksi tidak ditemukan.");
+
+            const labelData = [];
+            for (const t of selectedTrx) {
+                (t.items || []).forEach(it => {
+                    const name1 = (it.namaSohibul || t.customer?.nama || t.agen?.nama || '---').trim().toUpperCase();
+                    labelData.push({
+                        sohibul: name1,
+                        info: `No.${it.noTali} [${it.warnaTali || '-'}]`,
+                        agen: t.agen?.nama || '-'
+                    });
+                });
+            }
+
+            if (labelData.length === 0) {
+                printWindow.close();
+                throw new Error("Tidak ada item kambing dalam transaksi terpilih.");
+            }
+
+            // 5. Tandai sudah dicetak di DB (Background)
             for (const trx of selectedTrx) {
                 const updatedItems = (trx.items || []).map(it => ({ ...it, label_printed: true }));
                 await supabase.from('transaksi').update({ items: updatedItems }).eq('id', trx.id);
             }
-            renderTable();
+            setTimeout(() => renderTable(), 500);
+
+            // 6. Tulis HTML Akhir
+            const labelsHtml = labelData.map(l => `
+                <div class="label-box">
+                    <div class="sohibul">${l.sohibul}</div>
+                    <div class="divider"></div>
+                    <div class="footer">
+                        <span>${l.info}</span>
+                        <span style="opacity:0.7;">${l.agen}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const content = `
+                <html>
+                <head>
+                    <title>Cetak Label Kalung</title>
+                    <style>
+                        @page { size: A4; margin: 1cm; }
+                        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+                        .page-grid { 
+                            display: grid; 
+                            grid-template-columns: 7.5cm 7.5cm; 
+                            column-gap: 1cm;
+                            row-gap: 5px;
+                        }
+                        .label-box {
+                            width: 7.5cm; 
+                            height: 1.5cm;
+                            border: 0.3pt solid #ddd;
+                            padding: 0.1cm 0.3cm;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            overflow: hidden;
+                            box-sizing: border-box;
+                        }
+                        .sohibul {
+                            font-weight: 900;
+                            font-size: 12pt;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            text-align: center;
+                            line-height: 1.2;
+                        }
+                        .divider {
+                            border-top: 0.5pt dashed #ccc;
+                            margin: 2px 0;
+                        }
+                        .footer {
+                            font-size: 8pt;
+                            font-weight: 500;
+                            color: #444;
+                            display: flex;
+                            justify-content: space-between;
+                            white-space: nowrap;
+                        }
+                    </style>
+                </head>
+                <body onload="setTimeout(() => { window.print(); window.close(); }, 500);">
+                    <div class="page-grid">
+                        ${labelsHtml}
+                    </div>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.open();
+            printWindow.document.write(content);
+            printWindow.document.close();
+
         } catch (err) {
-            console.error('Failed to mark labels as printed:', err);
+            console.error('Print Error:', err);
+            window.showAlert('❌ GAGAL CETAK: ' + err.message, 'danger');
+        } finally {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
         }
-
-        // TULIS KONTEN LABEL KE JENDELA YANG SUDAH TERBUKA
-        const labelsHtml = labelData.map(l => `
-            <div class="label-box">
-                <div class="sohibul">${l.sohibul}</div>
-                <div class="divider"></div>
-                <div class="footer">
-                    <span>${l.info}</span>
-                    <span style="margin-left:auto; opacity:0.7;">${l.agen}</span>
-                </div>
-            </div>
-        `).join('');
-
-        const fullHtml = `
-            <html>
-            <head>
-                <title>Cetak Label Kalung</title>
-                <style>
-                    @page { size: A4; margin: 1cm; }
-                    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
-                    .page-grid { 
-                        display: grid; 
-                        grid-template-columns: 7.5cm 7.5cm; 
-                        column-gap: 1cm;
-                        row-gap: 2px;
-                    }
-                    .label-box {
-                        width: 7.3cm; 
-                        height: 1.3cm;
-                        border: 0.3pt solid #ddd;
-                        padding: 0.1cm 0.3cm;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        overflow: hidden;
-                        box-sizing: border-box;
-                        margin-bottom: 2px;
-                    }
-                    .sohibul {
-                        font-weight: 900;
-                        font-size: 11pt;
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        text-align: center;
-                        line-height: 1.2;
-                    }
-                    .divider {
-                        border-top: 0.5pt dashed #ccc;
-                        margin: 2px 0;
-                    }
-                    .footer {
-                        font-size: 8pt;
-                        font-weight: 500;
-                        color: #444;
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        white-space: nowrap;
-                    }
-                </style>
-            </head>
-            <body onload="window.print(); window.close();">
-                <div class="page-grid">
-                    ${labelsHtml}
-                </div>
-            </body>
-            </html>
-        `;
-
-        printWindow.document.open();
-        printWindow.document.write(fullHtml);
-        printWindow.document.close();
     };
 
     if (btnCetakLabel) {
