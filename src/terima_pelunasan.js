@@ -477,7 +477,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    const inpChannelBayar = document.getElementById('inpChannelBayar');
     if (inpChannelBayar) {
         inpChannelBayar.onchange = () => {
             const safeguard = document.getElementById('safeguardPay');
