@@ -1351,9 +1351,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const labelData = [];
         for (const t of selectedTrx) {
             (t.items || []).forEach(it => {
-                // FALLBACK LOGIC: Sohibul -> Buyer -> Agent
                 const name1 = (it.namaSohibul || t.customer?.nama || t.agen?.nama || '---').trim().toUpperCase();
-                
                 labelData.push({
                     sohibul: name1,
                     info: `No.${it.noTali} [${it.warnaTali || '-'}]`,
@@ -1364,20 +1362,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (labelData.length === 0) return window.showToast('Tidak ada kambing yang dipilih.', 'warning');
 
+        // BUKA JENDELA CETAK DULU (Penting agar tidak diblokir browser!)
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return window.showAlert('⚠️ Jendela cetak diblokir oleh browser! Mohon izinkan popup untuk situs ini.', 'danger');
+        printWindow.document.write('<html><body style="font-family:sans-serif; display:flex; align-items:center; justify-content:center; height:100vh;"><h3>Menyiapkan Label...</h3></body></html>');
+
         // MARK AS PRINTED IN DB
         try {
             for (const trx of selectedTrx) {
                 const updatedItems = (trx.items || []).map(it => ({ ...it, label_printed: true }));
                 await supabase.from('transaksi').update({ items: updatedItems }).eq('id', trx.id);
             }
-            // Trigger refresh so labels show up in UI
             renderTable();
         } catch (err) {
             console.error('Failed to mark labels as printed:', err);
         }
 
-        // OPEN PRINT WINDOW
-        const printWindow = window.open('', '_blank');
+        // TULIS KONTEN LABEL KE JENDELA YANG SUDAH TERBUKA
         const labelsHtml = labelData.map(l => `
             <div class="label-box">
                 <div class="sohibul">${l.sohibul}</div>
@@ -1389,7 +1390,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `).join('');
 
-        printWindow.document.write(`
+        const fullHtml = `
             <html>
             <head>
                 <title>Cetak Label Kalung</title>
@@ -1444,7 +1445,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             </body>
             </html>
-        `);
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(fullHtml);
         printWindow.document.close();
     };
 
