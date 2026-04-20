@@ -670,7 +670,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 },
                 customer: { nama: document.getElementById('inpCustNama').value, wa1: document.getElementById('inpCustWA1').value, wa2: document.getElementById('inpCustWA2').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 delivery: { tipe: document.getElementById('inpDeliveryTipe').value, tgl: document.getElementById('inpDeliveryTgl').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
-                items: currentCart, total_deal: total, total_paid: paidNow + (window.existingInstallmentsTotal || 0),
+                items: currentCart, total_deal: total, 
+                total_paid: Math.min(paidNow + (window.existingInstallmentsTotal || 0), total),
+                total_overpaid: Math.max(0, (paidNow + (window.existingInstallmentsTotal || 0)) - total),
                 history_bayar: paidNow > 0 ? [{ payId: 'PAY-'+Date.now(), tgl: inpTglOrder.value || window.getLocalDate(), nominal: paidNow, channel: finalChannelDP, buktiUrl }] : [],
                 komisi: { berhak: currentAgenTipeKomisi, nominal: parseNum(inpKomisiNominal?.value), status: 'belum_bayar', needs_approval: roleNorm === 'agen' }
             };
