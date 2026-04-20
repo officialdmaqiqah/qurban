@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td style="font-weight:700; color:var(--primary);">${t.id}</td>
                 <td>${t.customer.nama || '-'}</td>
-                <td style="font-weight:700; color:var(--warning);">${window.formatRp((t.total_overpaid || 0) + Math.max(0, t.total_paid - t.total_deal))}</td>
+                <td style="font-weight:700; color:var(--warning);">${window.formatRp(t.total_overpaid || 0)}</td>
                 <td><button class="btn btn-sm" style="padding:4px 10px; font-size:0.75rem; background:rgba(245,158,11,0.15); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">Refund</button></td>
             `;
             tr.onclick = () => openRefundModal(t);
@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const openRefundModal = (trx) => {
         const modal = document.getElementById('modalRefundKelebihan');
-        const surplus = (trx.total_overpaid || 0) + Math.max(0, trx.total_paid - trx.total_deal);
+        const surplus = (trx.total_overpaid || 0);
         document.getElementById('refundTrxId').textContent = trx.id;
         document.getElementById('refundKonsumen').textContent = trx.customer.nama;
         document.getElementById('refundNominal').textContent = window.formatRp(surplus);
