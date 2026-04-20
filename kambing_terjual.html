@@ -241,6 +241,7 @@
                             <p style="font-size:0.875rem; color:var(--text-muted);">Manajemen transaksi penjualan kambing qurban.</p>
                         </div>
                         <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <button class="btn" id="btnCetakLabel" style="display:none; background:#a855f7; border:none; color:white;">🏷️ Cetak Label (<span id="selectCount">0</span>)</button>
                             <button class="btn btn-primary" id="btnExportCsv" style="background:#10b981; border:none;">! Export CSV</button>
                             <button class="btn btn-primary" id="btnTambahTerjual" style="display:none;">+ Order Baru</button>
                         </div>
@@ -255,6 +256,7 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
+                                    <th style="width: 30px; text-align: center;"><input type="checkbox" id="checkAll" style="width:16px; height:16px; cursor:pointer;"></th>
                                     <th class="sort-header" data-column="id">ID Trx / Tgl 🔽</th>
                                     <th class="sort-header" data-column="agen">Agen / Marketing ↕️</th>
                                     <th class="sort-header" data-column="customer">Konsumen &amp; WA ↕️</th>

@@ -200,6 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inpKomisiNominal = document.getElementById('inpKomisiNominal');
 
     let currentSort = { column: 'id', direction: 'desc' };
+    let lastTrxData = []; // Store for bulk actions
 
     // --- SORTING HANDLER ---
     document.querySelectorAll('.sort-header').forEach(th => {
@@ -501,6 +502,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) { console.error("Query Error:", error); return; }
         
         let trx = [...(trxData || [])];
+        lastTrxData = trx; // Sync for global use
         const keyword = (inpGlobalSearch ? inpGlobalSearch.value : '').toLowerCase().trim();
 
         // 2. Fetch Support Data (Cached for this render)
@@ -597,6 +599,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const canEdit = isAdmin || isOwner;
 
             tr.innerHTML = `
+                <td style="text-align:center;"><input type="checkbox" class="trx-checkbox" data-id="${t.id}" style="width:16px; height:16px; cursor:pointer;"></td>
                 <td>
                     <div style="font-weight:700;">${t.id}</div>
                     <div style="font-size:0.75rem;">${formatTgl(t.tgl_trx)}</div>
@@ -1314,6 +1317,120 @@ document.addEventListener('DOMContentLoaded', async () => {
         inpGlobalSearch.addEventListener('input', debounce(() => {
             renderTable();
         }, 300));
+    }
+
+    // --- BULK ACTION & PRINT LABEL LOGIC ---
+    const checkAll = document.getElementById('checkAll');
+    const btnCetakLabel = document.getElementById('btnCetakLabel');
+    const selectCount = document.getElementById('selectCount');
+
+    const updateSelectionUI = () => {
+        const checked = document.querySelectorAll('.trx-checkbox:checked');
+        if (selectCount) selectCount.textContent = checked.length;
+        if (btnCetakLabel) btnCetakLabel.style.display = checked.length > 0 ? 'inline-block' : 'none';
+    };
+
+    if (checkAll) {
+        checkAll.addEventListener('change', () => {
+            document.querySelectorAll('.trx-checkbox').forEach(cb => cb.checked = checkAll.checked);
+            updateSelectionUI();
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('trx-checkbox')) {
+            updateSelectionUI();
+            if (!e.target.checked && checkAll) checkAll.checked = false;
+        }
+    });
+
+    window.printLabels = () => {
+        const selectedIds = Array.from(document.querySelectorAll('.trx-checkbox:checked')).map(cb => cb.dataset.id);
+        const selectedTrx = lastTrxData.filter(t => selectedIds.includes(t.id));
+        
+        const labelData = [];
+        selectedTrx.forEach(t => {
+            (t.items || []).forEach(it => {
+                labelData.push({
+                    sohibul: String(it.namaSohibul || '---').toUpperCase(),
+                    info: `No.${it.noTali} [${it.warnaTali || '-'}]`,
+                    agen: t.agen?.nama || '-'
+                });
+            });
+        });
+
+        if (labelData.length === 0) return window.showToast('Tidak ada kambing yang dipilih.', 'warning');
+
+        const printWindow = window.open('', '_blank');
+        const labelsHtml = labelData.map(l => `
+            <div class="label-box">
+                <div class="sohibul">${l.sohibul}</div>
+                <div class="divider"></div>
+                <div class="footer">${l.info} | ${l.agen}</div>
+            </div>
+        `).join('');
+
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Cetak Label Kalung</title>
+                <style>
+                    @page { size: A4; margin: 1cm; }
+                    body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+                    .page-grid { 
+                        display: grid; 
+                        grid-template-columns: 7.5cm 7.5cm; 
+                        column-gap: 1cm;
+                        row-gap: 4px;
+                    }
+                    .label-box {
+                        width: 7.3cm; 
+                        height: 1.3cm;
+                        border: 0.5pt solid #ccc;
+                        padding: 0.1cm;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        overflow: hidden;
+                        box-sizing: border-box;
+                        margin-bottom: 2px;
+                    }
+                    .sohibul {
+                        font-weight: 800;
+                        font-size: 11pt;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        text-align: center;
+                    }
+                    .divider {
+                        border-top: 0.5pt dashed #aaa;
+                        margin: 2px 0;
+                    }
+                    .footer {
+                        font-size: 8pt;
+                        color: #333;
+                        display: flex;
+                        justify-content: space-between;
+                        white-space: nowrap;
+                        overflow: hidden;
+                    }
+                </style>
+            </head>
+            <body onload="window.print(); window.close();">
+                <div class="page-grid">
+                    ${labelsHtml}
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+
+    if (btnCetakLabel) {
+        btnCetakLabel.addEventListener('click', () => {
+            window.printLabels();
+        });
     }
 
     renderTable();
