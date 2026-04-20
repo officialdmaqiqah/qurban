@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .eq('status_fisik', 'Ada')
             .limit(1);
 
-        let goat = (goats && goats.length > 0) ? goats[0] : null;
+        const goat = (goats && goats.length > 0) ? goats[0] : null;
 
         // 2. Jika tidak ketemu, coba cari tanpa filter 'Ada' untuk diagnosa
         if (!goat) {
@@ -284,6 +284,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             return window.showAlert(`Kambing <b>${noTali}</b> benar-benar tidak ditemukan di database. Tolong cek nomornya lagi.`, 'danger');
         }
+
+        const note = document.getElementById('inpCatatan').value;
+        const tgl = document.getElementById('inpTglKeluar').value || new Date().toISOString().split('T')[0];
+        const sttInp = document.getElementById('inpTargetStatus').value;
 
         const updates = { updated_at: new Date().toISOString(), catatan_keluar: note, tgl_keluar: tgl };
         
