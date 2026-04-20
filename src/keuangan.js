@@ -327,9 +327,62 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         window.handleDelete = async (id) => {
             window.showConfirm('Hapus transaksi ini?', async () => {
-                await supabase.from('keuangan').delete().eq('id', id);
-                renderApp();
-                window.showToast('Data dihapus', 'success');
+                try {
+                    // 1. Ambil detail transaksi sebelum dihapus
+                    const { data: item } = await supabase.from('keuangan').select('*').eq('id', id).single();
+                    if (!item) return;
+
+                    const category = (item.kategori || '').trim();
+                    const relTrxId = item.related_trx_id;
+                    const relGoatId = item.related_goat_id;
+
+                    // 2. Logika Rollback Berdasarkan Kategori
+                    if (relTrxId && (category === 'Pelunasan Order' || category === 'Pengembalian Dana')) {
+                        // Rollback Pelunasan/Refund
+                        const { data: trx } = await supabase.from('transaksi').select('*').eq('id', relTrxId).single();
+                        if (trx) {
+                            // Hitung ulang total paid dari history yang tersisa (kecuali ID ini)
+                            const updatedHistory = (trx.history_bayar || []).filter(h => h.payId !== id && h.id !== id);
+                            const newTotalPaid = updatedHistory.reduce((s, h) => s + (parseFloat(h.nominal) || 0), 0);
+                            const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
+                            
+                            await supabase.from('transaksi').update({ 
+                                total_paid: newTotalPaid, 
+                                total_overpaid: newTotalOverpaid,
+                                history_bayar: updatedHistory,
+                                updated_at: new Date().toISOString()
+                            }).eq('id', relTrxId);
+                        }
+                    } 
+                    else if (relTrxId && category === 'Komisi Agen') {
+                        // Rollback Komisi
+                        const { data: trx } = await supabase.from('transaksi').select('*').eq('id', relTrxId).single();
+                        if (trx) {
+                            const updatedKomisi = { ...trx.komisi, status: 'belum_bayar', tglBayar: null, buktiUrl: null };
+                            await supabase.from('transaksi').update({ 
+                                komisi: updatedKomisi,
+                                updated_at: new Date().toISOString()
+                            }).eq('id', relTrxId);
+                        }
+                    }
+                    else if (relGoatId && category === 'Kerugian (Mati/Hilang)') {
+                        // Rollback Status Kambing Mati -> Sakit
+                        await supabase.from('stok_kambing').update({
+                            status_kesehatan: 'Sakit', status_fisik: 'Ada', status_transaksi: 'Tersedia',
+                            tgl_keluar: null, catatan_keluar: null,
+                            updated_at: new Date().toISOString()
+                        }).eq('id', relGoatId);
+                    }
+
+                    // 3. Hapus Record Keuangan Utama
+                    await supabase.from('keuangan').delete().eq('id', id);
+                    
+                    renderApp();
+                    window.showToast('Data dihapus & Rollback berhasil', 'success');
+                } catch (err) {
+                    console.error("Delete Error:", err);
+                    window.showAlert("Gagal menghapus: " + err.message, "danger");
+                }
             });
         };
 
