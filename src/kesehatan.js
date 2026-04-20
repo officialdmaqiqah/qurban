@@ -250,7 +250,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (eligible) {
             eligible.forEach(k => {
                 const o = document.createElement('option'); o.value = k.no_tali;
-                o.textContent = `No ${k.no_tali} | Batch ${k.batch} | ${k.status_transaksi}`;
+                const warna = k.warna_tali || 'Tanpa Warna';
+                o.textContent = `No ${k.no_tali} [${warna}] | Batch ${k.batch} | ${k.status_transaksi}`;
                 list.appendChild(o);
             });
         }
