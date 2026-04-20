@@ -532,38 +532,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Event Search
     inpSearchOrder.addEventListener('input', renderList);
 
-    // --- REPAIR TOOL: SYNC BALANCES ---
+    // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
     const syncAllBalances = async () => {
-        window.showConfirm("🔄 Sinkronkan ulang seluruh saldo order berdasarkan riwayat pembayaran?<br><br><small>Ini akan memperbaiki data yang tidak sinkron (seperti data Aziz) akibat penghapusan transaksi manual sebelumnya.</small>", async () => {
-            window.showToast("Memulai sinkronisasi...", "info");
+        window.showConfirm("🔄 Sinkronkan ULANG seluruh saldo berdasarkan Data Keuangan?<br><br><small>Ini akan membangun ulang riwayat pembayaran dari nol untuk memastikan angka duplikat (seperti 2 Juta) atau error data lainnya hilang.</small>", async () => {
+            window.showToast("Memulai sinkronisasi data asli...", "info");
             try {
-                const { data: trxs, error } = await supabase.from('transaksi').select('*');
-                if (error) throw error;
+                // 1. Ambil data transaksi & keuangan
+                const { data: trxs, error: tErr } = await supabase.from('transaksi').select('*');
+                if (tErr) throw tErr;
+
+                // Ambil keuangan yang ada related_trx_id nya (Pemasukan/Pengeluaran terkait order)
+                const { data: fins, error: fErr } = await supabase.from('keuangan').select('*').not('related_trx_id', 'is', null);
+                if (fErr) throw fErr;
 
                 let updatedCount = 0;
                 for (const trx of trxs) {
-                    const history = trx.history_bayar || [];
-                    const calcPaid = history.reduce((s, h) => s + (parseFloat(h.nominal) || 0), 0);
-                    const calcOver = Math.max(0, calcPaid - (trx.total_deal || 0));
+                    // 2. Filter catatan keuangan yang milik transaksi ini (Pelunasan, Refund, dll)
+                    const relatedFins = (fins || []).filter(f => f.related_trx_id === trx.id);
+                    
+                    // 3. Bangun ulang history_bayar dari data keuangan murni
+                    const rebuiltHistory = relatedFins.map(f => ({
+                        payId: f.id,
+                        id: f.id, // compatibility
+                        tgl: f.tanggal,
+                        nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
+                        channel: f.channel,
+                        buktiUrl: f.bukti_url
+                    }));
 
-                    if (calcPaid !== trx.total_paid || calcOver !== trx.total_overpaid) {
+                    // 4. Hitung ulang total
+                    // Nominal pengeluaran (refund) akan mengurangi total_paid
+                    const newTotalPaid = rebuiltHistory.reduce((s, h) => s + h.nominal, 0);
+                    const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
+
+                    // 5. Update jika ada perbedaan (bandingkan angka)
+                    if (newTotalPaid !== trx.total_paid || newTotalOverpaid !== trx.total_overpaid || (JSON.stringify(rebuiltHistory) !== JSON.stringify(trx.history_bayar))) {
                         await supabase.from('transaksi').update({
-                            total_paid: calcPaid,
-                            total_overpaid: calcOver,
+                            total_paid: newTotalPaid,
+                            total_overpaid: newTotalOverpaid,
+                            history_bayar: rebuiltHistory,
                             updated_at: new Date().toISOString()
                         }).eq('id', trx.id);
                         updatedCount++;
                     }
                 }
 
-                window.showAlert(`Sinkronisasi selesai! <b>${updatedCount}</b> data berhasil diperbaiki.`, "success", () => {
+                window.showAlert(`Sinkronisasi Selesai! <b>${updatedCount}</b> data telah divalidasi dan diperbaiki menggunakan Data Keuangan asli. Sisa saldo duplikat seharusnya sudah hilang.`, "success", () => {
                     window.location.reload();
                 });
             } catch (err) {
-                console.error("Sync Error:", err);
-                window.showAlert("Gagal sinkronisasi: " + err.message, "danger");
+                console.error("Advanced Sync Error:", err);
+                window.showAlert("Gagal sinkronisasi data asli: " + err.message, "danger");
             }
-        }, null, "Sinkronisasi Saldo", "Ya, Sinkronkan", "btn-warning");
+        }, null, "Smart Integrity Sync", "Ya, Perbaiki Semua", "btn-warning");
     };
 
     document.getElementById('btnSyncBalances')?.addEventListener('click', syncAllBalances);
