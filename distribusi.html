@@ -344,14 +344,179 @@
     </div>
 
     <!-- AREA CETAK SURAT JALAN (HIDDEN) -->
+                <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
+                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
+                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                
+                                <a href="komisi.html" class="nav-item"> Komisi Agen</a>
+                <!-- NEW MENU -->
+                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight: 300; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
+
+            </nav>
+            <div style="padding: 1.5rem;">
+                <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">Manajemen Distribusi / Trip</div>
+                <div class="user-menu">
+                    <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
+                </div>
+            </header>
+
+            <div class="content-area fade-in">
+                <!-- STATS CARDS (DISTRIBUSI) -->
+                <div class="grid-cards" style="margin-bottom: 1.5rem;">
+                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--primary);">
+                        <div style="font-size:2rem;">🚚</div>
+                        <div>
+                            <div class="stat-lbl" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Trip Hari Ini</div>
+                            <div id="statTripToday" class="stat-val" style="font-size:1.4rem; font-weight: 300;">0 Trip</div>
+                        </div>
+                    </div>
+                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--warning);">
+                        <div style="font-size:2rem;">⏳</div>
+                        <div>
+                            <div class="stat-lbl" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Menunggu Kirim</div>
+                            <div id="statWaitDist" class="stat-val" style="font-size:1.4rem; font-weight: 300;">0 Ekor</div>
+                        </div>
+                    </div>
+                    <div class="card-box" style="margin-bottom:0; display:flex; align-items:center; gap:15px; border-left:4px solid var(--success);">
+                        <div style="font-size:2rem;">✅</div>
+                        <div>
+                            <div class="stat-lbl" style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Berhasil Terkirim</div>
+                            <div id="statDoneDist" class="stat-val" style="font-size:1.4rem; font-weight: 300;">0 Ekor</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="distrib-header flex-between glass-panel" style="margin-bottom: 2rem; padding:1.5rem; border-radius:20px;">
+                    <div>
+                        <h3 style="margin-bottom: 0.25rem; display:flex; align-items:center; gap:8px;">📦 Rencana Pengiriman</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); opacity: 0.8;">Atur trip per mobil dan cetak surat jalan langsung.</p>
+                    </div>
+                    <button class="btn btn-primary btn-shimmer" id="btnBuatTrip" style="padding:12px 24px; color:#ffffff; font-weight: 300; border-radius:12px;">+ Buat Trip Baru</button>
+                </div>
+
+                <div class="trip-grid" id="containerTrip">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL BUAT TRIP BARU -->
+    <div class="modal-overlay" id="modalTrip">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Buat Trip Distribusi Baru</h3>
+                <button class="modal-close" id="btnCloseModal">&times;</button>
+            </div>
+            <form id="formTrip">
+                <div class="modal-body modal-body-trip" style="display: grid; grid-template-columns: 300px 1fr; gap: 1.5rem; max-height: 75vh; overflow-y: auto;">
+                    <!-- Kiri: Info Trip -->
+                    <div class="modal-info-pane" style="border-right: 1px solid rgba(255,255,255,0.05); padding-right: 1rem; padding-top: 1.5rem; padding-left: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">Sopir / Mobil</label>
+                            <input type="text" id="inpTripSopir" class="form-control" list="listSopir" placeholder="Ketik nama sopir..." required>
+                            <datalist id="listSopir"></datalist>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Plat Nomor Polisi (Nopol)</label>
+                            <input type="text" id="inpTripNopol" class="form-control" placeholder="Contoh: BN 1234 XX" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tanggal Pengiriman</label>
+                            <input type="date" id="inpTripTgl" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Catatan Perjalanan (Trip Note)</label>
+                            <textarea id="inpTripNote" class="form-control" rows="3" placeholder="Contoh: Trip Wilayah Bangka Barat"></textarea>
+                        </div>
+                        <div style="background: rgba(16, 185, 129, 0.08); padding: 1rem; border-radius: 8px; border: 1px solid rgba(16,185,129,0.2);">
+                            <h4 style="margin:0 0 0.5rem 0; font-size:0.9rem; color:var(--success)">Ringkasan Trip:</h4>
+                            <div id="summarizedTripCount" style="font-size:1.1rem; font-weight: 300;">0 Ekor Kambing</div>
+                        </div>
+                    </div>
+
+                    <!-- Kanan: Pilih Kambing Terjual -->
+                    <div style="min-width:0; overflow:hidden; padding-top: 1.5rem; padding-right: 1.5rem;">
+                        <label class="form-label">Pilih Kambing yang Akan Dikirim (Status: Terjual)</label>
+                        <div class="filter-row-dist" style="display:flex; gap:0.5rem; margin-bottom:0.5rem; flex-wrap:wrap;">
+                            <input type="text" id="inpSearchGoat" class="form-control" placeholder="Cari No Tali / Konsumen / Wilayah..." style="flex:2; min-width:0;">
+                            <select id="inpFilterKab" class="form-control" style="flex:1; font-size:0.8rem; min-width:120px;">
+                                <option value="">-- Semua Kabupaten --</option>
+                            </select>
+                            <select id="inpFilterAgen" class="form-control" style="flex:1; font-size:0.8rem; min-width:120px;">
+                                <option value="">-- Semua Agen --</option>
+                            </select>
+                        </div>
+                        <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                            <table class="data-table sticky-enabled" style="font-size: 0.8rem;">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="checkAllGoats"></th>
+                                        <th>Urut</th>
+                                        <th class="sticky-col">No Tali / Warna</th>
+                                        <th>Konsumen</th>
+                                        <th>Kabupaten</th>
+                                        <th>Desa</th>
+                                        <th>Sisa Bayar</th>
+                                        <th>Tgl Antar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBodySelection">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text-main);" id="btnCancelModal">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btnSimpanTrip" style="color:#ffffff; font-weight: 300;">Simpan &amp; Aktifkan Trip</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL BUKTI KIRIM (LAPOR TUNTAS) -->
+    <div class="modal-overlay" id="modalLaporTuntas">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Bukti Penyerahan Kambing</h3>
+                <button class="modal-close" onclick="document.getElementById('modalLaporTuntas').classList.remove('active')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem; display:block;">
+                <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                    Silakan upload atau ambil foto dari kamera sebagai bukti serah terima kepada <strong id="laporKonsumenNama"></strong>:
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Upload Foto / Ambil Gambar</label>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <input type="file" id="inpBuktiFoto" accept="image/*" class="form-control" style="flex:1;">
+                        <button type="button" id="btnOpenCameraDist" class="btn btn-sm" style="background:#4b5563; color:#ffffff; padding:8px 12px; height:40px; border-radius:8px; border:none; display:flex; align-items:center; gap:5px;" title="Ambil Foto Langsung dari Kamera">📸 Kamera</button>
+                    </div>
+                </div>
+                <!-- Preview Image -->
+                <div style="text-align:center; margin-top: 1rem; display:none; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px;" id="previewBuktiContainer">
+                    <img id="previewBukti" src="" style="max-height: 250px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); max-width: 100%; object-fit:contain;">
+                </div>
+            </div>
+            <div class="modal-footer" style="padding:1rem 1.5rem;">
+                <button type="button" class="btn btn-primary" id="btnSimpanBukti" style="width: 100%; color:#ffffff; font-weight: 300;">Simpan &amp; Lapor Tuntas</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AREA CETAK SURAT JALAN (HIDDEN) -->
     <div id="printArea">
         <!-- Content will be injected by JS -->
     </div>
 
     <script type="module" src="src/layout.js?v=4.0"></script>
-    <script type="module" src="src/distribusi.js"></script>
+    <script type="module" src="src/distribusi.js?v=5.0"></script>
 </body>
 </html>
-
-
-
