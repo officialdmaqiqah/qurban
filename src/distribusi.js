@@ -1,14 +1,35 @@
 import { supabase } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 0. Immediate UI Wiring (Before any Async calls to ensure modal can always close)
+    const modalTrip = document.getElementById('modalTrip');
+    const closeModal = () => {
+        if(modalTrip) modalTrip.classList.remove('active');
+    };
+    document.getElementById('btnCloseModal')?.addEventListener('click', closeModal);
+    document.getElementById('btnCancelModal')?.addEventListener('click', closeModal);
+
     // 1. Check Session & Profile
-    const { data: { session } } = await supabase.auth.getSession();
+    let session, profile;
+    try {
+        const { data } = await supabase.auth.getSession();
+        session = data.session;
+    } catch (e) {
+        console.error("Auth Session Error:", e);
+    }
+    
     if (!session) {
         window.location.href = 'login.html';
         return;
     }
 
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+    try {
+        const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        profile = data;
+    } catch (e) {
+        console.error("Profile Fetch Error:", e);
+    }
+    
     if (!profile) return;
 
     const user = profile;
@@ -272,15 +293,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         (sops?.val || []).forEach(s => { const o = document.createElement('option'); o.value = s.nama; sopirsList.appendChild(o); });
 
         const eligible = goats.filter(k => k.status_transaksi === 'Terjual');
+
+        // Populate Filters
+        const kabs = [...new Set(eligible.map(k => trxs.find(t => t.id === k.transaction_id)?.delivery?.alamat?.kab || ''))].filter(Boolean).sort();
+        const agens = [...new Set(eligible.map(k => trxs.find(t => t.id === k.transaction_id)?.agen_nama || ''))].filter(Boolean).sort();
+
+        const selKab = document.getElementById('inpFilterKab');
+        const selAgen = document.getElementById('inpFilterAgen');
+        if (selKab) {
+            selKab.innerHTML = '<option value="">-- Semua Kabupaten --</option>';
+            kabs.forEach(k => selKab.innerHTML += `<option value="${k}">${k}</option>`);
+        }
+        if (selAgen) {
+            selAgen.innerHTML = '<option value="">-- Semua Agen --</option>';
+            agens.forEach(a => selAgen.innerHTML += `<option value="${a}">${a}</option>`);
+        }
+
         tableBodySelection.innerHTML = '';
         
         if(eligible.length === 0) {
             tableBodySelection.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">Tidak ada kambing terjual yang menunggu kirim.</td></tr>';
         }
 
-        const renderTable = (filter = '') => {
+        const renderTable = () => {
+            const search = document.getElementById('inpSearchGoat')?.value.toLowerCase() || '';
+            const fKab = selKab?.value || '';
+            const fAgen = selAgen?.value || '';
+
             tableBodySelection.innerHTML = '';
-            eligible.filter(k => k.no_tali.toLowerCase().includes(filter.toLowerCase())).forEach((k, idx) => {
+            
+            const filtered = eligible.filter(k => {
+                const trx = trxs.find(t => t.id === k.transaction_id);
+                const txt = (k.no_tali + ' ' + (trx?.customer?.nama || '') + ' ' + (trx?.delivery?.alamat?.kab || '')).toLowerCase();
+                const matchSearch = txt.includes(search);
+                const matchKab = !fKab || trx?.delivery?.alamat?.kab === fKab;
+                const matchAgen = !fAgen || trx?.agen_nama === fAgen;
+                return matchSearch && matchKab && matchAgen;
+            });
+
+            filtered.forEach((k, idx) => {
                 const trx = trxs.find(t => t.id === k.transaction_id);
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -293,18 +344,41 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${trx?.customer?.nama || '-'}</td>
                     <td>${trx?.delivery?.alamat?.kab || '-'}</td>
                     <td>${trx?.delivery?.alamat?.kec || trx?.delivery?.alamat?.desa || '-'}</td>
-                    <td style="color:var(--danger); font-weight:600;">${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format((trx?.totalDeal || 0) - (trx?.totalPaid || 0))}</td>
+                    <td style="color:var(--danger); font-weight:600;">${window.formatRp((trx?.total_deal || 0) - (trx?.total_paid || 0))}</td>
                     <td>${formatTgl(trx?.delivery?.tanggal)}</td>
                 `;
                 tableBodySelection.appendChild(tr);
             });
+
+            // Update Count
+            document.querySelectorAll('.goat-checkbox').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const count = document.querySelectorAll('.goat-checkbox:checked').length;
+                    const elCount = document.getElementById('summarizedTripCount');
+                    if(elCount) elCount.textContent = `${count} Ekor Kambing`;
+                });
+            });
         };
 
         renderTable();
-        document.getElementById('inpSearchGoat')?.addEventListener('input', (e) => renderTable(e.target.value));
+        document.getElementById('inpSearchGoat')?.addEventListener('input', renderTable);
+        selKab?.addEventListener('change', renderTable);
+        selAgen?.addEventListener('change', renderTable);
+
+        document.getElementById('checkAllGoats')?.addEventListener('change', (e) => {
+            const checked = e.target.checked;
+            document.querySelectorAll('.goat-checkbox').forEach(cb => {
+                cb.checked = checked;
+                cb.dispatchEvent(new Event('change'));
+            });
+        });
         
         modalTrip.classList.add('active');
         document.getElementById('inpTripTgl').value = new Date().toISOString().split('T')[0];
+        document.getElementById('summarizedTripCount').textContent = '0 Ekor Kambing';
+    });
+
+        document.getElementById('summarizedTripCount').textContent = '0 Ekor Kambing';
     });
 
     document.getElementById('formTrip')?.addEventListener('submit', async (e) => {
@@ -331,6 +405,69 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadData(true);
         renderTrips();
     });
+
+    window.printTrip = async (id) => {
+        const { trips } = await loadData();
+        const t = trips.find(x => x.id === id);
+        if(!t) return;
+
+        const printArea = document.getElementById('printArea');
+        printArea.innerHTML = `
+            <div class="sj-header">
+                <h2>DAARUL MAHABBAH QURBAN</h2>
+                <div class="sj-title">SURAT JALAN / TRIP PENGIRIMAN</div>
+            </div>
+            <div class="sj-body">
+                <div>
+                    <strong>ID TRIP:</strong> ${t.id}<br>
+                    <strong>SOPIR:</strong> ${t.sopirNama}<br>
+                    <strong>NOPOL:</strong> ${t.nopol}<br>
+                    <strong>TGL KIRIM:</strong> ${formatTgl(t.tglKirim)}
+                </div>
+                <div style="text-align:right;">
+                    <strong>CATATAN:</strong><br>
+                    ${t.note || '-'}
+                </div>
+            </div>
+            <table class="sj-table">
+                <thead>
+                    <tr>
+                        <th>NO</th>
+                        <th>NO TALI</th>
+                        <th>KONSUMEN</th>
+                        <th>ALAMAT TUJUAN</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${t.items.map((i, idx) => `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${i.noTali}</td>
+                            <td>${i.konsumen}</td>
+                            <td>${i.alamat}</td>
+                            <td>${i.status || 'Pengiriman'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <div class="sj-footer">
+                <div>
+                    <div class="signature-box"></div>
+                    Admin Kandang
+                </div>
+                <div>
+                    <div class="signature-box"></div>
+                    Sopir / Pengirim
+                </div>
+                <div>
+                    <div class="signature-box"></div>
+                    Penerima / Konsumen
+                </div>
+            </div>
+        `;
+        window.print();
+    };
 
     renderTrips();
 });
