@@ -196,7 +196,58 @@
                 </div>
 
                 <div class="pay-layout-grid">
-                    <!-- Kiri: Form Terima Bayar -->
+                    <!-- Atas: Management Order & Refund (Tabs) -->
+                    <div class="card-box">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
+                            <h3 style="margin:0;">📋 Kelola Order</h3>
+                            <div style="flex:1; min-width:160px; display:flex; justify-content:flex-end;">
+                                <input type="text" id="inpSearchOrder" class="form-control" placeholder="Cari Konsumen / ID..." style="width:100%; max-width:250px; font-size:0.85rem;">
+                            </div>
+                        </div>
+
+                        <div class="tab-header">
+                            <button class="tab-btn active" data-tab="unpaid">📋 Belum Lunas</button>
+                            <button class="tab-btn" data-tab="overpaid">
+                                ⚠️ Kelebihan Bayar
+                                <span id="badgeOverpaidCount" style="background:var(--warning); color:#000000; font-size:0.65rem; padding:2px 6px; border-radius:10px; margin-left:5px; display:none;">0</span>
+                            </button>
+                        </div>
+
+                        <div class="tab-content active" id="tabUnpaid">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Order</th>
+                                            <th>Konsumen</th>
+                                            <th>Sisa Tagihan</th>
+                                            <th>Penyelesaian</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBodyBelumLunas"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-content" id="tabOverpaid">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Order</th>
+                                            <th>Konsumen</th>
+                                            <th>Kelebihan</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBodyOverpaid"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bawah: Form Terima Bayar -->
                     <div class="card-box">
                         <h3 style="margin-bottom:1.25rem; display:flex; align-items:center; gap:8px;">💳 Input Pembayaran</h3>
 
@@ -210,7 +261,6 @@
                             <div class="info-grid" id="gridInfoOrder"></div>
                             <div id="infoUangLebih" style="display:none; margin-top:1rem; padding:0.75rem; border-radius:8px;"></div>
 
-                            </div>
                             <div id="boxHistoriPay" style="margin-top:0.75rem; display:none;">
                                 <div style="font-size:0.75rem; font-weight: 300; color:var(--text-muted); margin-bottom:0.35rem;">🕒 RIWAYAT BAYAR:</div>
                                 <div id="listHistoriPay"></div>
@@ -273,57 +323,6 @@
                             <button id="btnSimpanBayar" class="btn btn-primary" style="width:100%; font-size:1rem; padding:0.75rem; color:#ffffff; font-weight: 300; margin-top:0.5rem;">
                                 💾 Simpan Pembayaran
                             </button>
-                        </div>
-                    </div>
-
-                    <!-- Kanan: Management Order & Refund (Tabs) -->
-                    <div class="card-box">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
-                            <h3 style="margin:0;">📋 Kelola Order</h3>
-                            <div style="flex:1; min-width:160px; display:flex; justify-content:flex-end;">
-                                <input type="text" id="inpSearchOrder" class="form-control" placeholder="Cari Konsumen / ID..." style="width:100%; max-width:250px; font-size:0.85rem;">
-                            </div>
-                        </div>
-
-                        <div class="tab-header">
-                            <button class="tab-btn active" data-tab="unpaid">📋 Belum Lunas</button>
-                            <button class="tab-btn" data-tab="overpaid">
-                                ⚠️ Kelebihan Bayar
-                                <span id="badgeOverpaidCount" style="background:var(--warning); color:#000000; font-size:0.65rem; padding:2px 6px; border-radius:10px; margin-left:5px; display:none;">0</span>
-                            </button>
-                        </div>
-
-                        <div class="tab-content active" id="tabUnpaid">
-                            <div class="table-responsive">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>ID Order</th>
-                                            <th>Konsumen</th>
-                                            <th>Sisa Tagihan</th>
-                                            <th>Penyelesaian</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tableBodyBelumLunas"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="tab-content" id="tabOverpaid">
-                            <div class="table-responsive">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>ID Order</th>
-                                            <th>Konsumen</th>
-                                            <th>Kelebihan</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tableBodyOverpaid"></tbody>
-                                </table>
-                            </div>
                         </div>
                     </div>
                 </div>
