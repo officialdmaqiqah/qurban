@@ -1136,14 +1136,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 // 3. Force Reset Password
-                const newPass = prompt('Ketik Password Baru (Default: BanaBaru123):', 'BanaBaru123');
-                if (!newPass) throw new Error('Reset dibatalkan. Password tidak boleh kosong.');
+                window.showInput(`📦 Masukkan Password Baru untuk <strong>${rawEmail}</strong>:`, 'BanaBaru123', async (newPass) => {
+                    if (!newPass) return showAlert('Reset dibatalkan. Password tidak boleh kosong.', 'warning');
+                    
+                    try {
+                        setLoading(true);
+                        const { error: resetErr } = await supabaseAdmin.auth.admin.updateUserById(realUid, { password: newPass });
+                        if (resetErr) throw resetErr;
 
-                const { error: resetErr } = await supabaseAdmin.auth.admin.updateUserById(realUid, { password: newPass });
-                if (resetErr) throw resetErr;
+                        showAlert(`🩺 AKUN BERHASIL DIPULIHKAN!\n\nEmail Auth: ${authUser.email}\nStatus: Approved\nPassword: ${newPass}\n\nUser sekarang pasti bisa login.`, 'success');
+                        renderUserTable();
+                    } catch (err) {
+                        console.error('[Doctor] Reset Error:', err);
+                        showAlert('Gagal Reset Password: ' + err.message, 'danger');
+                    } finally {
+                        setLoading(false);
+                    }
+                }, () => {
+                    setLoading(false);
+                }, 'Reset Password (Doctor)');
 
-                showAlert(`🩺 AKUN BERHASIL DIPULIHKAN!\n\nEmail Auth: ${authUser.email}\nStatus: Approved\nPassword: ${newPass}\n\nUser sekarang pasti bisa login.`, 'success');
-                renderUserTable();
             } catch (err) {
                 console.error('[Doctor] Failed:', err);
                 showAlert('Gagal Menjalankan Akun Doctor: ' + err.message, 'danger');
