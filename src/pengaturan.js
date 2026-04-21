@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!profile) return;
 
     const user = profile;
-    const isAdmin = user.role === 'admin';
+    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes((user.role || '').toLowerCase().trim());
     const email = profile.email;
     if (email) {
        const display = document.getElementById('userEmailDisplay');
