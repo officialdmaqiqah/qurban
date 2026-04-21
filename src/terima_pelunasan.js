@@ -661,6 +661,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 window.showToast('Berhasil dihubungkan!', 'success');
                 inpManualPayId.value = '';
+                document.getElementById('inpNominalBayar').value = '';
                 selOrder.dispatchEvent(new Event('input'));
                 renderStats(); renderList();
             } catch (err) {
