@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             div.className = 'history-item';
             div.innerHTML = `
                 <div style="display:flex; flex-direction:column; gap:2px;">
-                    <span>• ${window.formatTgl(h.tgl)}</span>
+                    <span>• ${formatTgl(h.tgl)}</span>
                     <span style="font-size:0.65rem; color:var(--text-muted); opacity:0.6;">ID: ${h.payId || '-'}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:10px;">
