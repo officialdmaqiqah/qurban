@@ -220,10 +220,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
         listHistoriPay.innerHTML = '';
         (trx.history_bayar || []).forEach(h => {
-             const div = document.createElement('div'); div.className = 'history-item';
-             div.innerHTML = `<div><strong>${window.formatRp(h.nominal)}</strong> via ${h.channel}<br><small>${formatTgl(h.tgl)}</small></div> <button class="btn-sm" onclick="window.deleteHistoryItem('${trx.id}', '${h.payId}', ${h.nominal})">🗑️</button>`;
-             listHistoriPay.appendChild(div);
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span>• ${window.formatTgl(h.tgl)}</span>
+                    <span style="font-size:0.65rem; color:var(--text-muted); opacity:0.6;">ID: ${h.payId || '-'}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="text-align:right;">${window.formatRp(h.nominal)} <span class="history-channel">${h.channel}</span></span>
+                    <button class="btn-unlink-pay" data-payid="${h.payId}" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px;" title="Putuskan Hubungan Pembayaran">🗑️</button>
+                </div>
+            `;
+            listHistoriPay.appendChild(div);
         });
+
+        // Add Listeners for Unlink buttons
+        const unlinkBtns = listHistoriPay.querySelectorAll('.btn-unlink-pay');
+        unlinkBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const payId = e.target.closest('button').dataset.payid;
+                unlinkPayment(trx.id, payId);
+            });
+        });
+        
         boxHistoriPay.style.display = (trx.history_bayar?.length > 0) ? 'block' : 'none';
         
         // Show Advanced Linking Tool
@@ -233,16 +253,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         inpNominalBayar.value = window.formatNum(sisa);
         boxInfoOrder.style.display = 'block'; formBayar.style.display = 'block';
     });
-
-    window.deleteHistoryItem = async (trxId, payId, nominal) => {
-        window.showConfirm('Hapus riwayat?', async () => {
-            const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
-            const updatedHistory = trx.history_bayar.filter(h => h.payId !== payId);
-            await supabase.from('transaksi').update({ total_paid: trx.total_paid - nominal, history_bayar: updatedHistory }).eq('id', trxId);
-            await supabase.from('keuangan').delete().eq('id', payId);
-            selOrder.dispatchEvent(new Event('input')); renderStats(); renderList();
-        });
-    };
 
     const performSaveLunas = async (sendWA) => {
         const trxId = selOrder.value;
@@ -552,18 +562,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const { data: trxs, error: tErr } = await supabase.from('transaksi').select('*');
                 if (tErr) throw tErr;
 
-                // Ambil keuangan (baik yang punya related_trx_id maupun yang mungkin punya ID di keterangan)
-                const { data: finsAll, error: fErr } = await supabase.from('keuangan').select('*').or(`tipe.eq.pemasukan,tipe.eq.pengeluaran`);
+                // Ambil keuangan yang ada related_trx_id nya (Pemasukan/Pengeluaran terkait order)
+                const { data: fins, error: fErr } = await supabase.from('keuangan').select('*').not('related_trx_id', 'is', null);
                 if (fErr) throw fErr;
 
                 let updatedCount = 0;
                 for (const trx of trxs) {
-                    // 2. Filter catatan keuangan (berdasarkan ID relasi ATAU mention di keterangan)
-                    const relatedFins = (finsAll || []).filter(f => {
-                        const isDirect = f.related_trx_id === trx.id;
-                        const isMentioned = (f.keterangan || '').toUpperCase().includes(trx.id.toUpperCase());
-                        return isDirect || isMentioned;
-                    });
+                    // 2. Filter catatan keuangan (berdasarkan ID relasi)
+                    const relatedFins = (fins || []).filter(f => f.related_trx_id === trx.id);
                     
                     // 3. Bangun ulang history_bayar dari data keuangan murni
                     const rebuiltHistory = relatedFins.map(f => ({
@@ -655,6 +661,49 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     });
+
+    // --- UNLINK PAYMENT LOGIC ---
+    const unlinkPayment = async (trxId, payId) => {
+        if (!trxId || !payId) return;
+
+        window.showConfirm(`Putuskan hubungan pembayaran ini (${payId}) dari transaksi ini?`, async () => {
+            window.showToast('Melepaskan tautan...', 'info');
+            try {
+                // 1. Clear the related_trx_id in Keuangan
+                await supabase.from('keuangan').update({ related_trx_id: null }).eq('id', payId);
+
+                // 2. Refresh TRX Data & Rebuild History
+                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
+                const { data: relatedFins } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId);
+                
+                const rebuiltHistory = (relatedFins || []).map(f => ({
+                    payId: f.id,
+                    id: f.id,
+                    tgl: f.tanggal,
+                    nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
+                    channel: f.channel,
+                    buktiUrl: f.bukti_url
+                }));
+
+                const newTotalPaid = rebuiltHistory.reduce((s, h) => s + h.nominal, 0);
+                const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
+
+                await supabase.from('transaksi').update({
+                    total_paid: newTotalPaid,
+                    total_overpaid: newTotalOverpaid,
+                    history_bayar: rebuiltHistory,
+                    updated_at: new Date().toISOString()
+                }).eq('id', trxId);
+
+                window.showToast('Tautan berhasil dilepas!', 'success');
+                selOrder.dispatchEvent(new Event('input')); // Refresh view
+                renderStats(); renderList();
+            } catch (err) {
+                console.error(err);
+                window.showAlert('Gagal melepas tautan: ' + err.message, 'danger');
+            }
+        });
+    };
 
     window.setupMoneyMask('inpNominalBayar');
     window.setupMoneyMask('inpNominalRefund');
