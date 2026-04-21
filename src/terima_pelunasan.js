@@ -212,15 +212,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!trx) { boxInfoOrder.style.display = 'none'; formBayar.style.display = 'none'; return; }
         const sisa = trx.total_deal - trx.total_paid;
         gridInfoOrder.innerHTML = `
-            <div class="info-card"><div class="label">Konsumen</div><div class="value">${trx.customer.nama}</div></div>
-            <div class="info-card"><div class="label">Total Deal</div><div class="value">${window.formatRp(trx.total_deal)}</div></div>
-            <div class="info-card"><div class="label">Pernah Bayar</div><div class="value">${window.formatRp(trx.total_paid)}</div></div>
-            <div class="info-card" style="grid-column: span 1; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2);">
-                <div class="label" style="color:var(--warning);">SISA TAGIHAN</div>
-                <div class="value" style="color:var(--warning); font-size:1.4rem;">${window.formatRp(sisa)}</div>
-            </div>
-            <div style="grid-column: span 1; display:flex; flex-direction:column; justify-content:center; gap:5px;">
-                <button id="btnDeepScan" class="btn btn-sm" style="width:100%; border:1px dashed var(--primary); background:none; color:var(--primary); font-size:0.65rem; padding:8px;" title="Cari pembayaran yang mungkin tercecer di laporan keuangan">🔍 Cari Pembayaran Tercecer</button>
+            <div class="info-summary-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <div style="font-size:1.1rem; font-weight:700; color:var(--primary);">${trx.id}</div>
+                        <div style="font-size:0.85rem; color:var(--text-main);">${trx.customer.nama}</div>
+                    </div>
+                    <button id="btnDeepScan" class="btn-ghost-sm" title="Scan data tercecer">🔍 Deep Scan</button>
+                </div>
+
+                <div style="margin: 0.5rem 0;">
+                    <div class="info-item-row">
+                        <span class="info-item-label">Total Deal</span>
+                        <span class="info-item-value">${window.formatRp(trx.total_deal)}</span>
+                    </div>
+                    <div class="info-item-row">
+                        <span class="info-item-label">Telah Dibayar</span>
+                        <span class="info-item-value" style="color:var(--success);">${window.formatRp(trx.total_paid)}</span>
+                    </div>
+                </div>
+
+                <div class="balance-highlight ${sisa > 0 ? 'warning' : ''}">
+                    <div class="balance-label">${sisa > 0 ? 'Sisa Tagihan' : 'Status'}</div>
+                    <div class="balance-amount">${sisa > 0 ? window.formatRp(sisa) : (trx.total_paid > trx.total_deal ? 'Kelebihan Bayar' : 'LUNAS')}</div>
+                </div>
             </div>
         `;
         
