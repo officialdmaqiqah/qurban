@@ -845,6 +845,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const infoAgen = matchedAgen ? `${matchedAgen.nama} (${matchedAgen.wa || '-'})` : (newTrx.agen?.nama || '-');
                     
                     const commonData = { 
+                        judul: window.editingTrxId ? '*UPDATE DATA PENJUALAN!* 🔄' : '*NOTIFIKASI PENJUALAN BARU!* 🚀',
                         nama: newTrx.customer?.nama || '-', 
                         id: trxId, 
                         tgl: formatTgl(newTrx.tgl_trx), 
