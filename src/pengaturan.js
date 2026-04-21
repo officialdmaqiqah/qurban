@@ -1057,7 +1057,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusAutoReset = document.getElementById('statusAutoReset');
 
     const updateAutoResetStatus = () => {
-        const key = localStorage.getItem('SUPABASE_SERVICE_ROLE');
+        let key = localStorage.getItem('SUPABASE_SERVICE_ROLE');
+        
+        // Coba ambil dari cadangan Cookie jika localStorage kosong
+        if (!key) {
+            const cookieVal = document.cookie.split('; ').find(row => row.startsWith('SUPABASE_SERVICE_ROLE='))?.split('=')[1];
+            if (cookieVal) {
+                key = cookieVal;
+                localStorage.setItem('SUPABASE_SERVICE_ROLE', key); // Pulihkan ke localStorage
+            }
+        }
+        
         if (key && statusAutoReset) {
             statusAutoReset.textContent = 'Status: Aktif ⚡';
             statusAutoReset.style.background = 'rgba(16, 185, 129, 0.2)';
@@ -1075,8 +1085,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnSaveServiceRole.onclick = () => {
             const val = inpServiceRole.value.trim();
             if (!val || val.includes('•')) return showAlert('Masukkan kunci yang valid!', 'warning');
+            
+            // Simpan di localStorage (Utama)
             localStorage.setItem('SUPABASE_SERVICE_ROLE', val);
-            showToast('Kunci Master Tersimpan (Lokal)');
+            
+            // Simpan di Cookie (Cadangan Abadi - Tidak terhapus oleh localStorage.clear())
+            document.cookie = `SUPABASE_SERVICE_ROLE=${val}; max-age=31536000; path=/; SameSite=Lax`;
+            
+            showToast('Kunci Master Tersimpan (Lokal & Cadangan)');
             updateAutoResetStatus();
         };
     }
@@ -1091,7 +1107,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- AKUN DOCTOR: FORCE SYNC & REPAIR ---
     window.repairAccountDoctor = async (rawEmail, currentProfileId) => {
-        const serviceRoleKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
+        let serviceRoleKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
+        
+        // Coba pulihkan dari Cookie jika hilang
+        if (!serviceRoleKey) {
+            serviceRoleKey = document.cookie.split('; ').find(row => row.startsWith('SUPABASE_SERVICE_ROLE='))?.split('=')[1];
+            if (serviceRoleKey) localStorage.setItem('SUPABASE_SERVICE_ROLE', serviceRoleKey);
+        }
+
         if (!serviceRoleKey) return showAlert('Kunci Master (Service Role) belum diatur di tab Otomatisasi!', 'warning');
 
         showConfirm(`🩺 Jalankan Akun Doctor untuk "${rawEmail}"?\n\nSistem akan mencari ID asli di Supabase Auth, membetulkan jika tidak sinkron, dan mereset password.`, async () => {
