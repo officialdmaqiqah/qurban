@@ -35,14 +35,21 @@ module.exports = async (req, res) => {
 
         console.log(`[Proxy WA] Mengirim ke ${number} via ${sender} (Length: ${message.length})`);
 
-        // Use POST for the outgoing gateway request to avoid URL length issues
+        // Use POST with form-urlencoded for the outgoing gateway request 
+        // This is the most compatible format for most SMS/WA gateways
         const response = await fetch('https://xsender.id/api/send-message', {
             method: 'POST',
             headers: { 
                 'Accept': 'application/json',
-                'Content-Type': 'application/json' 
+                'Content-Type': 'application/x-www-form-urlencoded' 
             },
-            body: JSON.stringify({ api_key, sender, number, message, footer })
+            body: new URLSearchParams({
+                api_key: api_key,
+                sender: sender,
+                number: number,
+                message: message,
+                footer: footer || ''
+            })
         });
 
         const textResponse = await response.text();
