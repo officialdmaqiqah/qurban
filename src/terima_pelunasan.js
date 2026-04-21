@@ -306,12 +306,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const reks = await getBankAccounts();
                 const rekStr = (reks || []).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
 
+                const historyStr = (updatedHistory || []).length > 0
+                    ? (updatedHistory || []).map((h, idx) => `• ${formatTgl(h.tgl)}: ${window.formatRp(h.nominal)} (${idx === 0 ? 'DP' : 'Pelunasan'})`).join('\n')
+                    : `• Pembayaran: ${window.formatRp(nominal)}`;
+
                 const infoAgen = matchedAgen ? `${matchedAgen.nama} (${matchedAgen.wa || '-'})` : (trx.agen?.nama || '-');
                 const commonData = { 
                     nama: trx.customer.nama, 
                     id: trx.id, 
                     nominal: window.formatRp(nominal), 
                     sisa: window.formatRp(sisa - realPay),
+                    history: historyStr,
+                    maps: trx.customer?.alamat?.maps || '-',
                     rekening: rekStr || '-',
                     info_agen: infoAgen
                 };

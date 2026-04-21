@@ -838,6 +838,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const skipCustWA = agentTipe.includes('DM') || agentTipe.includes('EXT');
                     const calculatedKomisi = skipCustWA ? 0 : Math.round(total * 0.10);
 
+                    const historyStr = (newTrx.history_bayar || []).length > 0
+                        ? (newTrx.history_bayar || []).map((h, idx) => `• ${formatTgl(h.tgl)}: ${formatRp(h.nominal)} (${idx === 0 ? 'DP' : 'Angsuran'})`).join('\n')
+                        : `• DP Dibayar: ${formatRp(paidNow)}`;
+
                     const infoAgen = matchedAgen ? `${matchedAgen.nama} (${matchedAgen.wa || '-'})` : (newTrx.agen?.nama || '-');
                     
                     const commonData = { 
@@ -846,6 +850,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         tgl: formatTgl(newTrx.tgl_trx), 
                         total: formatRp(total), 
                         dp: formatRp(paidNow), 
+                        history: historyStr,
                         sisa: formatRp(total - newTrx.total_paid), 
                         items: itemsStr, 
                         sohibul: sohibulStr, 
