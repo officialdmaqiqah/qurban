@@ -171,7 +171,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="font-weight:700; color:var(--primary);">${t.id}</td>
                 <td>
                     <div style="font-weight:600;">${t.customer.nama || '-'}</div>
-                    <div style="font-size:0.7rem; color:var(--text-muted);">${formatTgl(t.tgl_trx)}</div>
+                    <div style="font-size:0.7rem; color:var(--primary); font-weight:500;">Agen: ${t.agen?.nama || '-'}</div>
+                    <div style="font-size:0.65rem; color:var(--text-muted);">${formatTgl(t.tgl_trx)}</div>
                 </td>
                 <td style="font-weight:700; color:var(--warning);">${window.formatRp(sisa)}</td>
                 <td style="min-width:100px;">
@@ -198,7 +199,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             tr.innerHTML = `
                 <td style="font-weight:700; color:var(--primary);">${t.id}</td>
-                <td>${t.customer.nama || '-'}</td>
+                <td>
+                    <div style="font-weight:600;">${t.customer.nama || '-'}</div>
+                    <div style="font-size:0.7rem; color:var(--primary); font-weight:500;">Agen: ${t.agen?.nama || '-'}</div>
+                </td>
                 <td style="font-weight:700; color:var(--warning);">${window.formatRp(t.total_overpaid || 0)}</td>
                 <td><button class="btn btn-sm" style="padding:4px 10px; font-size:0.75rem; background:rgba(245,158,11,0.15); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">Refund</button></td>
             `;
