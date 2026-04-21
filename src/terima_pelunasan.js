@@ -587,12 +587,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                         id: f.id, 
                         tgl: f.tanggal,
                         nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
+                        category: f.kategori,
+                        tipe: f.tipe,
                         channel: f.channel,
                         buktiUrl: f.bukti_url
-                    }));
+                    })).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
-                    // 4. Hitung ulang total
-                    const newTotalPaid = rebuiltHistory.reduce((s, h) => s + h.nominal, 0);
+                    // 4. Hitung ulang total (HANYA Pemasukan atau Refund Pelanggan)
+                    const newTotalPaid = rebuiltHistory.reduce((s, h) => {
+                        if (h.tipe === 'pemasukan' || h.category === 'Pengembalian Dana') return s + h.nominal;
+                        return s;
+                    }, 0);
                     const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
 
                     // 5. Update jika ada perbedaan
@@ -647,11 +652,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     id: f.id,
                     tgl: f.tanggal,
                     nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
+                    category: f.kategori,
+                    tipe: f.tipe,
                     channel: f.channel,
                     buktiUrl: f.bukti_url
-                }));
+                })).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
-                const newTotalPaid = rebuiltHistory.reduce((s, h) => s + h.nominal, 0);
+                const newTotalPaid = rebuiltHistory.reduce((s, h) => {
+                    if (h.tipe === 'pemasukan' || h.category === 'Pengembalian Dana') return s + h.nominal;
+                    return s;
+                }, 0);
                 const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
 
                 await supabase.from('transaksi').update({
@@ -708,11 +718,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     id: f.id,
                     tgl: f.tanggal,
                     nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
+                    category: f.kategori,
+                    tipe: f.tipe,
                     channel: f.channel,
                     buktiUrl: f.bukti_url
-                })).sort((a,b) => new Date(a.tgl) - new Date(b.tgl));
+                })).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
-                const newTotalPaid = rebuiltHistory.reduce((s, h) => s + h.nominal, 0);
+                const newTotalPaid = rebuiltHistory.reduce((s, h) => {
+                    if (h.tipe === 'pemasukan' || h.category === 'Pengembalian Dana') return s + h.nominal;
+                    return s;
+                }, 0);
                 const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
 
                 await supabase.from('transaksi').update({
@@ -752,11 +767,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     id: f.id,
                     tgl: f.tanggal,
                     nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
+                    category: f.kategori,
+                    tipe: f.tipe,
                     channel: f.channel,
                     buktiUrl: f.bukti_url
-                }));
+                })).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
-                const newTotalPaid = rebuiltHistory.reduce((s, h) => s + h.nominal, 0);
+                const newTotalPaid = rebuiltHistory.reduce((s, h) => {
+                    if (h.tipe === 'pemasukan' || h.category === 'Pengembalian Dana') return s + h.nominal;
+                    return s;
+                }, 0);
                 const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
 
                 await supabase.from('transaksi').update({

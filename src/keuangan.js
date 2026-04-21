@@ -343,7 +343,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (trx) {
                             // Hitung ulang total paid dari history yang tersisa (kecuali ID ini)
                             const updatedHistory = (trx.history_bayar || []).filter(h => h.payId !== id && h.id !== id);
-                            const newTotalPaid = updatedHistory.reduce((s, h) => s + (parseFloat(h.nominal) || 0), 0);
+                            
+                            const newTotalPaid = updatedHistory.reduce((s, h) => {
+                                // h.nominal usually already has the correct sign if it came from our new sync logic
+                                // but we double check kategori to be safe
+                                const isIncome = h.tipe === 'pemasukan' || (h.nominal > 0 && !h.category);
+                                const isRefund = h.category === 'Pengembalian Dana';
+                                if (isIncome || isRefund) return s + (parseFloat(h.nominal) || 0);
+                                return s;
+                            }, 0);
+                            
                             const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
                             
                             await supabase.from('transaksi').update({ 
@@ -476,10 +485,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const { data: trxs } = await supabase.from('transaksi').select('id');
                 const { data: fins } = await supabase.from('keuangan').select('*');
                 for (const trx of (trxs || [])) {
-                    const rel = (fins || []).filter(f => f.related_trx_id === trx.id);
-                    const total = rel.reduce((s, f) => s + (parseFloat(f.nominal) || 0), 0);
-                    const history = rel.map(f => ({ payId: f.id, tgl: f.tanggal, nominal: parseFloat(f.nominal), channel: f.channel, buktiUrl: f.bukti_url }));
-                    await supabase.from('transaksi').update({ total_paid: total, history_bayar: history }).eq('id', trx.id);
+                    const rel = (fins || []).filter(f => f.related_trx_id === trx.id).sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+                    
+                    const history = rel.map(f => ({ 
+                        payId: f.id, 
+                        id: f.id,
+                        tgl: f.tanggal, 
+                        nominal: (f.tipe === 'pengeluaran') ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
+                        category: f.kategori,
+                        tipe: f.tipe,
+                        channel: f.channel, 
+                        buktiUrl: f.bukti_url 
+                    }));
+
+                    const total = history.reduce((s, h) => {
+                        if (h.tipe === 'pemasukan' || h.category === 'Pengembalian Dana') return s + h.nominal;
+                        return s;
+                    }, 0);
+
+                    await supabase.from('transaksi').update({ 
+                        total_paid: total, 
+                        total_overpaid: Math.max(0, total - (trx.total_deal || 0)),
+                        history_bayar: history,
+                        updated_at: new Date().toISOString()
+                    }).eq('id', trx.id);
                 }
                 window.showAlert('Sinkron Selesai!', 'success', () => window.location.reload());
             });
