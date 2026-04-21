@@ -663,25 +663,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Generate Diff HTML
             let diffHtml = '';
-            const compareFields = [
-                { label: 'Nama Konsumen', old: original?.customer?.nama, new: newData?.customer?.nama },
-                { label: 'WA 1', old: original?.customer?.wa1, new: newData?.customer?.wa1 },
-                { label: 'Alamat (Kec)', old: original?.customer?.delivery?.alamat?.kec || original?.customer?.alamat?.kec, new: newData?.customer?.alamat?.kec },
-                { label: 'Alamat (Jalan)', old: original?.customer?.delivery?.alamat?.jalan || original?.customer?.alamat?.jalan, new: newData?.customer?.alamat?.jalan }
-            ];
-
-            compareFields.forEach(f => {
-                if (f.old !== f.new) {
-                    diffHtml += `
-                        <div class="diff-box">
-                            <div class="diff-label">${f.label}</div>
-                            <div class="diff-content">
-                                <div class="diff-old">${f.old || '(Kosong)'}</div>
-                                <div class="diff-new">${f.new || '(Kosong)'}</div>
+            if (newData?.type === 'PASSWORD_RESET_REQUEST') {
+                diffHtml = `
+                    <div class="diff-box" style="border-left: 4px solid var(--primary); background: rgba(59, 130, 246, 0.05);">
+                        <div class="diff-label" style="color: var(--primary); font-weight: 700;">💎 PERMINTAAN RESET PASSWORD</div>
+                        <div class="diff-content">
+                            <div style="font-size: 0.85rem; margin-bottom: 5px;">User memohon pengaturan password baru:</div>
+                            <div style="font-weight: 600; padding: 5px 10px; background: var(--bg-card); border-radius: 4px; display: inline-block; color: var(--success); letter-spacing: 1px;">
+                                ${newData.new_password}
                             </div>
-                        </div>`;
-                }
-            });
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">
+                                ℹ️ Silakan update secara manual di Dashboard Supabase Auth.
+                            </div>
+                        </div>
+                    </div>`;
+            } else {
+                const compareFields = [
+                    { label: 'Nama Konsumen', old: original?.customer?.nama, new: newData?.customer?.nama },
+                    { label: 'WA 1', old: original?.customer?.wa1, new: newData?.customer?.wa1 },
+                    { label: 'Alamat (Kec)', old: original?.customer?.delivery?.alamat?.kec || original?.customer?.alamat?.kec, new: newData?.customer?.alamat?.kec },
+                    { label: 'Alamat (Jalan)', old: original?.customer?.delivery?.alamat?.jalan || original?.customer?.alamat?.jalan, new: newData?.customer?.alamat?.jalan }
+                ];
+
+                compareFields.forEach(f => {
+                    if (f.old !== f.new) {
+                        diffHtml += `
+                            <div class="diff-box">
+                                <div class="diff-label">${f.label}</div>
+                                <div class="diff-content">
+                                    <div class="diff-old">${f.old || '(Kosong)'}</div>
+                                    <div class="diff-new">${f.new || '(Kosong)'}</div>
+                                </div>
+                            </div>`;
+                    }
+                });
+            }
 
             tr.innerHTML = `
                 <td>
@@ -700,10 +716,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     window.approveReq = async (id) => {
-        showConfirm('APPLY PERUBAHAN?\nData transaksi akan diperbarui sesuai permintaan agen.', async () => {
-            const { data: req } = await supabase.from('edit_requests').select('*').eq('id', id).single();
-            if(!req) return;
+        const { data: req } = await supabase.from('edit_requests').select('*').eq('id', id).single();
+        if(!req) return;
 
+        if (req.new_data?.type === 'PASSWORD_RESET_REQUEST') {
+            showConfirm('TANDAI SELESAI?\nPastikan Anda sudah mengubah password di Supabase Dashboard untuk user ini.', async () => {
+                await supabase.from('edit_requests').update({ status: 'done' }).eq('id', id);
+                showToast('Permintaan Reset Ditandai Selesai!');
+                renderEditRequests();
+            });
+            return;
+        }
+
+        showConfirm('APPLY PERUBAHAN?\nData transaksi akan diperbarui sesuai permintaan agen.', async () => {
             const { error: upErr } = await supabase.from('transaksi').update({ 
                 customer: req.new_data.customer, 
                 delivery: req.new_data.delivery,
