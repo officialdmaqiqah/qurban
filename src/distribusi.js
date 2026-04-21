@@ -377,9 +377,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('summarizedTripCount').textContent = '0 Ekor Kambing';
     });
 
-        document.getElementById('summarizedTripCount').textContent = '0 Ekor Kambing';
-    });
-
     document.getElementById('formTrip')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const selected = document.querySelectorAll('.goat-checkbox:checked');
