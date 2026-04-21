@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
         await supabase.auth.signOut();
-        localStorage.clear();
+        // localStorage.clear(); // <--- JANGAN gunakan clear() karena akan menghapus Kunci Master (Service Role)
+        showToast('Keluar...');
         window.location.href = 'login.html';
     });
 
@@ -499,9 +500,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><strong>${u.full_name}</strong><br><small>${u.email}</small></td>
                 <td>${u.role}</td>
                 <td>${u.status}</td>
-                <td style="display:flex; gap:0.5rem; flex-wrap:nowrap;">
-                    <button class="btn btn-sm" onclick="window.editUserAkses('${u.id}')">Akses</button>
-                    <button class="btn btn-sm" style="background:var(--danger); color:white; border:none;" onclick="window.deleteUser('${u.id}', '${u.full_name}')">Hapus</button>
+                <td style="display:flex; gap:0.4rem; flex-wrap:nowrap;">
+                    <button class="btn btn-sm" onclick="window.editUserAkses('${u.id}')" title="Edit Akses">Akses</button>
+                    <button class="btn btn-sm" style="background:#4b5563; color:white; border:none;" onclick="window.repairAccountDoctor('${u.email}', '${u.id}')" title="🩺 Perbaiki Akun (Auth Sync)">🩺 Doctor</button>
+                    <button class="btn btn-sm" style="background:var(--danger); color:white; border:none;" onclick="window.deleteUser('${u.id}', '${u.full_name}')" title="Hapus User">🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -737,9 +739,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const targetEmail = req.new_data.email.includes('@') ? req.new_data.email.toLowerCase() : `${req.new_data.email.toLowerCase()}@qurban.com`;
                         
                         // We need the internal Supabase UUID from public.profiles because auth.admin needs ID
-                        const { data: profile } = await supabase.from('profiles').select('id').eq('email', req.new_data.email).single();
+                        // Menggunakan .ilike agar tidak masalah huruf besar/kecil (Bana123 vs bana123)
+                        const { data: profile, error: profErr } = await supabase.from('profiles')
+                            .select('id, email')
+                            .ilike('email', req.new_data.email)
+                            .single();
                         
-                        if (!profile) throw new Error('User tidak ditemukan di tabel profil.');
+                        if (profErr || !profile) throw new Error(`User dengan email/username "${req.new_data.email}" tidak ditemukan di database.`);
 
                         const { error: adminErr } = await supabaseAdmin.auth.admin.updateUserById(
                             profile.id,
@@ -1082,6 +1088,70 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateAutoResetStatus();
         };
     }
+
+    // --- AKUN DOCTOR: FORCE SYNC & REPAIR ---
+    window.repairAccountDoctor = async (rawEmail, currentProfileId) => {
+        const serviceRoleKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
+        if (!serviceRoleKey) return showAlert('Kunci Master (Service Role) belum diatur di tab Otomatisasi!', 'warning');
+
+        showConfirm(`🩺 Jalankan Akun Doctor untuk "${rawEmail}"?\n\nSistem akan mencari ID asli di Supabase Auth, membetulkan jika tidak sinkron, dan mereset password.`, async () => {
+            try {
+                setLoading(true);
+                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+                const supabaseAdmin = createClient('https://juscihvfmgibmrhmclab.supabase.co', serviceRoleKey, {
+                    auth: { autoRefreshToken: false, persistSession: false }
+                });
+
+                // 1. Cari User di Auth menggunakan email (lowercase)
+                const searchEmail = rawEmail.includes('@') ? rawEmail.toLowerCase() : `${rawEmail.toLowerCase()}@qurban.com`;
+                
+                // listUsers() then filter is the most robust way if email query is tricky
+                const { data: { users }, error: listErr } = await supabaseAdmin.auth.admin.listUsers();
+                if (listErr) throw listErr;
+
+                const authUser = users.find(u => u.email.toLowerCase() === searchEmail);
+                if (!authUser) throw new Error(`User "${searchEmail}" tidak ditemukan di sistem Autentikasi (Auth). Pastikan user sudah pernah Register.`);
+
+                const realUid = authUser.id;
+                console.log('[Doctor] Found Auth User:', authUser.email, 'UID:', realUid);
+
+                // 2. Sinkronisasi Tabel Profiles (Jika ID mismatch)
+                if (realUid !== currentProfileId) {
+                    console.warn('[Doctor] ID Mismatch detected! Syncing profiles table...');
+                    const { data: oldProfile } = await supabase.from('profiles').select('*').eq('id', currentProfileId).single();
+                    
+                    if (oldProfile) {
+                        // Create NEW profile with correct ID, then delete old one
+                        const newProfileData = { ...oldProfile, id: realUid, email: rawEmail.toLowerCase(), status: 'approved' };
+                        const { error: insErr } = await supabase.from('profiles').upsert(newProfileData);
+                        if (insErr) throw new Error('Gagal migrasi ID profil: ' + insErr.message);
+                        
+                        // Delete old "detached" profile
+                        await supabase.from('profiles').delete().eq('id', currentProfileId);
+                        console.log('[Doctor] Profile re-linked to real UID.');
+                    }
+                } else {
+                    // Hanya normalisasi email jika ID sudah pas
+                    await supabase.from('profiles').update({ email: rawEmail.toLowerCase(), status: 'approved' }).eq('id', realUid);
+                }
+
+                // 3. Force Reset Password
+                const newPass = prompt('Ketik Password Baru (Default: BanaBaru123):', 'BanaBaru123');
+                if (!newPass) throw new Error('Reset dibatalkan. Password tidak boleh kosong.');
+
+                const { error: resetErr } = await supabaseAdmin.auth.admin.updateUserById(realUid, { password: newPass });
+                if (resetErr) throw resetErr;
+
+                showAlert(`🩺 AKUN BERHASIL DIPULIHKAN!\n\nEmail Auth: ${authUser.email}\nStatus: Approved\nPassword: ${newPass}\n\nUser sekarang pasti bisa login.`, 'success');
+                renderUserTable();
+            } catch (err) {
+                console.error('[Doctor] Failed:', err);
+                showAlert('Gagal Menjalankan Akun Doctor: ' + err.message, 'danger');
+            } finally {
+                setLoading(false);
+            }
+        });
+    };
 
     updateAutoResetStatus();
 });
