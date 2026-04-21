@@ -33,19 +33,16 @@ module.exports = async (req, res) => {
             });
         }
 
-        // Use global fetch (built-in in Node 18+)
-        const targetUrl = new URL('https://xsender.id/api/send-message');
-        targetUrl.searchParams.append('api_key', api_key);
-        targetUrl.searchParams.append('sender', sender);
-        targetUrl.searchParams.append('number', number);
-        targetUrl.searchParams.append('message', message);
-        if (footer) targetUrl.searchParams.append('footer', footer);
+        console.log(`[Proxy WA] Mengirim ke ${number} via ${sender} (Length: ${message.length})`);
 
-        console.log(`[Proxy WA] Mengirim ke ${number} via ${sender}`);
-
-        const response = await fetch(targetUrl.toString(), {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
+        // Use POST for the outgoing gateway request to avoid URL length issues
+        const response = await fetch('https://xsender.id/api/send-message', {
+            method: 'POST',
+            headers: { 
+                'Accept': 'application/json',
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({ api_key, sender, number, message, footer })
         });
 
         const textResponse = await response.text();

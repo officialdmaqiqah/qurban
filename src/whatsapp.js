@@ -163,18 +163,23 @@ export const sendWa = async (number, message) => {
     }
 
     // Gunakan Proxy Serverless (api/send-wa.js) untuk menghindari CORS & Blokir Network Lokal
-    const url = new URL('/api/send-wa', window.location.origin);
-    url.searchParams.append('api_key', config.apiKey);
-    url.searchParams.append('sender', config.sender);
-    url.searchParams.append('number', cleanNumber);
-    url.searchParams.append('message', message);
-    if (config.footer) url.searchParams.append('footer', config.footer);
-
     try {
-        const response = await fetch(url.toString(), {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
+        const response = await fetch('/api/send-wa', {
+            method: 'POST',
+            headers: { 
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                api_key: config.apiKey,
+                sender: config.sender,
+                number: cleanNumber,
+                message: message,
+                footer: config.footer
+            })
         });
+
+        const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
             // Jika 404 (Endpoint tidak ada, misal di local dev tanpa vercel dev)
@@ -182,10 +187,12 @@ export const sendWa = async (number, message) => {
                 console.warn('[WA] Proxy /api/send-wa tidak ditemukan. Mencoba koneksi langsung...');
                 return await sendWaDirect(cleanNumber, message, config);
             }
-            throw new Error(`HTTP Error: ${response.status}`);
+            
+            // Baca pesan detail dari proxy jika ada
+            const detailedMsg = result.message || `HTTP Error: ${response.status}`;
+            throw new Error(detailedMsg);
         }
 
-        const result = await response.json();
         console.log('[WA] Response:', result);
         
         if (result.status === true || result.status === 'success') {
@@ -200,8 +207,8 @@ export const sendWa = async (number, message) => {
     } catch (error) {
         console.error('[WA] Proxy Error:', error);
         
-        // Fallback terakhir: Coba tembak langsung jika proxy error (CORS/Network)
-        if (error.name === 'TypeError' || error.message.includes('fetch')) {
+        // Fallback terakhir: Coba tembak langsung jika proxy error (kecuali jika error berasal dari gateway 500 eksplisit)
+        if (error.name === 'TypeError' || error.message.includes('fetch') || error.message.includes('Network')) {
             console.warn('[WA] Network error pada proxy. Mencoba koneksi langsung...');
             return await sendWaDirect(cleanNumber, message, config);
         }
