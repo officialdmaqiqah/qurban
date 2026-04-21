@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const getTrips = async () => { const { data } = await supabase.from('master_data').select('val').eq('key', 'TRIPS').single(); return data?.val || []; };
     const containerTrip = document.getElementById('containerTrip');
-    const modalTrip = document.getElementById('modalTrip');
     const tableBodySelection = document.getElementById('tableBodySelection');
     
     let cachedTrips = [];
