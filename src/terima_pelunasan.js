@@ -215,9 +215,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="info-card"><div class="label">Konsumen</div><div class="value">${trx.customer.nama}</div></div>
             <div class="info-card"><div class="label">Total Deal</div><div class="value">${window.formatRp(trx.total_deal)}</div></div>
             <div class="info-card"><div class="label">Pernah Bayar</div><div class="value">${window.formatRp(trx.total_paid)}</div></div>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;">SALDO SISA:</div>
-            <div class="sisa-big" id="displaySisa">${window.formatRp(sisa)}</div>
+            <div class="info-card" style="grid-column: span 1; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2);">
+                <div class="label" style="color:var(--warning);">SISA TAGIHAN</div>
+                <div class="value" style="color:var(--warning); font-size:1.4rem;">${window.formatRp(sisa)}</div>
+            </div>
+            <div style="grid-column: span 1; display:flex; flex-direction:column; justify-content:center; gap:5px;">
+                <button id="btnDeepScan" class="btn btn-sm" style="width:100%; border:1px dashed var(--primary); background:none; color:var(--primary); font-size:0.65rem; padding:8px;" title="Cari pembayaran yang mungkin tercecer di laporan keuangan">🔍 Cari Pembayaran Tercecer</button>
+            </div>
         `;
+        
+        const btnDeepScan = document.getElementById('btnDeepScan');
+        if(btnDeepScan) btnDeepScan.onclick = () => deepScanTransaction(trx.id);
         listHistoriPay.innerHTML = '';
         (trx.history_bayar || []).forEach(h => {
             const div = document.createElement('div');
@@ -661,6 +669,66 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     });
+
+    // --- DEEP SCAN TRANSACTION LOGIC ---
+    const deepScanTransaction = async (trxId) => {
+        if (!trxId) return;
+        window.showToast('Memulai scan mendalam...', 'info');
+        
+        try {
+            // Scan ALL finance records that have TRX ID in description
+            const { data: allFins } = await supabase.from('keuangan').select('*').or(`tipe.eq.pemasukan,tipe.eq.pengeluaran`);
+            const matched = (allFins || []).filter(f => {
+                const desc = (f.keterangan || '').toUpperCase();
+                return desc.includes(trxId.toUpperCase()) && f.related_trx_id !== trxId;
+            });
+
+            if (matched.length === 0) {
+                window.showAlert('Tidak ditemukan pembayaran lain di laporan keuangan yang menyebut ' + trxId, 'info');
+                return;
+            }
+
+            const totalFound = matched.reduce((s, f) => s + (parseFloat(f.nominal)||0), 0);
+            window.showConfirm(`Ditemukan ${matched.length} pembayaran (${window.formatRp(totalFound)}) yang menyebut ${trxId} tapi belum terhubung. Hubungkan sekarang?`, async () => {
+                window.showToast('Menghubungkan...', 'info');
+                
+                // Update all matched records
+                const matchedIds = matched.map(m => m.id);
+                await supabase.from('keuangan').update({ related_trx_id: trxId }).in('id', matchedIds);
+
+                // Rebuild history
+                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
+                const { data: relatedFins } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId);
+                
+                const rebuiltHistory = (relatedFins || []).map(f => ({
+                    payId: f.id,
+                    id: f.id,
+                    tgl: f.tanggal,
+                    nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
+                    channel: f.channel,
+                    buktiUrl: f.bukti_url
+                })).sort((a,b) => new Date(a.tgl) - new Date(b.tgl));
+
+                const newTotalPaid = rebuiltHistory.reduce((s, h) => s + h.nominal, 0);
+                const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
+
+                await supabase.from('transaksi').update({
+                    total_paid: newTotalPaid,
+                    total_overpaid: newTotalOverpaid,
+                    history_bayar: rebuiltHistory,
+                    updated_at: new Date().toISOString()
+                }).eq('id', trxId);
+
+                window.showToast('Sinkronisasi mendalam berhasil!', 'success');
+                selOrder.dispatchEvent(new Event('input')); // Refresh
+                renderStats(); renderList();
+            });
+
+        } catch (err) {
+            console.error(err);
+            window.showAlert('Gagal scan mendalam: ' + err.message, 'danger');
+        }
+    };
 
     // --- UNLINK PAYMENT LOGIC ---
     const unlinkPayment = async (trxId, payId) => {
