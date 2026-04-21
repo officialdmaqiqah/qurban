@@ -69,7 +69,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
         await supabase.auth.signOut();
+        const masterKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
         localStorage.clear();
+        if (masterKey) localStorage.setItem('SUPABASE_SERVICE_ROLE', masterKey);
         window.location.href = 'login.html';
     });
 

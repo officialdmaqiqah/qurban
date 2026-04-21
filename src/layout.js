@@ -451,7 +451,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         logoutHeader.onclick = async () => {
             window.showConfirm('Yakin ingin keluar?', async () => {
                 await supabase.auth.signOut();
+                // Simpan kunci admin sebelum pembersihan
+                const masterKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
                 localStorage.clear();
+                if (masterKey) localStorage.setItem('SUPABASE_SERVICE_ROLE', masterKey);
+                
                 window.location.href = 'login.html';
             });
         };
