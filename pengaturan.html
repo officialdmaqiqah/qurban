@@ -386,6 +386,29 @@
                                                                 <tbody></tbody>
                                                         </table>
                                                 </div>
+
+                                                <!-- OTOMATISASI ADMIN SECTION -->
+                                                <div style="margin-top:2.5rem; padding:1.5rem; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.1); border-radius:12px;">
+                                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                                        <div>
+                                                            <h4 style="color:var(--success); margin-bottom:0.25rem;">⚡ Otomatisasi Reset Password</h4>
+                                                            <p style="font-size:0.75rem; color:var(--text-muted); margin:0;">Aktifkan fitur reset password otomatis tanpa harus buka dashboard Supabase.</p>
+                                                        </div>
+                                                        <div id="statusAutoReset" style="font-size:0.75rem; padding:4px 10px; border-radius:20px; background:rgba(255,255,255,0.05); color:var(--text-muted);">Status: Belum Aktif</div>
+                                                    </div>
+                                                    <div style="display:flex; gap:1rem; align-items:flex-end;">
+                                                        <div class="form-group" style="flex:1; margin-bottom:0;">
+                                                            <label class="form-label" style="font-size:0.75rem; color:var(--primary);">Supabase Service Role Key (Disimpan Lokal)</label>
+                                                            <input type="password" id="inpServiceRole" class="form-control" placeholder="Hubungkan untuk mengaktifkan fitur satu-klik..." style="font-size:0.85rem;">
+                                                        </div>
+                                                        <button id="btnSaveServiceRole" class="btn btn-primary" style="height:42px; background:var(--success); border:none; padding:0 1.5rem;">Simpan Kunci</button>
+                                                        <button id="btnClearServiceRole" class="btn btn-sm" style="height:42px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--danger);">Hapus</button>
+                                                    </div>
+                                                    <p style="margin-top:1rem; font-size:0.7rem; color:var(--text-muted); line-height:1.4;">
+                                                        💡 <strong>Cara Ambil Kunci:</strong> Buka Dashboard Supabase &gt; Project Settings &gt; API &gt; cari <strong>service_role (secret)</strong>. <br>
+                                                        ⚠️ <em>Keamanan: Kunci ini hanya akan disimpan di browser Anda saat ini saja.</em>
+                                                    </p>
+                                                </div>
                                         </div>
                                 </div>
 

@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             // 1. Auth Login
-            const email = username.includes('@') ? username : `${username}@qurban.com`;
+            const email = username.includes('@') ? username.toLowerCase() : `${username.toLowerCase()}@qurban.com`;
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email: email,
                 password: password

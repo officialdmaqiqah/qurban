@@ -720,11 +720,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!req) return;
 
         if (req.new_data?.type === 'PASSWORD_RESET_REQUEST') {
-            showConfirm('TANDAI SELESAI?\nPastikan Anda sudah mengubah password di Supabase Dashboard untuk user ini.', async () => {
-                await supabase.from('edit_requests').update({ status: 'done' }).eq('id', id);
-                showToast('Permintaan Reset Ditandai Selesai!');
-                renderEditRequests();
-            });
+            const serviceRoleKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
+            
+            if (serviceRoleKey) {
+                // AUTOMATED RESET via Admin Client
+                showConfirm(`OTOMATIS RESET PASSWORD?\nSistem akan langsung mengubah password ${req.new_data.full_name} menjadi yang baru secara otomatis.`, async () => {
+                    try {
+                        setLoading(true);
+                        // Create a temporary admin client
+                        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+                        const supabaseAdmin = createClient('https://juscihvfmgibmrhmclab.supabase.co', serviceRoleKey, {
+                            auth: { autoRefreshToken: false, persistSession: false }
+                        });
+
+                        // 1. Find the User in Auth (mapping email)
+                        const targetEmail = req.new_data.email.includes('@') ? req.new_data.email.toLowerCase() : `${req.new_data.email.toLowerCase()}@qurban.com`;
+                        
+                        // We need the internal Supabase UUID from public.profiles because auth.admin needs ID
+                        const { data: profile } = await supabase.from('profiles').select('id').eq('email', req.new_data.email).single();
+                        
+                        if (!profile) throw new Error('User tidak ditemukan di tabel profil.');
+
+                        const { error: adminErr } = await supabaseAdmin.auth.admin.updateUserById(
+                            profile.id,
+                            { password: req.new_data.new_password }
+                        );
+
+                        if (adminErr) throw adminErr;
+
+                        // 2. Mark request as done
+                        await supabase.from('edit_requests').update({ status: 'done' }).eq('id', id);
+                        
+                        showToast('✅ PASSWORD BERHASIL DIRESET OTOMATIS!');
+                        renderEditRequests();
+                    } catch (err) {
+                        console.error('[AdminReset] Error:', err);
+                        showAlert('Gagal Reset Otomatis: ' + err.message, 'danger');
+                    } finally {
+                        setLoading(false);
+                    }
+                });
+            } else {
+                // FALLBACK: Manual Instructions
+                showConfirm('TANDAI SELESAI?\nPastikan Anda sudah mengubah password di Supabase Dashboard untuk user ini.', async () => {
+                    await supabase.from('edit_requests').update({ status: 'done' }).eq('id', id);
+                    showToast('Permintaan Reset Ditandai Selesai!');
+                    renderEditRequests();
+                });
+            }
             return;
         }
 
@@ -1001,4 +1044,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
     if (isAdmin) migrateBankData();
+    // --- SERVICE ROLE KEY MANAGEMENT (For Automated Password Reset) ---
+    const inpServiceRole = document.getElementById('inpServiceRole');
+    const btnSaveServiceRole = document.getElementById('btnSaveServiceRole');
+    const btnClearServiceRole = document.getElementById('btnClearServiceRole');
+    const statusAutoReset = document.getElementById('statusAutoReset');
+
+    const updateAutoResetStatus = () => {
+        const key = localStorage.getItem('SUPABASE_SERVICE_ROLE');
+        if (key && statusAutoReset) {
+            statusAutoReset.textContent = 'Status: Aktif ⚡';
+            statusAutoReset.style.background = 'rgba(16, 185, 129, 0.2)';
+            statusAutoReset.style.color = 'var(--success)';
+            if (inpServiceRole) inpServiceRole.value = '••••••••••••••••••••••••••••••••';
+        } else if (statusAutoReset) {
+            statusAutoReset.textContent = 'Status: Belum Aktif';
+            statusAutoReset.style.background = 'rgba(255,255,255,0.05)';
+            statusAutoReset.style.color = 'var(--text-muted)';
+            if (inpServiceRole) inpServiceRole.value = '';
+        }
+    };
+
+    if (btnSaveServiceRole) {
+        btnSaveServiceRole.onclick = () => {
+            const val = inpServiceRole.value.trim();
+            if (!val || val.includes('•')) return showAlert('Masukkan kunci yang valid!', 'warning');
+            localStorage.setItem('SUPABASE_SERVICE_ROLE', val);
+            showToast('Kunci Master Tersimpan (Lokal)');
+            updateAutoResetStatus();
+        };
+    }
+
+    if (btnClearServiceRole) {
+        btnClearServiceRole.onclick = () => {
+            localStorage.removeItem('SUPABASE_SERVICE_ROLE');
+            showToast('Kunci Master Dihapus');
+            updateAutoResetStatus();
+        };
+    }
+
+    updateAutoResetStatus();
 });
