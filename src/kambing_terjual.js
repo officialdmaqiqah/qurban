@@ -853,6 +853,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         rekening: rekStr || '-',
                         info_agen: infoAgen,
                         alamat: (newTrx.customer?.alamat?.jalan || '') + ', ' + (newTrx.customer?.alamat?.kec || ''), 
+                        maps: newTrx.customer?.alamat?.maps || '-',
                         wa_konsumen: newTrx.customer?.wa1 || '-', 
                         nama_agen: newTrx.agen?.nama || '-', 
                         jadwal: formatTgl(newTrx.delivery?.tgl),
