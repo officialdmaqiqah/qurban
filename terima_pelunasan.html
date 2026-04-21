@@ -218,6 +218,16 @@
                                 <div style="font-size:0.75rem; font-weight: 300; color:var(--text-muted); margin-bottom:0.35rem;">🕒 RIWAYAT BAYAR:</div>
                                 <div id="listHistoriPay"></div>
                             </div>
+
+                            <!-- ADVANCED: LINK MANUAL PAYMENT -->
+                            <div id="boxLinkManualPay" style="display:none; margin-top:1rem; padding-top:0.75rem; border-top:1px dashed var(--border-color);">
+                                <div style="font-size:0.7rem; font-weight: 600; color:var(--primary); margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.02em;">🔧 Sambungkan Pembayaran Manual</div>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" id="inpManualPayId" class="form-control" placeholder="Cth: PAY-368651" style="font-size:0.75rem; flex:1;">
+                                    <button id="btnLinkManualPay" class="btn btn-sm" style="background:var(--primary); color:#000; border:none; padding:0 12px; font-weight:bold;">Sambung</button>
+                                </div>
+                                <div style="font-size:0.6rem; color:var(--text-muted); margin-top:0.4rem;">Gunakan ini jika pembayaran tidak muncul di riwayat (misal: kasus gantian kambing).</div>
+                            </div>
                         </div>
 
                         <div id="formBayar" style="display:none;">

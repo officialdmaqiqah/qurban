@@ -225,6 +225,11 @@ document.addEventListener('DOMContentLoaded', async () => {
              listHistoriPay.appendChild(div);
         });
         boxHistoriPay.style.display = (trx.history_bayar?.length > 0) ? 'block' : 'none';
+        
+        // Show Advanced Linking Tool
+        const boxLinkManualPay = document.getElementById('boxLinkManualPay');
+        if (boxLinkManualPay) boxLinkManualPay.style.display = 'block';
+
         inpNominalBayar.value = window.formatNum(sisa);
         boxInfoOrder.style.display = 'block'; formBayar.style.display = 'block';
     });
@@ -547,19 +552,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const { data: trxs, error: tErr } = await supabase.from('transaksi').select('*');
                 if (tErr) throw tErr;
 
-                // Ambil keuangan yang ada related_trx_id nya (Pemasukan/Pengeluaran terkait order)
-                const { data: fins, error: fErr } = await supabase.from('keuangan').select('*').not('related_trx_id', 'is', null);
+                // Ambil keuangan (baik yang punya related_trx_id maupun yang mungkin punya ID di keterangan)
+                const { data: finsAll, error: fErr } = await supabase.from('keuangan').select('*').or(`tipe.eq.pemasukan,tipe.eq.pengeluaran`);
                 if (fErr) throw fErr;
 
                 let updatedCount = 0;
                 for (const trx of trxs) {
-                    // 2. Filter catatan keuangan yang milik transaksi ini (Pelunasan, Refund, dll)
-                    const relatedFins = (fins || []).filter(f => f.related_trx_id === trx.id);
+                    // 2. Filter catatan keuangan (berdasarkan ID relasi ATAU mention di keterangan)
+                    const relatedFins = (finsAll || []).filter(f => {
+                        const isDirect = f.related_trx_id === trx.id;
+                        const isMentioned = (f.keterangan || '').toUpperCase().includes(trx.id.toUpperCase());
+                        return isDirect || isMentioned;
+                    });
                     
                     // 3. Bangun ulang history_bayar dari data keuangan murni
                     const rebuiltHistory = relatedFins.map(f => ({
                         payId: f.id,
-                        id: f.id, // compatibility
+                        id: f.id, 
                         tgl: f.tanggal,
                         nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
                         channel: f.channel,
@@ -567,11 +576,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }));
 
                     // 4. Hitung ulang total
-                    // Nominal pengeluaran (refund) akan mengurangi total_paid
                     const newTotalPaid = rebuiltHistory.reduce((s, h) => s + h.nominal, 0);
                     const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
 
-                    // 5. Update jika ada perbedaan (bandingkan angka)
+                    // 5. Update jika ada perbedaan
                     if (newTotalPaid !== trx.total_paid || newTotalOverpaid !== trx.total_overpaid || (JSON.stringify(rebuiltHistory) !== JSON.stringify(trx.history_bayar))) {
                         await supabase.from('transaksi').update({
                             total_paid: newTotalPaid,
@@ -594,6 +602,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     document.getElementById('btnSyncBalances')?.addEventListener('click', syncAllBalances);
+
+    // --- MANUAL LINK PAYMENT LOGIC ---
+    const btnLinkManualPay = document.getElementById('btnLinkManualPay');
+    const inpManualPayId = document.getElementById('inpManualPayId');
+
+    btnLinkManualPay?.addEventListener('click', async () => {
+        const trxId = selOrder.value;
+        const payIdsRaw = inpManualPayId.value.trim();
+        if (!trxId || !payIdsRaw) return window.showToast('Pilih Order & masukkan ID Pembayaran', 'warning');
+
+        const payIds = payIdsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        
+        window.showConfirm(`Hubungkan ${payIds.length} pembayaran ke ${trxId}?`, async () => {
+            window.showToast('Menghubungkan data...', 'info');
+            try {
+                // 1. Update Keuangan records
+                for (const pid of payIds) {
+                    await supabase.from('keuangan').update({ related_trx_id: trxId }).eq('id', pid);
+                }
+
+                // 2. Refresh TRX Data & Rebuild History
+                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
+                const { data: relatedFins } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId);
+                
+                const rebuiltHistory = (relatedFins || []).map(f => ({
+                    payId: f.id,
+                    id: f.id,
+                    tgl: f.tanggal,
+                    nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
+                    channel: f.channel,
+                    buktiUrl: f.bukti_url
+                }));
+
+                const newTotalPaid = rebuiltHistory.reduce((s, h) => s + h.nominal, 0);
+                const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
+
+                await supabase.from('transaksi').update({
+                    total_paid: newTotalPaid,
+                    total_overpaid: newTotalOverpaid,
+                    history_bayar: rebuiltHistory,
+                    updated_at: new Date().toISOString()
+                }).eq('id', trxId);
+
+                window.showToast('Berhasil dihubungkan!', 'success');
+                inpManualPayId.value = '';
+                selOrder.dispatchEvent(new Event('input'));
+                renderStats(); renderList();
+            } catch (err) {
+                console.error(err);
+                window.showAlert('Gagal menghubungkan: ' + err.message, 'danger');
+            }
+        });
+    });
 
     window.setupMoneyMask('inpNominalBayar');
     window.setupMoneyMask('inpNominalRefund');
