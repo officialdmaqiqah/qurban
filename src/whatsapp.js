@@ -177,6 +177,11 @@ export const sendWa = async (number, message) => {
         });
 
         if (!response.ok) {
+            // Jika 404 (Endpoint tidak ada, misal di local dev tanpa vercel dev)
+            if (response.status === 404) {
+                console.warn('[WA] Proxy /api/send-wa tidak ditemukan. Mencoba koneksi langsung...');
+                return await sendWaDirect(cleanNumber, message, config);
+            }
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
@@ -193,15 +198,58 @@ export const sendWa = async (number, message) => {
             };
         }
     } catch (error) {
-        // Jika gagal karena CORS atau Jaringan, kita kembalikan error asli supaya UI bisa menawarkan fallback manual
-        console.error('[WA] Gateway Error:', error);
+        console.error('[WA] Proxy Error:', error);
+        
+        // Fallback terakhir: Coba tembak langsung jika proxy error (CORS/Network)
+        if (error.name === 'TypeError' || error.message.includes('fetch')) {
+            console.warn('[WA] Network error pada proxy. Mencoba koneksi langsung...');
+            return await sendWaDirect(cleanNumber, message, config);
+        }
+
         return { 
             success: false, 
-            msg: 'Gagal terhubung ke Gateway WA (CORS/Network Error).',
+            msg: `Gagal mengirim WA: ${error.message}`,
             link: getWaLink(cleanNumber, message)
         };
     }
 };
+
+/**
+ * Fallback: Kirim langsung ke XSender (Mungkin terhalang CORS di browser)
+ */
+async function sendWaDirect(number, message, config) {
+    try {
+        const targetUrl = new URL('https://xsender.id/api/send-message');
+        targetUrl.searchParams.append('api_key', config.apiKey);
+        targetUrl.searchParams.append('sender', config.sender);
+        targetUrl.searchParams.append('number', number);
+        targetUrl.searchParams.append('message', message);
+        if (config.footer) targetUrl.searchParams.append('footer', config.footer);
+
+        const response = await fetch(targetUrl.toString(), {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
+
+        const result = await response.json();
+        if (result.status === true || result.status === 'success') {
+            return { success: true, msg: 'Pesan terkirim (Direct Path)!' };
+        }
+        return { 
+            success: false, 
+            msg: result.message || 'Gagal via Direct Path.',
+            link: window.getWaLink(number, message) 
+        };
+    } catch (err) {
+        console.error('[WA] Direct Path Error (CORS kemungkinan):', err);
+        return { 
+            success: false, 
+            msg: `Gateway tidak terjangkau (CORS/Network). Silakan gunakan pengiriman manual.`,
+            link: window.getWaLink(number, message)
+        };
+    }
+}
+
 window.sendWa = sendWa;
 
 window.sendWa = sendWa;

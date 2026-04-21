@@ -19,10 +19,17 @@ module.exports = async (req, res) => {
         const params = { ...req.query, ...req.body };
         const { api_key, sender, number, message, footer } = params;
 
+        // Validasi parameter wajib
         if (!api_key || !sender || !number || !message) {
+            const missing = [];
+            if (!api_key) missing.push('api_key');
+            if (!sender) missing.push('sender');
+            if (!number) missing.push('number');
+            if (!message) missing.push('message');
+            
             return res.status(400).json({ 
                 status: false, 
-                message: 'Missing required parameters: api_key, sender, number, or message.' 
+                message: `Parameter tidak lengkap: ${missing.join(', ')}` 
             });
         }
 
@@ -34,18 +41,26 @@ module.exports = async (req, res) => {
         targetUrl.searchParams.append('message', message);
         if (footer) targetUrl.searchParams.append('footer', footer);
 
-        console.log(`[Proxy] Sending message to ${number} via ${sender}`);
+        console.log(`[Proxy WA] Mengirim ke ${number} via ${sender}`);
 
         const response = await fetch(targetUrl.toString(), {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         });
 
-        if (!response.ok) {
-            throw new Error(`Gateway returned HTTP ${response.status}`);
+        const textResponse = await response.text();
+        let result;
+        try {
+            result = JSON.parse(textResponse);
+        } catch (e) {
+            console.error('[Proxy WA] Respons bukan JSON:', textResponse);
+            throw new Error(`Gateway mengembalikan respons tidak valid (Bukan JSON): ${textResponse.substring(0, 50)}...`);
         }
 
-        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(`Gateway Error (${response.status}): ${result.message || result.msg || 'Terjadi kesalahan internal pada gateway.'}`);
+        }
+
         return res.status(200).json(result);
 
     } catch (error) {
