@@ -404,6 +404,13 @@
                                                         <button id="btnSaveServiceRole" class="btn btn-primary" style="height:42px; background:var(--success); border:none; padding:0 1.5rem;">Simpan Kunci</button>
                                                         <button id="btnClearServiceRole" class="btn btn-sm" style="height:42px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--danger);">Hapus</button>
                                                     </div>
+
+                                                    <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px dashed rgba(16,185,129,0.2);">
+                                                        <h4 style="color:#f59e0b; margin-bottom:0.25rem;">🩺 Smart Balance Repair (Tool Rekonsiliasi)</h4>
+                                                        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1rem;">Gunakan tombol ini jika saldo <b>Tunai / Cash</b> di Dashboard terlihat terlalu besar (Double Count) akibat pemakaian Saldo Titipan Agen lama.</p>
+                                                        <button id="btnSmartFixLedger" class="btn btn-primary" style="background:#f59e0b; border:none; padding:0 1.5rem;">🩺 Sinkronkan Saldo Titipan & Cash</button>
+                                                    </div>
+
                                                     <p style="margin-top:1rem; font-size:0.7rem; color:var(--text-muted); line-height:1.4;">
                                                         💡 <strong>Cara Ambil Kunci:</strong> Buka Dashboard Supabase &gt; Project Settings &gt; API &gt; cari <strong>service_role (secret)</strong>. <br>
                                                         ⚠️ <em>Keamanan: Kunci ini hanya akan disimpan di browser Anda saat ini saja.</em>

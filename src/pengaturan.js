@@ -1188,5 +1188,84 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
+    // --- SMART BALANCE REPAIR: RECONCILIATION TOOL ---
+    const btnSmartFixLedger = document.getElementById('btnSmartFixLedger');
+
+    const smartFixLedger = async () => {
+        let serviceRoleKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
+        if (!serviceRoleKey) {
+            serviceRoleKey = document.cookie.split('; ').find(row => row.startsWith('SUPABASE_SERVICE_ROLE='))?.split('=')[1];
+            if (serviceRoleKey) localStorage.setItem('SUPABASE_SERVICE_ROLE', serviceRoleKey);
+        }
+
+        if (!serviceRoleKey) return showAlert('Kunci Master (Service Role) belum diatur! Silakan isi dulu di bagian atas.', 'warning');
+
+        showConfirm(`🩺 Jalankan Perbaikan Saldo Otomatis?\n\nSistem akan mendeteksi transaksi titipan yang "tidak sinkron" (menyebabkan saldo tunai membengkak) dan memperbaikinya secara massal.`, async () => {
+            try {
+                setLoading(true);
+                showToast('Memulai diagnosa data...', 'info');
+
+                // 1. Get all financial records
+                const { data: fins, error: finError } = await supabase.from('keuangan').select('*');
+                if (finError) throw finError;
+
+                const outRecords = fins.filter(f => f.kategori === 'Pemakaian Titipan Agen' && f.tipe === 'pengeluaran');
+                console.log(`[SmartFix] Found ${outRecords.length} usage records.`);
+
+                let updates = [];
+                for (const outRec of outRecords) {
+                    if (!outRec.related_trx_id) continue;
+
+                    // Find matching IN record (Jual Kambing or Pelunasan Order)
+                    const match = fins.find(inRec => 
+                        inRec.related_trx_id === outRec.related_trx_id && 
+                        inRec.tipe === 'pemasukan' && 
+                        Math.abs(inRec.nominal) === Math.abs(outRec.nominal) &&
+                        inRec.channel !== outRec.channel
+                    );
+
+                    if (match) {
+                        updates.push({ id: outRec.id, channel: match.channel, trxId: outRec.related_trx_id });
+                    }
+                }
+
+                if (updates.length === 0) {
+                    setLoading(false);
+                    return showAlert('Selamat! Tidak ditemukan data yang tidak sinkron. Saldo Anda sudah aman.', 'success');
+                }
+
+                showConfirm(`Ditemukan ${updates.length} transaksi tidak sinkron. Lanjutkan perbaikan otomatis?`, async () => {
+                    try {
+                        setLoading(true);
+                        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+                        const supabaseAdmin = createClient('https://juscihvfmgibmrhmclab.supabase.co', serviceRoleKey, {
+                            auth: { autoRefreshToken: false, persistSession: false }
+                        });
+
+                        let successCount = 0;
+                        for (const up of updates) {
+                            const { error } = await supabaseAdmin.from('keuangan').update({ channel: up.channel }).eq('id', up.id);
+                            if (!error) successCount++;
+                            else console.error(`Failed to fix ${up.id}:`, error);
+                        }
+
+                        showAlert(`🩺 PERBAIKAN SELESAI!\n\n${successCount} transaksi telah disinkronkan.\n\nSilakan cek Dashboard Keuangan Anda, saldo Tunai seharusnya sudah normal kembali.`, 'success');
+                    } catch (err) {
+                        showAlert('Error saat eksekusi: ' + err.message, 'danger');
+                    } finally {
+                        setLoading(false);
+                    }
+                }, () => setLoading(false), 'Konfirmasi Eksekusi', 'Ya, Perbaiki Sekarang', 'btn-warning');
+
+            } catch (err) {
+                console.error('[SmartFix] Failed:', err);
+                showAlert('Gagal Diagnosa: ' + err.message, 'danger');
+                setLoading(false);
+            }
+        });
+    };
+
+    if (btnSmartFixLedger) btnSmartFixLedger.onclick = smartFixLedger;
+
     updateAutoResetStatus();
 });
