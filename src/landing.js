@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function syncContactUI() {
-        const waLink = `https://wa.me/${currentAgent.wa}?text=Halo ${currentAgent.name}, saya ingin bertanya tentang Qurban.`;
+        const waLink = `https://wa.me/${currentAgent.wa}?text=Halo, Kak ${currentAgent.name}, saya ingin bertanya tentang Qurban.`;
         if (floatingWa) floatingWa.href = waLink;
         if (heroConsultation) heroConsultation.href = waLink;
         if (footerWa) {

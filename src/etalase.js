@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function syncContactUI() {
-        const waLink = `https://wa.me/${currentAgent.wa}?text=Halo ${currentAgent.name}, saya tertarik dengan hewan qurban di etalase.`;
+        const waLink = `https://wa.me/${currentAgent.wa}?text=Halo, Kak ${currentAgent.name}, saya tertarik dengan hewan qurban di etalase.`;
         if (floatingWa) floatingWa.href = waLink;
         
         const footerWa = document.getElementById('footerWa');
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (goat.harga_kandang > 5000000) category = 'Premium';
             else if (goat.harga_kandang > 3500000) category = 'Super';
 
-            const waText = `Halo ${currentAgent.name}, saya berminat dengan kambing Tag #${tagNum} (${goat.warna_tali || ''}). Apakah masih tersedia?`;
+            const waText = `Halo, Kak ${currentAgent.name}, saya berminat dengan kambing Tag #${tagNum} (${goat.warna_tali || ''}). Apakah masih tersedia?\n\nLink Foto: ${finalImg}`;
             const waLink = `https://wa.me/${currentAgent.wa}?text=${encodeURIComponent(waText)}`;
 
             card.innerHTML = `
