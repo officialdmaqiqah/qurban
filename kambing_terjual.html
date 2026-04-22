@@ -49,11 +49,47 @@
             .modal-body {
                 grid-template-columns: 1fr !important;
                 padding: 1rem !important;
-                gap: 1.5rem !important;
-                max-height: calc(100vh - 130px) !important;
+                gap: 1.25rem !important;
+                max-height: calc(100vh - 140px) !important;
             }
             .full-width {
                 grid-column: 1 !important;
+            }
+            .form-section {
+                padding: 1rem !important;
+            }
+            /* Force stacked layout for grids that were 2 columns */
+            .mobile-stack {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+            /* Prevent iOS auto-zoom by ensuring font-size is 16px */
+            .form-control, select.form-control, input.form-control {
+                font-size: 16px !important;
+            }
+            .modal-footer {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch !important;
+            }
+            .modal-footer > div {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .modal-footer .btn {
+                width: 100%;
+                padding: 12px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cart-item-prices {
+                grid-template-columns: 1fr !important;
+            }
+            .komisi-grid {
+                grid-template-columns: 1fr !important;
             }
         }
 
@@ -308,7 +344,7 @@
                             <label class="form-label">Nama Lengkap Konsumen</label>
                             <input type="text" id="inpCustNama" class="form-control" placeholder="Nama pembeli">
                         </div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                        <div class="mobile-stack" style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
                             <div class="form-group" style="margin-bottom:0">
                                 <label class="form-label">WA 1 (Utama)</label>
                                 <input type="text" id="inpCustWA1" class="form-control" placeholder="08xxxx">
@@ -323,7 +359,7 @@
                     <!-- ROW 2: DELIVERY & CART -->
                     <div class="form-section">
                         <div class="form-section-title">🚚 Informasi Pengantaran</div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                        <div class="mobile-stack" style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
                             <div class="form-group">
                                 <label class="form-label">Tipe</label>
                                 <select id="inpDeliveryTipe" class="form-control">
@@ -337,7 +373,7 @@
                                 <input type="date" id="inpDeliveryTgl" class="form-control">
                             </div>
                         </div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                        <div class="mobile-stack" style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
                             <div class="form-group">
                                 <label class="form-label">Kabupaten</label>
                                 <select id="inpCustKab" class="form-control" style="font-size:0.8rem"></select>
@@ -392,7 +428,7 @@
                     </div>
 
                     <!-- ROW 4: PAYMENT (Full Width) -->
-                    <div class="form-section full-width" style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:1.5rem; align-items:stretch; background:rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.15); padding: 1.25rem;">
+                    <div class="form-section full-width mobile-stack" style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:1.5rem; align-items:stretch; background:rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.15); padding: 1.25rem;">
                         <div class="form-group" style="margin-bottom:0">
                             <label class="form-label" style="color:var(--success); font-weight: 600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Uang Muka / Bayar Awal (DP)</label>
                             <div style="position:relative;">
