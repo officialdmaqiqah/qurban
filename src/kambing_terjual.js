@@ -150,8 +150,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data } = await supabase.from('keuangan').select('nominal, tipe, kategori').eq('agen_name', agenName);
         let saldo = 0;
         (data || []).forEach(f => {
-            const isOut = f.kategori !== 'Titipan Dana Agen' || f.tipe === 'pengeluaran';
-            saldo += (isOut ? -1 : 1) * (parseFloat(f.nominal) || 0);
+            const nom = parseFloat(f.nominal) || 0;
+            const isDepositIn = f.kategori === 'Titipan Dana Agen' && f.tipe === 'pemasukan';
+            const isDepositOut = ['Pemakaian Titipan Agen', 'Penarikan Titipan Agen'].includes(f.kategori) || (f.kategori === 'Titipan Dana Agen' && f.tipe === 'pengeluaran');
+            
+            if (isDepositIn) saldo += nom;
+            else if (isDepositOut) saldo -= nom;
         });
         return saldo;
     };
@@ -794,7 +798,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             tanggal: newTrx.tgl_trx, 
                             kategori: 'Pemakaian Titipan Agen', 
                             nominal: paidNow, 
-                            channel: 'Saldo Titipan', 
+                            channel: 'Tunai / Cash', // Harus sama dengan channel IN agar saldo tidak double count
                             related_trx_id: trxId, 
                             agen_name: agenName,
                             keterangan: `Pemakaian titipan untuk DP Order ${trxId}`
@@ -805,7 +809,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             tanggal: newTrx.tgl_trx, 
                             kategori: 'Jual Kambing', 
                             nominal: paidNow, 
-                            channel: 'Saldo Titipan', 
+                            channel: 'Tunai / Cash', // Berubah dari 'Saldo Titipan' agar masuk ke kas tunai
                             related_trx_id: trxId, 
                             agen_name: agenName,
                             keterangan: `DP via Titipan Agen`
@@ -992,7 +996,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tanggal: tgl, 
                     kategori: 'Pemakaian Titipan Agen', 
                     nominal, 
-                    channel: 'Saldo Titipan', 
+                    channel: 'Tunai / Cash', // Harus sama dengan channel IN
                     related_trx_id: trxId, 
                     agen_name: agenName,
                     keterangan: `Pemakaian titipan untuk Pelunasan Order ${trxId}`
@@ -1003,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tanggal: tgl, 
                     kategori: 'Pelunasan Order', 
                     nominal, 
-                    channel: 'Saldo Titipan', 
+                    channel: 'Tunai / Cash', // Berubah dari 'Saldo Titipan' agar masuk ke kas tunai
                     related_trx_id: trxId, 
                     agen_name: agenName,
                     keterangan: `Pelunasan via Titipan Agen`
