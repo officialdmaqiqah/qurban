@@ -110,10 +110,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         trxs.filter(t => {
             const dtStr = t.tgl_trx || t.tglTrx;
             if(!dtStr) return false;
-            // Standardize to YYYY-MM-DD for string comparison
-            const dt = new Date(dtStr).toISOString().split('T')[0];
-            const s = start.toISOString().split('T')[0];
-            const e = end.toISOString().split('T')[0];
+            // Use en-CA to get YYYY-MM-DD in local time
+            const dt = new Date(dtStr).toLocaleDateString('en-CA');
+            const s = start.toLocaleDateString('en-CA');
+            const e = end.toLocaleDateString('en-CA');
             return dt >= s && dt <= e;
         }).forEach(t => {
             // Omzet (Deal + Added Cost + Admin Fee)
@@ -140,9 +140,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         fin.filter(f => {
             const dtStr = f.tanggal;
             if(!dtStr) return false;
-            const dt = new Date(dtStr).toISOString().split('T')[0];
-            const s = start.toISOString().split('T')[0];
-            const e = end.toISOString().split('T')[0];
+            const dt = new Date(dtStr).toLocaleDateString('en-CA');
+            const s = start.toLocaleDateString('en-CA');
+            const e = end.toLocaleDateString('en-CA');
             return dt >= s && dt <= e;
         }).forEach(f => {
             const nom = parseNum(f.nominal);
