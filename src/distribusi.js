@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         modalTrip.classList.add('active');
         document.getElementById('inpTripTgl').value = new Date().toISOString().split('T')[0];
         document.getElementById('summarizedTripCount').textContent = '0 Ekor Kambing';
-    });
+    }
 
     document.getElementById('formTrip')?.addEventListener('submit', async (e) => {
         e.preventDefault();
