@@ -136,7 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     !katLine.includes('komisi') && 
                     !katLine.includes('bagi hasil') &&
                     !katLine.includes('mutasi') &&
-                    !katLine.includes('titipan')
+                    !katLine.includes('titipan') &&
+                    !katLine.includes('beli kambing')
                 ) {
                     opex += nom;
                 }
@@ -360,7 +361,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fTrxs = trxs.filter(t => { const d = new Date(t.tgl_trx || t.tglTrx); return d >= start && d <= end; });
 
         // 1. KPI Scorecards
-        const opex = fFin.filter(f => f.tipe === 'pengeluaran' && !['Bayar Supplier', 'Pelunasan Supplier', 'Bagi Hasil (Investor)'].includes(f.kategori)).reduce((s,f) => s + f.nominal, 0);
+        const opex = fFin.filter(f => {
+            if(f.tipe !== 'pengeluaran') return false;
+            const kl = (f.kategori || '').toLowerCase();
+            const isEx = kl.includes('bayar supplier') || kl.includes('pelunasan supplier') || kl.includes('komisi') || 
+                         kl.includes('bagi hasil') || kl.includes('mutasi') || kl.includes('titipan') || kl.includes('beli kambing') ||
+                         f.kategori === 'Kerugian (Mati/Hilang)';
+            return !isEx;
+        }).reduce((s,f) => s + f.nominal, 0);
         const activeGoats = goats.filter(g => g.status_transaksi === 'Tersedia').length || 1;
         const cph = opex / activeGoats;
         
