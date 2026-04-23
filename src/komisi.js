@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const totalDeal = parseFloat(t.total_deal || t.totalDeal || 0);
             const totalPaid = parseFloat(t.total_paid || t.totalPaid || 0);
             const nominalKomisi = parseFloat(t.komisi.nominal) || 0;
-            const canPay = totalPaid > nominalKomisi;
+            const canPay = totalPaid >= nominalKomisi;
             const btnLabel = isLunas ? '💸 Cairkan' : (canPay ? '💸 Cairkan (DP)' : '⌛ Tunggu DP > Komisi');
             
             tr.innerHTML = `
