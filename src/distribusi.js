@@ -283,7 +283,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    document.getElementById('btnBuatTrip')?.addEventListener('click', async () => {
+    document.getElementById('btnBuatTrip')?.addEventListener('click', () => openTripModal(false));
+    document.getElementById('btnSembelih')?.addEventListener('click', () => openTripModal(true));
+
+    async function openTripModal(isSembelih = false) {
+        const modal = document.getElementById('modalTrip');
+        modal.dataset.mode = isSembelih ? 'sembelih' : 'kirim';
+        
+        // Update Modal Title & Button
+        const title = modal.querySelector('.modal-title');
+        const submitBtn = document.getElementById('btnSimpanTrip');
+        if (isSembelih) {
+            title.textContent = 'Proses Sembelih di Kandang';
+            submitBtn.textContent = '🔪 Konfirmasi Sembelih & Tuntas';
+            submitBtn.style.background = '#6366f1';
+            document.getElementById('inpTripSopir').value = 'Admin Kandang (Sembelih)';
+            document.getElementById('inpTripNopol').value = '-';
+            document.getElementById('inpTripNote').value = 'Sembelih di Kandang atas permintaan customer.';
+        } else {
+            title.textContent = 'Buat Trip Distribusi Baru';
+            submitBtn.textContent = 'Simpan & Aktifkan Trip';
+            submitBtn.style.background = ''; // default primary
+            document.getElementById('inpTripSopir').value = '';
+            document.getElementById('inpTripNopol').value = '';
+            document.getElementById('inpTripNote').value = '';
+        }
+
         const { goats, trxs } = await loadData();
         const { data: sops } = await supabase.from('master_data').select('val').eq('key', 'SOPIR').single();
         
@@ -382,22 +407,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         const selected = document.querySelectorAll('.goat-checkbox:checked');
         if(!selected.length) return showAlert('Pilih minimal 1 kambing!', 'warning');
 
+        const isSembelih = document.getElementById('modalTrip').dataset.mode === 'sembelih';
         const { trips } = await loadData();
+        const tripId = (isSembelih ? 'SMB-' : 'TRP-') + Date.now().toString().slice(-6);
+        
         const newTrip = {
-            id: 'TRP-' + Date.now().toString().slice(-6),
+            id: tripId,
             sopirNama: document.getElementById('inpTripSopir').value,
             nopol: document.getElementById('inpTripNopol').value,
             tglKirim: document.getElementById('inpTripTgl').value,
-            status: 'Pengiriman',
+            status: isSembelih ? 'Selesai' : 'Pengiriman',
             note: document.getElementById('inpTripNote').value,
             items: Array.from(selected).map(cb => ({
-                goatId: cb.dataset.id, noTali: cb.dataset.notali, konsumen: cb.dataset.konsumen, alamat: cb.dataset.alamat, status: 'Pengiriman'
+                goatId: cb.dataset.id, 
+                noTali: cb.dataset.notali, 
+                konsumen: cb.dataset.konsumen, 
+                alamat: cb.dataset.alamat, 
+                status: isSembelih ? 'Terdistribusi' : 'Pengiriman',
+                tglDistribusi: isSembelih ? new Date().toISOString() : null,
+                buktiUrl: isSembelih ? 'SEM_KANDANG' : null
             }))
         };
+        
         trips.push(newTrip);
         await saveTrips(trips);
+
+        if (isSembelih) {
+            showToast('Memproses sembelih...', 'info');
+            for (const item of newTrip.items) {
+                await supabase.from('stok_kambing').update({ 
+                    status_transaksi: 'Terdistribusi', 
+                    status_fisik: 'Disembelih',
+                    updated_at: new Date().toISOString()
+                }).eq('id', item.goatId);
+            }
+        }
+
         modalTrip.classList.remove('active');
-        showToast(`Trip ${newTrip.id} diaktifkan!`);
+        showToast(isSembelih ? `✅ ${selected.length} Kambing disembelih & tuntas!` : `Trip ${newTrip.id} diaktifkan!`);
         await loadData(true);
         renderTrips();
     });
