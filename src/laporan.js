@@ -108,8 +108,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const savingDetails = [];
 
         trxs.filter(t => {
-            const dt = new Date(t.tgl_trx || t.tglTrx);
-            return dt >= start && dt <= end;
+            const dtStr = t.tgl_trx || t.tglTrx;
+            if(!dtStr) return false;
+            // Standardize to YYYY-MM-DD for string comparison
+            const dt = new Date(dtStr).toISOString().split('T')[0];
+            const s = start.toISOString().split('T')[0];
+            const e = end.toISOString().split('T')[0];
+            return dt >= s && dt <= e;
         }).forEach(t => {
             // Omzet (Deal + Added Cost + Admin Fee)
             omzet += parseNum(t.total_deal || t.totalDeal);
@@ -133,8 +138,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         let deadKomp = 0;
         
         fin.filter(f => {
-            const dt = new Date(f.tanggal);
-            return dt >= start && dt <= end;
+            const dtStr = f.tanggal;
+            if(!dtStr) return false;
+            const dt = new Date(dtStr).toISOString().split('T')[0];
+            const s = start.toISOString().split('T')[0];
+            const e = end.toISOString().split('T')[0];
+            return dt >= s && dt <= e;
         }).forEach(f => {
             const nom = parseNum(f.nominal);
             const katLine = (f.kategori || '').toLowerCase().trim();
@@ -515,14 +524,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             container.style.display = 'none';
             if(val === 'thisMonth') {
-                document.getElementById('inpStartDate').value = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-                document.getElementById('inpEndDate').value = today.toISOString().split('T')[0];
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                document.getElementById('inpStartDate').value = firstDay.toLocaleDateString('en-CA');
+                document.getElementById('inpEndDate').value = window.getLocalDate();
             } else if(val === 'thisYear') {
-                document.getElementById('inpStartDate').value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-                document.getElementById('inpEndDate').value = today.toISOString().split('T')[0];
+                const firstJan = new Date(today.getFullYear(), 0, 1);
+                document.getElementById('inpStartDate').value = firstJan.toLocaleDateString('en-CA');
+                document.getElementById('inpEndDate').value = window.getLocalDate();
             } else if(val === 'all') {
                 document.getElementById('inpStartDate').value = '2024-01-01';
-                document.getElementById('inpEndDate').value = today.toISOString().split('T')[0];
+                document.getElementById('inpEndDate').value = window.getLocalDate();
             }
             init();
         }
@@ -531,10 +542,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initial Load
     const today = new Date();
     if(!document.getElementById('inpStartDate').value) {
-        document.getElementById('inpStartDate').value = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+        const firstJan = new Date(today.getFullYear(), 0, 1);
+        document.getElementById('inpStartDate').value = firstJan.toLocaleDateString('en-CA');
     }
     if(!document.getElementById('inpEndDate').value) {
-        document.getElementById('inpEndDate').value = today.toISOString().split('T')[0];
+        document.getElementById('inpEndDate').value = window.getLocalDate();
     }
     // Global Photo Viewer for Distribusi
     window.viewDistPhoto = (url) => {
