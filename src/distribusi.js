@@ -203,8 +203,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         const modal = document.getElementById('modalLaporTuntas');
         document.getElementById('laporKonsumenNama').textContent = nama;
         modal._tripId = tripId; modal._goatId = goatId;
+        
+        // Reset modal state
+        document.getElementById('inpBuktiFoto').value = '';
+        document.getElementById('previewBukti').src = '';
+        document.getElementById('previewBuktiContainer').style.display = 'none';
+        
         modal.classList.add('active');
     };
+
+    // Photo Preview Logic
+    document.getElementById('inpBuktiFoto')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                document.getElementById('previewBukti').src = re.target.result;
+                document.getElementById('previewBuktiContainer').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Camera Integration
+    document.getElementById('btnOpenCameraDist')?.addEventListener('click', () => {
+        window.openCameraUI((file) => {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            const inp = document.getElementById('inpBuktiFoto');
+            if (inp) {
+                inp.files = dt.files;
+                inp.dispatchEvent(new Event('change'));
+            }
+        });
+    });
 
     document.getElementById('btnSimpanBukti')?.addEventListener('click', async () => {
         const modal = document.getElementById('modalLaporTuntas');
