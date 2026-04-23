@@ -252,18 +252,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Update DOM
         // 1. Inventori Statement
-        document.getElementById('dashTotalKambing').textContent = (goatsDb || []).length + ' Ekor';
+        const totalPop = (goatsDb || []).length;
+        document.getElementById('dashTotalKambing').textContent = totalPop;
         document.getElementById('dashTersedia').textContent = countTersedia;
         document.getElementById('dashTerjual').textContent = unitsSold;
         document.getElementById('dashSakitMatiCount').textContent = (countSakit + countMati);
         document.getElementById('dashHilang').textContent = countHilang;
 
+        // --- COMPOSITION BAR LOGIC ---
+        const updateBar = (id, count) => {
+            const el = document.getElementById(id);
+            if(el) {
+                const pct = totalPop > 0 ? (count / totalPop * 100) : 0;
+                el.style.width = pct + '%';
+            }
+        };
+        updateBar('barAvailable', countTersedia);
+        updateBar('barSold', unitsSold);
+        updateBar('barSick', (countSakit + countMati));
+        updateBar('barLost', countHilang);
+
         // 2. Performa Sales Statement
         document.getElementById('dashTerjualRp').textContent = formatRp(omzet);
-        document.getElementById('dashTerjualEkor').textContent = `${unitsSold} Ekor`;
+        document.getElementById('dashTerjualEkor').textContent = `${unitsSold} Ekor Terjual`;
         document.getElementById('dashTotalHPP').textContent = formatRp(hpp);
         document.getElementById('dashTotalKomisiSales').textContent = formatRp(komisi);
         document.getElementById('dashTotalSavingSales').textContent = formatRp(saving);
+        
         const elProfitSales = document.getElementById('dashProfitSales');
         if (elProfitSales) {
             elProfitSales.textContent = formatRp(totalProfitSales);
@@ -314,10 +329,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const bal = channelBalances[ch];
                 if (Math.abs(bal) < 1) return; // Skip zero balances
                 const item = document.createElement('div');
-                item.className = 'statement-item';
+                item.className = 'data-row';
                 item.innerHTML = `
-                    <span class="statement-item-label">${ch}</span>
-                    <span class="statement-item-value">${formatRp(bal)}</span>
+                    <span class="data-label">${ch}</span>
+                    <span class="data-value">${formatRp(bal)}</span>
                 `;
                 breakdownContainer.appendChild(item);
             });
