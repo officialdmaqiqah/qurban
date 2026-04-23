@@ -588,7 +588,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Cleanup legacy sidebar logout button if exists
-    document.getElementById('logoutBtn')?.closest('div')?.remove();
+    // document.getElementById('logoutBtn')?.closest('div')?.remove();
 
     // 4. VERSION INDICATOR (Visual Proof)
     const sidebar = document.querySelector('.sidebar');
