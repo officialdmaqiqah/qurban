@@ -7,17 +7,16 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700" rel="stylesheet">
         <link rel="stylesheet" href="src/style.css?v=4.4">
         <style>
-            /* Custom styles for Statement Cards */
             .statement-card {
                 background: var(--bg-card);
                 border-radius: var(--radius-xl);
                 border: 1px solid rgba(255, 255, 255, 0.05);
-                padding: 2rem;
-                height: 100%;
+                padding: 1.75rem;
                 display: flex;
                 flex-direction: column;
                 box-shadow: var(--shadow-lg);
                 transition: var(--transition);
+                margin-bottom: 1.5rem;
             }
             .statement-card:hover {
                 border-color: var(--primary-transparent);
@@ -26,65 +25,92 @@
             .statement-header {
                 display: flex;
                 justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 2rem;
-                padding-bottom: 1.5rem;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                align-items: center;
+                margin-bottom: 1.5rem;
             }
             .statement-title {
-                font-size: 0.875rem;
+                font-size: 0.8rem;
                 text-transform: uppercase;
                 letter-spacing: 0.1em;
                 color: var(--text-muted);
-                font-weight: 500;
+                font-weight: 600;
             }
             .statement-main-value {
-                font-size: 2rem;
+                font-size: 1.75rem;
                 font-weight: 700;
                 letter-spacing: -0.02em;
-                margin-top: 0.5rem;
+                margin-top: 0.25rem;
             }
             .statement-list {
                 display: flex;
                 flex-direction: column;
-                gap: 1.25rem;
+                gap: 1rem;
             }
             .statement-item {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                font-size: 0.95rem;
+                font-size: 0.9rem;
+                padding-bottom: 0.75rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            }
+            .statement-item:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
             }
             .statement-item-label {
                 color: var(--text-muted);
-                font-weight: 400;
             }
             .statement-item-value {
                 font-weight: 600;
-                color: var(--text-main);
             }
-            .divider-light {
-                height: 1px;
-                background: rgba(255, 255, 255, 0.05);
-                margin: 0.5rem 0;
-            }
-            .section-grid {
+            
+            /* Two Column Layout within Card */
+            .card-split {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+                grid-template-columns: 1fr 1.2fr;
                 gap: 2rem;
-                margin-bottom: 3rem;
+                align-items: center;
             }
-            @media (max-width: 768px) {
-                .section-grid {
+            
+            .dashboard-main-grid {
+                display: grid;
+                grid-template-columns: 1.2fr 1fr;
+                gap: 1.5rem;
+                align-items: start;
+            }
+            
+            @media (max-width: 1024px) {
+                .dashboard-main-grid {
                     grid-template-columns: 1fr;
                 }
-                .statement-main-value {
-                    font-size: 1.5rem;
+                .card-split {
+                    grid-template-columns: 1fr;
+                    gap: 1.5rem;
                 }
             }
+            
+            .section-header {
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: var(--text-muted);
+                margin-bottom: 1rem;
+                letter-spacing: 0.05em;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
             .highlight-green { color: var(--success) !important; }
-            .highlight-amber { color: var(--warning) !important; }
             .highlight-rose { color: var(--danger) !important; }
+            .highlight-amber { color: var(--warning) !important; }
+            
+            .accent-bar {
+                width: 4px;
+                height: 40px;
+                background: var(--primary);
+                border-radius: 4px;
+                margin-right: 12px;
+            }
         </style>
         <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
 </head>
@@ -125,142 +151,139 @@
                 <!-- Main Content -->
                 <main class="main-content">
                         <header class="topbar">
-                                <div class="page-title">Management Overview (Real-Time)</div>
+                                <div class="page-title">Executive Summary (Real-Time)</div>
                                 <div class="user-menu">
                                         <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
                                 </div>
                         </header>
 
                         <div class="content-area fade-in">
-                                <!-- INVENTORY SECTION -->
-                                <h3 style="margin-bottom: 1.5rem; font-weight: 300; letter-spacing: 0.05em; color: var(--text-muted);">📊 INVENTORI & STATUS KANDANG</h3>
-                                <div class="statement-card" style="margin-bottom: 2.5rem;">
-                                    <div class="statement-header">
-                                        <div>
-                                            <div class="statement-title">Total Populasi Saat Ini</div>
-                                            <div class="statement-main-value" id="dashTotalKambing">0 Ekor</div>
-                                        </div>
-                                        <div style="font-size: 2.5rem; opacity: 0.2;">🐏</div>
-                                    </div>
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 2rem;">
-                                        <div class="statement-item">
-                                            <span class="statement-item-label">Tersedia</span>
-                                            <span class="statement-item-value highlight-green" id="dashTersedia">0</span>
-                                        </div>
-                                        <div class="statement-item">
-                                            <span class="statement-item-label">Terjual</span>
-                                            <span class="statement-item-value" id="dashTerjual">0</span>
-                                        </div>
-                                        <div class="statement-item">
-                                            <span class="statement-item-label">Sakit/Mati</span>
-                                            <span class="statement-item-value highlight-rose" id="dashSakitMatiCount">0</span>
-                                        </div>
-                                        <div class="statement-item">
-                                            <span class="statement-item-label">Hilang</span>
-                                            <span class="statement-item-value highlight-amber" id="dashHilang">0</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- SALES PERFORMANCE -->
-                                <h3 style="margin-bottom: 1.5rem; font-weight: 300; letter-spacing: 0.05em; color: var(--text-muted);">📈 PERFORMA PENJUALAN</h3>
-                                <div class="statement-card" style="margin-bottom: 2.5rem;">
-                                    <div class="statement-header">
-                                        <div>
-                                            <div class="statement-title">Total Omzet Penjualan</div>
-                                            <div class="statement-main-value highlight-green" id="dashTerjualRp">Rp 0</div>
-                                        </div>
-                                        <div style="font-size: 2.5rem; opacity: 0.2;">💹</div>
-                                    </div>
-                                    <div class="statement-list">
-                                        <div class="statement-item">
-                                            <span class="statement-item-label">Volume Terjual</span>
-                                            <span class="statement-item-value" id="dashTerjualEkor">0 Ekor</span>
-                                        </div>
-                                        <div class="statement-item">
-                                            <span class="statement-item-label">Harga Pokok Penjualan (HPP)</span>
-                                            <span class="statement-item-value highlight-rose" id="dashTotalHPP">Rp 0</span>
-                                        </div>
-                                        <div class="statement-item">
-                                            <span class="statement-item-label">Komisi Agen</span>
-                                            <span class="statement-item-value highlight-amber" id="dashTotalKomisiSales">Rp 0</span>
-                                        </div>
-                                        <div class="statement-item">
-                                            <span class="statement-item-label">Dana Saving</span>
-                                            <span class="statement-item-value" id="dashTotalSavingSales">Rp 0</span>
-                                        </div>
-                                        <div class="divider-light"></div>
-                                        <div class="statement-item" style="font-size: 1.1rem; padding-top: 0.5rem;">
-                                            <span class="statement-item-label" style="color: var(--text-main); font-weight: 600;">Profit Sales (Gross)</span>
-                                            <span class="statement-item-value highlight-green" id="dashProfitSales">Rp 0</span>
-                                        </div>
-                                        <div class="statement-item">
-                                            <span class="statement-item-label">Rata-rata Profit / Ekor</span>
-                                            <span class="statement-item-value" id="dashAvgProfit">Rp 0</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- PROFITABILITY & LIQUIDITY -->
-                                <div class="section-grid">
-                                    <!-- PROFITABILITY -->
-                                    <div>
-                                        <h3 style="margin-bottom: 1.5rem; font-weight: 300; letter-spacing: 0.05em; color: var(--text-muted);">💎 PROFITABILITAS NETTO</h3>
-                                        <div class="statement-card">
-                                            <div class="statement-header">
+                            <div class="dashboard-main-grid">
+                                <!-- LEFT COLUMN: INVENTORY & SALES -->
+                                <div>
+                                    <div class="section-header">📊 INVENTORI & STATUS KANDANG</div>
+                                    <div class="statement-card">
+                                        <div class="card-split">
+                                            <div style="display: flex; align-items: center;">
+                                                <div class="accent-bar"></div>
                                                 <div>
-                                                    <div class="statement-title">Total Laba Bersih</div>
-                                                    <div class="statement-main-value highlight-green" id="dashProfitRealtime">Rp 0</div>
+                                                    <div class="statement-title">Total Populasi</div>
+                                                    <div class="statement-main-value" id="dashTotalKambing">0 Ekor</div>
                                                 </div>
                                             </div>
                                             <div class="statement-list">
                                                 <div class="statement-item">
-                                                    <span class="statement-item-label">Biaya Operasional</span>
-                                                    <span class="statement-item-value highlight-rose" id="dashOperatingExpenses">Rp 0</span>
+                                                    <span class="statement-item-label">Tersedia</span>
+                                                    <span class="statement-item-value highlight-green" id="dashTersedia">0</span>
                                                 </div>
                                                 <div class="statement-item">
-                                                    <span class="statement-item-label">Kerugian Kambing Mati</span>
-                                                    <span class="statement-item-value highlight-rose" id="dashKerugianMati">Rp 0</span>
+                                                    <span class="statement-item-label">Terjual</span>
+                                                    <span class="statement-item-value" id="dashTerjual">0</span>
                                                 </div>
-                                                <div class="divider-light"></div>
                                                 <div class="statement-item">
-                                                    <span class="statement-item-label">Laba Bersih / Ekor</span>
-                                                    <span class="statement-item-value highlight-green" id="dashNetProfitPerEkor">Rp 0</span>
+                                                    <span class="statement-item-label">Sakit/Mati</span>
+                                                    <span class="statement-item-value highlight-rose" id="dashSakitMatiCount">0</span>
+                                                </div>
+                                                <div class="statement-item">
+                                                    <span class="statement-item-label">Hilang</span>
+                                                    <span class="statement-item-value highlight-amber" id="dashHilang">0</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- LIQUIDITY -->
-                                    <div>
-                                        <h3 style="margin-bottom: 1.5rem; font-weight: 300; letter-spacing: 0.05em; color: var(--text-muted);">🏦 POSISI KAS & LIKUIDITAS</h3>
-                                        <div class="statement-card">
-                                            <div class="statement-header">
-                                                <div>
-                                                    <div class="statement-title">Total Saldo Kas & Bank</div>
-                                                    <div class="statement-main-value" id="dashTotalSaldoKas">Rp 0</div>
-                                                </div>
+                                    <div class="section-header" style="margin-top: 2rem;">📈 PERFORMA PENJUALAN</div>
+                                    <div class="statement-card">
+                                        <div class="statement-header">
+                                            <div>
+                                                <div class="statement-title">Total Omzet Penjualan</div>
+                                                <div class="statement-main-value highlight-green" id="dashTerjualRp">Rp 0</div>
                                             </div>
-                                            <div class="statement-list">
-                                                <!-- Breakdowns will be injected here via JS -->
-                                                <div id="cashBreakdownContainer" style="display: flex; flex-direction: column; gap: 1rem;">
-                                                    <div class="statement-item">
-                                                        <span class="statement-item-label">Memuat rincian akun...</span>
-                                                    </div>
-                                                </div>
-                                                <div class="divider-light"></div>
-                                                <div class="statement-item">
-                                                    <span class="statement-item-label">Titipan Dana Agen</span>
-                                                    <span class="statement-item-value highlight-amber" id="dashTotalTitipan">Rp 0</span>
-                                                </div>
+                                            <div style="font-size: 2rem; opacity: 0.1;">💹</div>
+                                        </div>
+                                        <div class="statement-list">
+                                            <div class="statement-item">
+                                                <span class="statement-item-label">Volume Terjual</span>
+                                                <span class="statement-item-value" id="dashTerjualEkor">0 Ekor</span>
+                                            </div>
+                                            <div class="statement-item">
+                                                <span class="statement-item-label">Total HPP</span>
+                                                <span class="statement-item-value highlight-rose" id="dashTotalHPP">Rp 0</span>
+                                            </div>
+                                            <div class="statement-item">
+                                                <span class="statement-item-label">Komisi Agen</span>
+                                                <span class="statement-item-value highlight-amber" id="dashTotalKomisiSales">Rp 0</span>
+                                            </div>
+                                            <div class="statement-item">
+                                                <span class="statement-item-label">Dana Saving</span>
+                                                <span class="statement-item-value" id="dashTotalSavingSales">Rp 0</span>
+                                            </div>
+                                            <div style="margin: 0.5rem 0; border-top: 1px dashed rgba(255,255,255,0.1);"></div>
+                                            <div class="statement-item">
+                                                <span class="statement-item-label" style="font-weight: 600;">Profit Sales (Gross)</span>
+                                                <span class="statement-item-value highlight-green" id="dashProfitSales" style="font-size: 1.1rem;">Rp 0</span>
+                                            </div>
+                                            <div class="statement-item">
+                                                <span class="statement-item-label">Avg. Profit / Ekor</span>
+                                                <span class="statement-item-value" id="dashAvgProfit">Rp 0</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- RIGHT COLUMN: PROFITABILITY & LIQUIDITY -->
+                                <div>
+                                    <div class="section-header">💎 PROFITABILITAS NETTO</div>
+                                    <div class="statement-card">
+                                        <div class="statement-header">
+                                            <div>
+                                                <div class="statement-title">Laba Bersih Aktual</div>
+                                                <div class="statement-main-value highlight-green" id="dashProfitRealtime">Rp 0</div>
+                                            </div>
+                                            <div style="font-size: 2rem; opacity: 0.1;">💎</div>
+                                        </div>
+                                        <div class="statement-list">
+                                            <div class="statement-item">
+                                                <span class="statement-item-label">Biaya Operasional</span>
+                                                <span class="statement-item-value highlight-rose" id="dashOperatingExpenses">Rp 0</span>
+                                            </div>
+                                            <div class="statement-item">
+                                                <span class="statement-item-label">Kerugian Mati</span>
+                                                <span class="statement-item-value highlight-rose" id="dashKerugianMati">Rp 0</span>
+                                            </div>
+                                            <div class="statement-item">
+                                                <span class="statement-item-label">Laba Bersih / Ekor</span>
+                                                <span class="statement-item-value highlight-green" id="dashNetProfitPerEkor">Rp 0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="section-header" style="margin-top: 2rem;">🏦 KAS & LIKUIDITAS</div>
+                                    <div class="statement-card">
+                                        <div class="statement-header">
+                                            <div>
+                                                <div class="statement-title">Total Saldo Kas & Bank</div>
+                                                <div class="statement-main-value" id="dashTotalSaldoKas">Rp 0</div>
+                                            </div>
+                                            <div style="font-size: 2rem; opacity: 0.1;">💵</div>
+                                        </div>
+                                        <div class="statement-list" id="cashBreakdownContainer">
+                                            <div class="statement-item">
+                                                <span class="statement-item-label">Memuat data...</span>
+                                            </div>
+                                        </div>
+                                        <div style="margin: 0.5rem 0; border-top: 1px dashed rgba(255,255,255,0.1);"></div>
+                                        <div class="statement-item">
+                                            <span class="statement-item-label">Titipan Dana Agen</span>
+                                            <span class="statement-item-value highlight-amber" id="dashTotalTitipan">Rp 0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                 </main>
         </div>
         <script type="module" src="src/layout.js?v=4.0"></script>
-        <script type="module" src="src/dashboard.js?v=3.0"></script>
+        <script type="module" src="src/dashboard.js?v=3.1"></script>
 </body>
 </html>
