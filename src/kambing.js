@@ -872,7 +872,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'ID Transaksi': '-', 'Tgl Transaksi': '-', 'Agen': '-', 'Tipe Agen': '-',
                     'Nama Konsumen': '-', 'Sohibul Qurban': '-', 'WA Konsumen 1': '-', 'WA Konsumen 2': '-', 
                     'Alamat Pengiriman': '-', 'Tipe Pengiriman': '-', 'Tgl Pengiriman': '-',
-                    'Harga Deal (Kambing Ini)': 0, 'Total Deal (Nota)': 0, 'Total Dibayar (Nota)': 0,
+                    'Harga Deal (Kambing Ini)': 0, 'Total Dibayar (Nota)': 0,
                     'Sisa Tagihan (Nota)': 0, 'Kelebihan Bayar (Nota)': 0, 'Komisi Agen': 0, 'Status Komisi': '-'
                 };
                 let profitNetRow = 0;
@@ -908,11 +908,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 'Tipe Pengiriman': (t.delivery.tipe || '').replace('_', ' '),
                                 'Tgl Pengiriman': formatTgl(t.delivery.tgl),
                                 'Harga Deal (Kambing Ini)': hDeal,
-                                'Total Deal (Nota)': parseFloat(t.total_deal) || 0,
-                                'Total Dibayar (Nota)': parseFloat(t.total_paid) || 0,
-                                'Sisa Tagihan (Nota)': sisaTagihan > 0 ? sisaTagihan : 0,
-                                'Kelebihan Bayar (Nota)': parseFloat(t.total_overpaid) || 0,
-                                'Komisi Agen': komisiVal,
+                                'Total Dibayar (Nota)': itemIndex === 0 ? (parseFloat(t.total_paid) || 0) : 0,
+                                'Sisa Tagihan (Nota)': itemIndex === 0 ? (sisaTagihan > 0 ? sisaTagihan : 0) : 0,
+                                'Kelebihan Bayar (Nota)': itemIndex === 0 ? (parseFloat(t.total_overpaid) || 0) : 0,
+                                'Komisi Agen': itemIndex === 0 ? komisiVal : 0,
                                 'Status Komisi': t.komisi ? t.komisi.status : '-'
                             };
                         }
