@@ -24,6 +24,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
 
+    const parseNum = (val) => {
+        if (typeof val === 'number') return val;
+        if (!val) return 0;
+        return parseFloat(String(val).replace(/[^0-9.-]+/g, "")) || 0;
+    };
+
     // Tab Logic
     const tabItems = document.querySelectorAll('.tab-item');
     const sections = document.querySelectorAll('.report-section');
@@ -105,17 +111,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
             return dt >= start && dt <= end;
         }).forEach(t => {
-            omzet += (t.total_deal || t.totalDeal || 0);
+            // Omzet (Deal + Added Cost + Admin Fee)
+            omzet += parseNum(t.total_deal || t.totalDeal);
+            if(t.added_cost) omzet += parseNum(t.added_cost);
+            if(t.admin_fee) omzet += parseNum(t.admin_fee);
+
             (t.items || []).forEach(it => {
                 const g = goats.find(x => x.id === it.goatId);
-                const sVal = parseFloat(g?.saving || 0);
-                hpp += parseFloat(g?.harga_nota || 0);
+                const sVal = parseNum(g?.saving);
+                hpp += parseNum(g?.harga_nota);
                 saving += sVal;
                 if(sVal > 0) {
                     savingDetails.push({ trxId: t.id, noTali: it.noTali, customer: t.customer?.nama || '-', val: sVal });
                 }
             });
-            komisi += parseFloat(t.komisi?.nominal || 0);
+            komisi += parseNum(t.komisi?.nominal);
         });
 
         let opex = 0;
@@ -126,23 +136,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dt = new Date(f.tanggal);
             return dt >= start && dt <= end;
         }).forEach(f => {
-            const nom = parseFloat(f.nominal || 0);
-            if(f.tipe === 'pengeluaran') {
-                const katLine = (f.kategori || '').toLowerCase();
-                if(f.kategori === 'Kerugian (Mati/Hilang)') deadLossRaw += nom;
-                else if(
-                    !katLine.includes('bayar supplier') && 
-                    !katLine.includes('pelunasan supplier') && 
-                    !katLine.includes('komisi') && 
-                    !katLine.includes('bagi hasil') &&
-                    !katLine.includes('mutasi') &&
-                    !katLine.includes('titipan') &&
-                    !katLine.includes('beli kambing')
-                ) {
-                    opex += nom;
+            const nom = parseNum(f.nominal);
+            const katLine = (f.kategori || '').toLowerCase().trim();
+            const isNonKas = (f.channel || '').toLowerCase().includes('non-kas');
+
+            if (isNonKas) {
+                if (f.tipe === 'pengeluaran') deadLossRaw += nom;
+                else if (f.tipe === 'pemasukan') deadKomp += nom;
+            } else {
+                if (f.tipe === 'pengeluaran') {
+                    const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
+                    const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan');
+                    
+                    if (!isExclusion) {
+                        opex += nom;
+                    }
+                } else if (f.tipe === 'pemasukan') {
+                    if (katLine.includes('kompensasi')) {
+                        deadKomp += nom;
+                    }
                 }
-            } else if(f.tipe === 'pemasukan') {
-                if(f.kategori === 'Kompensasi Supplier') deadKomp += nom;
             }
         });
 
