@@ -872,8 +872,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'ID Transaksi': '-', 'Tgl Transaksi': '-', 'Agen': '-', 'Tipe Agen': '-',
                     'Nama Konsumen': '-', 'Sohibul Qurban': '-', 'WA Konsumen 1': '-', 'WA Konsumen 2': '-', 
                     'Alamat Pengiriman': '-', 'Tipe Pengiriman': '-', 'Tgl Pengiriman': '-',
-                    'Harga Deal (Kambing Ini)': 0, 'Total Dibayar (Nota)': 0,
-                    'Sisa Tagihan (Nota)': 0, 'Kelebihan Bayar (Nota)': 0, 'Komisi Agen': 0, 'Status Komisi': '-'
+                    'Harga Deal (Kambing Ini)': 0, 'Total Dibayar (Per Ekor)': 0,
+                    'Sisa Tagihan (Per Ekor)': 0, 'Kelebihan Bayar (Per Ekor)': 0, 'Komisi Agen (Per Ekor)': 0, 'Status Komisi': '-'
                 };
                 let profitNetRow = 0;
                 
@@ -891,9 +891,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const hNota = parseFloat(k.harga_nota) || 0;
                             const hSaving = parseFloat(k.saving) || 0;
                             const komisiVal = (t.komisi && t.komisi.berhak) ? parseFloat(t.komisi.nominal) : 0;
-                            const komisiRow = itemIndex === 0 ? komisiVal : 0;
+                            const nItems = t.items.length || 1;
+                            const komisiPerEkor = komisiVal / nItems;
                             
-                            profitNetRow = hDeal - hNota - hSaving - komisiRow;
+                            profitNetRow = hDeal - hNota - hSaving - komisiPerEkor;
                             
                             trxInfo = {
                                 'ID Transaksi': t.id,
@@ -908,10 +909,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 'Tipe Pengiriman': (t.delivery.tipe || '').replace('_', ' '),
                                 'Tgl Pengiriman': formatTgl(t.delivery.tgl),
                                 'Harga Deal (Kambing Ini)': hDeal,
-                                'Total Dibayar (Nota)': itemIndex === 0 ? (parseFloat(t.total_paid) || 0) : 0,
-                                'Sisa Tagihan (Nota)': itemIndex === 0 ? (sisaTagihan > 0 ? sisaTagihan : 0) : 0,
-                                'Kelebihan Bayar (Nota)': itemIndex === 0 ? (parseFloat(t.total_overpaid) || 0) : 0,
-                                'Komisi Agen': itemIndex === 0 ? komisiVal : 0,
+                                'Total Dibayar (Per Ekor)': (parseFloat(t.total_paid) || 0) / nItems,
+                                'Sisa Tagihan (Per Ekor)': (sisaTagihan > 0 ? sisaTagihan : 0) / nItems,
+                                'Kelebihan Bayar (Per Ekor)': (parseFloat(t.total_overpaid) || 0) / nItems,
+                                'Komisi Agen (Per Ekor)': komisiPerEkor,
                                 'Status Komisi': t.komisi ? t.komisi.status : '-'
                             };
                         }
