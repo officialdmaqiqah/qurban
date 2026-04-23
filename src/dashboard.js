@@ -244,17 +244,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const netProfit = omzet - hpp - komisi - operatingExpenses - (deadLossRaw - deadKomp) - saving;
         const piutang = omzet - totalPaidInFinance;
+        const totalProfitSales = omzet - hpp - komisi - saving;
+        const unitsSold = countTerjual + countDistribusi;
+        const avgProfit = unitsSold > 0 ? (totalProfitSales / unitsSold) : 0;
+        const deadLossNet = deadLossRaw - deadKomp;
+        const netProfitPerEkor = unitsSold > 0 ? (netProfit / unitsSold) : 0;
 
         // Update DOM
-        document.getElementById('dashTotalSaldoKas').textContent = formatRp(totalSaldoKasBank);
-        document.getElementById('dashTotalTerbayar').textContent = formatRp(totalPaidInFinance);
-        document.getElementById('dashHutangAgen').textContent = formatRp(totalHutangKomisi);
-        document.getElementById('dashTotalTitipan').textContent = formatRp(totalTitipanAgen);
-        document.getElementById('dashSaldoNetto').textContent = formatRp(totalSaldoKasBank - totalHutangKomisi - totalTitipanAgen);
+        // 1. Inventori
+        document.getElementById('dashTotalKambing').textContent = (goatsDb || []).length + ' Ekor';
+        document.getElementById('dashTersedia').textContent = countTersedia + ' Ekor';
+        document.getElementById('dashTerjual').textContent = unitsSold + ' Ekor';
+        document.getElementById('dashSakitMatiCount').textContent = (countSakit + countMati) + ' Ekor';
+        document.getElementById('dashHilang').textContent = countHilang + ' Ekor';
         document.getElementById('dashNilaiAsetStok').textContent = formatRp(nilaiAsetStok);
+
+        // 2. Performa Sales
+        document.getElementById('dashSalesVolume').textContent = `${unitsSold} Ekor / ${formatRp(omzet)}`;
+        document.getElementById('dashTotalHPP').textContent = formatRp(hpp);
+        document.getElementById('dashTotalTerbayar').textContent = formatRp(totalPaidInFinance);
         document.getElementById('dashPiutang').textContent = formatRp(piutang);
-        document.getElementById('dashPemasukan').textContent = formatRp(totalPemasukan);
-        document.getElementById('dashPengeluaran').textContent = formatRp(totalPengeluaran);
+        document.getElementById('dashProfitSales').textContent = formatRp(totalProfitSales);
+        document.getElementById('dashAvgProfit').textContent = formatRp(avgProfit);
+
+        // 3. Profitabilitas
+        document.getElementById('dashOperatingExpenses').textContent = formatRp(operatingExpenses);
+        document.getElementById('dashTotalKomisi').textContent = formatRp(komisi);
+        document.getElementById('dashTotalSaving').textContent = formatRp(saving);
+        document.getElementById('dashKerugianMati').textContent = formatRp(deadLossNet);
+        document.getElementById('dashNetProfitPerEkor').textContent = formatRp(netProfitPerEkor);
         
         const elNet = document.getElementById('dashProfitRealtime');
         if(elNet) {
@@ -262,12 +280,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             elNet.style.color = netProfit < 0 ? 'var(--danger)' : 'var(--success)';
         }
 
-        document.getElementById('dashTotalKambing').textContent = (userRole === 'agen' ? (countTerjual + countDistribusi) : (goatsDb || []).length) + ' Ekor';
-        document.getElementById('dashTersedia').textContent = countTersedia;
-        document.getElementById('dashTerjual').textContent = countTerjual;
-        document.getElementById('dashDistribusi').textContent = countDistribusi;
-        document.getElementById('dashSakitOnly').textContent = countSakit;
-        document.getElementById('dashSakitMatiCount').textContent = countSakit + countMati;
+        // 4. Kas & Likuiditas
+        document.getElementById('dashTotalSaldoKas').textContent = formatRp(totalSaldoKasBank);
+        document.getElementById('dashHutangAgen').textContent = formatRp(totalHutangKomisi);
+        document.getElementById('dashSaldoNetto').textContent = formatRp(totalSaldoKasBank - totalHutangKomisi - totalTitipanAgen);
+        document.getElementById('dashTotalTitipan').textContent = formatRp(totalTitipanAgen);
 
         // Apply Permissions Hiding
         if (permissions.hideProfit) {
