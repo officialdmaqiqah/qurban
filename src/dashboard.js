@@ -274,6 +274,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // 2. Performa Sales Statement
         document.getElementById('dashTerjualRp').textContent = formatRp(omzet);
+        
+        const elTerbayar = document.getElementById('dashTerbayarInfo');
+        if(elTerbayar) elTerbayar.textContent = formatRp(totalPaidInFinance);
+        
+        const elPiutang = document.getElementById('dashPiutangInfo');
+        if(elPiutang) elPiutang.textContent = formatRp(piutang);
+
         document.getElementById('dashTerjualEkor').textContent = `${unitsSold} Ekor Terjual`;
         document.getElementById('dashTotalHPP').textContent = formatRp(hpp);
         document.getElementById('dashTotalKomisiSales').textContent = formatRp(komisi);
