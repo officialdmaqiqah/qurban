@@ -377,7 +377,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const komisi = t.komisi?.nominal || 0;
             return s + (deal - hpp - komisi);
         }, 0);
-        const avgProfit = fTrxs.length ? totalProfit / fTrxs.length : 0;
+        const totalItemsSold = fTrxs.reduce((s, t) => s + (t.items || []).length, 0);
+        const avgProfit = totalItemsSold ? totalProfit / totalItemsSold : 0;
 
         document.getElementById('kpiCPH').textContent = formatRp(cph);
         document.getElementById('kpiMortality').textContent = mortality + '%';
