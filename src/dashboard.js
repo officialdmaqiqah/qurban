@@ -251,40 +251,77 @@ document.addEventListener('DOMContentLoaded', async () => {
         const netProfitPerEkor = unitsSold > 0 ? (netProfit / unitsSold) : 0;
 
         // Update DOM
-        // 1. Inventori
+        // 1. Inventori Statement
         document.getElementById('dashTotalKambing').textContent = (goatsDb || []).length + ' Ekor';
-        document.getElementById('dashTersedia').textContent = countTersedia + ' Ekor';
-        document.getElementById('dashTerjual').textContent = unitsSold + ' Ekor';
-        document.getElementById('dashSakitMatiCount').textContent = (countSakit + countMati) + ' Ekor';
-        document.getElementById('dashHilang').textContent = countHilang + ' Ekor';
-        document.getElementById('dashNilaiAsetStok').textContent = formatRp(nilaiAsetStok);
+        document.getElementById('dashTersedia').textContent = countTersedia;
+        document.getElementById('dashTerjual').textContent = unitsSold;
+        document.getElementById('dashSakitMatiCount').textContent = (countSakit + countMati);
+        document.getElementById('dashHilang').textContent = countHilang;
 
-        // 2. Performa Sales
-        document.getElementById('dashSalesVolume').textContent = `${unitsSold} Ekor / ${formatRp(omzet)}`;
+        // 2. Performa Sales Statement
+        document.getElementById('dashTerjualRp').textContent = formatRp(omzet);
+        document.getElementById('dashTerjualEkor').textContent = `${unitsSold} Ekor`;
         document.getElementById('dashTotalHPP').textContent = formatRp(hpp);
-        document.getElementById('dashTotalTerbayar').textContent = formatRp(totalPaidInFinance);
-        document.getElementById('dashPiutang').textContent = formatRp(piutang);
-        document.getElementById('dashProfitSales').textContent = formatRp(totalProfitSales);
+        document.getElementById('dashTotalKomisiSales').textContent = formatRp(komisi);
+        document.getElementById('dashTotalSavingSales').textContent = formatRp(saving);
+        const elProfitSales = document.getElementById('dashProfitSales');
+        if (elProfitSales) {
+            elProfitSales.textContent = formatRp(totalProfitSales);
+            elProfitSales.classList.remove('highlight-green', 'highlight-rose');
+            elProfitSales.classList.add(totalProfitSales >= 0 ? 'highlight-green' : 'highlight-rose');
+        }
         document.getElementById('dashAvgProfit').textContent = formatRp(avgProfit);
 
-        // 3. Profitabilitas
+        // 3. Profitabilitas Statement
+        const elNet = document.getElementById('dashProfitRealtime');
+        if (elNet) {
+            elNet.textContent = (netProfit >= 0 ? '+' : '') + formatRp(netProfit);
+            elNet.classList.remove('highlight-green', 'highlight-rose');
+            elNet.classList.add(netProfit >= 0 ? 'highlight-green' : 'highlight-rose');
+        }
         document.getElementById('dashOperatingExpenses').textContent = formatRp(operatingExpenses);
-        document.getElementById('dashTotalKomisi').textContent = formatRp(komisi);
-        document.getElementById('dashTotalSaving').textContent = formatRp(saving);
         document.getElementById('dashKerugianMati').textContent = formatRp(deadLossNet);
         document.getElementById('dashNetProfitPerEkor').textContent = formatRp(netProfitPerEkor);
-        
-        const elNet = document.getElementById('dashProfitRealtime');
-        if(elNet) {
-            elNet.textContent = (netProfit >= 0 ? '+' : '') + formatRp(netProfit);
-            elNet.style.color = netProfit < 0 ? 'var(--danger)' : 'var(--success)';
-        }
 
-        // 4. Kas & Likuiditas
+        // 4. Kas & Likuiditas Statement
         document.getElementById('dashTotalSaldoKas').textContent = formatRp(totalSaldoKasBank);
-        document.getElementById('dashHutangAgen').textContent = formatRp(totalHutangKomisi);
-        document.getElementById('dashSaldoNetto').textContent = formatRp(totalSaldoKasBank - totalHutangKomisi - totalTitipanAgen);
         document.getElementById('dashTotalTitipan').textContent = formatRp(totalTitipanAgen);
+
+        // --- CASH BREAKDOWN INJECTION ---
+        const channelBalances = {};
+        (keuanganDb || []).forEach(f => {
+            const ch = (f.channel || 'Tunai').trim();
+            if (ch.toLowerCase().includes('non-kas')) return;
+            const nom = parseNum(f.nominal);
+            channelBalances[ch] = (channelBalances[ch] || 0) + (f.tipe === 'pemasukan' ? nom : -nom);
+        });
+
+        const breakdownContainer = document.getElementById('cashBreakdownContainer');
+        if (breakdownContainer) {
+            breakdownContainer.innerHTML = '';
+            // Sort to prioritize requested channels
+            const preferred = ['Kas Operasional', 'Tunai', 'Mandiri', 'BSI'];
+            const sortedChannels = Object.keys(channelBalances).sort((a, b) => {
+                const idxA = preferred.findIndex(p => a.toLowerCase().includes(p.toLowerCase()));
+                const idxB = preferred.findIndex(p => b.toLowerCase().includes(p.toLowerCase()));
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                if (idxA !== -1) return -1;
+                if (idxB !== -1) return 1;
+                return a.localeCompare(b);
+            });
+
+            sortedChannels.forEach(ch => {
+                const bal = channelBalances[ch];
+                if (Math.abs(bal) < 1) return; // Skip zero balances
+                const item = document.createElement('div');
+                item.className = 'statement-item';
+                item.innerHTML = `
+                    <span class="statement-item-label">${ch}</span>
+                    <span class="statement-item-value">${formatRp(bal)}</span>
+                `;
+                breakdownContainer.appendChild(item);
+            });
+        }
 
         // Apply Permissions Hiding
         if (permissions.hideProfit) {
