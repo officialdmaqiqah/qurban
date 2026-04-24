@@ -13,6 +13,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka || 0);
 
+    const setText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+
     const updateDashboard = async () => {
         const [
             { data: goatsDb },
