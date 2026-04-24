@@ -463,7 +463,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Populate Filters
         const kabs = [...new Set(eligible.map(k => trxs.find(t => t.id === k.transaction_id)?.delivery?.alamat?.kab || ''))].filter(Boolean).sort();
-        const agens = [...new Set(eligible.map(k => trxs.find(t => t.id === k.transaction_id)?.agen_nama || ''))].filter(Boolean).sort();
+        const agens = [...new Set(eligible.map(k => {
+            const trx = trxs.find(t => t.id === k.transaction_id);
+            return (typeof trx?.agen === 'object' ? trx?.agen?.nama : trx?.agen) || trx?.agen_nama || '';
+        }))].filter(Boolean).sort();
 
         const selKab = document.getElementById('inpFilterKab');
         const selAgen = document.getElementById('inpFilterAgen');
@@ -494,7 +497,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const txt = (k.no_tali + ' ' + (trx?.customer?.nama || '') + ' ' + (trx?.delivery?.alamat?.kab || '')).toLowerCase();
                 const matchSearch = txt.includes(search);
                 const matchKab = !fKab || trx?.delivery?.alamat?.kab === fKab;
-                const matchAgen = !fAgen || trx?.agen_nama === fAgen;
+                const currentAgen = (typeof trx?.agen === 'object' ? trx?.agen?.nama : trx?.agen) || trx?.agen_nama || '';
+                const matchAgen = !fAgen || currentAgen === fAgen;
                 return matchSearch && matchKab && matchAgen;
             });
 
