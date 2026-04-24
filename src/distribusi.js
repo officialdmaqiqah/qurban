@@ -128,9 +128,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     async function renderTrips() {
         const { trips, goats } = await loadData();
-        if(!containerTrip) return;
-
         const isSopir = profile?.role === 'sopir';
+        
+        // --- STUCK GOAT DETECTION (Unlinked Distribution) ---
+        const goatIdsInTrips = new Set();
+        trips.forEach(t => (t.items || []).forEach(i => goatIdsInTrips.add(i.goatId)));
+        const stuckGoats = goats.filter(k => (k.status_transaksi === 'Terdistribusi' || k.status_fisik === 'Disembelih') && !goatIdsInTrips.has(k.id));
         
         const filteredTrips = trips.filter(t => {
             if(isSopir && (t.sopirNama||'').toLowerCase() !== (profile.full_name||'').toLowerCase()) return false;
@@ -140,11 +143,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             return true;
         }).sort((a,b) => new Date(b.tglKirim) - new Date(a.tglKirim));
 
-
         updateStatsDist(trips, goats);
 
         containerTrip.innerHTML = '';
-        if(!filteredTrips.length) {
+
+        // --- SHOW STUCK GOATS CARD IN HISTORY ---
+        if (currentTab === 'histori' && stuckGoats.length > 0 && !isSopir) {
+            const stuckCard = document.createElement('div');
+            stuckCard.className = 'trip-card glass-panel';
+            stuckCard.style.border = '1px dashed var(--danger)';
+            stuckCard.innerHTML = `
+                <div class="trip-header">
+                    <div>
+                        <div class="trip-id" style="color:var(--danger);">⚠️ Data Tersangkut</div>
+                        <div class="trip-date">Ditemukan ${stuckGoats.length} ekor tanpa rekaman trip</div>
+                    </div>
+                </div>
+                <div class="trip-items" style="max-height:150px; overflow-y:auto; margin:1rem 0;">
+                    ${stuckGoats.map(k => `
+                        <div class="trip-item" style="border-left-color:var(--danger);">
+                            <div style="font-weight:600;">No.${k.no_tali} - ${k.warna_tali}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted);">${k.status_fisik} | ${k.status_transaksi}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="trip-footer">
+                    <p style="font-size:0.75rem; color:var(--text-muted);">Kambing ini sudah terdistribusi tapi riwayatnya tidak tersimpan.</p>
+                    <button class="btn btn-sm" onclick="window.rollbackStuckGoats()" style="background:var(--danger); color:white; border-radius:6px; font-weight:600; padding:8px 16px;">🔄 Reset Status Kambing</button>
+                </div>
+            `;
+            containerTrip.appendChild(stuckCard);
+        }
+
+        if(!filteredTrips.length && !stuckGoats.length) {
             containerTrip.innerHTML = '<div style="text-align:center; padding:3rem; color:var(--text-muted); background:rgba(255,255,255,0.02); border-radius:15px; border:1px dashed rgba(255,255,255,0.1);">Belum ada rencana perjalanan (Trip) distribusi.</div>';
             return;
         }
@@ -244,6 +275,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     };
+
+    window.rollbackStuckGoats = async () => {
+        showConfirm(`Reset status kambing yang tersangkut? Kambing akan kembali ke antrean 'Menunggu Kirim'.`, async () => {
+            try {
+                showToast('Mereset status kambing...', 'info');
+                const { goats, trips } = await loadData();
+                const goatIdsInTrips = new Set();
+                trips.forEach(t => (t.items || []).forEach(i => goatIdsInTrips.add(i.goatId)));
+                const stuckGoats = goats.filter(k => (k.status_transaksi === 'Terdistribusi' || k.status_fisik === 'Disembelih') && !goatIdsInTrips.has(k.id));
+
+                const updates = stuckGoats.map(k => {
+                    return supabase.from('stok_kambing').update({
+                        status_transaksi: 'Terjual',
+                        status_fisik: 'Ada',
+                        updated_at: new Date().toISOString()
+                    }).eq('id', k.id);
+                });
+
+                await Promise.all(updates);
+                showToast(`✅ ${stuckGoats.length} ekor kambing berhasil direset.`, 'success');
+                await loadData(true);
+                renderTrips();
+            } catch (err) {
+                showAlert('Gagal reset: ' + err.message, 'danger');
+            }
+        });
+    };
+
 
 
     window.openLaporDist = (tripId, goatId, nama) => {
