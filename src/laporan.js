@@ -401,8 +401,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                          f.kategori === 'Kerugian (Mati/Hilang)';
             return !isEx;
         }).reduce((s,f) => s + f.nominal, 0);
+        // Calculate additional components for CPH as requested
+        const totalKomisi = fTrxs.reduce((s, t) => s + (t.komisi?.nominal || 0), 0);
+        
+        let deadLossRaw = 0;
+        let deadKomp = 0;
+        fFin.forEach(f => {
+            const chan = f.channel || 'Tunai';
+            const nom = f.nominal || 0;
+            const katLine = (f.kategori || '').toLowerCase().trim();
+            if (chan.toLowerCase().includes('non-kas')) {
+                if (f.tipe === 'pengeluaran') deadLossRaw += nom;
+                else if (f.tipe === 'pemasukan') deadKomp += nom;
+            } else if (f.tipe === 'pemasukan' && katLine.includes('kompensasi')) {
+                deadKomp += nom;
+            }
+        });
+        const deadLossNet = deadLossRaw - deadKomp;
+
         const activeGoats = goats.length || 1;
-        const cph = opex / activeGoats;
+        const cph = (opex + totalKomisi + deadLossNet) / activeGoats;
         
         const totalGoats = goats.length || 1;
         const dead = goats.filter(g => g.status_kesehatan === 'Mati' || g.status_fisik === 'Mati').length;
