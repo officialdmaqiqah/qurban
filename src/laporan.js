@@ -401,7 +401,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                          f.kategori === 'Kerugian (Mati/Hilang)';
             return !isEx;
         }).reduce((s,f) => s + f.nominal, 0);
-        const activeGoats = goats.filter(g => g.status_transaksi === 'Tersedia').length || 1;
+        const activeGoats = goats.length || 1;
         const cph = opex / activeGoats;
         
         const totalGoats = goats.length || 1;
