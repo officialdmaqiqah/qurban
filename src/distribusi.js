@@ -461,6 +461,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { goats, trxs } = await loadData();
         const { data: sops } = await supabase.from('master_data').select('val').eq('key', 'SOPIR').single();
         
+        // Populate Channels for Internal Transfer
+        const [reNew, reOld, finData] = await Promise.all([
+            supabase.from('master_data').select('val').eq('key', 'REKENING').single(),
+            supabase.from('master_data').select('val').eq('key', 'BANK_ACCOUNTS').single(),
+            supabase.from('keuangan').select('channel')
+        ]);
+        
+        const reks = (reNew?.data?.val && reNew.data.val.length > 0) ? reNew.data : (reOld?.data || null);
+        const existingChannels = [...new Set((finData?.data || []).map(f => f.channel).filter(c => c && !c.toLowerCase().includes('non-kas')))];
+        
+        const chanSelect = document.getElementById('inpInternalChannel');
+        if (chanSelect) {
+            chanSelect.innerHTML = '<option value="Non-Kas (Pencatatan)">Non-Kas (Hanya Catatan Laba)</option>';
+            chanSelect.innerHTML += '<option value="Tunai">Tunai / Cash</option>';
+            
+            // Add from Master Data
+            const bankList = reks?.val || [];
+            const added = new Set(['Tunai', 'Non-Kas (Pencatatan)']);
+            
+            bankList.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.bank;
+                opt.textContent = `Bank ${r.bank} (${r.norek})`;
+                chanSelect.appendChild(opt);
+                added.add(r.bank);
+            });
+
+            // Add from existing transactions if not already in master
+            existingChannels.forEach(c => {
+                if (!added.has(c)) {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    chanSelect.appendChild(opt);
+                    added.add(c);
+                }
+            });
+        }
+
         const sopirsList = document.getElementById('listSopir');
         sopirsList.innerHTML = '';
         (sops?.val || []).forEach(s => { const o = document.createElement('option'); o.value = s.nama; sopirsList.appendChild(o); });
@@ -619,7 +658,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     kategori: 'Internal Transfer / Aqiqah',
                                     nominal: diff,
                                     keterangan: `Penyesuaian Harga Internal Aqiqah - No Tali ${item.noTali} (Trx ${trx.id})`,
-                                    channel: 'Non-Kas (Pencatatan)',
+                                    channel: document.getElementById('inpInternalChannel')?.value || 'Non-Kas (Pencatatan)',
                                     related_trx_id: trx.id,
                                     related_goat_id: item.goatId
                                 });
