@@ -184,16 +184,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fFis = selStatusFisik.value;
 
         if(search) {
-            filtered = filtered.filter(k => 
-                (k.no_tali || '').toLowerCase().includes(search) ||
-                (k.id || '').toLowerCase().includes(search) ||
-                (k.supplier || '').toLowerCase().includes(search) ||
-                (k.batch || '').toLowerCase().includes(search) ||
-                (k.warna_tali || '').toLowerCase().includes(search) ||
-                (k.sex || '').toLowerCase().includes(search) ||
-                (k.lokasi || '').toLowerCase().includes(search)
-            );
+            const isShortNumber = /^\d+$/.test(search) && search.length <= 3;
+            filtered = filtered.filter(k => {
+                const matchNoTali = (k.no_tali || '').toLowerCase().includes(search);
+                const matchWarna = (k.warna_tali || '').toLowerCase().includes(search);
+                const matchSupplier = (k.supplier || '').toLowerCase().includes(search);
+                const matchLokasi = (k.lokasi || '').toLowerCase().includes(search);
+                const matchSex = (k.sex || '').toLowerCase().includes(search);
+                
+                // Only match ID and Batch if search is not a short number (avoid matching Batch 03 when searching for No Tali 03)
+                const matchID = !isShortNumber && (k.id || '').toLowerCase().includes(search);
+                const matchBatch = !isShortNumber && (k.batch || '').toLowerCase().includes(search);
+
+                return matchNoTali || matchWarna || matchSupplier || matchLokasi || matchSex || matchID || matchBatch;
+            });
         }
+
         if(minHarga > 0) filtered = filtered.filter(k => k.harga_kandang >= minHarga);
         if(maxHarga < Infinity && maxHarga > 0) filtered = filtered.filter(k => k.harga_kandang <= maxHarga);
         
