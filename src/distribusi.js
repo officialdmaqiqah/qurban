@@ -447,6 +447,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('inpTripNote').value = '';
         }
 
+        const containerInternal = document.getElementById('containerInternalPrice');
+        if (containerInternal) containerInternal.style.display = isSembelih ? 'block' : 'none';
+        const inpInternal = document.getElementById('inpInternalPrice');
+        if (inpInternal) inpInternal.value = '';
+
         const { goats, trxs } = await loadData();
         const { data: sops } = await supabase.from('master_data').select('val').eq('key', 'SOPIR').single();
         
@@ -574,14 +579,50 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (isSembelih) {
                 console.log('Slaughtering goats:', selected.length);
-                const updates = newTrip.items.map(item => {
-                    return supabase.from('stok_kambing').update({
+                const internalPriceVal = window.parseNum(document.getElementById('inpInternalPrice')?.value || 0);
+                
+                const updates = [];
+                const financeEntries = [];
+
+                for (const item of newTrip.items) {
+                    // 1. Update Goat Status
+                    updates.push(supabase.from('stok_kambing').update({
                         status_transaksi: 'Terdistribusi',
                         status_fisik: 'Disembelih',
                         updated_at: new Date().toISOString()
-                    }).eq('id', item.goatId);
-                });
+                    }).eq('id', item.goatId));
+
+                    // 2. Handle Internal Price Adjustment (Hidden Ledger Entry)
+                    if (internalPriceVal > 0) {
+                        const trx = cachedTransactions.find(t => t.id === cachedGoats.find(g => g.id === item.goatId)?.transaction_id);
+                        if (trx) {
+                            // Find item in trx to get deal price
+                            const trxItem = (trx.items || []).find(it => it.goatId === item.goatId);
+                            const dealPrice = window.parseNum(trxItem?.hargaDeal || trxItem?.harga || 0);
+                            
+                            const diff = dealPrice - internalPriceVal;
+                            if (diff > 0) {
+                                financeEntries.push({
+                                    id: 'ADJ-' + Date.now().toString().slice(-6) + '-' + item.noTali,
+                                    tipe: 'pengeluaran',
+                                    tanggal: newTrip.tglKirim,
+                                    kategori: 'Internal Transfer / Aqiqah',
+                                    nominal: diff,
+                                    keterangan: `Penyesuaian Harga Internal Aqiqah - No Tali ${item.noTali} (Trx ${trx.id})`,
+                                    channel: 'Non-Kas (Pencatatan)',
+                                    related_trx_id: trx.id,
+                                    related_goat_id: item.goatId
+                                });
+                            }
+                        }
+                    }
+                }
                 
+                if (financeEntries.length > 0) {
+                    console.log('Recording internal adjustments:', financeEntries.length);
+                    await supabase.from('keuangan').insert(financeEntries);
+                }
+
                 const results = await Promise.all(updates);
                 const errors = results.filter(r => r.error);
                 if (errors.length > 0) {
@@ -683,6 +724,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnAktif?.addEventListener('click', () => switchTab('aktif'));
     btnHistori?.addEventListener('click', () => switchTab('histori'));
 
+    window.setupMoneyMask('inpInternalPrice');
     renderTrips();
 });
 

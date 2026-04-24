@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let opex = 0;
         let deadLossRaw = 0;
         let deadKomp = 0;
+        let internalTransfers = 0;
         
         fin.filter(f => {
             const dtStr = f.tanggal;
@@ -152,8 +153,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isNonKas = chan.toLowerCase().includes('non-kas');
 
             if (isNonKas) {
-                if (f.tipe === 'pengeluaran') deadLossRaw += nom;
-                else if (f.tipe === 'pemasukan') deadKomp += nom;
+                if (katLine.includes('internal transfer')) {
+                    if (f.tipe === 'pengeluaran') internalTransfers += nom;
+                    else if (f.tipe === 'pemasukan') internalTransfers -= nom;
+                } else {
+                    if (f.tipe === 'pengeluaran') deadLossRaw += nom;
+                    else if (f.tipe === 'pemasukan') deadKomp += nom;
+                }
             } else {
                 if (f.tipe === 'pengeluaran') {
                     const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
@@ -190,6 +196,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(deadKomp > 0) addRow('(+) Kompensasi Supplier', deadKomp, 'text-success');
         addRow('Kerugian Kematian (Netto)', -deadLossNet, 'row-total ' + (deadLossNet > 0 ? 'text-danger' : ''));
 
+        if(internalTransfers !== 0) {
+            addRow('(-) Penyesuaian Harga Aqiqah', -internalTransfers, 'text-muted');
+        }
+
+
         
         const savingStr = saving > 0 ? `<br><small style="font-weight:normal; opacity:0.7">Audit Kalkulasi: Terhitung dari ${trxs.filter(t => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
@@ -219,7 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        const netProfit = omzet - hpp - komisi - opex - deadLossNet - saving;
+        const netProfit = omzet - hpp - komisi - opex - deadLossNet - saving - internalTransfers;
         addRow('LABA BERSIH', netProfit, 'row-grand-total text-premium');
         return netProfit;
     };
