@@ -195,6 +195,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             })
             .map(t => t.id);
 
+        let internalTransfers = 0;
+
         (keuanganDb || []).forEach(f => {
             const dt = new Date(f.tanggal);
             const isInSeason = dt >= startSeason && dt <= endSeason;
@@ -202,10 +204,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             const nom = parseNum(f.nominal);
 
             if ((f.channel || '').toLowerCase().includes('non-kas')) {
-                // Logika Non-Kas (Rugi Mati) - Hanya jika terjadi di musim ini
                 if (isInSeason) {
-                    if (f.tipe === 'pengeluaran') deadLossRaw += nom;
-                    else if (f.tipe === 'pemasukan') deadKomp += nom;
+                    if (katLine.includes('internal transfer')) {
+                        if (f.tipe === 'pengeluaran') internalTransfers += nom;
+                        else if (f.tipe === 'pemasukan') internalTransfers -= nom;
+                    } else {
+                        if (f.tipe === 'pengeluaran') deadLossRaw += nom;
+                        else if (f.tipe === 'pemasukan') deadKomp += nom;
+                    }
                 }
             } else {
                 // Logika Kas/Bank Real
@@ -242,16 +248,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        const netProfit = omzet - hpp - komisi - operatingExpenses - (deadLossRaw - deadKomp) - saving;
+        const deadLossNet = deadLossRaw - deadKomp;
+        const netProfit = omzet - hpp - komisi - operatingExpenses - deadLossNet - saving - internalTransfers;
         const piutang = omzet - totalPaidInFinance;
         const totalProfitSales = omzet - hpp - komisi - saving;
         const unitsSold = countTerjual + countDistribusi;
         const avgProfit = unitsSold > 0 ? (totalProfitSales / unitsSold) : 0;
-        const deadLossNet = deadLossRaw - deadKomp;
-        const netProfitPerEkor = unitsSold > 0 ? (netProfit / unitsSold) : 0;
 
-        // Update DOM
-        // 1. Inventori Statement
+        // 5. UPDATE UI
+        setText('dashProfitRealtime', formatRp(netProfit));
+        setText('dashOperatingExpenses', formatRp(operatingExpenses));
+        setText('dashKerugianMati', formatRp(deadLossNet));
+        setText('dashInternalTransfer', formatRp(internalTransfers)); // New ID
         const totalPop = (goatsDb || []).length;
         document.getElementById('dashTotalKambing').textContent = totalPop;
         document.getElementById('dashTersedia').textContent = countTersedia;
