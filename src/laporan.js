@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             inpOwner.onchange = async () => {
                 const val = parseInt(inpOwner.value) || 0;
                 const newCfg = { owner: val, team: 100 - val };
-                await supabase.from('master_data').upsert({ key: 'PORSI_BAGI_HASIL', val: newCfg });
+                await supabase.from('master_data').upsert({ key: 'PORSI_BAGI_HASIL', val: newCfg }, { onConflict: 'key' });
                 init();
             };
         }

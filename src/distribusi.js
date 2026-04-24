@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const saveTrips = async (trips) => {
-        const { data, error } = await supabase.from('master_data').upsert({ key: 'TRIPS', val: trips });
+        const { data, error } = await supabase.from('master_data').upsert({ key: 'TRIPS', val: trips }, { onConflict: 'key' });
         if (error) {
             console.error('Save TRIPS error:', error);
             throw new Error('Gagal menyimpan data distribusi: ' + error.message);
