@@ -133,6 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             komisi += parseNum(t.komisi?.nominal);
         });
 
+        let opexByChannel = {};
         let opex = 0;
         let deadLossRaw = 0;
         let deadKomp = 0;
@@ -147,7 +148,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).forEach(f => {
             const nom = parseNum(f.nominal);
             const katLine = (f.kategori || '').toLowerCase().trim();
-            const isNonKas = (f.channel || '').toLowerCase().includes('non-kas');
+            const chan = f.channel || 'Tunai';
+            const isNonKas = chan.toLowerCase().includes('non-kas');
 
             if (isNonKas) {
                 if (f.tipe === 'pengeluaran') deadLossRaw += nom;
@@ -159,6 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     if (!isExclusion) {
                         opex += nom;
+                        opexByChannel[chan] = (opexByChannel[chan] || 0) + nom;
                     }
                 } else if (f.tipe === 'pemasukan') {
                     if (katLine.includes('kompensasi')) {
@@ -176,10 +179,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         addRow('(-) HPP (Harga Nota)', -hpp, 'text-muted');
         addRow('LABA KOTOR', omzet - hpp, 'row-total text-premium');
         addRow('(-) Komisi Agen', -komisi);
-        addRow('(-) Biaya Operasional', -opex);
+        
+        // Breakdown Opex
+        addRow('(-) Biaya Operasional (Total)', -opex, 'text-warning');
+        Object.keys(opexByChannel).forEach(ch => {
+            addRow(`&nbsp;&nbsp;&nbsp;&nbsp;• via ${ch}`, -opexByChannel[ch], 'text-muted small-text');
+        });
+
         addRow('(-) Kerugian Kematian (Bruto)', -deadLossRaw);
         if(deadKomp > 0) addRow('(+) Kompensasi Supplier', deadKomp, 'text-success');
         addRow('Kerugian Kematian (Netto)', -deadLossNet, 'row-total ' + (deadLossNet > 0 ? 'text-danger' : ''));
+
         
         const savingStr = saving > 0 ? `<br><small style="font-weight:normal; opacity:0.7">Audit Kalkulasi: Terhitung dari ${trxs.filter(t => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
