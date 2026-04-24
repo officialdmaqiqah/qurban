@@ -208,15 +208,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             const katLine = (f.kategori || '').toLowerCase().trim();
             const nom = parseNum(f.nominal);
 
+            // PRIORITASKAN CEK INTERNAL TRANSFER (AQIQAH)
+            if (katLine.includes('internal transfer')) {
+                if (isInSeason) {
+                    if (f.tipe === 'pengeluaran') internalTransfers += nom;
+                    else if (f.tipe === 'pemasukan') internalTransfers -= nom;
+                }
+                return;
+            }
+
             if ((f.channel || '').toLowerCase().includes('non-kas')) {
                 if (isInSeason) {
-                    if (katLine.includes('internal transfer')) {
-                        if (f.tipe === 'pengeluaran') internalTransfers += nom;
-                        else if (f.tipe === 'pemasukan') internalTransfers -= nom;
-                    } else {
-                        if (f.tipe === 'pengeluaran') deadLossRaw += nom;
-                        else if (f.tipe === 'pemasukan') deadKomp += nom;
-                    }
+                    if (f.tipe === 'pengeluaran') deadLossRaw += nom;
+                    else if (f.tipe === 'pemasukan') deadKomp += nom;
                 }
             } else {
                 // Logika Kas/Bank Real

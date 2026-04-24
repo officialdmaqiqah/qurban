@@ -152,14 +152,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const chan = f.channel || 'Tunai';
             const isNonKas = chan.toLowerCase().includes('non-kas');
 
+            // PRIORITASKAN CEK INTERNAL TRANSFER (AQIQAH)
+            // Mau itu via Bank atau Non-Kas, tetap dianggap Internal Transfer, bukan Opex
+            if (katLine.includes('internal transfer')) {
+                if (f.tipe === 'pengeluaran') internalTransfers += nom;
+                else if (f.tipe === 'pemasukan') internalTransfers -= nom;
+                return; // Selesai untuk record ini
+            }
+
             if (isNonKas) {
-                if (katLine.includes('internal transfer')) {
-                    if (f.tipe === 'pengeluaran') internalTransfers += nom;
-                    else if (f.tipe === 'pemasukan') internalTransfers -= nom;
-                } else {
-                    if (f.tipe === 'pengeluaran') deadLossRaw += nom;
-                    else if (f.tipe === 'pemasukan') deadKomp += nom;
-                }
+                if (f.tipe === 'pengeluaran') deadLossRaw += nom;
+                else if (f.tipe === 'pemasukan') deadKomp += nom;
             } else {
                 if (f.tipe === 'pengeluaran') {
                     const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
