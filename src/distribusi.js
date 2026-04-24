@@ -226,7 +226,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const saveTrips = async (trips) => {
-        const { data, error } = await supabase.from('master_data').upsert({ key: 'TRIPS', val: trips }, { onConflict: 'key' });
+        // Manually provide an ID to avoid null constraint if the DB default fails
+        const { data, error } = await supabase.from('master_data').upsert({ 
+            id: 'trip-record-master', // Static ID for the TRIPS record is fine since key is unique 'TRIPS'
+            key: 'TRIPS', 
+            val: trips 
+        }, { onConflict: 'key' });
+        
         if (error) {
             console.error('Save TRIPS error:', error);
             throw new Error('Gagal menyimpan data distribusi: ' + error.message);

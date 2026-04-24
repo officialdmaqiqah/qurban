@@ -143,11 +143,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         profileData.kontak = kontakKandangInput.value.trim();
         profileData.alamat = alamatKandangInput.value.trim();
         
-        const payload = { key: 'PROFILE', val: profileData };
-        if (profileData.db_id) payload.id = profileData.db_id;
-        else payload.id = 'ID-PROFILE';
-
-        const { error } = await supabase.from('master_data').upsert(payload, { onConflict: 'key' });
+        const { error } = await supabase.from('master_data').upsert({ id: 'md-profile', key: 'PROFILE', val: profileData }, { onConflict: 'key' });
         
         if (error) {
             console.error('Save Profil Error:', error);
