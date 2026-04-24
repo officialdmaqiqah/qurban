@@ -195,9 +195,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const saveTrips = async (trips) => {
-        await supabase.from('master_data').upsert({ key: 'TRIPS', val: trips });
+        const { data, error } = await supabase.from('master_data').upsert({ key: 'TRIPS', val: trips });
+        if (error) {
+            console.error('Save TRIPS error:', error);
+            throw new Error('Gagal menyimpan data distribusi: ' + error.message);
+        }
         cachedTrips = trips;
     };
+
 
     window.deleteTrip = async (id) => {
         showConfirm(`Hapus rekaman trip ${id}? Data stok tidak akan berubah. Gunakan 'Batalkan' jika ingin mengembalikan status kambing.`, async () => {
@@ -503,24 +508,44 @@ document.addEventListener('DOMContentLoaded', async () => {
             }))
         };
         
-        trips.push(newTrip);
-        await saveTrips(trips);
+        try {
+            trips.push(newTrip);
+            showToast('Menyimpan data...', 'info');
+            await saveTrips(trips);
 
-        if (isSembelih) {
-            showToast('Memproses sembelih...', 'info');
-            for (const item of newTrip.items) {
-                await supabase.from('stok_kambing').update({ 
-                    status_transaksi: 'Terdistribusi', 
-                    status_fisik: 'Disembelih',
-                    updated_at: new Date().toISOString()
-                }).eq('id', item.goatId);
+            if (isSembelih) {
+                console.log('Slaughtering goats:', selected.length);
+                const updates = newTrip.items.map(item => {
+                    return supabase.from('stok_kambing').update({
+                        status_transaksi: 'Terdistribusi',
+                        status_fisik: 'Disembelih',
+                        updated_at: new Date().toISOString()
+                    }).eq('id', item.goatId);
+                });
+                
+                const results = await Promise.all(updates);
+                const errors = results.filter(r => r.error);
+                if (errors.length > 0) {
+                    console.error('Update goats error:', errors);
+                    throw new Error('Sebagian data kambing gagal diperbarui.');
+                }
             }
-        }
 
-        modalTrip.classList.remove('active');
-        showToast(isSembelih ? `✅ ${selected.length} Kambing disembelih & tuntas!` : `Trip ${newTrip.id} diaktifkan!`);
-        await loadData(true);
-        renderTrips();
+            modalTrip.classList.remove('active');
+            showToast(isSembelih ? `✅ ${selected.length} Kambing disembelih & tuntas!` : `Trip ${newTrip.id} diaktifkan!`, 'success');
+            
+            if (isSembelih) {
+                currentTab = 'histori';
+                btnAktif.classList.remove('active');
+                btnHistori.classList.add('active');
+            }
+            
+            await loadData(true);
+            renderTrips();
+        } catch (err) {
+            console.error('Process error:', err);
+            showAlert('Gagal: ' + err.message, 'danger');
+        }
     });
 
     window.printTrip = async (id) => {
