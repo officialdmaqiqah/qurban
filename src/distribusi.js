@@ -89,6 +89,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let cachedTrips = [];
     let cachedGoats = [];
     let cachedTransactions = [];
+    let currentTab = 'aktif'; // 'aktif' or 'histori'
+
 
     const loadData = async (force = false) => {
         if (!force && cachedTrips.length > 0) return { trips: cachedTrips, goats: cachedGoats, trxs: cachedTransactions };
@@ -132,8 +134,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const filteredTrips = trips.filter(t => {
             if(isSopir && (t.sopirNama||'').toLowerCase() !== (profile.full_name||'').toLowerCase()) return false;
+            
+            if (currentTab === 'aktif') return t.status === 'Pengiriman';
+            if (currentTab === 'histori') return t.status === 'Selesai';
             return true;
         }).sort((a,b) => new Date(b.tglKirim) - new Date(a.tglKirim));
+
 
         updateStatsDist(trips, goats);
 
@@ -150,11 +156,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             card.innerHTML = `
                 <div class="trip-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <div>
-                        <div class="trip-id text-premium">${t.id}</div>
+                        <div class="trip-id text-premium">${t.id} ${t.id.startsWith('SMB-') ? '<span class="badge-sembelih">🔪 Sembelih</span>' : ''}</div>
                         <div class="trip-date">${formatTgl(t.tglKirim)}</div>
                     </div>
                     <span class="badge ${isDone ? 'badge-success' : 'badge-warning'}" style="padding:4px 10px; font-size:0.75rem; border-radius:30px;">${t.status.toUpperCase()}</span>
                 </div>
+
                 <div class="trip-info" style="font-size:0.85rem; line-height:1.6;">
                     <div style="color:var(--text-main); font-weight:600;">🚚 ${t.sopirNama}</div>
                     <div style="color:var(--text-muted); font-size:0.75rem;">📋 ${t.nopol || '-'} • ${t.note || 'Tanpa catatan'}</div>
@@ -176,8 +183,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
                 <div class="trip-footer" style="padding-top:0.5rem; justify-content:space-between;">
                      <button class="btn btn-sm" onclick="window.printTrip('${t.id}')" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid rgba(255,255,255,0.1); border-radius:6px;">🖨️ Cetak</button>
-                     ${!isSopir ? `<button class="btn btn-sm" onclick="window.deleteTrip('${t.id}')" style="color:var(--danger); background:transparent; border:none; opacity:0.6;">🗑️ Hapus</button>` : ''}
+                     <div style="display:flex; gap:8px;">
+                        ${isDone && !isSopir ? `<button class="btn btn-sm" onclick="window.rollbackDistribution('${t.id}')" style="color:var(--danger); background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); border-radius:6px; font-size:0.7rem;">↩️ Batalkan</button>` : ''}
+                        ${!isSopir ? `<button class="btn btn-sm" onclick="window.deleteTrip('${t.id}')" style="color:var(--danger); background:transparent; border:none; opacity:0.6;">🗑️ Hapus</button>` : ''}
+                     </div>
                 </div>
+
             `;
             containerTrip.appendChild(card);
         });
@@ -189,7 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     window.deleteTrip = async (id) => {
-        showConfirm(`Hapus trip ${id}?`, async () => {
+        showConfirm(`Hapus rekaman trip ${id}? Data stok tidak akan berubah. Gunakan 'Batalkan' jika ingin mengembalikan status kambing.`, async () => {
             const { trips } = await loadData();
             const filtered = trips.filter(t => t.id !== id);
             await saveTrips(filtered);
@@ -198,6 +209,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderTrips();
         });
     };
+
+    window.rollbackDistribution = async (id) => {
+        showConfirm(`Batalkan distribusi ${id}? Status kambing akan dikembalikan menjadi 'Terjual' & 'Ada'.`, async () => {
+            try {
+                showToast('Membatalkan distribusi...', 'info');
+                const { trips } = await loadData();
+                const trip = trips.find(t => t.id === id);
+                if (!trip) throw new Error("Trip tidak ditemukan.");
+
+                // 1. Rollback Stok Kambing
+                for (const item of trip.items) {
+                    await supabase.from('stok_kambing').update({
+                        status_transaksi: 'Terjual',
+                        status_fisik: 'Ada',
+                        updated_at: new Date().toISOString()
+                    }).eq('id', item.goatId);
+                }
+
+                // 2. Hapus Trip
+                const filtered = trips.filter(t => t.id !== id);
+                await saveTrips(filtered);
+
+                showToast(`✅ Distribusi ${id} berhasil dibatalkan.`, 'success');
+                await loadData(true);
+                renderTrips();
+            } catch (err) {
+                showAlert('Gagal Rollback: ' + err.message, 'danger');
+            }
+        });
+    };
+
 
     window.openLaporDist = (tripId, goatId, nama) => {
         const modal = document.getElementById('modalLaporTuntas');
@@ -544,5 +586,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.print();
     };
 
+    const btnAktif = document.getElementById('tabAktif');
+    const btnHistori = document.getElementById('tabHistori');
+
+    const switchTab = (tab) => {
+        currentTab = tab;
+        btnAktif.classList.toggle('active', tab === 'aktif');
+        btnHistori.classList.toggle('active', tab === 'histori');
+        renderTrips();
+    };
+
+    btnAktif?.addEventListener('click', () => switchTab('aktif'));
+    btnHistori?.addEventListener('click', () => switchTab('histori'));
+
     renderTrips();
 });
+
