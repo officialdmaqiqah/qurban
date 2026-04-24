@@ -72,12 +72,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                  trxDb = [];
             }
         }
+        const parseNum = (val) => {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            return parseFloat(String(val).replace(/[^0-9.-]+/g, "")) || 0;
+        };
 
         // 1. KAS & LIKUIDITAS
         let totalSaldoKasBank = (keuanganDb || []).reduce((acc, item) => {
             const ch = (item.channel || 'Tunai').toLowerCase();
             if (ch.includes('non-kas')) return acc;
-            const nom = parseFloat(item.nominal) || 0;
+            const nom = parseNum(item.nominal);
             return acc + (item.tipe === 'pemasukan' ? nom : -nom);
         }, 0);
 
@@ -153,13 +158,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (item.tipe === 'pengeluaran') totalPengeluaran += (parseFloat(item.nominal) || 0);
             }
         });
-
-        // 4. PROFIT & PIUTANG CALCULATION (SEASONAL - SYNCED WITH REPORT LOGIC)
-        const parseNum = (val) => {
-            if (typeof val === 'number') return val;
-            if (!val) return 0;
-            return parseFloat(String(val).replace(/[^0-9.-]+/g, "")) || 0;
-        };
 
         let omzet = 0, hpp = 0, komisi = 0, saving = 0, totalPaidFinance = 0;
         
@@ -263,6 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const totalProfitSales = omzet - hpp - komisi - saving;
         const unitsSold = countTerjual + countDistribusi;
         const avgProfit = unitsSold > 0 ? (totalProfitSales / unitsSold) : 0;
+        const netProfitPerEkor = unitsSold > 0 ? (netProfit / unitsSold) : 0;
 
         // 5. UPDATE UI
         setText('dashProfitRealtime', formatRp(netProfit));
