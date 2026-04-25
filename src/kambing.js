@@ -186,16 +186,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(search) {
             const isShortNumber = /^\d+$/.test(search) && search.length <= 3;
             filtered = filtered.filter(k => {
-                const matchNoTali = (k.no_tali || '').toLowerCase().includes(search);
-                const matchWarna = (k.warna_tali || '').toLowerCase().includes(search);
-                const matchSupplier = (k.supplier || '').toLowerCase().includes(search);
-                const matchLokasi = (k.lokasi || '').toLowerCase().includes(search);
-                const matchSex = (k.sex || '').toLowerCase().includes(search);
+                const s = search.toLowerCase();
+                const matchNoTali = (k.no_tali || '').toLowerCase().includes(s);
+                const matchBatch = (k.batch || '').toLowerCase().includes(s);
+                const matchID = (k.id || '').toLowerCase().includes(s);
                 
-                // Only match ID and Batch if search is not a short number (avoid matching Batch 03 when searching for No Tali 03)
-                const matchID = !isShortNumber && (k.id || '').toLowerCase().includes(search);
-                const matchBatch = !isShortNumber && (k.batch || '').toLowerCase().includes(search);
+                if (isShortNumber) {
+                    return matchNoTali || matchBatch || matchID;
+                }
 
+                const matchWarna = (k.warna_tali || '').toLowerCase().includes(s);
+                const matchSupplier = (k.supplier || '').toLowerCase().includes(s);
+                const matchLokasi = (k.lokasi || '').toLowerCase().includes(s);
+                const matchSex = (k.sex || '').toLowerCase().includes(s);
                 return matchNoTali || matchWarna || matchSupplier || matchLokasi || matchSex || matchID || matchBatch;
             });
         }
@@ -859,13 +862,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if(search) {
                         const isShortNumber = /^\d+$/.test(search) && search.length <= 3;
                         outData = outData.filter(k => {
-                            const matchNoTali = (k.no_tali || '').toLowerCase().includes(search);
-                            const matchWarna = (k.warna_tali || '').toLowerCase().includes(search);
-                            const matchSupplier = (k.supplier || '').toLowerCase().includes(search);
-                            const matchLokasi = (k.lokasi || '').toLowerCase().includes(search);
-                            const matchSex = (k.sex || '').toLowerCase().includes(search);
-                            const matchID = !isShortNumber && (k.id || '').toLowerCase().includes(search);
-                            const matchBatch = !isShortNumber && (k.batch || '').toLowerCase().includes(search);
+                            const s = search.toLowerCase();
+                            const matchNoTali = (k.no_tali || '').toLowerCase().includes(s);
+                            const matchBatch = (k.batch || '').toLowerCase().includes(s);
+                            const matchID = (k.id || '').toLowerCase().includes(s);
+                            
+                            if (isShortNumber) {
+                                return matchNoTali || matchBatch || matchID;
+                            }
+
+                            const matchWarna = (k.warna_tali || '').toLowerCase().includes(s);
+                            const matchSupplier = (k.supplier || '').toLowerCase().includes(s);
+                            const matchLokasi = (k.lokasi || '').toLowerCase().includes(s);
+                            const matchSex = (k.sex || '').toLowerCase().includes(s);
                             return matchNoTali || matchWarna || matchSupplier || matchLokasi || matchSex || matchID || matchBatch;
                         });
                     }
