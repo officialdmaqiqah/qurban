@@ -840,142 +840,148 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnExport.style.display = isRestricted('noExportMaster') ? 'none' : 'block';
 
         btnExport.addEventListener('click', async () => {
-            // Use the exactly same data that is currently displayed in the table
-            let outData = window.lastFilteredKambingData;
-            
-            // Fallback if not yet rendered or empty (though renderTable is called on init)
-            if (!outData || outData.length === 0) {
-                const db = await getDb();
-                outData = [...db];
+            try {
+                // Use the exactly same data that is currently displayed in the table
+                let outData = window.lastFilteredKambingData;
                 
-                // Apply current filters if lastFilteredKambingData is missing
-                const search = (inpSearch?.value || '').toLowerCase().trim();
-                const minHarga = window.parseNum(inpMinHarga?.value || 0);
-                const maxHarga = window.parseNum(inpMaxHarga?.value || 0) || Infinity;
-                const fT = selStatusTransaksi.value;
-                const fK = selStatusKesehatan.value;
-                const fF = selStatusFisik.value;
+                // Fallback if not yet rendered or empty
+                if (!outData || outData.length === 0) {
+                    const db = await getDb();
+                    outData = [...db];
+                    
+                    const search = (inpSearch?.value || '').toLowerCase().trim();
+                    const minHarga = window.parseNum(inpMinHarga?.value || 0);
+                    const maxHarga = window.parseNum(inpMaxHarga?.value || 0) || Infinity;
+                    const fT = selStatusTransaksi?.value;
+                    const fK = selStatusKesehatan?.value;
+                    const fF = selStatusFisik?.value;
 
-                if(search) {
-                    const isShortNumber = /^\d+$/.test(search) && search.length <= 3;
-                    outData = outData.filter(k => {
-                        const matchNoTali = (k.no_tali || '').toLowerCase().includes(search);
-                        const matchWarna = (k.warna_tali || '').toLowerCase().includes(search);
-                        const matchSupplier = (k.supplier || '').toLowerCase().includes(search);
-                        const matchLokasi = (k.lokasi || '').toLowerCase().includes(search);
-                        const matchSex = (k.sex || '').toLowerCase().includes(search);
-                        const matchID = !isShortNumber && (k.id || '').toLowerCase().includes(search);
-                        const matchBatch = !isShortNumber && (k.batch || '').toLowerCase().includes(search);
-                        return matchNoTali || matchWarna || matchSupplier || matchLokasi || matchSex || matchID || matchBatch;
-                    });
+                    if(search) {
+                        const isShortNumber = /^\d+$/.test(search) && search.length <= 3;
+                        outData = outData.filter(k => {
+                            const matchNoTali = (k.no_tali || '').toLowerCase().includes(search);
+                            const matchWarna = (k.warna_tali || '').toLowerCase().includes(search);
+                            const matchSupplier = (k.supplier || '').toLowerCase().includes(search);
+                            const matchLokasi = (k.lokasi || '').toLowerCase().includes(search);
+                            const matchSex = (k.sex || '').toLowerCase().includes(search);
+                            const matchID = !isShortNumber && (k.id || '').toLowerCase().includes(search);
+                            const matchBatch = !isShortNumber && (k.batch || '').toLowerCase().includes(search);
+                            return matchNoTali || matchWarna || matchSupplier || matchLokasi || matchSex || matchID || matchBatch;
+                        });
+                    }
+                    if(minHarga > 0) outData = outData.filter(k => k.harga_kandang >= minHarga);
+                    if(maxHarga < Infinity && maxHarga > 0) outData = outData.filter(k => k.harga_kandang <= maxHarga);
+                    if(fT) outData = outData.filter(k => k.status_transaksi === fT);
+                    if(fK) outData = outData.filter(k => k.status_kesehatan === fK);
+                    if(fF) outData = outData.filter(k => k.status_fisik === fF);
                 }
-                if(minHarga > 0) outData = outData.filter(k => k.harga_kandang >= minHarga);
-                if(maxHarga < Infinity && maxHarga > 0) outData = outData.filter(k => k.harga_kandang <= maxHarga);
-                if(fT) outData = outData.filter(k => k.status_transaksi === fT);
-                if(fK) outData = outData.filter(k => k.status_kesehatan === fK);
-                if(fF) outData = outData.filter(k => k.status_fisik === fF);
-            }
 
-            if (outData.length === 0) {
-                return showAlert("Tidak ada data untuk diekspor dengan filter saat ini.", "warning");
-            }
+                if (!outData || outData.length === 0) {
+                    return showAlert("Tidak ada data untuk diekspor dengan filter saat ini.", "warning");
+                }
 
-            showToast('Menyiapkan data ekspor...', 'info');
+                showToast(`Menyiapkan ekspor ${outData.length} data...`, 'info');
 
+                const { data: trxs, error: trxErr } = await supabase.from('transaksi').select('*');
+                if (trxErr) throw new Error("Gagal mengambil data transaksi: " + trxErr.message);
 
-            const { data: trxs } = await supabase.from('transaksi').select('*');
-            let exportArray = [];
-
-            outData.forEach(k => {
-                let statBayar = '-';
-                let trxInfo = {
-                    'ID Transaksi': '-', 'Tgl Transaksi': '-', 'Agen': '-', 'Tipe Agen': '-',
-                    'Nama Konsumen': '-', 'Sohibul Qurban': '-', 'WA Konsumen 1': '-', 'WA Konsumen 2': '-', 
-                    'Alamat Pengiriman': '-', 'Tipe Pengiriman': '-', 'Tgl Pengiriman': '-',
-                    'Harga Deal (Kambing Ini)': 0, 'Total Dibayar (Per Ekor)': 0,
-                    'Sisa Tagihan (Per Ekor)': 0, 'Kelebihan Bayar (Per Ekor)': 0, 'Komisi Agen (Per Ekor)': 0, 'Status Komisi': '-'
-                };
-                let profitNetRow = 0;
-                
-                if (k.status_transaksi === 'Terjual' || k.status_transaksi === 'Terdistribusi') {
-                    const t = (trxs || []).find(x => x.id === k.transaction_id);
-                    if (t) {
-                        statBayar = ((t.total_paid || 0) >= (t.total_deal || 0)) ? 'Lunas' : 'Belum Lunas';
-                        const tItems = Array.isArray(t.items) ? t.items : [];
-                        const itemIndex = tItems.findIndex(i => i.goatId === k.id);
-
-                        if (itemIndex !== -1) {
-                            const itemInTrx = t.items[itemIndex];
-                            const alamatDelivery = t.delivery.alamat || {};
-                            const sisaTagihan = (t.total_deal || 0) - (t.total_paid || 0);
+                let exportArray = [];
+                outData.forEach(k => {
+                    let statBayar = '-';
+                    let trxInfo = {
+                        'ID Transaksi': '-', 'Tgl Transaksi': '-', 'Agen': '-', 'Tipe Agen': '-',
+                        'Nama Konsumen': '-', 'Sohibul Qurban': '-', 'WA Konsumen 1': '-', 'WA Konsumen 2': '-', 
+                        'Alamat Pengiriman': '-', 'Tipe Pengiriman': '-', 'Tgl Pengiriman': '-',
+                        'Harga Deal (Kambing Ini)': 0, 'Total Dibayar (Per Ekor)': 0,
+                        'Sisa Tagihan (Per Ekor)': 0, 'Kelebihan Bayar (Per Ekor)': 0, 'Komisi Agen (Per Ekor)': 0, 'Status Komisi': '-'
+                    };
+                    let profitNetRow = 0;
+                    
+                    if (k.status_transaksi === 'Terjual' || k.status_transaksi === 'Terdistribusi') {
+                        const t = (trxs || []).find(x => x.id === k.transaction_id);
+                        if (t) {
+                            statBayar = ((t.total_paid || 0) >= (t.total_deal || 0)) ? 'Lunas' : 'Belum Lunas';
+                            const tItems = Array.isArray(t.items) ? t.items : [];
+                            const itemIndex = tItems.findIndex(i => i.goatId === k.id);
                             
-                            const hDeal = parseFloat(itemInTrx.hargaDeal) || 0;
-                            const hNota = parseFloat(k.harga_nota) || 0;
-                            const hSaving = parseFloat(k.saving) || 0;
-                            const komisiVal = (t.komisi && t.komisi.berhak) ? parseFloat(t.komisi.nominal) : 0;
-                            const nItems = t.items.length || 1;
-                            const komisiPerEkor = komisiVal / nItems;
-                            
-                            profitNetRow = hDeal - hNota - hSaving - komisiPerEkor;
-                            
-                            trxInfo = {
-                                'ID Transaksi': t.id,
-                                'Tgl Transaksi': formatTgl(t.tgl_trx),
-                                'Agen': t.agen.nama || '-',
-                                'Tipe Agen': t.agen.tipe || '-',
-                                'Nama Konsumen': t.customer.nama || '-',
-                                'Sohibul Qurban': itemInTrx.namaSohibul || '-',
-                                'WA Konsumen 1': t.customer.wa1 || '-',
-                                'WA Konsumen 2': t.customer.wa2 || '-',
-                                'Alamat Pengiriman': `${alamatDelivery.jalan || ''} ${alamatDelivery.desa || ''}, Kec. ${alamatDelivery.kec || ''}, Kab. ${alamatDelivery.kab || ''}`.trim().replace(/^,|,$/g, ''),
-                                'Tipe Pengiriman': (t.delivery.tipe || '').replace('_', ' '),
-                                'Tgl Pengiriman': formatTgl(t.delivery.tgl),
-                                'Harga Deal (Kambing Ini)': hDeal,
-                                'Total Dibayar (Per Ekor)': (parseFloat(t.total_paid) || 0) / nItems,
-                                'Sisa Tagihan (Per Ekor)': (sisaTagihan > 0 ? sisaTagihan : 0) / nItems,
-                                'Kelebihan Bayar (Per Ekor)': (parseFloat(t.total_overpaid) || 0) / nItems,
-                                'Komisi Agen (Per Ekor)': komisiPerEkor,
-                                'Status Komisi': t.komisi ? t.komisi.status : '-'
-                            };
+                            if (itemIndex !== -1) {
+                                const itemInTrx = tItems[itemIndex];
+                                const ad = t.delivery?.alamat || {};
+                                const sisa = (t.total_deal || 0) - (t.total_paid || 0);
+                                
+                                const hDeal = parseFloat(itemInTrx?.hargaDeal || 0);
+                                const hNota = parseFloat(k.harga_nota || 0);
+                                const hSaving = parseFloat(k.saving || 0);
+                                const komVal = (t.komisi && t.komisi.berhak) ? parseFloat(t.komisi.nominal || 0) : 0;
+                                const nItems = tItems.length || 1;
+                                const komPerEkor = komVal / nItems;
+                                
+                                profitNetRow = hDeal - hNota - hSaving - komPerEkor;
+                                
+                                trxInfo = {
+                                    'ID Transaksi': t.id,
+                                    'Tgl Transaksi': formatTgl(t.tgl_trx),
+                                    'Agen': t.agen?.nama || '-',
+                                    'Tipe Agen': t.agen?.tipe || '-',
+                                    'Nama Konsumen': t.customer?.nama || '-',
+                                    'Sohibul Qurban': itemInTrx?.namaSohibul || '-',
+                                    'WA Konsumen 1': t.customer?.wa1 || '-',
+                                    'WA Konsumen 2': t.customer?.wa2 || '-',
+                                    'Alamat Pengiriman': `${ad.jalan || ''} ${ad.desa || ''}, Kec. ${ad.kec || ''}, Kab. ${ad.kab || ''}`.trim(),
+                                    'Tipe Pengiriman': (t.delivery?.tipe || '').replace('_', ' '),
+                                    'Tgl Pengiriman': formatTgl(t.delivery?.tgl),
+                                    'Harga Deal (Kambing Ini)': hDeal,
+                                    'Total Dibayar (Per Ekor)': (parseFloat(t.total_paid || 0)) / nItems,
+                                    'Sisa Tagihan (Per Ekor)': (sisa > 0 ? sisa : 0) / nItems,
+                                    'Kelebihan Bayar (Per Ekor)': (parseFloat(t.total_overpaid || 0)) / nItems,
+                                    'Komisi Agen (Per Ekor)': komPerEkor,
+                                    'Status Komisi': t.komisi ? t.komisi.status : '-'
+                                };
+                            }
                         }
                     }
-                }
 
-                exportArray.push({
-                    'Batch': (k.batch || '').replace('BT-','BT'),
-                    'ID Sistem': k.id,
-                    'Tgl Masuk': formatTgl(k.tgl_masuk),
-                    'Supplier': isRestricted('hideSupplierInfo') ? '***' : (k.supplier || '-'),
-                    'No Tali': k.no_tali || '-',
-                    'Warna Tali': k.warna_tali || '-',
-                    'Sex': k.sex || '-',
-                    'Lokasi': k.lokasi || '-',
-                    ...(isRestricted('hideWeight') ? {} : { 'Berat (kg)': k.berat || '-' }),
-                    'Link Foto': k.foto_fisik || '-',
-                    ...(isRestricted('hideHargaNota') ? {} : { 'Harga Nota (Rp)': parseFloat(k.harga_nota) || 0 }),
-                    ...(isRestricted('hideProfit') ? {} : { 
-                        'Nilai Saving (Rp)': parseFloat(k.saving) || 0,
-                        'Est Profit (Rp)': parseFloat(k.profit) || 0 
-                    }),
-                    'Harga Jual Kandang (Rp)': isRestricted('hideHargaKandang') ? 0 : (parseFloat(k.harga_kandang) || 0),
-                    'Status Transaksi': k.status_transaksi || '-',
-                    'Status Kesehatan': k.status_kesehatan || '-',
-                    'Status Fisik': k.status_fisik || '-',
-                    'Status Bayar': statBayar,
-                    ...(isRestricted('hideProfit') ? {} : { 'Profit Net / Ekor (Rp)': profitNetRow }),
-                    'Catatan Histori / Keluar': '-',
-                    ...trxInfo
+                    exportArray.push({
+                        'Batch': (k.batch || '').replace('BT-','BT'),
+                        'ID Sistem': k.id,
+                        'Tgl Masuk': formatTgl(k.tgl_masuk),
+                        'Supplier': isRestricted('hideSupplierInfo') ? '***' : (k.supplier || '-'),
+                        'No Tali': k.no_tali || '-',
+                        'Warna Tali': k.warna_tali || '-',
+                        'Sex': k.sex || '-',
+                        'Lokasi': k.lokasi || '-',
+                        ...(isRestricted('hideWeight') ? {} : { 'Berat (kg)': k.berat || '-' }),
+                        'Link Foto': k.foto_fisik || '-',
+                        ...(isRestricted('hideHargaNota') ? {} : { 'Harga Nota (Rp)': parseFloat(k.harga_nota) || 0 }),
+                        ...(isRestricted('hideProfit') ? {} : { 
+                            'Nilai Saving (Rp)': parseFloat(k.saving) || 0,
+                            'Est Profit (Rp)': parseFloat(k.profit) || 0 
+                        }),
+                        'Harga Jual Kandang (Rp)': isRestricted('hideHargaKandang') ? 0 : (parseFloat(k.harga_kandang) || 0),
+                        'Status Transaksi': k.status_transaksi || '-',
+                        'Status Kesehatan': k.status_kesehatan || '-',
+                        'Status Fisik': k.status_fisik || '-',
+                        'Status Bayar': statBayar,
+                        ...(isRestricted('hideProfit') ? {} : { 'Profit Net / Ekor (Rp)': profitNetRow }),
+                        'Catatan Histori / Keluar': '-',
+                        ...trxInfo
+                    });
                 });
-            });
 
-            if(typeof XLSX !== 'undefined') {
-                const worksheet = XLSX.utils.json_to_sheet(exportArray);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Master Data Stock");
-                XLSX.writeFile(workbook, `Master_Data_Komprehensif_${new Date().getTime()}.xlsx`);
-            } else {
-                showAlert("Library Export Excel gagal dimuat. Silakan muat ulang halaman atau cek koneksi internet Anda.", 'danger');
+                if(typeof XLSX !== 'undefined') {
+                    const ws = XLSX.utils.json_to_sheet(exportArray);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Master Data Stock");
+                    XLSX.writeFile(wb, `Master_Data_Export_${new Date().getTime()}.xlsx`);
+                    showToast('✅ Berhasil mengunduh data!', 'success');
+                } else {
+                    throw new Error("Library XLSX tidak ditemukan.");
+                }
+            } catch (err) {
+                console.error("Export Error:", err);
+                showAlert("Gagal mengekspor data: " + err.message, "danger");
             }
+        });
         });
     }
 
