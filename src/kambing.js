@@ -982,7 +982,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showAlert("Gagal mengekspor data: " + err.message, "danger");
             }
         });
-        });
     }
 
     renderTable();
