@@ -466,6 +466,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('refundKonsumen').textContent = trx.customer.nama;
         document.getElementById('refundNominal').textContent = window.formatRp(surplus);
         document.getElementById('inpNominalRefund').value = window.formatNum(surplus);
+        
+        const inpTglRefund = document.getElementById('inpTglRefund');
+        if (inpTglRefund) inpTglRefund.value = window.getLocalDate();
+        
         modal._trx = trx; modal.classList.add('active');
     };
 
@@ -477,40 +481,139 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.getElementById('btnSimpanRefund')?.addEventListener('click', async () => {
-        const modal = document.getElementById('modalRefundKelebihan');
-        const trx = modal._trx;
-        const nominal = window.parseNum(document.getElementById('inpNominalRefund').value);
-        const tgl = document.getElementById('inpTglRefund').value;
-        const chan = document.getElementById('inpChannelRefund').value;
-        const refId = 'REF-' + Date.now().toString().slice(-6);
+        const btn = document.getElementById('btnSimpanRefund');
+        const oldText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Memproses...';
 
-        const oldOver = (trx.total_overpaid || 0);
-        const oldPaid = (trx.total_paid || 0);
-        const deal = (trx.total_deal || 0);
+        try {
+            const modal = document.getElementById('modalRefundKelebihan');
+            const trx = modal._trx;
+            const nominal = window.parseNum(document.getElementById('inpNominalRefund').value);
+            const tgl = document.getElementById('inpTglRefund').value;
+            const chan = document.getElementById('inpChannelRefund').value;
+            const refId = 'REF-' + Date.now().toString().slice(-6);
 
-        let fromOver = Math.min(nominal, oldOver);
-        let remaining = nominal - fromOver;
-        let fromPaid = Math.min(remaining, Math.max(0, oldPaid - deal));
+            let finalChannel = chan;
+            const inpRekIdRefund = document.getElementById('inpRekIdRefund');
+            if (chan === 'Transfer Bank' && inpRekIdRefund?.value) {
+                finalChannel = `TF ${inpRekIdRefund.options[inpRekIdRefund.selectedIndex].textContent}`;
+            }
 
-        await supabase.from('transaksi').update({ 
-            total_overpaid: oldOver - fromOver,
-            total_paid: oldPaid - fromPaid
-        }).eq('id', trx.id);
-        await supabase.from('keuangan').insert([{ id: refId, tipe: 'pengeluaran', tanggal: tgl, kategori: 'Pengembalian Dana', nominal, channel: chan, related_trx_id: trx.id, keterangan: 'Refund kelebihan '+trx.id }]);
-        
-        modal.classList.remove('active');
-        window.showAlert('Refund Berhasil!', 'success', () => { renderStats(); renderList(); });
+            let buktiUrl = null;
+            const inpBuktiRefund = document.getElementById('inpBuktiRefund');
+            if (inpBuktiRefund?.files.length > 0) {
+                const b64 = await compressImage(inpBuktiRefund.files[0]);
+                buktiUrl = await uploadToGDrive(b64, 'BUKTI_REFUND');
+            }
+
+            const oldOver = (trx.total_overpaid || 0);
+            const oldPaid = (trx.total_paid || 0);
+            const deal = (trx.total_deal || 0);
+
+            let fromOver = Math.min(nominal, oldOver);
+            let remaining = nominal - fromOver;
+            let fromPaid = Math.min(remaining, Math.max(0, oldPaid - deal));
+
+            await supabase.from('transaksi').update({ 
+                total_overpaid: oldOver - fromOver,
+                total_paid: oldPaid - fromPaid
+            }).eq('id', trx.id);
+            
+            await supabase.from('keuangan').insert([{ 
+                id: refId, 
+                tipe: 'pengeluaran', 
+                tanggal: tgl, 
+                kategori: 'Pengembalian Dana', 
+                nominal, 
+                channel: finalChannel, 
+                related_trx_id: trx.id, 
+                keterangan: 'Refund kelebihan '+trx.id,
+                bukti_url: buktiUrl
+            }]);
+            
+            modal.classList.remove('active');
+            window.showAlert('Refund Berhasil!', 'success', () => { renderStats(); renderList(); });
+        } catch (err) {
+            console.error(err);
+            window.showAlert('Gagal refund: ' + err.message, 'danger');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = oldText;
+        }
     });
 
-    const inpChannelRefund = document.getElementById('inpChannelRefund');
     if (inpChannelRefund) {
-        inpChannelRefund.onchange = () => {
+        inpChannelRefund.onchange = async () => {
             const safeguard = document.getElementById('safeguardRefund');
             if (safeguard) {
                 safeguard.style.display = (inpChannelRefund.value === 'Kas Operasional') ? 'block' : 'none';
             }
+            
+            const containerRekRefund = document.getElementById('containerRekRefund');
+            const inpRekIdRefund = document.getElementById('inpRekIdRefund');
+            if (inpChannelRefund.value === 'Transfer Bank') {
+                containerRekRefund.style.display = 'block';
+                const reks = await getBankAccounts();
+                inpRekIdRefund.innerHTML = '<option value="">-- Pilih Rekening --</option>';
+                reks.forEach(r => {
+                    const o = document.createElement('option');
+                    o.value = r.id;
+                    o.textContent = `${r.bank} - ${r.norek} (${r.an})`;
+                    inpRekIdRefund.appendChild(o);
+                });
+            } else {
+                containerRekRefund.style.display = 'none';
+            }
         };
     }
+
+    // --- CAMERA & BUKTI REFUND LOGIC ---
+    const btnOpenCameraRefund = document.getElementById('btnOpenCameraRefund');
+    const inpBuktiRefund = document.getElementById('inpBuktiRefund');
+    const previewBuktiRefund = document.getElementById('previewBuktiRefund');
+
+    btnOpenCameraRefund?.addEventListener('click', () => {
+        if(typeof window.openCameraUI === 'function') {
+            window.openCameraUI(async (file) => {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                if(inpBuktiRefund) inpBuktiRefund.files = dt.files;
+                
+                if(previewBuktiRefund) {
+                    const previewImg = previewBuktiRefund.querySelector('img');
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        if(previewImg) previewImg.src = e.target.result;
+                        previewBuktiRefund.style.display = 'flex';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+
+    inpBuktiRefund?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file && previewBuktiRefund) {
+            const previewImg = previewBuktiRefund.querySelector('img');
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                if(previewImg) previewImg.src = re.target.result;
+                previewBuktiRefund.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('btnRemoveRefundPhoto')?.addEventListener('click', () => {
+        if(inpBuktiRefund) inpBuktiRefund.value = '';
+        if(previewBuktiRefund) {
+            previewBuktiRefund.style.display = 'none';
+            const img = previewBuktiRefund.querySelector('img');
+            if(img) img.src = '';
+        }
+    });
 
     if (inpChannelBayar) {
         inpChannelBayar.onchange = () => {
@@ -604,11 +707,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }, 0);
                     const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
 
-                    // 5. Update jika ada perbedaan
-                    if (newTotalPaid !== trx.total_paid || newTotalOverpaid !== trx.total_overpaid || (JSON.stringify(rebuiltHistory) !== JSON.stringify(trx.history_bayar))) {
+                    // 5. Update jika ada perbedaan & harga deal valid
+                    const isDiff = newTotalPaid !== trx.total_paid || (JSON.stringify(rebuiltHistory) !== JSON.stringify(trx.history_bayar));
+                    
+                    if (isDiff && (trx.total_deal > 0)) {
                         await supabase.from('transaksi').update({
                             total_paid: newTotalPaid,
-                            total_overpaid: newTotalOverpaid,
+                            total_overpaid: Math.max(0, newTotalPaid - (trx.total_deal || 0)),
                             history_bayar: rebuiltHistory,
                             updated_at: new Date().toISOString()
                         }).eq('id', trx.id);

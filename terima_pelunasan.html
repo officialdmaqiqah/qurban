@@ -370,8 +370,21 @@
                         <option value="Lainnya">🧩 Lainnya</option>
                     </select>
                     <div id="containerRekRefund" style="display:none; margin-top:0.4rem;">
-                        <label class="form-label" style="font-size:0.7rem;">💳 Rekening Sumber</label>
+                        <label class="form-label" style="font-size:0.7rem; color:var(--primary);">💳 Rekening Sumber</label>
                         <select id="inpRekIdRefund" class="form-control" style="font-size:0.8rem;"></select>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 1rem; border-top: 1px dotted var(--border-color); padding-top: 1rem;">
+                    <label class="form-label">📸 Bukti Refund (Opsional)</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="file" id="inpBuktiRefund" class="form-control" accept="image/*" style="font-size:0.8rem; flex:1;">
+                        <button type="button" id="btnOpenCameraRefund" class="btn btn-sm" style="background:#4b5563; color:#ffffff; padding:8px 12px; height:40px; border-radius:8px; border:none; display:flex; align-items:center; gap:5px;" title="Ambil Foto dari Kamera">📸 Kamera</button>
+                        <div id="previewBuktiRefund" style="display:none; align-items:center; gap:8px;">
+                            <div style="width:40px; height:40px; border-radius:4px; overflow:hidden; border:1px solid var(--border-color);">
+                                <img src="" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                            <button type="button" id="btnRemoveRefundPhoto" class="btn btn-sm" style="background:#ef4444; color:#ffffff; border:none; border-radius:4px; padding:4px 8px; font-size:0.7rem;">🗑️</button>
+                        </div>
                     </div>
                 </div>
             </div>
