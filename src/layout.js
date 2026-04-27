@@ -689,3 +689,91 @@ window.openCameraUI = function(callback) {
         }, 'image/jpeg', 0.8);
     };
 };
+
+// --- SHARED IMAGE UTILITIES ---
+const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
+
+window.compressImage = async function(file, maxWidth = 800, quality = 0.6) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > height) {
+                    if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
+                } else {
+                    if (height > maxWidth) { width *= maxWidth / height; height = maxWidth; }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Get base64 without prefix
+                const base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+                resolve(base64);
+            };
+            img.onerror = () => reject(new Error('Gagal memproses file gambar.'));
+        };
+        reader.onerror = () => reject(new Error('Gagal membaca file.'));
+    });
+};
+
+window.uploadToGDrive = async function(base64, folderName, fileName) {
+    try {
+        const response = await fetch(GDRIVE_PROXY_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                base64: base64,
+                mimeType: "image/jpeg",
+                fileName: fileName || ("upload_" + Date.now() + ".jpg"),
+                folderName: folderName || "UPLOADS_GENERAL"
+            })
+        });
+        const result = await response.json();
+        if (result.success && result.url) {
+            return window.getDirectDriveLink(result.url);
+        } else {
+            console.error('GDrive Script Error:', result.error || 'Unknown error');
+            return null;
+        }
+    } catch (error) {
+        console.error('GDrive Upload Fetch failed:', error);
+        return null;
+    }
+};
+
+/**
+ * processImageUpload: High-level helper for UI modules
+ * Returns the URL on success, or null on failure.
+ * Automatically shows toasts/alerts.
+ */
+window.processImageUpload = async function(file, folderName, fileName) {
+    if (!file) return null;
+    
+    window.showToast('Mengompres & Mengunggah gambar...', 'info');
+    try {
+        const b64 = await window.compressImage(file);
+        const url = await window.uploadToGDrive(b64, folderName, fileName);
+        
+        if (url) {
+            window.showToast('Gambar berhasil diunggah!', 'success');
+            return url;
+        } else {
+            window.showAlert('Gagal mengunggah gambar ke Cloud. Silakan coba lagi atau cek koneksi.', 'danger');
+            return null;
+        }
+    } catch (err) {
+        console.error('Upload Process Error:', err);
+        window.showAlert('Terjadi kesalahan saat memproses gambar: ' + err.message, 'danger');
+        return null;
+    }
+};
+

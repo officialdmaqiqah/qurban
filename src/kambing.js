@@ -67,60 +67,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return data?.val || [];
     };
     
-    // GOOGLE DRIVE INTEGRATION (VIA APPS SCRIPT PROXY)
-    const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
-
-    // --- PHOTO UTILITIES ---
-
-
-    async function compressImage(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    let width = img.width;
-                    let height = img.height;
-                    const max = 800;
-                    if (width > height) {
-                        if (width > max) { height *= max / width; width = max; }
-                    } else {
-                        if (height > max) { width *= max / height; height = max; }
-                    }
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
-                };
-            };
-        });
-    }
-
-    async function uploadToGDrive(base64, folderName) {
-        try {
-            const response = await fetch(GDRIVE_PROXY_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    base64: base64,
-                    mimeType: "image/jpeg",
-                    fileName: "kambing_" + Date.now() + ".jpg",
-                    folderName: folderName || "FOTO_MASTER_KAMBING"
-                })
-            });
-            const result = await response.json();
-            if(result.success) {
-                return window.getDirectDriveLink(result.url);
-            }
-            return null;
-        } catch (error) {
-            console.error('GDrive Upload failed:', error);
-            return null;
-        }
-    }
     
     const tableBody = document.getElementById('tableBodyKambing');
     const modalKambing = document.getElementById('modalKambing');
@@ -275,9 +221,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${getStatusBadge('fisik', item.status_fisik)}</td>
                 <td>${statusBayarBadge}</td>
                 <td style="text-align:center; vertical-align:middle;">
-                    ${(item.foto_thumb || item.foto_fisik) 
-                        ? `<button class="btn btn-sm btn-view-photo" data-url="${getDirectDriveLink(item.foto_fisik)}" data-notali="${item.no_tali}" data-warna="${item.warna_tali || '-'}" title="Klik untuk Perbesar" style="width:32px; height:32px; border-radius:50%; padding:0; overflow:hidden; border:2px solid var(--primary-transparent); background:rgba(255,255,255,0.05);">
-                             <img src="${getDirectDriveLink(item.foto_thumb || item.foto_fisik)}" style="width:100%; height:100%; object-fit:cover;">
+                    ${(item.foto_thumb || item.foto_fisik || item.foto_nota_url) 
+                        ? `<button class="btn btn-sm btn-view-photo" data-url="${getDirectDriveLink(item.foto_fisik || item.foto_nota_url)}" data-notali="${item.no_tali}" data-warna="${item.warna_tali || '-'}" title="Klik untuk Perbesar" style="width:32px; height:32px; border-radius:50%; padding:0; overflow:hidden; border:2px solid var(--primary-transparent); background:rgba(255,255,255,0.05);">
+                             <img src="${getDirectDriveLink(item.foto_thumb || item.foto_fisik || item.foto_nota_url)}" style="width:100%; height:100%; object-fit:cover;">
                            </button>`
                         : `<span style="opacity:0.1; font-size:1rem;" title="Tanpa foto">🚫</span>`
                     }
@@ -693,15 +639,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             let photoUrl = dbItem.foto_fisik || null;
             let thumbUrl = dbItem.foto_thumb || null;
             if(inpFotoFisik && inpFotoFisik.files.length > 0) {
-                showToast('Mengecilkan & Mengunggah ke Google Drive...', 'info');
-                const b64 = await compressImage(inpFotoFisik.files[0]);
-                const uploadResUrl = await uploadToGDrive(b64, "FOTO_MASTER_KAMBING");
-                if(uploadResUrl) {
-                    photoUrl = uploadResUrl;
-                    thumbUrl = uploadResUrl;
-                    showToast('Foto berhasil diunggah ke Google Drive', 'success');
+                const uploadedUrl = await window.processImageUpload(inpFotoFisik.files[0], 'FOTO_MASTER_KAMBING', 'kambing_' + Date.now() + '.jpg');
+                if (uploadedUrl) {
+                    photoUrl = uploadedUrl;
+                    thumbUrl = uploadedUrl;
                 } else {
-                    showToast('Gagal mengunggah foto ke Google Drive, melewati proses gambar.', 'warning');
+                    // Fail upload, stop save to let user retry
+                    return;
                 }
             } else if (isPhotoRemoved) {
                 photoUrl = null;

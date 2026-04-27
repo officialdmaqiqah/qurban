@@ -17,55 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 
-    const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
-
-
-
-    async function compressImage(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    let width = img.width;
-                    let height = img.height;
-                    const max = 800;
-                    if (width > height) {
-                        if (width > max) { height *= max / width; width = max; }
-                    } else {
-                        if (height > max) { width *= max / height; height = max; }
-                    }
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
-                };
-            };
-        });
-    }
-
-    async function uploadToGDrive(base64, folderName) {
-        try {
-            const response = await fetch(GDRIVE_PROXY_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    base64: base64,
-                    mimeType: "image/jpeg",
-                    fileName: "masuk_" + Date.now(),
-                    folderName: folderName || "FOTO_NOTA_SUPPLIER"
-                })
-            });
-            const result = await response.json();
-            return result.success ? window.getDirectDriveLink(result.url) : null;
-        } catch (error) {
-            console.error('GDrive Upload failed:', error);
-            return null;
-        }
-    }
     
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
         await supabase.auth.signOut();
@@ -222,9 +173,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         let fotoNotaUrl = null;
         if (inpFotoNota && inpFotoNota.files.length > 0) {
-            window.showToast('Mengunggah foto nota...', 'info');
-            const b64 = await compressImage(inpFotoNota.files[0]);
-            fotoNotaUrl = await uploadToGDrive(b64, 'FOTO_NOTA_SUPPLIER');
+            fotoNotaUrl = await window.processImageUpload(inpFotoNota.files[0], 'FOTO_NOTA_SUPPLIER', 'masuk_' + Date.now() + '.jpg');
+            if (!fotoNotaUrl) return; // Stop if upload failed to prevent missing image in draft
         }
 
         const editingId = document.getElementById('draftId').value;
