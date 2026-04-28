@@ -523,7 +523,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 bodyMingguan.innerHTML = '<tr><td colspan="2" align="center" style="opacity:0.5">Belum ada data pengeluaran</td></tr>';
             } else {
                 sortedWeeks.forEach(w => {
-                    bodyMingguan.innerHTML += `<tr><td><strong>${w}</strong></td><td class="text-right text-warning" style="font-weight:600;">${formatRp(weekly[w])}</td></tr>`;
+                    // Format w: "2026-W18" -> "Pekan ke-18 (2026)"
+                    let displayWeek = w;
+                    const parts = w.split('-W');
+                    if(parts.length === 2) {
+                        displayWeek = `Pekan ke-${parseInt(parts[1], 10)} (${parts[0]})`;
+                    }
+                    bodyMingguan.innerHTML += `<tr><td><strong>${displayWeek}</strong></td><td class="text-right text-warning" style="font-weight:600;">${formatRp(weekly[w])}</td></tr>`;
                 });
             }
         }
