@@ -1467,6 +1467,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             height: 1.5cm;
                             border: 0.3pt solid #ddd;
                             padding: 0.1cm 0.3cm;
+                            page-break-inside: avoid;
+                            break-inside: avoid;
                             display: flex;
                             flex-direction: column;
                             justify-content: center;
