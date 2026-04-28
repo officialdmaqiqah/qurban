@@ -500,6 +500,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
             });
         }
+
+        // 4. Tren Pengeluaran Mingguan
+        const bodyMingguan = document.querySelector('#tableAnalisisMingguan tbody');
+        if(bodyMingguan) {
+            bodyMingguan.innerHTML = '';
+            const getIsoWeek = (dateStr) => {
+                const d = new Date(dateStr);
+                d.setHours(0, 0, 0, 0);
+                d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+                const week1 = new Date(d.getFullYear(), 0, 4);
+                return d.getFullYear() + '-W' + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7 + 1).toString().padStart(2, '0');
+            };
+            const weekly = {};
+            fFin.filter(f => f.tipe === 'pengeluaran').forEach(f => {
+                const w = getIsoWeek(f.tanggal);
+                weekly[w] = (weekly[w] || 0) + f.nominal;
+            });
+            
+            const sortedWeeks = Object.keys(weekly).sort((a,b) => b.localeCompare(a)); // Descending order
+            if(sortedWeeks.length === 0) {
+                bodyMingguan.innerHTML = '<tr><td colspan="2" align="center" style="opacity:0.5">Belum ada data pengeluaran</td></tr>';
+            } else {
+                sortedWeeks.forEach(w => {
+                    bodyMingguan.innerHTML += `<tr><td><strong>${w}</strong></td><td class="text-right text-warning" style="font-weight:600;">${formatRp(weekly[w])}</td></tr>`;
+                });
+            }
+        }
     };
 
     const debugText = document.getElementById('debugText');
