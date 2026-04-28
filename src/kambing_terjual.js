@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     map.set(nameKey, { 
                         ...existing, 
-                        wa: p.wa || existing.wa, 
+                        wa: existing.wa || p.wa, 
                         tipe: newTipe, 
                         source: 'merged'
                     });
