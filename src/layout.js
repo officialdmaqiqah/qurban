@@ -495,20 +495,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const allowedMenus = profile.allowed_menus || [];
         
         if (!isAdmin) {
-            // FORCE: Redirect away from dashboard if not admin
-            if (window.location.pathname.includes('dashboard.html')) {
+            // FORCE: Redirect away from dashboard if not admin and not in allowed menus
+            if (window.location.pathname.includes('dashboard.html') && !allowedMenus.includes('dashboard.html')) {
                 window.location.href = 'kambing.html';
                 return;
             }
 
             document.querySelectorAll('.nav-item').forEach(item => {
                 const href = item.getAttribute('href');
-                // Force hide dashboard for non-admins
-                if (href && href.includes('dashboard.html')) {
-                    item.style.display = 'none';
-                }
                 // Hide if not in allowed menus
-                else if (href && !allowedMenus.includes(href)) {
+                if (href && !allowedMenus.includes(href)) {
                     // Kecuali pengaturan.html, kita ijinkan agar bisa edit profil personal
                     if (href !== 'pengaturan.html') {
                         item.style.display = 'none';

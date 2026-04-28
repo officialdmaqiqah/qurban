@@ -37,9 +37,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const rekeningDb = reksData?.val || [];
         const userRole = (profile.role || 'staff').toLowerCase().trim();
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+        const allowedMenus = profile.allowed_menus || [];
         
         // --- REDUNDANT SAFETY REDIRECT ---
-        if (!isAdmin) {
+        if (!isAdmin && !allowedMenus.includes('dashboard.html')) {
             window.location.href = 'kambing.html';
             return;
         }
