@@ -1413,7 +1413,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const name1 = (it.namaSohibul || t.customer?.nama || '---').trim().toUpperCase();
                     labelData.push({
                         sohibul: name1,
-                        info: `No.${it.noTali} [${it.warnaTali || '-'}]`
+                        info: `No.${it.noTali} [${it.warnaTali || '-'}]`,
+                        agen: t.agen?.nama || '-'
                     });
                 });
             }
@@ -1436,7 +1437,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="sohibul">${l.sohibul}</div>
                     <div class="divider"></div>
                     <div class="footer">
-                        <span>${l.info}</span>
+                        <span>${l.info} | ${l.agen}</span>
                     </div>
                 </div>
             `).join('');
