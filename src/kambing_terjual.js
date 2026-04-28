@@ -260,6 +260,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const initForm = async () => {
+        if (formTerjual) formTerjual.reset();
+        
         const userRole = (profile.role || '').toLowerCase();
         const isAdmin = userRole === 'admin';
         const linkedAgen = profile.permissions?.linkedAgen || '';
