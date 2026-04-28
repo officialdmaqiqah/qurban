@@ -225,7 +225,7 @@ export const sendWa = async (number, message) => {
 
         return { 
             success: false, 
-            msg: `Gagal mengirim WA: ${error.message}`,
+            msg: `Gagal mengirim WA: ${error.message} (Tujuan: ${cleanNumber})`,
             link: getWaLink(cleanNumber, message)
         };
     }
