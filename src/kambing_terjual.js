@@ -1410,11 +1410,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const labelData = [];
             for (const t of selectedTrx) {
                 (t.items || []).forEach(it => {
-                    const name1 = (it.namaSohibul || t.customer?.nama || t.agen?.nama || '---').trim().toUpperCase();
+                    const name1 = (it.namaSohibul || t.customer?.nama || '---').trim().toUpperCase();
                     labelData.push({
                         sohibul: name1,
-                        info: `No.${it.noTali} [${it.warnaTali || '-'}]`,
-                        agen: t.agen?.nama || '-'
+                        info: `No.${it.noTali} [${it.warnaTali || '-'}]`
                     });
                 });
             }
@@ -1438,7 +1437,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="divider"></div>
                     <div class="footer">
                         <span>${l.info}</span>
-                        <span style="opacity:0.7;">${l.agen}</span>
                     </div>
                 </div>
             `).join('');
@@ -1482,10 +1480,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                         .footer {
                             font-size: 8pt;
-                            font-weight: 500;
+                            font-weight: bold;
                             color: #444;
                             display: flex;
-                            justify-content: space-between;
+                            justify-content: center;
                             white-space: nowrap;
                         }
                     </style>
