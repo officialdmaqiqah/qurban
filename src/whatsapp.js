@@ -210,7 +210,7 @@ export const sendWa = async (number, message) => {
         } else {
             return { 
                 success: false, 
-                msg: result.message || result.msg || 'Gagal mengirim pesan via Gateway.',
+                msg: `${result.message || result.msg || 'Gagal mengirim pesan via Gateway.'} (Tujuan: ${cleanNumber})`,
                 link: getWaLink(cleanNumber, message) 
             };
         }
@@ -254,7 +254,7 @@ async function sendWaDirect(number, message, config) {
         }
         return { 
             success: false, 
-            msg: result.message || 'Gagal via Direct Path.',
+            msg: `${result.message || 'Gagal via Direct Path.'} (Tujuan: ${number})`,
             link: window.getWaLink(number, message) 
         };
     } catch (err) {
