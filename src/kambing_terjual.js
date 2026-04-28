@@ -1432,15 +1432,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             setTimeout(() => renderTable(), 500);
 
             // 6. Tulis HTML Akhir
-            const labelsHtml = labelData.map(l => `
+            const labelsHtml = labelData.map(l => {
+                let fs = '13pt';
+                if (l.sohibul.length > 40) fs = '7pt';
+                else if (l.sohibul.length > 30) fs = '8pt';
+                else if (l.sohibul.length > 20) fs = '9.5pt';
+                else if (l.sohibul.length > 15) fs = '11pt';
+
+                return `
                 <div class="label-box">
-                    <div class="sohibul">${l.sohibul}</div>
+                    <div class="sohibul" style="font-size: ${fs};">${l.sohibul}</div>
                     <div class="divider"></div>
                     <div class="footer">
                         <span>${l.info} | ${l.agen}</span>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
 
             const content = `
                 <html>
@@ -1468,12 +1475,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                         .sohibul {
                             font-weight: 900;
-                            font-size: 12pt;
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
                             text-align: center;
-                            line-height: 1.2;
+                            line-height: 1.1;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            flex: 1;
+                            word-wrap: break-word;
+                            overflow: hidden;
+                            padding: 1px 0;
                         }
                         .divider {
                             border-top: 0.5pt dashed #ccc;
