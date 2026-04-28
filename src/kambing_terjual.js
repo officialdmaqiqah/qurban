@@ -625,6 +625,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
+    window.viewBuktiPhoto = (srcUrl) => {
+        const lb = document.getElementById('photoLightbox');
+        const img = document.getElementById('lightboxImg');
+        const loader = document.getElementById('lightboxLoading');
+        const btnDownload = document.getElementById('btnDownloadLightbox');
+        
+        if(lb && img) {
+            img.style.display = 'none';
+            if(loader) {
+                loader.style.display = 'none';
+            }
+            img.src = srcUrl;
+            lb.style.display = 'flex';
+            img.style.display = 'block';
+
+            if (btnDownload) {
+                btnDownload.style.display = 'none'; // Sembunyikan download untuk bukti TF sementara ini
+            }
+        }
+    };
+
     window.viewGoatPhoto = async (id) => {
         const { data: k } = await supabase.from('stok_kambing').select('foto_fisik, no_tali, warna_tali').eq('id', id).single();
         if(!k || !k.foto_fisik) return window.showToast('Foto tidak tersedia.', 'warning');
