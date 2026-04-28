@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 if (f.tipe === 'pengeluaran') {
                     const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
-                    const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan');
+                    const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan') || katLine.includes('pengembalian dana') || katLine.includes('refund');
                     
                     if (!isExclusion) {
                         opex += nom;
@@ -406,15 +406,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fFin = fin.filter(f => { const d = new Date(f.tanggal); return d >= start && d <= end; });
         const fTrxs = trxs.filter(t => { const d = new Date(t.tgl_trx || t.tglTrx); return d >= start && d <= end; });
 
-        // 1. KPI Scorecards
-        const opex = fFin.filter(f => {
+        const isOpex = f => {
             if(f.tipe !== 'pengeluaran') return false;
             const kl = (f.kategori || '').toLowerCase();
             const isEx = kl.includes('bayar supplier') || kl.includes('pelunasan supplier') || kl.includes('komisi') || 
                          kl.includes('bagi hasil') || kl.includes('mutasi') || kl.includes('titipan') || kl.includes('beli kambing') ||
+                         kl.includes('pengembalian dana') || kl.includes('refund') ||
                          f.kategori === 'Kerugian (Mati/Hilang)';
             return !isEx;
-        }).reduce((s,f) => s + f.nominal, 0);
+        };
+
+        // 1. KPI Scorecards
+        const opex = fFin.filter(isOpex).reduce((s,f) => s + f.nominal, 0);
         // Calculate additional components for CPH as requested
         const totalKomisi = fTrxs.reduce((s, t) => s + (t.komisi?.nominal || 0), 0);
         
@@ -462,7 +465,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(bodyCat) {
             bodyCat.innerHTML = '';
             const cats = {};
-            fFin.filter(f => f.tipe === 'pengeluaran').forEach(f => {
+            fFin.filter(isOpex).forEach(f => {
                 cats[f.kategori] = (cats[f.kategori] || 0) + f.nominal;
             });
             const totalExp = Object.values(cats).reduce((s,v) => s+v, 0) || 1;
@@ -513,7 +516,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return d.getFullYear() + '-W' + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7 + 1).toString().padStart(2, '0');
             };
             const weekly = {};
-            fFin.filter(f => f.tipe === 'pengeluaran').forEach(f => {
+            fFin.filter(isOpex).forEach(f => {
                 const w = getIsoWeek(f.tanggal);
                 weekly[w] = (weekly[w] || 0) + f.nominal;
             });
