@@ -158,6 +158,14 @@ export const sendWa = async (number, message) => {
 
     console.log('[WA] Menyiapkan pengiriman ke:', cleanNumber);
     
+    if (!cleanNumber || cleanNumber.length < 10) {
+        return { 
+            success: false, 
+            msg: `Nomor tujuan tidak valid (${number}). Pastikan nomor benar.`, 
+            link: getWaLink(number, message) 
+        };
+    }
+
     // Validasi Konfigurasi
     if (!config || !config.apiKey || !config.sender) {
         console.error('[WA] Konfigurasi WA Tidak Lengkap!', config);

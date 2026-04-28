@@ -37,19 +37,21 @@ module.exports = async (req, res) => {
 
         // Use POST with form-urlencoded for the outgoing gateway request 
         // This is the most compatible format for most SMS/WA gateways
+        const payload = {
+            api_key: api_key,
+            sender: sender,
+            number: number,
+            message: message
+        };
+        if (footer) payload.footer = footer;
+
         const response = await fetch('https://xsender.id/api/send-message', {
             method: 'POST',
             headers: { 
                 'Accept': 'application/json',
                 'Content-Type': 'application/x-www-form-urlencoded' 
             },
-            body: new URLSearchParams({
-                api_key: api_key,
-                sender: sender,
-                number: number,
-                message: message,
-                footer: footer || ''
-            })
+            body: new URLSearchParams(payload)
         });
 
         const textResponse = await response.text();
