@@ -773,6 +773,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnAktif?.addEventListener('click', () => switchTab('aktif'));
     btnHistori?.addEventListener('click', () => switchTab('histori'));
 
+    document.getElementById('btnSyncTrips')?.addEventListener('click', async () => {
+        showConfirm('Sinkronkan seluruh data Trip Selesai/Sembelih dengan Master Stock Kambing? Fitur ini akan memaksa kambing di dalam trip menjadi status Terdistribusi/Disembelih.', async () => {
+            try {
+                showToast('Mensinkronkan...', 'info');
+                const { trips } = await loadData();
+                let updated = 0;
+                const updates = [];
+                for(const t of trips) {
+                    if (t.status === 'Selesai') {
+                        const isSembelih = t.items.some(i => i.buktiUrl === 'SEM_KANDANG');
+                        for(const item of t.items) {
+                            if (isSembelih || item.status === 'Terdistribusi') {
+                                updates.push(supabase.from('stok_kambing').update({
+                                    status_transaksi: 'Terdistribusi',
+                                    status_fisik: isSembelih ? 'Disembelih' : 'Terdistribusi',
+                                    updated_at: new Date().toISOString()
+                                }).eq('id', item.goatId));
+                                updated++;
+                            }
+                        }
+                    }
+                }
+                
+                if (updates.length > 0) {
+                    await Promise.all(updates);
+                    showToast(`Berhasil mensinkronkan ${updated} data kambing.`, 'success');
+                } else {
+                    showToast('Tidak ada data kambing yang perlu disinkronisasi.', 'info');
+                }
+                
+                setTimeout(() => window.location.reload(), 1500);
+            } catch (err) {
+                showAlert('Gagal sinkron: ' + err.message, 'danger');
+            }
+        }, null, 'Sync Stok', 'Ya, Sinkron Sekarang', 'btn-warning');
+    });
+
     window.setupMoneyMask('inpInternalPrice');
     renderTrips();
 });

@@ -5,8 +5,8 @@ const supabaseKey = 'sb_publishable_K6phM9DpcT4aqm1nvXdkYA_h9N1fQTQ';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function checkTrips() {
-    const { data: trips } = await supabase.from('master_data').select('val').eq('key', 'TRIPS').single();
-    console.log("TRIPS:", JSON.stringify(trips?.val || [], null, 2));
+    const { data: trips, error } = await supabase.from('master_data').select('id, key').eq('key', 'TRIPS').single();
+    console.log("TRIPS Row:", trips, error);
 }
 
 checkTrips();

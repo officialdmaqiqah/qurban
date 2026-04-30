@@ -1,29 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
 
-dotenv.config();
+const supabaseUrl = 'https://juscihvfmgibmrhmclab.supabase.co';
+const supabaseKey = 'sb_publishable_K6phM9DpcT4aqm1nvXdkYA_h9N1fQTQ';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY);
-
-async function checkUsers() {
-    const { data: profiles, error } = await supabase
+async function check() {
+    const { data, error } = await supabase
         .from('profiles')
-        .select('email, role, status, allowed_menus, permissions');
-
+        .select('*')
+        .or('full_name.ilike.%Wawan%,full_name.ilike.%Husni%,email.ilike.%Husni%,email.ilike.%wawan%');
+    
     if (error) {
-        console.error('Error fetching profiles:', error);
-        return;
+        console.error("Error:", error);
+    } else {
+        console.log("Users found:", JSON.stringify(data, null, 2));
     }
-
-    console.log('--- USER PROFILES & PERMISSIONS ---');
-    profiles.forEach(p => {
-        console.log(`Email: ${p.email}`);
-        console.log(`Role: ${p.role}`);
-        console.log(`Status: ${p.status}`);
-        console.log(`Allowed Menus: ${JSON.stringify(p.allowed_menus)}`);
-        console.log(`Permissions: ${JSON.stringify(p.permissions)}`);
-        console.log('-----------------------------------');
-    });
 }
 
-checkUsers();
+check();
