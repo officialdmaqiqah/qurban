@@ -768,7 +768,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 items: currentCart, total_deal: total, 
                 total_paid: Math.min(paidNow + (window.existingInstallmentsTotal || 0), total),
                 total_overpaid: Math.max(0, (paidNow + (window.existingInstallmentsTotal || 0)) - total),
-                history_bayar: paidNow > 0 ? [{ payId: 'PAY-'+Date.now(), tgl: inpTglOrder.value || window.getLocalDate(), nominal: paidNow, channel: finalChannelDP, buktiUrl }] : [],
+                history_bayar: paidNow > 0 ? [
+                    { payId: 'PAY-'+Date.now(), tgl: inpTglOrder.value || window.getLocalDate(), nominal: paidNow, channel: finalChannelDP, buktiUrl },
+                    ...(window.existingInstallmentsHistory || [])
+                ] : (window.existingInstallmentsHistory || []),
                 komisi: { 
                     berhak: currentAgenTipeKomisi, 
                     nominal: parseNum(inpKomisiNominal?.value), 
@@ -978,9 +981,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             await supabase.from('keuangan').delete().eq('related_trx_id', trxId);
             window.existingInstallmentsTotal = 0;
         } else {
-            // Hanya ambil nominal cicilan (Pelunasan Order), abaikan DP (Jual Kambing) karena DP akan diinput ulang/diedit
-            const { data: fin } = await supabase.from('keuangan').select('nominal').eq('related_trx_id', trxId).neq('kategori', 'Jual Kambing');
-            window.existingInstallmentsTotal = fin?.reduce((s,f) => s + f.nominal, 0) || 0;
+            // Hanya ambil nominal cicilan (Pelunasan Order & Refund), abaikan DP (Jual Kambing) karena DP akan diinput ulang/diedit
+            const { data: fin } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId).neq('kategori', 'Jual Kambing');
+            window.existingInstallmentsTotal = fin?.reduce((s,f) => {
+                if (f.tipe === 'pemasukan' && f.kategori === 'Pelunasan Order') return s + parseFloat(f.nominal);
+                if (f.kategori === 'Pengembalian Dana') return s - parseFloat(f.nominal);
+                return s;
+            }, 0) || 0;
+            
+            window.existingInstallmentsHistory = fin?.filter(f => f.kategori === 'Pelunasan Order' || f.kategori === 'Pengembalian Dana').map(f => ({
+                payId: f.id,
+                tgl: f.tanggal,
+                nominal: f.tipe === 'pengeluaran' ? -Math.abs(parseFloat(f.nominal)) : parseFloat(f.nominal),
+                channel: f.channel,
+                buktiUrl: f.bukti_url,
+                category: f.kategori
+            })) || [];
+
             // Hapus record DP lama dari keuangan
             await supabase.from('keuangan').delete().eq('related_trx_id', trxId).eq('kategori', 'Jual Kambing');
         }
