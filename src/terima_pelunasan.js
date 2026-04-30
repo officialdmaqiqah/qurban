@@ -702,7 +702,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     // 4. Hitung ulang total (HANYA Pemasukan atau Refund Pelanggan)
                     const newTotalPaid = rebuiltHistory.reduce((s, h) => {
-                        if (h.tipe === 'pemasukan' || h.category === 'Pengembalian Dana') return s + h.nominal;
+                        const isRefund = h.category === 'Pengembalian Dana' || h.category === 'Refund Kelebihan' || (h.category || '').toLowerCase().includes('refund') || (h.category || '').toLowerCase().includes('pengembalian');
+                        if (h.tipe === 'pemasukan' || isRefund) return s + h.nominal;
                         return s;
                     }, 0);
                     const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
