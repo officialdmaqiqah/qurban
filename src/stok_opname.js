@@ -104,6 +104,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const id = e.target.dataset.id;
                 const loc = e.target.value;
                 const goat = goats.find(g => g.id === id);
+                const newHistory = await updateAuditLog(goat, loc, 'Audit Lokasi');
+                
                 // Update Cache
                 const updatedGoat = { ...goat, lokasi: loc, updated_at: new Date().toISOString(), status_history: newHistory };
                 const idx = cachedGoats.findIndex(g => g.id === id);
