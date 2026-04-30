@@ -1,9 +1,5 @@
 
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-const supabaseUrl = 'https://juscihvfmgibmrhmclab.supabase.co';
-const supabaseKey = 'sb_publishable_K6phM9DpcT4aqm1nvXdkYA_h9N1fQTQ';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const penGrid = document.getElementById('penGrid');
@@ -13,12 +9,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const avgDensityEl = document.getElementById('avgDensity');
     const btnRefresh = document.getElementById('btnRefresh');
 
-    // Default capacities stored in localStorage to persist user adjustments
-    let penCapacities = JSON.parse(localStorage.getItem('PEN_CAPACITIES')) || {};
+    // Fetch master locations from Settings
+    const getMasterLocations = async () => {
+        const { data, error } = await supabase.from('master_data').select('val').eq('key', 'LOKASI').single();
+        if (error && error.code !== 'PGRST116') console.error('Error fetching locations:', error);
+        return data?.val || [];
+    };
 
     const loadData = async () => {
         try {
-            // Fetch all goats that are currently in the pen (status_fisik = 'Ada')
+            // 1. Fetch Master Locations
+            const masterLocations = await getMasterLocations();
+            
+            // 2. Fetch all goats that are currently in the pen (status_fisik = 'Ada')
             const { data: goats, error } = await supabase
                 .from('stok_kambing')
                 .select('id, no_tali, lokasi')
@@ -26,19 +29,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (error) throw error;
 
-            // Group goats by location
+            // 3. Prepare Pens Object
             const pens = {};
-            goats.forEach(g => {
-                const loc = g.lokasi || 'UNSET';
-                if (!pens[loc]) pens[loc] = [];
-                pens[loc].push(g);
+            
+            // Initialize with master locations
+            masterLocations.forEach(loc => {
+                pens[loc.nama] = {
+                    goats: [],
+                    capacity: parseInt(loc.kapasitas) || 10,
+                    id: loc.id
+                };
             });
 
-            renderGrid(pens);
+            // Group goats by location
+            goats.forEach(g => {
+                const locName = g.lokasi || 'UNSET';
+                if (!pens[locName]) {
+                    // Handle locations not in master data
+                    pens[locName] = {
+                        goats: [],
+                        capacity: 10, // Default
+                        id: 'UNTRACKED-' + locName
+                    };
+                }
+                pens[locName].goats.push(g);
+            });
+
+            renderGrid(pens, masterLocations);
             updateSummary(pens);
         } catch (err) {
             console.error('Error loading pen data:', err);
-            alert('Gagal memuat data kandang: ' + err.message);
+            if (window.showAlert) window.showAlert('Gagal memuat data kandang: ' + err.message, 'danger');
+            else alert('Gagal memuat data kandang: ' + err.message);
         }
     };
 
@@ -49,16 +71,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         return { label: 'Longgar', class: 'status-low', barClass: 'bar-low' };
     };
 
-    const renderGrid = (pens) => {
+    const renderGrid = (pens, masterLocations) => {
         penGrid.innerHTML = '';
         
         // Sort pen names alphabetically
         const sortedPenNames = Object.keys(pens).sort();
 
         sortedPenNames.forEach(name => {
-            const count = pens[name].length;
-            const capacity = penCapacities[name] || 10; // Default capacity 10
-            const percentage = Math.round((count / capacity) * 100);
+            const pen = pens[name];
+            const count = pen.goats.length;
+            const capacity = pen.capacity;
+            const percentage = capacity > 0 ? Math.round((count / capacity) * 100) : 0;
             const status = getStatusInfo(percentage);
 
             const card = document.createElement('div');
@@ -93,13 +116,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Add event listeners for capacity inputs
         document.querySelectorAll('.capacity-input').forEach(input => {
-            input.addEventListener('change', (e) => {
+            input.addEventListener('change', async (e) => {
                 const penName = e.target.dataset.pen;
                 const newVal = parseInt(e.target.value);
                 if (newVal > 0) {
-                    penCapacities[penName] = newVal;
-                    localStorage.setItem('PEN_CAPACITIES', JSON.stringify(penCapacities));
-                    loadData(); // Re-render
+                    // Update in Master Data if it exists there
+                    const currentMaster = await getMasterLocations();
+                    const idx = currentMaster.findIndex(l => l.nama === penName);
+                    
+                    if (idx !== -1) {
+                        currentMaster[idx].kapasitas = newVal;
+                        const { error } = await supabase.from('master_data').upsert({ 
+                            id: 'ID-LOKASI', 
+                            key: 'LOKASI', 
+                            val: currentMaster 
+                        }, { onConflict: 'key' });
+                        
+                        if (error) {
+                            window.showToast('Gagal update ke Cloud: ' + error.message, 'danger');
+                        } else {
+                            window.showToast('Kapasitas diperbarui!', 'success');
+                            loadData(); // Re-render
+                        }
+                    } else {
+                        // For non-master locations, just local update or show warning
+                        window.showToast('Lokasi ini tidak terdaftar di Pengaturan. Update hanya sementara.', 'warning');
+                        // Local storage fallback for ad-hoc locations
+                        let localCaps = JSON.parse(localStorage.getItem('PEN_CAPACITIES')) || {};
+                        localCaps[penName] = newVal;
+                        localStorage.setItem('PEN_CAPACITIES', JSON.stringify(localCaps));
+                        loadData();
+                    }
                 }
             });
         });
@@ -113,9 +160,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         let totalDensity = 0;
 
         penNames.forEach(name => {
-            const count = pens[name].length;
-            const capacity = penCapacities[name] || 10;
-            const density = (count / capacity) * 100;
+            const pen = pens[name];
+            const count = pen.goats.length;
+            const capacity = pen.capacity;
+            const density = capacity > 0 ? (count / capacity) * 100 : 0;
             
             totalGoats += count;
             if (density > 100) overloaded++;
@@ -133,3 +181,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initial load
     loadData();
 });
+
