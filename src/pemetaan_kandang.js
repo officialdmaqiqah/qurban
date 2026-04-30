@@ -84,6 +84,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             const percentage = capacity > 0 ? Math.round((count / capacity) * 100) : 0;
             const status = getStatusInfo(percentage);
 
+            // Generate units for visual map
+            let unitsHtml = '';
+            // 1. Render actual goats
+            pen.goats.forEach(g => {
+                unitsHtml += `
+                    <div class="goat-unit" title="No Tali: ${g.no_tali}">
+                        <div class="unit-tooltip">${g.no_tali}</div>
+                    </div>`;
+            });
+            // 2. Render empty slots (if any, up to capacity)
+            const emptyCount = Math.max(0, capacity - count);
+            for(let i = 0; i < emptyCount; i++) {
+                unitsHtml += `<div class="goat-unit empty"></div>`;
+            }
+            // 3. If overloaded, maybe show extra? (Current logic shows all goats, then empty slots only if count < capacity)
+
             const card = document.createElement('div');
             card.className = `pen-card ${count === 0 ? 'empty-pen' : ''}`;
             card.innerHTML = `
@@ -96,13 +112,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="stat-value">${count}</span>
                         <span class="stat-label">ekor</span>
                     </div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+                        ${percentage}% Kapasitas
+                    </div>
                 </div>
-                <div class="progress-container">
-                    <div class="progress-bar ${status.barClass}" style="width: ${Math.min(percentage, 100)}%"></div>
+
+                <div class="visual-map">
+                    ${unitsHtml}
                 </div>
-                <div style="font-size: 0.75rem; display: flex; justify-content: space-between; color: var(--text-muted);">
-                    <span>Kepadatan: ${percentage}%</span>
-                    <span>Max: ${capacity}</span>
+
+                <div style="font-size: 0.75rem; display: flex; justify-content: space-between; color: var(--text-muted); margin-top: auto;">
+                    <span>Sisa Slot: ${Math.max(0, capacity - count)}</span>
+                    <span>Kapasitas Max: ${capacity}</span>
                 </div>
                 <div class="capacity-control">
                     <span>Atur Kapasitas:</span>

@@ -179,6 +179,61 @@
         @media (max-width: 768px) {
             .pen-grid { grid-template-columns: 1fr; }
         }
+
+        /* Visual Goat Map */
+        .visual-map {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(18px, 1fr));
+            gap: 4px;
+            margin: 0.75rem 0;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            min-height: 44px;
+        }
+
+        .goat-unit {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        
+        .goat-unit:hover {
+            transform: scale(1.3);
+            z-index: 5;
+            box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.4);
+        }
+
+        .goat-unit.empty {
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: none;
+            border: 1px dashed rgba(255, 255, 255, 0.08);
+            cursor: default;
+        }
+        .goat-unit.empty:hover { transform: none; }
+
+        .unit-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-5px);
+            background: var(--bg-card);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.6rem;
+            white-space: nowrap;
+            display: none;
+            border: 1px solid var(--primary-transparent);
+            z-index: 10;
+            pointer-events: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .goat-unit:hover .unit-tooltip { display: block; }
     </style>
 </head>
 <body>
