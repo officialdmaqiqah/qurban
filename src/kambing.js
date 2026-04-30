@@ -133,19 +133,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isShortNumber = /^\d+$/.test(search) && search.length <= 3;
             filtered = filtered.filter(k => {
                 const s = search.toLowerCase();
-                const matchNoTali = (k.no_tali || '').toLowerCase().includes(s);
+                const matchNoTali = String(k.no_tali || '').toLowerCase().includes(s);
                 const matchBatch = (k.batch || '').toLowerCase().includes(s);
-                const matchID = (k.id || '').toLowerCase().includes(s);
                 
                 if (isShortNumber) {
-                    return matchNoTali || matchBatch || matchID;
+                    return matchNoTali || matchBatch;
                 }
 
                 const matchWarna = (k.warna_tali || '').toLowerCase().includes(s);
                 const matchSupplier = (k.supplier || '').toLowerCase().includes(s);
                 const matchLokasi = (k.lokasi || '').toLowerCase().includes(s);
                 const matchSex = (k.sex || '').toLowerCase().includes(s);
-                return matchNoTali || matchWarna || matchSupplier || matchLokasi || matchSex || matchID || matchBatch;
+                return matchNoTali || matchWarna || matchSupplier || matchLokasi || matchSex || matchBatch;
             });
         }
 
