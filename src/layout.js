@@ -584,14 +584,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Cleanup legacy sidebar logout button if exists
-    // document.getElementById('logoutBtn')?.closest('div')?.remove();
+    document.getElementById('logoutBtn')?.closest('div')?.remove();
 
-    // 4. VERSION INDICATOR (Visual Proof)
+    // 4. VERSION INDICATOR & CREDITS
     const sidebar = document.querySelector('.sidebar');
     if (sidebar) {
         const verTag = document.createElement('div');
-        verTag.style.cssText = 'padding: 10px 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.05); cursor: default;';
-        verTag.innerHTML = `System Version: <span style="color:var(--primary); font-weight:700;">v5.0 [LATEST]</span>`;
+        verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
+        verTag.innerHTML = `
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.0 [LATEST]</span></div>
+            <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
+        `;
         sidebar.appendChild(verTag);
     }
     console.log("%c>> DMQ SYSTEM ACTIVE: v5.0 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
