@@ -597,6 +597,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
         sidebar.appendChild(verTag);
     }
+
+    // --- GLOBAL MENU INJECTION (PEMETAAN KANDANG) ---
+    const sidebarNav = document.querySelector('.sidebar-nav');
+    if (sidebarNav) {
+        // Find "Distribusi" or "Stok Opname" to insert after
+        const targetLink = Array.from(sidebarNav.querySelectorAll('.nav-item')).find(a => a.href.includes('distribusi.html')) || 
+                           Array.from(sidebarNav.querySelectorAll('.nav-item')).find(a => a.href.includes('stok_opname.html'));
+        
+        if (targetLink && !sidebarNav.querySelector('a[href="pemetaan_kandang.html"]')) {
+            const mapLink = document.createElement('a');
+            mapLink.href = 'pemetaan_kandang.html';
+            mapLink.className = 'nav-item';
+            mapLink.innerHTML = '&bull; Pemetaan Kandang';
+            if (window.location.pathname.includes('pemetaan_kandang.html')) mapLink.classList.add('active');
+            targetLink.after(mapLink);
+        }
+    }
+
     console.log("%c>> DMQ SYSTEM ACTIVE: v5.0 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
 });
 
