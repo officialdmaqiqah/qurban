@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { goats } = await loadData();
         const { data: trxs } = await supabase.from('transaksi').select('*');
         
-        let headers = ['No Tali', 'Batch', 'Warna Tali', 'Lokasi Sistem', 'Lokasi Fisik (Cek)', 'Status', 'Sohibul'];
+        let headers = ['No Tali', 'Batch', 'Warna Tali', 'Lokasi Sistem', 'Lokasi Fisik (Cek)', 'Status', 'Sohibul', 'Agen'];
         let csv = headers.join(',') + '\n';
         
         goats.forEach(i => {
@@ -262,7 +262,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 i.no_tali, i.batch, i.warna_tali, 
                 `"${i.lokasi || '-'}"`, '""', // Space for pen check
                 i.status_transaksi, 
-                `"${trx?.customer?.nama || '-'}"`
+                `"${trx?.customer?.nama || '-'}"`,
+                `"${trx?.agen?.nama || '-'}"`
             ].join(',') + '\n';
         });
 
