@@ -16,6 +16,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         return data?.val || [];
     };
 
+    const getUnitStyle = (colorName) => {
+        const colors = {
+            'biru': '#3b82f6',
+            'merah': '#ef4444',
+            'kuning': '#fbbf24', // Amber-400 for better visibility
+            'hijau': '#10b981',
+            'ungu': '#8b5cf6',
+            'pink': '#ec4899',
+            'hitam': '#111827',
+            'putih': '#ffffff',
+            'orange': '#f97316',
+            'coklat': '#78350f'
+        };
+        const key = (colorName || '').toLowerCase().trim();
+        const bg = colors[key] || 'var(--primary)';
+        // Change text color to black for light backgrounds
+        const isLight = ['putih', 'kuning'].includes(key);
+        const text = isLight ? '#000' : '#fff';
+        const shadow = isLight ? 'none' : '0 1px 2px rgba(0,0,0,0.6)';
+        const border = isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)';
+        
+        return `background-color: ${bg}; color: ${text}; text-shadow: ${shadow}; border: ${border};`;
+    };
+
     const loadData = async () => {
         try {
             // 1. Fetch Master Locations
@@ -24,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 2. Fetch all goats that are currently in the pen (status_fisik = 'Ada')
             const { data: goats, error } = await supabase
                 .from('stok_kambing')
-                .select('id, no_tali, lokasi')
+                .select('id, no_tali, lokasi, warna_tali')
                 .eq('status_fisik', 'Ada');
 
             if (error) throw error;
@@ -88,9 +112,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             let unitsHtml = '';
             // 1. Render actual goats
             pen.goats.forEach(g => {
+                const style = getUnitStyle(g.warna_tali);
                 unitsHtml += `
-                    <div class="goat-unit" title="No Tali: ${g.no_tali}">
-                        <div class="unit-tooltip">${g.no_tali}</div>
+                    <div class="goat-unit" title="No Tali: ${g.no_tali} (${g.warna_tali || '-'})" style="${style}">
+                        ${g.no_tali}
+                        <div class="unit-tooltip">${g.no_tali} (${g.warna_tali || '-'})</div>
                     </div>`;
             });
             // 2. Render empty slots (if any, up to capacity)
