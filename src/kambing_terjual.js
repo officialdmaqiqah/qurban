@@ -296,6 +296,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(previewBuktiDP) previewBuktiDP.style.display = 'none';
         if(imgPreviewDP) imgPreviewDP.src = '';
         window.existingBuktiUrl = null;
+        window.existingKomisiState = null; // Reset komisi state
         
         
         window.setupMoneyMask(inpTotalBayarAwal);
@@ -768,7 +769,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 total_paid: Math.min(paidNow + (window.existingInstallmentsTotal || 0), total),
                 total_overpaid: Math.max(0, (paidNow + (window.existingInstallmentsTotal || 0)) - total),
                 history_bayar: paidNow > 0 ? [{ payId: 'PAY-'+Date.now(), tgl: inpTglOrder.value || window.getLocalDate(), nominal: paidNow, channel: finalChannelDP, buktiUrl }] : [],
-                komisi: { berhak: currentAgenTipeKomisi, nominal: parseNum(inpKomisiNominal?.value), status: 'belum_bayar', needs_approval: roleNorm === 'agen' }
+                komisi: { 
+                    berhak: currentAgenTipeKomisi, 
+                    nominal: parseNum(inpKomisiNominal?.value), 
+                    status: window.existingKomisiState?.status || 'belum_bayar', 
+                    needs_approval: window.existingKomisiState?.needs_approval ?? (roleNorm === 'agen'),
+                    tglBayar: window.existingKomisiState?.tglBayar || null,
+                    isUpfront: window.existingKomisiState?.isUpfront || false,
+                    buktiUrl: window.existingKomisiState?.buktiUrl || null
+                }
             };
 
             console.log(`[Edit Debug] Attempting save. ID: ${window.editingTrxId}, Role: ${roleNorm}, Email: ${profile.email}`);
@@ -1082,6 +1091,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
         if(!trx) return;
         window.editingTrxId = trx.id;
+        window.existingKomisiState = trx.komisi || null;
         await initForm();
         
         if (inpTglOrder) inpTglOrder.value = trx.tgl_trx || window.getLocalDate();
