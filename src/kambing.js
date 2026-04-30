@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const matchBatch = (k.batch || '').toLowerCase().includes(s);
                 
                 if (isShortNumber) {
-                    return matchNoTali || matchBatch;
+                    return matchNoTali;
                 }
 
                 const matchWarna = (k.warna_tali || '').toLowerCase().includes(s);
