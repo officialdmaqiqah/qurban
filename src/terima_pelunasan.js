@@ -702,7 +702,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     // 4. Hitung ulang total (HANYA Pemasukan atau Refund Pelanggan)
                     const newTotalPaid = rebuiltHistory.reduce((s, h) => {
-                        const isRefund = h.category === 'Pengembalian Dana' || h.category === 'Refund Kelebihan' || (h.category || '').toLowerCase().includes('refund') || (h.category || '').toLowerCase().includes('pengembalian');
+                        // Jika pengeluaran tapi bukan komisi, pasti itu uang refund yg dikembalikan ke pelanggan
+                        const isRefund = h.tipe === 'pengeluaran' && h.category !== 'Komisi Agen';
                         if (h.tipe === 'pemasukan' || isRefund) return s + h.nominal;
                         return s;
                     }, 0);

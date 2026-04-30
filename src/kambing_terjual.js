@@ -984,12 +984,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Hanya ambil nominal cicilan (Pelunasan Order & Refund), abaikan DP (Jual Kambing) karena DP akan diinput ulang/diedit
             const { data: fin } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId).neq('kategori', 'Jual Kambing');
             window.existingInstallmentsTotal = fin?.reduce((s,f) => {
+                const isRefund = f.tipe === 'pengeluaran' && f.kategori !== 'Komisi Agen';
                 if (f.tipe === 'pemasukan' && f.kategori === 'Pelunasan Order') return s + parseFloat(f.nominal);
-                if (f.kategori === 'Pengembalian Dana') return s - parseFloat(f.nominal);
+                if (isRefund) return s - parseFloat(f.nominal);
                 return s;
             }, 0) || 0;
             
-            window.existingInstallmentsHistory = fin?.filter(f => f.kategori === 'Pelunasan Order' || f.kategori === 'Pengembalian Dana').map(f => ({
+            window.existingInstallmentsHistory = fin?.filter(f => f.kategori === 'Pelunasan Order' || (f.tipe === 'pengeluaran' && f.kategori !== 'Komisi Agen')).map(f => ({
                 payId: f.id,
                 tgl: f.tanggal,
                 nominal: f.tipe === 'pengeluaran' ? -Math.abs(parseFloat(f.nominal)) : parseFloat(f.nominal),
