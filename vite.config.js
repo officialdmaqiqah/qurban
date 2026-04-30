@@ -24,7 +24,8 @@ export default defineConfig({
         laporan: resolve(__dirname, 'laporan.html'),
         register: resolve(__dirname, 'register.html'),
         forgot_password: resolve(__dirname, 'forgot_password.html'),
-        deposit_agen: resolve(__dirname, 'deposit_agen.html')
+        deposit_agen: resolve(__dirname, 'deposit_agen.html'),
+        pemetaan_kandang: resolve(__dirname, 'pemetaan_kandang.html')
       }
     }
   },
