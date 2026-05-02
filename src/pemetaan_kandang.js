@@ -48,15 +48,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 2. Fetch all goats that are currently in the pen (status_fisik = 'Ada')
             const { data: goats, error } = await supabase
                 .from('stok_kambing')
-                .select('*') // Fetch all fields for detail view
+                .select('*')
                 .eq('status_fisik', 'Ada');
 
             if (error) throw error;
 
-            // 3. Prepare Pens Object
+            // 3. Fetch Related Transactions for search context
+            const trxIds = [...new Set(goats.map(g => g.transaction_id).filter(id => id))];
+            let transactionsMap = {};
+            if (trxIds.length > 0) {
+                const { data: trxs } = await supabase.from('transaksi').select('id, customer, items').in('id', trxIds);
+                (trxs || []).forEach(t => {
+                    transactionsMap[t.id] = t;
+                });
+            }
+
+            // 4. Prepare Pens Object
             const pens = {};
-            
-            // Initialize with master locations
             masterLocations.forEach(loc => {
                 pens[loc.nama] = {
                     goats: [],
@@ -65,16 +73,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 };
             });
 
-            // Group goats by location
+            // Group goats and attach extra context for search
             goats.forEach(g => {
                 const locName = g.lokasi || 'UNSET';
                 if (!pens[locName]) {
-                    pens[locName] = {
-                        goats: [],
-                        capacity: 10, 
-                        id: 'UNTRACKED-' + locName
-                    };
+                    pens[locName] = { goats: [], capacity: 10, id: 'UNTRACKED-' + locName };
                 }
+                
+                // Attach search context
+                const trx = transactionsMap[g.transaction_id];
+                g._searchContext = {
+                    customer: (trx?.customer?.nama || '').toLowerCase(),
+                    sohibul: (trx?.items?.find(it => it.goatId === g.id)?.namaSohibul || '').toLowerCase()
+                };
+
                 pens[locName].goats.push(g);
             });
 
@@ -183,7 +195,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             pen.goats.forEach(g => {
                 const style = getUnitStyle(g.warna_tali);
                 unitsHtml += `
-                    <div class="goat-unit" data-id="${g.id}" data-tag="${g.no_tali}" title="No Tali: ${g.no_tali} (${g.warna_tali || '-'})" style="${style}">
+                    <div class="goat-unit" 
+                         data-id="${g.id}" 
+                         data-tag="${g.no_tali}" 
+                         data-customer="${g._searchContext.customer}" 
+                         data-sohibul="${g._searchContext.sohibul}"
+                         title="No Tali: ${g.no_tali}" style="${style}">
                         ${g.no_tali}
                         <div class="unit-tooltip">Klik untuk Detail (#${g.no_tali})</div>
                     </div>`;
@@ -303,14 +320,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const units = document.querySelectorAll('.goat-unit:not(.empty)');
         
         units.forEach(u => {
-            const tag = u.dataset.tag.toLowerCase();
-            if (val && tag.includes(val)) {
+            const tag = (u.dataset.tag || '').toLowerCase();
+            const cust = (u.dataset.customer || '').toLowerCase();
+            const sohib = (u.dataset.sohibul || '').toLowerCase();
+
+            if (val && (tag.includes(val) || cust.includes(val) || sohib.includes(val))) {
                 u.style.transform = 'scale(1.5)';
-                u.style.zIndex = '10';
+                u.style.zIndex = '100';
                 u.style.boxShadow = '0 0 15px var(--primary)';
                 u.style.borderColor = '#fff';
                 
-                // If it's an exact match, scroll into view
+                // If it's an exact match on tag, scroll into view
                 if (tag === val) {
                     u.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
@@ -328,28 +348,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnCloseModalDetail').onclick = closeModal;
     document.getElementById('btnCloseDetail').onclick = closeModal;
 
-    // LIGHTBOX LOGIC
+    // PHOTO ZOOM LOGIC (Using Global ViewPhoto from layout.js)
     const photoContainer = document.getElementById('goatPhotoContainer');
-    const lightbox = document.getElementById('photoLightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
-    const btnCloseLightbox = document.getElementById('btnCloseLightbox');
-
-    photoContainer.onclick = () => {
+    photoContainer.onclick = (e) => {
+        e.stopPropagation();
         const img = document.getElementById('goatPhoto');
         if (img.style.display !== 'none' && img.src) {
-            lightboxImg.src = img.src;
-            lightbox.style.display = 'flex';
+            if (typeof window.viewPhoto === 'function') {
+                window.viewPhoto(img.src);
+            } else {
+                // Fallback if global not available
+                window.open(img.src, '_blank');
+            }
         }
-    };
-
-    const closeLightbox = () => {
-        lightbox.style.display = 'none';
-        lightboxImg.src = '';
-    };
-
-    btnCloseLightbox.onclick = closeLightbox;
-    lightbox.onclick = (e) => {
-        if (e.target === lightbox) closeLightbox();
     };
 
     window.onclick = (e) => {
