@@ -495,8 +495,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const allowedMenus = profile.allowed_menus || [];
         
         if (!isAdmin) {
-            // FORCE: Redirect away from dashboard if not admin and not in allowed menus
-            if (window.location.pathname.includes('dashboard.html') && !allowedMenus.includes('dashboard.html')) {
+            // FORCE: Redirect away from protected pages if not admin and not in allowed menus
+            const protectedPages = ['dashboard.html', 'keuangan.html', 'laporan.html', 'pemetaan_kandang.html'];
+            const currentPage = window.location.pathname.split('/').pop();
+            
+            if (protectedPages.includes(currentPage) && !allowedMenus.includes(currentPage)) {
                 window.location.href = 'kambing.html';
                 return;
             }
@@ -601,17 +604,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- GLOBAL MENU INJECTION (PEMETAAN KANDANG) ---
     const sidebarNav = document.querySelector('.sidebar-nav');
     if (sidebarNav) {
-        // Find "Distribusi" or "Stok Opname" to insert after
-        const targetLink = Array.from(sidebarNav.querySelectorAll('.nav-item')).find(a => a.href.includes('distribusi.html')) || 
-                           Array.from(sidebarNav.querySelectorAll('.nav-item')).find(a => a.href.includes('stok_opname.html'));
-        
-        if (targetLink && !sidebarNav.querySelector('a[href="pemetaan_kandang.html"]')) {
-            const mapLink = document.createElement('a');
-            mapLink.href = 'pemetaan_kandang.html';
-            mapLink.className = 'nav-item';
-            mapLink.innerHTML = '&bull; Pemetaan Kandang';
-            if (window.location.pathname.includes('pemetaan_kandang.html')) mapLink.classList.add('active');
-            targetLink.after(mapLink);
+        // CHECK PERMISSION: Only inject if Admin or specifically allowed
+        const userRole = (profile?.role || 'staff').toLowerCase().trim();
+        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+        const allowedMenus = profile?.allowed_menus || [];
+        const isAllowed = isAdmin || allowedMenus.includes('pemetaan_kandang.html');
+
+        if (isAllowed) {
+            // Find "Distribusi" or "Stok Opname" to insert after
+            const targetLink = Array.from(sidebarNav.querySelectorAll('.nav-item')).find(a => a.href.includes('distribusi.html')) || 
+                               Array.from(sidebarNav.querySelectorAll('.nav-item')).find(a => a.href.includes('stok_opname.html'));
+            
+            if (targetLink && !sidebarNav.querySelector('a[href="pemetaan_kandang.html"]')) {
+                const mapLink = document.createElement('a');
+                mapLink.href = 'pemetaan_kandang.html';
+                mapLink.className = 'nav-item';
+                mapLink.innerHTML = '&bull; Pemetaan Kandang';
+                if (window.location.pathname.includes('pemetaan_kandang.html')) mapLink.classList.add('active');
+                targetLink.after(mapLink);
+            }
         }
     }
 

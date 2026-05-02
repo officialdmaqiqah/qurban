@@ -522,6 +522,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             { h: 'kesehatan.html', n: 'Kambing Sakit/Mati' },
             { h: 'stok_opname.html', n: 'Stok Opname' },
             { h: 'distribusi.html', n: 'Distribusi' },
+            { h: 'pemetaan_kandang.html', n: 'Pemetaan Kandang' },
             { h: 'keuangan.html', n: 'Pencatatan Keuangan' },
             { h: 'terima_pelunasan.html', n: 'Terima Pelunasan' },
             { h: 'hutang_supplier.html', n: 'Hutang ke Supplier' },
