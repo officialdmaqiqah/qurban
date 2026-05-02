@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Mobile Test - Dashboard Layout</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../src/style.css?v=test">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 0, 0, 0.05);
+            --card-radius: 20px;
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--card-radius);
+            padding: 1.75rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 2rem;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.15);
+        }
+        .stat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 0.35rem; display: block; }
+        .stat-value { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text-main); font-variant-numeric: tabular-nums; margin-bottom: 0.5rem; }
+        .stat-subvalue { font-size: 0.875rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 0; border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
+        .data-row:last-child { border-bottom: none; }
+        .data-label { font-size: 0.95rem; color: var(--text-muted); }
+        .data-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+        .comp-bar { height: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; display: flex; overflow: hidden; margin: 1.25rem 0; }
+        .comp-segment { height: 100%; }
+        .comp-available { background: var(--success); width: 50%; }
+        .comp-sold { background: var(--primary); width: 40%; }
+        .comp-sick { background: var(--danger); width: 8%; }
+        .comp-lost { background: var(--warning); width: 2%; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; }
+        @media (max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        .section-title { display: flex; align-items: center; gap: 12px; margin-bottom: 0.85rem; margin-top: 0; font-size: 1.1rem; font-weight: 500; }
+        .section-group { margin-top: 2rem; }
+        .icon-circle { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-transparent); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .finance-summary { background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.06), transparent); padding: 1.25rem; border-radius: 16px; margin-top: 0.75rem; }
+        .badge-mini { font-size: 0.75rem; padding: 3px 10px; border-radius: 6px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .badge-mini-green { background: rgba(var(--success-rgb), 0.1); color: var(--success); }
+        .badge-mini-amber { background: rgba(var(--warning-rgb), 0.1); color: var(--warning); }
+        .highlight-green { color: var(--success); }
+        .highlight-rose { color: var(--danger); }
+        .highlight-amber { color: var(--warning); }
+
+        /* DEBUG: Show viewport boundaries */
+        .debug-info {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: red;
+            color: white;
+            padding: 4px 8px;
+            font-size: 11px;
+            z-index: 99999;
+            text-align: center;
+        }
+    </style>
+    <script>(function(){document.documentElement.classList.add('light-mode');})();</script>
+</head>
+<body>
+    <div class="debug-info" id="debugInfo"></div>
+    <script>
+        function updateDebug() {
+            const el = document.getElementById('debugInfo');
+            const body = document.body;
+            el.textContent = `Viewport: ${window.innerWidth}x${window.innerHeight} | Body scroll: ${body.scrollWidth}x${body.scrollHeight} | Overflow: ${body.scrollWidth > window.innerWidth ? 'YES ⚠️' : 'NO ✅'}`;
+        }
+        window.addEventListener('resize', updateDebug);
+        window.addEventListener('load', updateDebug);
+        setTimeout(updateDebug, 500);
+    </script>
+
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo"><span style="font-weight: 600;">Daarul Mahabbah Qurban</span></div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">Dashboard Keuangan</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <div class="page-title" style="font-weight: 300;">Management <span style="font-weight: 700;">Overview</span></div>
+                <div class="user-menu">
+                    <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">WSE82</span>
+                </div>
+            </header>
+
+            <div class="content-area fade-in">
+                <div class="dashboard-grid">
+                    <div>
+                        <div class="section-title">
+                            <div class="icon-circle">🐐</div>
+                            <span>Inventori & Status Kandang</span>
+                        </div>
+                        
+                        <div class="glass-card">
+                            <span class="stat-label">Total Populasi</span>
+                            <div class="stat-value">126</div>
+                            <div class="stat-subvalue">Kambing dalam database</div>
+                            
+                            <div class="comp-bar">
+                                <div class="comp-segment comp-available"></div>
+                                <div class="comp-segment comp-sold"></div>
+                                <div class="comp-segment comp-sick"></div>
+                                <div class="comp-segment comp-lost"></div>
+                            </div>
+                            
+                            <div class="data-row">
+                                <div class="data-label">🐐 Tersedia</div>
+                                <div class="data-value highlight-green">65</div>
+                            </div>
+                            <div class="data-row">
+                                <div class="data-label">🤝 Terjual / Terdistribusi</div>
+                                <div class="data-value">59</div>
+                            </div>
+                            <div class="data-row">
+                                <div class="data-label">🏥 Sakit / Mati</div>
+                                <div class="data-value highlight-rose">2</div>
+                            </div>
+                            <div class="data-row">
+                                <div class="data-label">🔍 Hilang</div>
+                                <div class="data-value highlight-amber">0</div>
+                            </div>
+                        </div>
+
+                        <div class="section-group">
+                            <div class="section-title">
+                                <div class="icon-circle">📈</div>
+                                <span>Performa Penjualan</span>
+                            </div>
+                            <div class="glass-card">
+                                <span class="stat-label">Total Omzet Musim Ini</span>
+                                <div class="stat-value highlight-green">Rp 206.800.000</div>
+                                <div style="display: flex; gap: 10px; margin-bottom: 1.25rem;">
+                                    <div class="badge-mini badge-mini-green">
+                                        <span>Terbayar:</span> <span>Rp 150.000.000</span>
+                                    </div>
+                                    <div class="badge-mini badge-mini-amber">
+                                        <span>Piutang:</span> <span>Rp 56.800.000</span>
+                                    </div>
+                                </div>
+                                <div class="stat-subvalue">59 Ekor Terjual</div>
+                                <div class="finance-summary">
+                                    <div class="data-row">
+                                        <span class="data-label">Total HPP</span>
+                                        <span class="data-value highlight-rose">Rp 120.500.000</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="data-label">Komisi Agen</span>
+                                        <span class="data-value highlight-amber">Rp 8.250.000</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="data-label">Dana Saving</span>
+                                        <span class="data-value">Rp 2.000.000</span>
+                                    </div>
+                                    <div class="data-row" style="border-top: 2px solid rgba(0,0,0,0.06); margin-top: 0.5rem; padding-top: 1rem;">
+                                        <span class="data-label" style="font-weight: 700; color: var(--text-main);">Gross Profit Sales</span>
+                                        <span class="data-value highlight-green" style="font-size: 1.1rem;">Rp 76.050.000</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="data-label">Avg. Profit / Ekor</span>
+                                        <span class="data-value">Rp 1.289.000</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="section-title">
+                            <div class="icon-circle">💎</div>
+                            <span>Profitabilitas Netto</span>
+                        </div>
+                        <div class="glass-card" style="background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08), var(--glass-bg));">
+                            <span class="stat-label">Laba Bersih Aktual</span>
+                            <div class="stat-value highlight-green">Rp 52.300.000</div>
+                            <div class="stat-subvalue">Setelah semua biaya operasional</div>
+                            <div style="margin-top: 1.25rem;">
+                                <div class="data-row">
+                                    <span class="data-label">Biaya Operasional</span>
+                                    <span class="data-value highlight-rose">Rp 18.750.000</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">Kerugian Kambing Mati</span>
+                                    <span class="data-value highlight-rose">Rp 5.000.000</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">Laba Bersih / Ekor</span>
+                                    <span class="data-value highlight-green" style="font-weight: 700;">Rp 886.441</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

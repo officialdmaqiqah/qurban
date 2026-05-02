@@ -1610,34 +1610,49 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
         width: 100% !important;
         max-width: 100vw !important;
         box-sizing: border-box !important;
+        overflow-x: hidden !important; /* Safe: clips at container level, not inside cards */
     }
 
-    /* Glass card mobile — DO NOT use overflow:hidden, it clips data values */
-    .glass-card {
-        padding: 1.25rem !important;
+    /* ===== UNIVERSAL MOBILE WIDTH CONSTRAINT ===== */
+    /* Force ALL card-like elements to respect parent width */
+    .glass-card,
+    .card-box,
+    .finance-summary,
+    .premium-card {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
         word-break: break-word;
     }
 
-    /* Disable hover lift on mobile — Samsung rendering bug */
+    .glass-card {
+        padding: 1rem !important;
+    }
+
+    /* Disable hover lift on mobile — causes Samsung rendering bugs */
     .glass-card:hover {
         transform: none !important;
     }
 
-    /* Data row: ensure label shrinks, value stays visible */
+    /* ===== DATA ROW MOBILE FIX ===== */
     .data-row {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
         gap: 0.5rem;
     }
     .data-label {
-        flex: 1 1 0%;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: 0.85rem !important;
     }
     .data-value {
-        flex: 0 0 auto;
-        text-align: right;
-        white-space: nowrap;
+        flex: 0 0 auto !important;
+        text-align: right !important;
+        white-space: nowrap !important;
+        font-size: 0.85rem !important;
     }
 
     /* Section title: compact for narrow screens */
@@ -1653,24 +1668,24 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
 
     /* Stat value: scale down for small screens */
     .stat-value {
-        font-size: 1.75rem !important;
+        font-size: 1.5rem !important;
     }
 
-    /* Badge mini: wrap on narrow screens */
+    /* Badge mini: compact for mobile */
     .badge-mini {
-        font-size: 0.65rem !important;
+        font-size: 0.6rem !important;
         padding: 2px 6px !important;
     }
 
     /* Finance summary: tighter on mobile */
     .finance-summary {
-        padding: 0.75rem !important;
-        border-radius: 12px !important;
+        padding: 0.5rem !important;
+        border-radius: 10px !important;
     }
 
-    /* Card box: constrain width */
+    /* Card box: tighter padding */
     .card-box {
-        padding: 1rem !important;
+        padding: 0.75rem !important;
     }
 
     .data-table th, .data-table td {
