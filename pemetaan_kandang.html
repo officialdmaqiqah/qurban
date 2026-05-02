@@ -94,44 +94,55 @@
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
+            gap: 0.75rem;
             margin-bottom: 1.5rem;
         }
 
         .summary-card {
             background: var(--bg-card);
             border-radius: 16px;
-            padding: 0.75rem 1rem;
+            padding: 0.75rem;
             border: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.6rem;
+            min-width: 0; /* Prevent flex overflow */
+            box-shadow: var(--shadow-sm);
         }
 
         .summary-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1rem;
+        }
+
+        .summary-info {
+            min-width: 0;
+            flex: 1;
         }
 
         .summary-info h4 {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.02em;
             color: var(--text-muted);
             margin: 0;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .summary-info .value {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--text-main);
             font-family: 'Outfit', sans-serif;
+            line-height: 1.2;
         }
 
         /* Search Results Visual Feedback */
@@ -151,7 +162,11 @@
         @media (max-width: 768px) {
             .pen-grid { grid-template-columns: 1fr; }
             .summary-grid {
-                grid-template-columns: 1fr 1fr; /* 2x2 Grid for Mobile */
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 0.5rem;
+            }
+            .summary-card {
+                padding: 0.6rem;
             }
         }
 
