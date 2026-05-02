@@ -231,16 +231,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="visual-map">
                     ${unitsHtml}
                 </div>
-
-                <div style="font-size: 0.75rem; display: flex; justify-content: space-between; color: var(--text-muted); margin-top: auto;">
-                    <span>Sisa Slot: ${Math.max(0, capacity - count)}</span>
-                    <span>Kapasitas Max: ${capacity}</span>
-                </div>
-                <div class="capacity-control">
-                    <span>Atur Kapasitas:</span>
-                    <input type="number" class="capacity-input" data-pen="${name}" value="${capacity}" min="1">
-                    <span style="font-size: 0.65rem; opacity: 0.7;">(Auto-save)</span>
-                </div>
             `;
 
             penGrid.appendChild(card);
@@ -252,40 +242,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 e.stopPropagation();
                 openGoatDetail(unit.dataset.id);
             };
-        });
-
-        // Add event listeners for capacity inputs
-        document.querySelectorAll('.capacity-input').forEach(input => {
-            input.addEventListener('change', async (e) => {
-                const penName = e.target.dataset.pen;
-                const newVal = parseInt(e.target.value);
-                if (newVal > 0) {
-                    const currentMaster = await getMasterLocations();
-                    const idx = currentMaster.findIndex(l => l.nama === penName);
-                    
-                    if (idx !== -1) {
-                        currentMaster[idx].kapasitas = newVal;
-                        const { error } = await supabase.from('master_data').upsert({ 
-                            id: 'ID-LOKASI', 
-                            key: 'LOKASI', 
-                            val: currentMaster 
-                        }, { onConflict: 'key' });
-                        
-                        if (error) {
-                            window.showToast('Gagal update ke Cloud: ' + error.message, 'danger');
-                        } else {
-                            window.showToast('Kapasitas diperbarui!', 'success');
-                            loadData(); 
-                        }
-                    } else {
-                        window.showToast('Lokasi ini tidak terdaftar di Pengaturan.', 'warning');
-                        let localCaps = JSON.parse(localStorage.getItem('PEN_CAPACITIES')) || {};
-                        localCaps[penName] = newVal;
-                        localStorage.setItem('PEN_CAPACITIES', JSON.stringify(localCaps));
-                        loadData();
-                    }
-                }
-            });
         });
     };
 
@@ -318,29 +274,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     inpSearchGoat.addEventListener('input', (e) => {
         const val = e.target.value.trim().toLowerCase();
         const units = document.querySelectorAll('.goat-unit:not(.empty)');
+        const cards = document.querySelectorAll('.pen-card');
         
+        // Reset all
+        cards.forEach(c => c.classList.remove('search-match', 'search-dimmed'));
+        units.forEach(u => u.classList.remove('match-highlight'));
+
+        if (!val) return;
+
+        let firstMatchCard = null;
+
         units.forEach(u => {
             const tag = (u.dataset.tag || '').toLowerCase();
             const cust = (u.dataset.customer || '').toLowerCase();
             const sohib = (u.dataset.sohibul || '').toLowerCase();
 
-            if (val && (tag.includes(val) || cust.includes(val) || sohib.includes(val))) {
-                u.style.transform = 'scale(1.5)';
-                u.style.zIndex = '100';
-                u.style.boxShadow = '0 0 15px var(--primary)';
-                u.style.borderColor = '#fff';
+            if (tag.includes(val) || cust.includes(val) || sohib.includes(val)) {
+                u.classList.add('match-highlight');
                 
-                // If it's an exact match on tag, scroll into view
-                if (tag === val) {
-                    u.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Highlight Parent Card
+                const parentCard = u.closest('.pen-card');
+                if (parentCard) {
+                    parentCard.classList.add('search-match');
+                    if (!firstMatchCard) firstMatchCard = parentCard;
                 }
-            } else {
-                u.style.transform = '';
-                u.style.zIndex = '';
-                u.style.boxShadow = '';
-                u.style.borderColor = '';
             }
         });
+
+        // Dim cards that have no match
+        cards.forEach(c => {
+            if (!c.classList.contains('search-match')) {
+                c.classList.add('search-dimmed');
+            }
+        });
+
+        // Auto Scroll to first matched card
+        if (firstMatchCard) {
+            firstMatchCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     });
 
     // Modal Close Logic
