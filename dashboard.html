@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Management Dashboard - DM Qurban</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="src/style.css?v=4.4">
@@ -139,71 +139,26 @@
             
             .light-mode .glass-card { background: rgba(255, 255, 255, 0.85); }
 
-            /* ===== MOBILE FIX FOR SAMSUNG / SMALL PHONES ===== */
+            /* Mobile: fit everything inside 360px viewport */
             @media (max-width: 768px) {
                 .glass-card {
-                    padding: 1rem;
-                    border-radius: 14px;
-                    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.06);
-                    margin-bottom: 1.25rem;
-                }
-                .glass-card:hover {
-                    transform: none;
-                }
-                .stat-value {
-                    font-size: 1.5rem;
-                }
-                .stat-label {
-                    font-size: 0.7rem;
-                    letter-spacing: 0.08em;
-                }
-                .stat-subvalue {
-                    font-size: 0.8rem;
-                }
-                .data-row {
-                    padding: 0.6rem 0;
-                }
-                .data-label {
-                    font-size: 0.8rem;
-                    flex: 1 1 0%;
-                    min-width: 0;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-                .data-value {
-                    font-size: 0.8rem;
-                    flex-shrink: 0;
-                    white-space: nowrap;
-                }
-                .dashboard-grid {
-                    gap: 1rem;
-                }
-                .section-title {
-                    font-size: 0.95rem;
-                    gap: 8px;
-                    margin-bottom: 0.5rem;
-                }
-                .icon-circle {
-                    width: 28px;
-                    height: 28px;
-                    font-size: 0.85rem;
-                }
-                .finance-summary {
                     padding: 0.75rem;
-                    border-radius: 10px;
+                    margin-bottom: 1rem;
+                    border-radius: 14px;
                 }
-                .badge-mini {
-                    font-size: 0.6rem;
-                    padding: 2px 6px;
-                    gap: 3px;
-                }
-                .section-group {
-                    margin-top: 1.25rem;
-                }
-                .comp-bar {
-                    margin: 0.75rem 0;
-                }
+                .glass-card:hover { transform: none; }
+                .stat-value { font-size: 1.4rem; }
+                .stat-label { font-size: 0.65rem; letter-spacing: 0.08em; }
+                .data-row { padding: 0.5rem 0; }
+                .data-label { font-size: 0.78rem; }
+                .data-value { font-size: 0.78rem; }
+                .section-title { font-size: 0.9rem; gap: 8px; }
+                .icon-circle { width: 26px; height: 26px; font-size: 0.8rem; }
+                .finance-summary { padding: 0.5rem; border-radius: 10px; }
+                .badge-mini { font-size: 0.55rem; padding: 2px 5px; gap: 2px; }
+                .section-group { margin-top: 1rem; }
+                .comp-bar { margin: 0.5rem 0; }
+                .stat-subvalue { font-size: 0.75rem; }
             }
         </style>
         <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>

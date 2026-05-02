@@ -90,11 +90,6 @@ body.light-mode .topbar {
   padding: 0;
 }
 
-html {
-  overflow-x: hidden; /* Prevent horizontal scroll on Samsung & other mobile browsers */
-  max-width: 100%;
-}
-
 body {
   font-family: var(--font-family);
   background-color: var(--bg-dark);
@@ -102,8 +97,6 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.2s ease, color 0.2s ease;
-  overflow-x: hidden; /* Prevent horizontal scroll on all devices */
-  max-width: 100vw;   /* Constrain body width to viewport */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -364,16 +357,13 @@ a:hover {
 }
 
 /* ===== APP LAYOUT (DASHBOARD & INTERNAL PAGES) ===== */
-html { background-color: var(--bg-dark); overflow-x: hidden; }
+html { background-color: var(--bg-dark); }
 
 .app-layout {
   display: flex;
-  width: 100%;          /* Explicit width constraint */
-  max-width: 100vw;     /* Never wider than viewport */
   min-height: 100vh;
   background-color: var(--bg-dark);
   animation: appFadeIn 0.3s ease-out;
-  overflow-x: hidden;   /* Block any child from expanding beyond viewport */
 }
 
 @media (min-width: 769px) {
@@ -497,8 +487,7 @@ html { background-color: var(--bg-dark); overflow-x: hidden; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: visible;       /* Was: hidden — caused content clipping on Samsung */
-  min-width: 0;            /* Prevent flex child from overflowing parent */
+  overflow: hidden;
   animation: contentFadeIn 0.4s ease-out;
 }
 
@@ -1437,15 +1426,6 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
 
     .app-layout {
         display: block;
-        width: 100%;
-        max-width: 100vw;
-        overflow-x: hidden;
-    }
-
-    .main-content {
-        width: 100%;
-        max-width: 100%;
-        overflow-x: hidden;
     }
 
     /* FIX: SIDEBAR MENU POSITION ON MOBILE */
@@ -1606,96 +1586,11 @@ body.light-mode .type-tab:hover { background: #f8fafc; }
 
     /* Padding & Table Density - Compensate for fixed topbar height (60px) */
     .content-area { 
-        padding: calc(60px + 1rem) 0.75rem 1rem 0.75rem !important;
-        width: 100% !important;
-        max-width: 100vw !important;
-        box-sizing: border-box !important;
-        overflow-x: hidden !important; /* Safe: clips at container level, not inside cards */
+        padding: calc(60px + 1rem) 1rem 1rem 1rem !important; 
     }
-
-    /* ===== UNIVERSAL MOBILE WIDTH CONSTRAINT ===== */
-    /* Force ALL card-like elements to respect parent width */
-    .glass-card,
-    .card-box,
-    .finance-summary,
-    .premium-card {
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-        word-break: break-word;
-    }
-
-    .glass-card {
-        padding: 1rem !important;
-    }
-
-    /* Disable hover lift on mobile — causes Samsung rendering bugs */
-    .glass-card:hover {
-        transform: none !important;
-    }
-
-    /* ===== DATA ROW MOBILE FIX ===== */
-    .data-row {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        gap: 0.5rem;
-    }
-    .data-label {
-        flex: 1 1 0% !important;
-        min-width: 0 !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-        font-size: 0.85rem !important;
-    }
-    .data-value {
-        flex: 0 0 auto !important;
-        text-align: right !important;
-        white-space: nowrap !important;
-        font-size: 0.85rem !important;
-    }
-
-    /* Section title: compact for narrow screens */
-    .section-title {
-        font-size: 1rem !important;
-        gap: 8px !important;
-    }
-    .icon-circle {
-        width: 30px !important;
-        height: 30px !important;
-        font-size: 0.9rem !important;
-    }
-
-    /* Stat value: scale down for small screens */
-    .stat-value {
-        font-size: 1.5rem !important;
-    }
-
-    /* Badge mini: compact for mobile */
-    .badge-mini {
-        font-size: 0.6rem !important;
-        padding: 2px 6px !important;
-    }
-
-    /* Finance summary: tighter on mobile */
-    .finance-summary {
-        padding: 0.5rem !important;
-        border-radius: 10px !important;
-    }
-
-    /* Card box: tighter padding */
-    .card-box {
-        padding: 0.75rem !important;
-    }
-
     .data-table th, .data-table td {
         padding: 0.6rem 0.4rem !important;
         font-size: 0.8rem !important;
-    }
-
-    /* Responsive grid on narrow phones */
-    .responsive-grid-2 {
-        grid-template-columns: 1fr !important;
     }
 }
 
