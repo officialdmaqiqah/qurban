@@ -596,7 +596,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return `
                     <div style="display:inline-flex; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:4px 8px; font-size:0.75rem; transition: var(--transition); cursor:pointer;" 
                          onclick="window.viewGoatPhoto('${item.goatId}')">
-                        <span style="color:${badgeColor}; font-weight:600; margin-right:4px;">No.${item.noTali} ${item.label_printed ? '<span title="Label Sudah Dicetak">🏷️</span>' : ''}</span>
+                        <span style="color:${badgeColor}; font-weight:600; margin-right:4px;">
+                            No.${item.noTali} 
+                            ${item.label_printed ? `<span title="Label Sudah Dicetak (Klik untuk Batalkan/Reset)" style="cursor:pointer; font-size:1rem; margin-left:4px;" onclick="event.stopPropagation(); window.resetLabelStatus('${t.id}', '${item.goatId}')">🏷️</span>` : ''}
+                        </span>
                         <span style="color:var(--text-muted); font-size:0.65rem;">${kMeta?.warna_tali || item.warnaTali || '-'}</span>
                     </div>`; 
             }).join('') + `</div>`;
@@ -1405,6 +1408,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!e.target.checked && checkAll) checkAll.checked = false;
         }
     });
+
+    window.resetLabelStatus = async (trxId, goatId) => {
+        window.showConfirm('Batalkan tanda "Sudah Dicetak" untuk kambing ini?', async () => {
+            try {
+                // 1. Ambil data transaksi terbaru
+                const { data: trx, error: fetchErr } = await supabase.from('transaksi').select('items').eq('id', trxId).single();
+                if (fetchErr || !trx) throw new Error("Gagal mengambil data transaksi.");
+
+                // 2. Update status label_printed pada item spesifik
+                const updatedItems = (trx.items || []).map(it => {
+                    if (it.goatId === goatId) {
+                        return { ...it, label_printed: false };
+                    }
+                    return it;
+                });
+
+                // 3. Simpan kembali ke DB
+                const { error: upErr } = await supabase.from('transaksi').update({ items: updatedItems }).eq('id', trxId);
+                if (upErr) throw upErr;
+
+                window.showToast('Tanda label berhasil dibatalkan.', 'success');
+                renderTable(); // Refresh tabel
+            } catch (err) {
+                console.error('Reset Label Error:', err);
+                window.showAlert('Gagal membatalkan tanda label: ' + err.message, 'danger');
+            }
+        });
+    };
 
     window.printLabels = async () => {
         const btn = document.getElementById('btnCetakLabel');
