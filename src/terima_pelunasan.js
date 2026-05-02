@@ -174,18 +174,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td data-label="ID ORDER" style="font-weight:700; color:var(--primary);">${t.id}</td>
                 <td data-label="KONSUMEN">
-                    <div style="font-weight:600;">${t.customer.nama || '-'}</div>
-                    <div style="font-size:0.7rem; color:var(--primary); font-weight:500;">Agen: ${t.agen?.nama || '-'}</div>
-                    <div style="font-size:0.65rem; color:var(--text-muted);">${formatTgl(t.tgl_trx)}</div>
-                </td>
-                <td data-label="SISA TAGIHAN" style="font-weight:700; color:var(--warning);">${window.formatRp(sisa)}</td>
-                <td data-label="PENYELESAIAN" style="min-width:100px;">
-                    <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Terbayar ${pct}%</div>
-                    <div style="background:rgba(255,255,255,0.06); height:6px; border-radius:4px; width:100%;">
-                        <div style="width:${Math.min(100, pct)}%; height:100%; background:var(--success); border-radius:4px;"></div>
+                    <div class="cell-content" style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
+                        <div style="font-weight:600; font-size:0.95rem;">${t.customer.nama || '-'}</div>
+                        <div style="font-size:0.7rem; color:var(--primary); font-weight:500;">Agen: ${t.agen?.nama || '-'}</div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); opacity:0.7;">${formatTgl(t.tgl_trx)}</div>
                     </div>
                 </td>
-                <td data-label="AKSI"><button class="btn btn-sm" style="padding:4px 10px; font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--success); border:1px solid rgba(16,185,129,0.3);">Pilih</button></td>
+                <td data-label="SISA TAGIHAN" style="font-weight:700; color:var(--warning);">${window.formatRp(sisa)}</td>
+                <td data-label="PENYELESAIAN">
+                    <div class="cell-content" style="width:140px; display:flex; flex-direction:column; align-items:flex-end;">
+                        <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:4px;">Terbayar ${pct}%</div>
+                        <div style="background:rgba(0,0,0,0.1); height:6px; border-radius:4px; width:100%; border:1px solid rgba(255,255,255,0.05);">
+                            <div style="width:${Math.min(100, pct)}%; height:100%; background:var(--success); border-radius:4px; box-shadow:0 0 10px rgba(16,185,129,0.3);"></div>
+                        </div>
+                    </div>
+                </td>
+                <td data-label="AKSI"><button class="btn btn-sm" style="padding:6px 16px; font-size:0.8rem; background:rgba(16,185,129,0.1); color:var(--success); border:1px solid rgba(16,185,129,0.2); border-radius:8px; font-weight:600;">Pilih Order</button></td>
             `;
             tr.onclick = () => {
                 // Clear selected state from all rows
@@ -204,11 +208,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td data-label="ID ORDER" style="font-weight:700; color:var(--primary);">${t.id}</td>
                 <td data-label="KONSUMEN">
-                    <div style="font-weight:600;">${t.customer.nama || '-'}</div>
-                    <div style="font-size:0.7rem; color:var(--primary); font-weight:500;">Agen: ${t.agen?.nama || '-'}</div>
+                    <div class="cell-content" style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
+                        <div style="font-weight:600;">${t.customer.nama || '-'}</div>
+                        <div style="font-size:0.7rem; color:var(--primary); font-weight:500;">Agen: ${t.agen?.nama || '-'}</div>
+                    </div>
                 </td>
                 <td data-label="KELEBIHAN" style="font-weight:700; color:var(--warning);">${window.formatRp(t.total_overpaid || 0)}</td>
-                <td data-label="AKSI"><button class="btn btn-sm" style="padding:4px 10px; font-size:0.75rem; background:rgba(245,158,11,0.15); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">Refund</button></td>
+                <td data-label="AKSI"><button class="btn btn-sm" style="padding:6px 16px; font-size:0.8rem; background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.2); border-radius:8px; font-weight:600;">Refund Dana</button></td>
             `;
             tr.onclick = () => openRefundModal(t);
         }
