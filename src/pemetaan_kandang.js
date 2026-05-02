@@ -102,6 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('goatPhoto').style.display = 'none';
         document.getElementById('goatNoPhoto').style.display = 'block';
         document.getElementById('goatTagBadge').textContent = '...';
+        document.getElementById('goatSohibul').textContent = 'Memuat...';
         
         modal.classList.add('active');
 
@@ -111,35 +112,49 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Populate Modal
             document.getElementById('goatTagBadge').textContent = '#' + (goat.no_tali || '-');
-            document.getElementById('goatType').textContent = (goat.jenis || '-') + ' / ' + (goat.kategori || '-');
-            document.getElementById('goatWeight').textContent = (goat.berat_estimasi || '-') + ' kg / ' + (goat.jenis_kelamin || '-');
+            document.getElementById('goatWeight').textContent = (goat.berat || '-') + ' kg / ' + (goat.sex || '-');
             document.getElementById('goatLocation').textContent = goat.lokasi || '-';
             document.getElementById('goatNote').textContent = goat.keterangan || 'Tidak ada catatan khusus.';
             
             // Status Badge
             const statusBadge = document.getElementById('goatStatusBadge');
-            statusBadge.textContent = `STATUS: ${goat.status_fisik || 'ADA'}`;
-            if (goat.status_order === 'Terjual') {
+            statusBadge.textContent = `STATUS FISIK: ${goat.status_fisik || 'ADA'}`;
+            
+            if (goat.status_transaksi === 'Terjual' || goat.status_transaksi === 'Terdistribusi') {
                 statusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
                 statusBadge.style.color = '#10b981';
-                statusBadge.textContent += ' (TERJUAL)';
+                statusBadge.textContent += ` (${goat.status_transaksi.toUpperCase()})`;
             } else {
                 statusBadge.style.background = 'rgba(59, 130, 246, 0.1)';
                 statusBadge.style.color = '#3b82f6';
             }
 
-            // Customer Info (if sold)
-            if (goat.customer_name) {
-                document.getElementById('goatCustomer').textContent = goat.customer_name;
+            // Customer Info & Sohibul
+            if (goat.transaction_id) {
+                // Fetch Transaksi for Sohibul Names
+                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', goat.transaction_id).single();
+                if (trx) {
+                    document.getElementById('goatCustomer').textContent = trx.customer?.nama || '-';
+                    const itemInTrx = (trx.items || []).find(it => it.goatId === goat.id);
+                    document.getElementById('goatSohibul').textContent = itemInTrx?.namaSohibul || '-';
+                } else {
+                    document.getElementById('goatCustomer').textContent = 'Error memuat data';
+                    document.getElementById('goatSohibul').textContent = '-';
+                }
             } else {
                 document.getElementById('goatCustomer').textContent = 'STOK TERSEDIA';
+                document.getElementById('goatSohibul').textContent = '-';
             }
 
-            // Photo
+            // Photo Fix: Use foto_fisik or foto_thumb and ensure direct link
             const img = document.getElementById('goatPhoto');
             const noPhoto = document.getElementById('goatNoPhoto');
-            if (goat.foto_url) {
-                img.src = goat.foto_url;
+            const rawUrl = goat.foto_fisik || goat.foto_thumb;
+            
+            if (rawUrl) {
+                // Use getDirectDriveLink if available (usually in layout.js or global)
+                const finalUrl = (typeof window.getDirectDriveLink === 'function') ? window.getDirectDriveLink(rawUrl) : rawUrl;
+                img.src = finalUrl;
                 img.style.display = 'block';
                 noPhoto.style.display = 'none';
             } else {
