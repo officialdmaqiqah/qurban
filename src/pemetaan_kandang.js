@@ -140,19 +140,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 statusBadge.style.color = '#3b82f6';
             }
 
-            // Customer Info & Sohibul
-            if (goat.transaction_id) {
-                // Fetch Transaksi for Sohibul Names
-                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', goat.transaction_id).single();
-                if (trx) {
-                    document.getElementById('goatCustomer').textContent = trx.customer?.nama || '-';
-                    const itemInTrx = (trx.items || []).find(it => it.goatId === goat.id);
-                    document.getElementById('goatSohibul').textContent = itemInTrx?.namaSohibul || '-';
+            // Customer Info & Sohibul & Price
+            const priceContainer = document.getElementById('goatPriceContainer');
+            if (goat.status_transaksi === 'Terjual' || goat.status_transaksi === 'Terdistribusi') {
+                // HIDE Price if SOLD
+                if (priceContainer) priceContainer.style.display = 'none';
+                
+                if (goat.transaction_id) {
+                    const { data: trx } = await supabase.from('transaksi').select('*').eq('id', goat.transaction_id).single();
+                    if (trx) {
+                        document.getElementById('goatCustomer').textContent = trx.customer?.nama || '-';
+                        const itemInTrx = (trx.items || []).find(it => it.goatId === goat.id);
+                        document.getElementById('goatSohibul').textContent = itemInTrx?.namaSohibul || '-';
+                    } else {
+                        document.getElementById('goatCustomer').textContent = 'Error memuat data';
+                        document.getElementById('goatSohibul').textContent = '-';
+                    }
                 } else {
-                    document.getElementById('goatCustomer').textContent = 'Error memuat data';
+                    document.getElementById('goatCustomer').textContent = 'Terjual (Tanpa ID Transaksi)';
                     document.getElementById('goatSohibul').textContent = '-';
                 }
             } else {
+                // SHOW Price if NOT SOLD
+                if (priceContainer) {
+                    priceContainer.style.display = 'block';
+                    const fmtPrice = (typeof window.formatRp === 'function') ? window.formatRp(goat.harga_kandang) : (goat.harga_kandang || '-');
+                    document.getElementById('goatPrice').textContent = fmtPrice;
+                }
                 document.getElementById('goatCustomer').textContent = 'STOK TERSEDIA';
                 document.getElementById('goatSohibul').textContent = '-';
             }
