@@ -90,6 +90,11 @@ body.light-mode .topbar {
   padding: 0;
 }
 
+html {
+  overflow-x: hidden; /* Prevent horizontal scroll on Samsung & other mobile browsers */
+  max-width: 100%;
+}
+
 body {
   font-family: var(--font-family);
   background-color: var(--bg-dark);
@@ -97,6 +102,8 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.2s ease, color 0.2s ease;
+  overflow-x: hidden; /* Prevent horizontal scroll on all devices */
+  max-width: 100vw;   /* Constrain body width to viewport */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -357,7 +364,7 @@ a:hover {
 }
 
 /* ===== APP LAYOUT (DASHBOARD & INTERNAL PAGES) ===== */
-html { background-color: var(--bg-dark); }
+html { background-color: var(--bg-dark); overflow-x: hidden; }
 
 .app-layout {
   display: flex;
@@ -487,7 +494,8 @@ html { background-color: var(--bg-dark); }
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;       /* Was: hidden — caused content clipping on Samsung */
+  min-width: 0;            /* Prevent flex child from overflowing parent */
   animation: contentFadeIn 0.4s ease-out;
 }
 

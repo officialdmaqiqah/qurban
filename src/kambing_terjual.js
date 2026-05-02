@@ -999,8 +999,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 category: f.kategori
             })) || [];
 
-            // Hapus record DP lama dari keuangan
-            await supabase.from('keuangan').delete().eq('related_trx_id', trxId).eq('kategori', 'Jual Kambing');
+            // Hapus record DP lama dan Komisi lama dari keuangan agar tidak duplikat saat diinsert ulang di performSave
+            await supabase.from('keuangan').delete().eq('related_trx_id', trxId).in('kategori', ['Jual Kambing', 'Komisi Agen']);
         }
         await supabase.from('transaksi').delete().eq('id', trxId);
     };
