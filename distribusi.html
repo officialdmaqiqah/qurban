@@ -203,14 +203,51 @@
         /* MOBILE OPTIMIZATION */
         @media (max-width: 768px) {
             .grid-cards {
-                grid-template-columns: 1fr;
-                gap: 1rem;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+                gap: 0.75rem !important;
+                margin-bottom: 1.5rem !important;
             }
             .card-stat-premium {
-                padding: 1rem 1.25rem;
+                padding: 0.75rem 1rem !important;
+                gap: 0.75rem !important;
+                border-radius: 16px !important;
             }
-            .stat-value-premium {
-                font-size: 1.25rem;
+            .icon-box-premium {
+                width: 42px !important;
+                height: 42px !important;
+                font-size: 1.25rem !important;
+                border-radius: 12px !important;
+            }
+            .stat-label-premium { font-size: 0.55rem !important; }
+            .stat-value-premium { font-size: 1rem !important; }
+
+            .distrib-header {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 1.25rem !important;
+                padding: 1rem !important;
+            }
+            .distrib-header > div:last-child {
+                flex-direction: column !important;
+                display: flex !important;
+                gap: 0.5rem !important;
+            }
+            .distrib-header .btn {
+                width: 100% !important;
+                justify-content: center !important;
+                padding: 10px 16px !important;
+                font-size: 0.9rem !important;
+            }
+
+            .tab-header {
+                gap: 1rem !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            .tab-btn {
+                padding: 0.75rem 0.25rem !important;
+                font-size: 0.85rem !important;
             }
         }
     </style>

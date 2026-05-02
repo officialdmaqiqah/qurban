@@ -94,26 +94,32 @@
                 gap: 0.5rem !important;
             }
             .summary-card {
-                padding: 0.75rem !important;
+                padding: 0.65rem !important;
                 gap: 0.5rem !important;
                 border-radius: 10px !important;
+                min-width: 0 !important;
             }
             .summary-icon {
-                width: 36px !important;
-                height: 36px !important;
-                font-size: 1.1rem !important;
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 1rem !important;
                 flex-shrink: 0 !important;
             }
-            .summary-info h4 { font-size: 0.6rem !important; }
-            .summary-info p { font-size: 0.85rem !important; }
+            .summary-info { min-width: 0; flex: 1; }
+            .summary-info h4 { font-size: 0.55rem !important; letter-spacing: 0; }
+            .summary-info p { 
+                font-size: 0.78rem !important; 
+                word-break: break-all !important; 
+                line-height: 1.1 !important;
+            }
 
             .balance-card {
-                padding: 0.75rem !important;
+                padding: 0.65rem !important;
                 gap: 0.5rem !important;
                 min-width: 0 !important;
             }
-            .balance-label { font-size: 0.6rem !important; }
-            .balance-value { font-size: 0.85rem !important; }
+            .balance-label { font-size: 0.55rem !important; }
+            .balance-value { font-size: 0.78rem !important; }
 
             /* Mobile: form 2-col → 1-col */
             .form-2col { grid-template-columns: 1fr !important; gap: 0.5rem !important; }

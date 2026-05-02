@@ -142,23 +142,40 @@
             /* Mobile: fit everything inside 360px viewport */
             @media (max-width: 768px) {
                 .glass-card {
-                    padding: 0.75rem;
-                    margin-bottom: 1rem;
-                    border-radius: 14px;
+                    padding: 0.75rem !important;
+                    margin-bottom: 1rem !important;
+                    border-radius: 12px !important;
                 }
-                .glass-card:hover { transform: none; }
-                .stat-value { font-size: 1.4rem; }
-                .stat-label { font-size: 0.65rem; letter-spacing: 0.08em; }
-                .data-row { padding: 0.5rem 0; }
-                .data-label { font-size: 0.78rem; }
-                .data-value { font-size: 0.78rem; }
-                .section-title { font-size: 0.9rem; gap: 8px; }
-                .icon-circle { width: 26px; height: 26px; font-size: 0.8rem; }
-                .finance-summary { padding: 0.5rem; border-radius: 10px; }
-                .badge-mini { font-size: 0.55rem; padding: 2px 5px; gap: 2px; }
-                .section-group { margin-top: 1rem; }
-                .comp-bar { margin: 0.5rem 0; }
-                .stat-subvalue { font-size: 0.75rem; }
+                .glass-card:hover { transform: none !important; }
+                .stat-value { font-size: 1.35rem !important; word-break: break-all !important; }
+                .stat-label { font-size: 0.6rem !important; letter-spacing: 0.05em !important; }
+                .stat-subvalue { font-size: 0.7rem !important; }
+                
+                .data-row { padding: 0.4rem 0 !important; gap: 0.4rem !important; }
+                .data-label { 
+                    font-size: 0.75rem !important; 
+                    flex: 1 1 auto !important;
+                    min-width: 0 !important;
+                    white-space: normal !important; /* Allow label to wrap if very long */
+                    line-height: 1.2 !important;
+                }
+                .data-value { 
+                    font-size: 0.75rem !important; 
+                    flex: 0 0 auto !important;
+                    white-space: nowrap !important;
+                    font-weight: 700 !important;
+                }
+                
+                /* Specific fix for elements with inline font-sizes */
+                [id^="dash"] { font-size: inherit; } 
+                #dashProfitSales { font-size: 0.9rem !important; }
+
+                .section-title { font-size: 0.9rem !important; gap: 6px !important; }
+                .icon-circle { width: 24px !important; height: 24px !important; font-size: 0.75rem !important; }
+                .finance-summary { padding: 0.5rem !important; border-radius: 8px !important; }
+                .badge-mini { font-size: 0.55rem !important; padding: 2px 5px !important; gap: 2px !important; flex-wrap: wrap !important; }
+                .section-group { margin-top: 1rem !important; }
+                .comp-bar { margin: 0.5rem 0 !important; height: 6px !important; }
             }
         </style>
         <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
