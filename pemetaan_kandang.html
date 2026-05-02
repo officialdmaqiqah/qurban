@@ -360,17 +360,13 @@
                 <div style="padding: 2rem;">
                     <div id="goatStatusBadge" style="display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem; background: rgba(var(--primary-rgb), 0.1); color: var(--primary);">STATUS: ADA</div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                        <div class="info-group" style="grid-column: 1 / -1;">
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                        <div class="info-group">
                             <label style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Nama Sohibul Qurban</label>
                             <div id="goatSohibul" style="font-size: 1.15rem; font-weight: 700; color: var(--primary);">-</div>
                         </div>
                         <div class="info-group">
-                            <label style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Bobot / Gender</label>
-                            <div id="goatWeight" style="font-size: 1.1rem; font-weight: 600;">-</div>
-                        </div>
-                        <div class="info-group">
-                            <label style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Pemilik / Pembeli</label>
+                            <label style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Pemilik / Pembeli (Order)</label>
                             <div id="goatCustomer" style="font-size: 1rem; font-weight: 600;">-</div>
                         </div>
                         <div class="info-group">
@@ -389,6 +385,12 @@
                 <button type="button" class="btn" style="width: 100%; background: var(--primary); color: white; font-weight: 700; padding: 12px; border-radius: 12px;" id="btnCloseDetail">Tutup Detail</button>
             </div>
         </div>
+    </div>
+
+    <!-- LIGHTBOX FOR PHOTO ZOOM -->
+    <div id="photoLightbox" class="modal-overlay" style="z-index: 9999; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center;">
+        <button id="btnCloseLightbox" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 3rem; cursor: pointer; z-index: 10001;">&times;</button>
+        <img id="lightboxImg" src="" style="max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.5);">
     </div>
 
     <script type="module" src="src/layout.js?v=4.1"></script>

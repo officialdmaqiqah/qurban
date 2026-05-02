@@ -112,7 +112,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Populate Modal
             document.getElementById('goatTagBadge').textContent = '#' + (goat.no_tali || '-');
-            document.getElementById('goatWeight').textContent = (goat.berat || '-') + ' kg / ' + (goat.sex || '-');
             document.getElementById('goatLocation').textContent = goat.lokasi || '-';
             document.getElementById('goatNote').textContent = goat.keterangan || 'Tidak ada catatan khusus.';
             
@@ -328,6 +327,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeModal = () => document.getElementById('modalGoatDetail').classList.remove('active');
     document.getElementById('btnCloseModalDetail').onclick = closeModal;
     document.getElementById('btnCloseDetail').onclick = closeModal;
+
+    // LIGHTBOX LOGIC
+    const photoContainer = document.getElementById('goatPhotoContainer');
+    const lightbox = document.getElementById('photoLightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const btnCloseLightbox = document.getElementById('btnCloseLightbox');
+
+    photoContainer.onclick = () => {
+        const img = document.getElementById('goatPhoto');
+        if (img.style.display !== 'none' && img.src) {
+            lightboxImg.src = img.src;
+            lightbox.style.display = 'flex';
+        }
+    };
+
+    const closeLightbox = () => {
+        lightbox.style.display = 'none';
+        lightboxImg.src = '';
+    };
+
+    btnCloseLightbox.onclick = closeLightbox;
+    lightbox.onclick = (e) => {
+        if (e.target === lightbox) closeLightbox();
+    };
+
     window.onclick = (e) => {
         const modal = document.getElementById('modalGoatDetail');
         if (e.target === modal) closeModal();
