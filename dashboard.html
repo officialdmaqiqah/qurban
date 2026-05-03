@@ -86,10 +86,16 @@
             .dashboard-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 1.75rem;
+                gap: 2rem;
+                align-items: stretch;
             }
             @media (max-width: 1024px) {
                 .dashboard-grid { grid-template-columns: 1fr; }
+            }
+
+            .dashboard-section {
+                display: flex;
+                flex-direction: column;
             }
 
             .section-title {
@@ -102,8 +108,9 @@
                 font-weight: 500;
             }
             
-            .section-group {
-                margin-top: 2rem;
+            .dashboard-section .glass-card {
+                flex: 1;
+                margin-bottom: 0;
             }
 
             .icon-circle {
@@ -225,8 +232,8 @@
 
                         <div class="content-area fade-in">
                             <div class="dashboard-grid">
-                                <!-- COLUMN 1: OPERATIONS -->
-                                <div>
+                                <!-- SECTION 1: INVENTORY -->
+                                <div class="dashboard-section">
                                     <div class="section-title">
                                         <div class="icon-circle">🐐</div>
                                         <span>Inventori & Status Kandang</span>
@@ -261,56 +268,10 @@
                                             <div class="data-value highlight-amber" id="dashHilang">0</div>
                                         </div>
                                     </div>
-
-                                    <div class="section-group">
-                                        <div class="section-title">
-                                            <div class="icon-circle">📈</div>
-                                            <span>Performa Penjualan</span>
-                                        </div>
-                                        
-                                        <div class="glass-card">
-                                            <span class="stat-label">Total Omzet Musim Ini</span>
-                                            <div class="stat-value highlight-green" id="dashTerjualRp">Rp 0</div>
-                                            
-                                            <div style="display: flex; gap: 10px; margin-bottom: 1.25rem;">
-                                                <div class="badge-mini badge-mini-green">
-                                                    <span>Terbayar:</span> <span id="dashTerbayarInfo">Rp 0</span>
-                                                </div>
-                                                <div class="badge-mini badge-mini-amber">
-                                                    <span>Piutang:</span> <span id="dashPiutangInfo">Rp 0</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="stat-subvalue" id="dashTerjualEkor">0 Ekor Terjual</div>
-                                            
-                                            <div class="finance-summary">
-                                                <div class="data-row">
-                                                    <span class="data-label">Total HPP</span>
-                                                    <span class="data-value highlight-rose" id="dashTotalHPP">Rp 0</span>
-                                                </div>
-                                                <div class="data-row">
-                                                    <span class="data-label">Komisi Agen</span>
-                                                    <span class="data-value highlight-amber" id="dashTotalKomisiSales">Rp 0</span>
-                                                </div>
-                                                <div class="data-row">
-                                                    <span class="data-label">Dana Saving</span>
-                                                    <span class="data-value" id="dashTotalSavingSales">Rp 0</span>
-                                                </div>
-                                                <div class="data-row" style="border-top: 2px solid rgba(255,255,255,0.06); margin-top: 0.5rem; padding-top: 1rem;">
-                                                    <span class="data-label" style="font-weight: 700; color: var(--text-main);">Gross Profit Sales</span>
-                                                    <span class="data-value highlight-green" id="dashProfitSales" style="font-size: 1.1rem;">Rp 0</span>
-                                                </div>
-                                                <div class="data-row">
-                                                    <span class="data-label">Avg. Profit / Ekor</span>
-                                                    <span class="data-value" id="dashAvgProfit">Rp 0</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
 
-                                <!-- COLUMN 2: FINANCIALS -->
-                                <div>
+                                <!-- SECTION 2: PROFITABILITY (Top Right) -->
+                                <div class="dashboard-section">
                                     <div class="section-title">
                                         <div class="icon-circle">💎</div>
                                         <span>Profitabilitas Netto</span>
@@ -340,25 +301,73 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div class="section-group">
-                                        <div class="section-title">
-                                            <div class="icon-circle">🏦</div>
-                                            <span>Likuiditas & Kas</span>
+                                <!-- SECTION 3: SALES PERFORMANCE (Bottom Left) -->
+                                <div class="dashboard-section">
+                                    <div class="section-title">
+                                        <div class="icon-circle">📈</div>
+                                        <span>Performa Penjualan</span>
+                                    </div>
+                                    
+                                    <div class="glass-card">
+                                        <span class="stat-label">Total Omzet Musim Ini</span>
+                                        <div class="stat-value highlight-green" id="dashTerjualRp">Rp 0</div>
+                                        
+                                        <div style="display: flex; gap: 10px; margin-bottom: 1.25rem;">
+                                            <div class="badge-mini badge-mini-green">
+                                                <span>Terbayar:</span> <span id="dashTerbayarInfo">Rp 0</span>
+                                            </div>
+                                            <div class="badge-mini badge-mini-amber">
+                                                <span>Piutang:</span> <span id="dashPiutangInfo">Rp 0</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="stat-subvalue" id="dashTerjualEkor">0 Ekor Terjual</div>
+                                        
+                                        <div class="finance-summary">
+                                            <div class="data-row">
+                                                <span class="data-label">Total HPP</span>
+                                                <span class="data-value highlight-rose" id="dashTotalHPP">Rp 0</span>
+                                            </div>
+                                            <div class="data-row">
+                                                <span class="data-label">Komisi Agen</span>
+                                                <span class="data-value highlight-amber" id="dashTotalKomisiSales">Rp 0</span>
+                                            </div>
+                                            <div class="data-row">
+                                                <span class="data-label">Dana Saving</span>
+                                                <span class="data-value" id="dashTotalSavingSales">Rp 0</span>
+                                            </div>
+                                            <div class="data-row" style="border-top: 2px solid rgba(255,255,255,0.06); margin-top: 0.5rem; padding-top: 1rem;">
+                                                <span class="data-label" style="font-weight: 700; color: var(--text-main);">Gross Profit Sales</span>
+                                                <span class="data-value highlight-green" id="dashProfitSales" style="font-size: 1.1rem;">Rp 0</span>
+                                            </div>
+                                            <div class="data-row">
+                                                <span class="data-label">Avg. Profit / Ekor</span>
+                                                <span class="data-value" id="dashAvgProfit">Rp 0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- SECTION 4: LIQUIDITY (Bottom Right) -->
+                                <div class="dashboard-section">
+                                    <div class="section-title">
+                                        <div class="icon-circle">🏦</div>
+                                        <span>Likuiditas & Kas</span>
+                                    </div>
+                                    
+                                    <div class="glass-card">
+                                        <span class="stat-label">Total Saldo Kas & Bank</span>
+                                        <div class="stat-value" id="dashTotalSaldoKas">Rp 0</div>
+                                        
+                                        <div id="cashBreakdownContainer" style="margin-top: 1.25rem;">
+                                            <!-- JS Injection -->
                                         </div>
                                         
-                                        <div class="glass-card">
-                                            <span class="stat-label">Total Saldo Kas & Bank</span>
-                                            <div class="stat-value" id="dashTotalSaldoKas">Rp 0</div>
-                                            
-                                            <div id="cashBreakdownContainer" style="margin-top: 1.25rem;">
-                                                <!-- JS Injection -->
-                                            </div>
-                                            
-                                            <div class="data-row" style="border-top: 1px dashed rgba(255,255,255,0.06); margin-top: 0.5rem;">
-                                                <span class="data-label">Titipan Dana Agen</span>
-                                                <span class="data-value highlight-amber" id="dashTotalTitipan">Rp 0</span>
-                                            </div>
+                                        <div class="data-row" style="border-top: 1px dashed rgba(255,255,255,0.06); margin-top: 0.5rem;">
+                                            <span class="data-label">Titipan Dana Agen</span>
+                                            <span class="data-value highlight-amber" id="dashTotalTitipan">Rp 0</span>
                                         </div>
                                     </div>
                                 </div>
