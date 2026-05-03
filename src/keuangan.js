@@ -527,13 +527,53 @@ document.addEventListener('DOMContentLoaded', async () => {
             const btn = document.getElementById('btnExportKeuangan');
             if(btn) { btn.disabled = true; btn.innerText = 'Memproses...'; }
             try {
-                const { data } = await supabase.from('keuangan').select('*').order('tanggal', { ascending: false });
-                const ws = XLSX.utils.json_to_sheet(data);
+                // Fetch data & Map in parallel for speed
+                const [respKeu, trxMap] = await Promise.all([
+                    supabase.from('keuangan').select('*').order('tanggal', { ascending: false }),
+                    getTransaksiMap()
+                ]);
+                
+                const rawData = respKeu.data || [];
+                
+                // Transform for Excel with enriched fields
+                const exportData = rawData.map(item => {
+                    const trx = item.related_trx_id ? trxMap[item.related_trx_id] : null;
+                    const customerName = trx?.customer?.nama || '-';
+                    const agenName = trx?.agen?.nama || '-';
+                    
+                    let keterangan = (item.keterangan || '').trim();
+                    // User Request: Never let keterangan be empty
+                    if (!keterangan) {
+                        if (trx) {
+                            keterangan = `${item.kategori} - ${customerName}`;
+                        } else {
+                            keterangan = item.kategori || '-';
+                        }
+                    }
+
+                    return {
+                        'ID': item.id,
+                        'Tanggal': item.tanggal,
+                        'Tipe': item.tipe,
+                        'Kategori': item.kategori,
+                        'Nominal': item.nominal,
+                        'Channel': item.channel || '-',
+                        'Nama Konsumen': customerName,
+                        'Nama Agen': agenName,
+                        'Keterangan': keterangan,
+                        'Ref ID Transaksi': item.related_trx_id || '-'
+                    };
+                });
+
+                const ws = XLSX.utils.json_to_sheet(exportData);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Keuangan');
                 XLSX.writeFile(wb, `Export_Keuangan_${new Date().toISOString().split('T')[0]}.xlsx`);
                 window.showToast('Export Berhasil!', 'success');
-            } catch(e) { window.showAlert(e.message, 'danger'); }
+            } catch(e) { 
+                console.error("Export Error:", e);
+                window.showAlert("Export Gagal: " + e.message, 'danger'); 
+            }
             finally { if(btn) { btn.disabled = false; btn.innerText = '📥 Export Excel'; } }
         };
 
