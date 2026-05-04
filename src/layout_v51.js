@@ -626,7 +626,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    console.log("%c>> DMQ SYSTEM ACTIVE: v5.0 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
+    console.log("%c>> DMQ SYSTEM ACTIVE: v5.2 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
 });
 
 // --- UNIVERSAL CAMERA UI (Webcam & Mobile) ---
