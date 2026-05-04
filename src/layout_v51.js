@@ -595,10 +595,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         const verTag = document.createElement('div');
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.2 [LATEST]</span></div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.3 [LATEST]</span></div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;
         sidebar.appendChild(verTag);
+    }
+
+    // --- GLOBAL ACTIVITY LOGGER ---
+    window.logActivity = async (action, target, details = {}) => {
+        try {
+            const user = window.CURRENT_USER;
+            if (!user) return;
+            
+            await supabase.from('activity_logs').insert([{
+                user_id: user.id,
+                user_email: user.email,
+                user_name: user.full_name || user.email,
+                action: action,
+                target: target || window.location.pathname.split('/').pop(),
+                details: details
+            }]);
+        } catch (e) {
+            console.warn("Logging failed:", e);
+        }
+    };
+
+    // Auto-log page access
+    if (window.CURRENT_USER) {
+        const pageName = window.location.pathname.split('/').pop() || 'index.html';
+        window.logActivity('OPEN_PAGE', pageName);
     }
 
     // --- GLOBAL MENU INJECTION (PEMETAAN KANDANG) ---
@@ -626,7 +651,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    console.log("%c>> DMQ SYSTEM ACTIVE: v5.2 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
+    console.log("%c>> DMQ SYSTEM ACTIVE: v5.3 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
 });
 
 // --- UNIVERSAL CAMERA UI (Webcam & Mobile) ---
