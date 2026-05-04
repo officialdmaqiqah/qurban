@@ -112,6 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 2. STOK STATS
         let nilaiAsetStok = 0;
         let countTersedia = 0, countTerjual = 0, countDistribusi = 0, countSakit = 0, countMati = 0, countHilang = 0;
+        let countJantan = 0, countBetina = 0;
 
         (goatsDb || []).forEach(k => {
             let isOwnGoat = true;
@@ -135,6 +136,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (['Mati', 'Disembelih'].includes(k.status_kesehatan)) countMati++;
                 if (k.status_fisik === 'Hilang') countHilang++;
             }
+
+            // Gender stats (Population wide)
+            if ((k.sex || '').toLowerCase() === 'jantan') countJantan++;
+            else if ((k.sex || '').toLowerCase() === 'betina') countBetina++;
         });
 
         // 3. DASHBOARD FILTER PERIODE (MUSIM BERJALAN)
@@ -275,6 +280,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('dashTerjual').textContent = unitsSold;
         document.getElementById('dashSakitMatiCount').textContent = (countSakit + countMati);
         document.getElementById('dashHilang').textContent = countHilang;
+        
+        setText('dashJantanCount', countJantan);
+        setText('dashBetinaCount', countBetina);
 
         // --- COMPOSITION BAR LOGIC ---
         const updateBar = (id, count) => {

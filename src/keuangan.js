@@ -504,7 +504,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }));
 
                     const total = history.reduce((s, h) => {
-                        if (h.tipe === 'pemasukan' || h.category === 'Pengembalian Dana') return s + h.nominal;
+                        const isIncome = h.tipe === 'pemasukan';
+                        const categoryLower = (h.category || '').toLowerCase();
+                        const isAdjustment = categoryLower.includes('internal transfer') || categoryLower.includes('aqiqah adjustment');
+                        const isRefund = h.tipe === 'pengeluaran' && categoryLower.includes('pengembalian dana');
+                        
+                        if (isIncome) return s + h.nominal;
+                        if (isAdjustment) return s + Math.abs(h.nominal);
+                        if (isRefund) return s + h.nominal;
                         return s;
                     }, 0);
 

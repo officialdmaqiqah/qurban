@@ -103,13 +103,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (status === 'Mati') { color = '#ef4444'; bg = 'rgba(239, 68, 68, 0.1)'; }
             else { color = '#64748b'; bg = 'rgba(100, 116, 139, 0.1)'; }
         }
+        }
         return `<span class="badge" style="background:${bg}; color:${color}; border: 1px solid ${color}">${text}</span>`;
+    }
+
+    function getSexBadge(sex) {
+        if (!sex) return '-';
+        const isMale = sex.toLowerCase() === 'jantan';
+        const color = isMale ? '#3b82f6' : '#ec4899';
+        const bg = isMale ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)';
+        const icon = isMale ? '♂' : '♀';
+        return `<span class="badge" style="background:${bg}; color:${color}; border: 1px solid ${color}; font-weight:700;">${icon} ${sex}</span>`;
     }
 
     const inpSearch = document.getElementById('inpSearch');
     const selStatusTransaksi = document.getElementById('selStatusTransaksi');
     const selStatusKesehatan = document.getElementById('selStatusKesehatan');
     const selStatusFisik = document.getElementById('selStatusFisik');
+    const selSex = document.getElementById('selSex');
     const inpMinHarga = document.getElementById('inpMinHarga');
     const inpMaxHarga = document.getElementById('inpMaxHarga');
 
@@ -128,6 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fTrans = selStatusTransaksi.value;
         const fKes = selStatusKesehatan.value;
         const fFis = selStatusFisik.value;
+        const fSex = selSex?.value;
 
         if(search) {
             const isShortNumber = /^\d+$/.test(search) && search.length <= 3;
@@ -154,6 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(fTrans) filtered = filtered.filter(k => k.status_transaksi === fTrans);
         if(fKes) filtered = filtered.filter(k => k.status_kesehatan === fKes);
         if(fFis) filtered = filtered.filter(k => k.status_fisik === fFis);
+        if(fSex) filtered = filtered.filter(k => k.sex === fSex);
 
         filtered.sort((a, b) => {
             let valA = a[currentSort.column];
@@ -211,7 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="font-weight:600;">${item.no_tali}</div>
                     <div style="font-size:0.7rem; color:var(--text-muted); font-weight:400; margin-top:2px;">${item.warna_tali || '-'}</div>
                 </td>
-                <td>${item.sex || '-'}</td>
+                <td>${getSexBadge(item.sex)}</td>
                 <td><span class="badge" style="background:rgba(255,255,255,0.1);">${item.lokasi || '-'}</span></td>
                 <td style="font-weight:600; color:var(--primary); display: ${isRestricted('hideWeight') ? 'none' : ''}">${item.berat ? item.berat + ' kg' : '-'}</td>
                 ${isReseller ? '' : `<td style="font-weight:bold; color:var(--success);">${formatRp(item.harga_kandang)}</td>`}
@@ -229,9 +242,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
                 <td>
                     <div class="action-btns">
-                        ${isReadonly ? `<span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">🔒 Non-Edit</span>` : `
-                            ${(item.status_transaksi !== 'Terjual' && item.status_transaksi !== 'Terdistribusi' || isAdmin) ? `<button class="btn btn-sm btn-edit-action" data-id="${item.id}" title="Edit Data">✏️</button>` : `<span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">🔒</span>`}
-                            ${((item.status_transaksi !== 'Terdistribusi' || isAdmin) && !isAgen) ? `<button class="btn btn-sm btn-delete-action" data-id="${item.id}" title="Hapus Data">🗑️</button>` : ''}
                         `}
                     </div>
                 </td>
@@ -723,7 +733,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initial Load
     initPage();
 
-    [inpSearch, selStatusTransaksi, selStatusKesehatan, selStatusFisik, inpMinHarga, inpMaxHarga].forEach(el => {
+    [inpSearch, selStatusTransaksi, selStatusKesehatan, selStatusFisik, selSex, inpMinHarga, inpMaxHarga].forEach(el => {
         if(el) el.addEventListener('change', renderTable);
         if(el === inpSearch || el === inpMinHarga || el === inpMaxHarga) el.addEventListener('input', renderTable);
     });
