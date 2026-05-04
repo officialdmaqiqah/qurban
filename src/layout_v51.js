@@ -649,6 +649,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 targetLink.after(mapLink);
             }
         }
+
+        // LOG AKTIVITAS: Khusus Yahya Kurniawan (yahyaisyoyok)
+        const userEmail = profile?.email || '';
+        if (userEmail === 'yahyaisyoyok' || userEmail === 'yahyaisyoyok@gmail.com') {
+            const logLink = document.createElement('a');
+            logLink.href = 'log_aktivitas.html';
+            logLink.className = 'nav-item';
+            logLink.innerHTML = '&bull; Log Aktivitas';
+            if (window.location.pathname.includes('log_aktivitas.html')) logLink.classList.add('active');
+            
+            // Insert at the very bottom of sidebar nav
+            sidebarNav.appendChild(logLink);
+        }
     }
 
     console.log("%c>> DMQ SYSTEM ACTIVE: v5.3 <<", "color: #10b981; font-weight: bold; font-size: 14px;");

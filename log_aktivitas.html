@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Aktivitas | DMQ System</title>
+    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .log-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            transition: 0.2s;
+        }
+        .log-card:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+        .log-user-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .log-info {
+            flex: 1;
+        }
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.25rem;
+        }
+        .log-user-name {
+            font-weight: 700;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+        .log-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .log-action-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .log-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-open { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .badge-save { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .badge-delete { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div id="sidebarHeaderWrapper"></div>
+        <nav class="sidebar-nav"></nav>
+    </div>
+
+    <div class="main-content">
+        <header class="topbar">
+            <div class="page-title">
+                <h1>📜 Log Aktivitas User</h1>
+                <p>Memantau aktivitas real-time seluruh personil DMQ</p>
+            </div>
+            <div class="user-menu">
+                <span id="userEmailDisplay"></span>
+            </div>
+        </header>
+
+        <main class="content-area">
+            <div class="filter-bar">
+                <div class="search-box">
+                    <input type="text" id="inpSearchLog" class="form-control" placeholder="Cari nama user, aksi, atau halaman...">
+                </div>
+                <select id="filterAction" class="form-control" style="width: 200px;">
+                    <option value="">Semua Aksi</option>
+                    <option value="OPEN_PAGE">Membuka Halaman</option>
+                    <option value="SAVE_DATA">Simpan Data</option>
+                    <option value="DELETE">Hapus Data</option>
+                    <option value="LOGIN">Login</option>
+                </select>
+                <button class="btn btn-primary" id="btnRefreshLog">🔄 Refresh</button>
+            </div>
+
+            <div id="logContainer">
+                <!-- Data will be loaded here -->
+                <div class="empty-state">
+                    <div class="empty-icon">⏳</div>
+                    <p>Memuat data aktivitas...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="src/log_aktivitas.js"></script>
+</body>
+</html>
