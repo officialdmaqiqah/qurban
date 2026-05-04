@@ -8,8 +8,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const email = session.user.email;
-    if (email !== 'yahyaisyoyok' && email !== 'yahyaisyoyok@gmail.com') {
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+    if (!profile) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const email = (profile.email || '').toLowerCase();
+    const name = (profile.full_name || '').toLowerCase();
+    const role = (profile.role || '').toLowerCase();
+    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(role);
+
+    if (!( (email.includes('yahya') || name.includes('yahya')) && isAdmin )) {
         document.body.innerHTML = `
             <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0f172a; color:white; font-family:sans-serif;">
                 <h1 style="font-size:4rem;">🚫</h1>

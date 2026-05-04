@@ -650,9 +650,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // LOG AKTIVITAS: Khusus Yahya Kurniawan (yahyaisyoyok)
-        const userEmail = profile?.email || '';
-        if (userEmail === 'yahyaisyoyok' || userEmail === 'yahyaisyoyok@gmail.com') {
+        // LOG AKTIVITAS: Khusus Yahya (Admin/Office/Staf)
+        const userEmail = (profile?.email || '').toLowerCase();
+        const userName = (profile?.full_name || '').toLowerCase();
+        const userRole = (profile?.role || '').toLowerCase();
+        const isAdminRole = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+        
+        if ((userEmail.includes('yahya') || userName.includes('yahya')) && isAdminRole) {
             const logLink = document.createElement('a');
             logLink.href = 'log_aktivitas.html';
             logLink.className = 'nav-item';
