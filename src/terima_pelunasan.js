@@ -682,11 +682,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.showToast("Memulai sinkronisasi data asli...", "info");
             try {
                 // 1. Ambil data transaksi & keuangan
-                const { data: trxs, error: tErr } = await supabase.from('transaksi').select('*');
+                const { data: trxs, error: tErr } = await supabase.from('transaksi').select('*').range(0, 9999);
                 if (tErr) throw tErr;
 
                 // Ambil keuangan yang ada related_trx_id nya (Pemasukan/Pengeluaran terkait order)
-                const { data: fins, error: fErr } = await supabase.from('keuangan').select('*').not('related_trx_id', 'is', null);
+                const { data: fins, error: fErr } = await supabase.from('keuangan').select('*').not('related_trx_id', 'is', null).range(0, 9999);
                 if (fErr) throw fErr;
 
                 let updatedCount = 0;
@@ -823,7 +823,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         try {
             // Scan ALL finance records that have TRX ID in description
-            const { data: allFins } = await supabase.from('keuangan').select('*').or(`tipe.eq.pemasukan,tipe.eq.pengeluaran`);
+            const { data: allFins } = await supabase.from('keuangan').select('*').or(`tipe.eq.pemasukan,tipe.eq.pengeluaran`).range(0, 9999);
             const matched = (allFins || []).filter(f => {
                 const desc = (f.keterangan || '').toUpperCase();
                 return desc.includes(trxId.toUpperCase()) && f.related_trx_id !== trxId;

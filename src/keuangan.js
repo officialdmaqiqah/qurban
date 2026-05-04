@@ -487,8 +487,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const handleSyncAll = async () => {
             window.showConfirm('Sinkronkan seluruh saldo?', async () => {
                 window.showToast('Sinkronisasi berjalan...', 'info');
-                const { data: trxs } = await supabase.from('transaksi').select('id, total_deal, total_paid, history_bayar');
-                const { data: fins } = await supabase.from('keuangan').select('*');
+                const { data: trxs } = await supabase.from('transaksi').select('id, total_deal, total_paid, history_bayar').range(0, 9999);
+                const { data: fins } = await supabase.from('keuangan').select('*').range(0, 9999);
                 for (const trx of (trxs || [])) {
                     const rel = (fins || []).filter(f => f.related_trx_id === trx.id).sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
                     
