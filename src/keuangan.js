@@ -506,7 +506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const total = history.reduce((s, h) => {
                         const isIncome = h.tipe === 'pemasukan';
                         const categoryLower = (h.category || '').toLowerCase();
-                        const isAdjustment = categoryLower.includes('internal transfer') || categoryLower.includes('aqiqah adjustment');
+                        const isAdjustment = categoryLower.includes('internal') || categoryLower.includes('aqiqah') || (h.id || h.payId || '').startsWith('ADJ-');
                         const isRefund = h.tipe === 'pengeluaran' && categoryLower.includes('pengembalian dana');
                         
                         if (isIncome) return s + h.nominal;

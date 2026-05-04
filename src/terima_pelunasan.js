@@ -712,7 +712,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         // KHUSUS: Internal Transfer / Aqiqah dianggap sebagai kredit/pemasukan internal yang mengurangi sisa tagihan
                         const isIncome = h.tipe === 'pemasukan';
                         const categoryLower = (h.category || '').toLowerCase();
-                        const isAdjustment = categoryLower.includes('internal transfer') || categoryLower.includes('aqiqah adjustment');
+                        const isAdjustment = categoryLower.includes('internal') || categoryLower.includes('aqiqah') || (h.id || h.payId || '').startsWith('ADJ-');
                         const isRefund = h.tipe === 'pengeluaran' && categoryLower.includes('pengembalian dana');
                         
                         if (isIncome) return s + h.nominal;
@@ -786,7 +786,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const newTotalPaid = rebuiltHistory.reduce((s, h) => {
                     const isIncome = h.tipe === 'pemasukan';
                     const categoryLower = (h.category || '').toLowerCase();
-                    const isAdjustment = categoryLower.includes('internal transfer') || categoryLower.includes('aqiqah adjustment');
+                    const isAdjustment = categoryLower.includes('internal') || categoryLower.includes('aqiqah') || (h.id || h.payId || '').startsWith('ADJ-');
                     const isRefund = h.tipe === 'pengeluaran' && categoryLower.includes('pengembalian dana');
                     
                     if (isIncome) return s + h.nominal;
@@ -858,7 +858,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 })).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
                 const newTotalPaid = rebuiltHistory.reduce((s, h) => {
-                    if (h.tipe === 'pemasukan' || h.category === 'Pengembalian Dana') return s + h.nominal;
+                    const isIncome = h.tipe === 'pemasukan';
+                    const categoryLower = (h.category || '').toLowerCase();
+                    const isAdjustment = categoryLower.includes('internal') || categoryLower.includes('aqiqah') || (h.id || h.payId || '').startsWith('ADJ-');
+                    const isRefund = h.tipe === 'pengeluaran' && categoryLower.includes('pengembalian dana');
+                    
+                    if (isIncome) return s + h.nominal;
+                    if (isAdjustment) return s + Math.abs(h.nominal);
+                    if (isRefund) return s + h.nominal;
                     return s;
                 }, 0);
                 const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
