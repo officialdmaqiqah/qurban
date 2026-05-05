@@ -595,7 +595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         const userId = profile?.id || 'NO_ID';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v6.7 [NUCLEAR PROTECTION]</span></div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v6.9 [THE COMPLETE MENU]</span></div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;
         sidebar.appendChild(verTag);
@@ -642,6 +642,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
                     <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
                     <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
+                    <a href="pemetaan_kandang.html" class="nav-item">&bull; Pemetaan Kandang</a>
                     <div class="nav-header">💰 DATA FINANCE</div>
                     <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
                     <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
@@ -649,6 +650,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                     <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
                     <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;">📊 LAPORAN</a>
+                    <a href="log_aktivitas.html" class="nav-item" style="color:#10b981 !important; margin-top:10px;">&bull; Log Aktivitas</a>
                 `;
             }
 
