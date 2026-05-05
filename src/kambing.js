@@ -12,14 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (email) document.getElementById('userEmailDisplay').textContent = email;
 
     const userRole = (profile.role || 'staff').toLowerCase().trim();
-    const userEmail = (profile.email || '').toLowerCase();
-    const userName = (profile.full_name || '').toLowerCase();
-    const userId = profile.id;
-    
-    // KHUSUS YAHYA: Bypass by ID
-    const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId) || userName.includes('yahya') || userEmail.includes('yahya');
-    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
-    const isAgen = userRole === 'agen' && !isYahya;
+    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+    const isAgen = userRole === 'agen';
 
     window.isRestricted = function(perm) {
         if (isAdmin) return false;

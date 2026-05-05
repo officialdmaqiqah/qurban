@@ -36,8 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const reksData = (reNew?.data?.val && reNew.data.val.length > 0) ? reNew.data : (reOld?.data || null);
         const rekeningDb = reksData?.val || [];
         const userRole = (profile.role || 'staff').toLowerCase().trim();
-        const isAdmin = ['admin', 'owner'].includes(userRole);
-        const isAgen = userRole === 'agen';
+        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
 
         const permissions = profile.permissions || {};
         const linkedAgen = profile.linked_agen_nama || permissions.linkedAgen || '';
