@@ -494,7 +494,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const userEmail = (profile.email || '').toLowerCase();
         const userName = (profile.full_name || '').toLowerCase();
         const userId = profile.id;
-        const userRole = (profile.role || 'staff').toLowerCase().trim();
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const allowedMenus = profile.allowed_menus || [];
         
