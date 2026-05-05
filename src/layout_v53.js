@@ -587,18 +587,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const oldLogout = document.getElementById('logoutBtnLegacy');
     if (oldLogout) oldLogout.remove();
 
-    // 4. VERSION INDICATOR & CREDITS
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) {
-        const verTag = document.createElement('div');
-        verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
-        const userId = profile?.id || 'NO_ID';
-        verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v10.0 [THE RESET]</span></div>
-            <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
-        `;
-        sidebar.appendChild(verTag);
-    }
+    // 4. VERSION INDICATOR & CREDITS (Now hardcoded in HTML)
 
     // --- GLOBAL ACTIVITY LOGGER ---
     window.logActivity = async (action, target, details = {}) => {
