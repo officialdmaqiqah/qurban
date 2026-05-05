@@ -411,14 +411,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const bell = document.createElement('div');
         bell.className = 'action-icon';
         bell.id = 'notifBellIcon';
-        bell.innerHTML = '🔔';
+        bell.innerHTML = '<i class="fas fa-bell"></i>';
         bell.title = 'Notifikasi';
         bell.onclick = () => window.location.href = 'pengaturan.html';
         
         // 2. Settings Gear
         const gear = document.createElement('div');
         gear.className = 'action-icon';
-        gear.innerHTML = '⚙️';
+        gear.innerHTML = '<i class="fas fa-cog"></i>';
         gear.title = 'Pengaturan';
         gear.onclick = () => window.location.href = 'pengaturan.html';
 
@@ -426,25 +426,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const themeBtn = document.createElement('div');
         themeBtn.className = 'action-icon';
         const t = localStorage.getItem('QURBAN_THEME') || 'light';
-        themeBtn.innerHTML = t === 'dark' ? '☀️' : '🌙';
+        themeBtn.innerHTML = t === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
         themeBtn.title = 'Ganti Tema';
         themeBtn.onclick = () => {
             const isDark = !document.documentElement.classList.contains('light-mode');
             if (isDark) {
                 document.documentElement.classList.add('light-mode');
                 localStorage.setItem('QURBAN_THEME', 'light');
-                themeBtn.innerHTML = '🌙';
+                themeBtn.innerHTML = '<i class="fas fa-moon"></i>';
             } else {
                 document.documentElement.classList.remove('light-mode');
                 localStorage.setItem('QURBAN_THEME', 'dark');
-                themeBtn.innerHTML = '☀️';
+                themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
             }
         };
 
         // 4. Logout Button in Header
         const logoutHeader = document.createElement('div');
         logoutHeader.className = 'action-icon logout-icon';
-        logoutHeader.innerHTML = '⏻';
+        logoutHeader.innerHTML = '<i class="fas fa-power-off"></i>';
         logoutHeader.title = 'Logout';
         logoutHeader.onclick = async () => {
             window.showConfirm('Yakin ingin keluar?', async () => {
