@@ -653,10 +653,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // LOG AKTIVITAS: Khusus Yahya dengan Role Admin/Office
         const userEmail = (profile?.email || '').toLowerCase();
         const userName = (profile?.full_name || '').toLowerCase();
-        const isAdminRole = ['admin', 'office'].includes(userRole);
+        const currentRole = (profile?.role || '').toLowerCase().trim();
         
         // Cek: Harus ada kata 'yahya' dan role harus Admin/Office
-        const isAuthorizedYahya = (userName.includes('yahya') || userEmail.includes('yahya')) && isAdminRole;
+        const isAuthorizedYahya = (userName.includes('yahya') || userEmail.includes('yahya')) && ['admin', 'office'].includes(currentRole);
+
+        console.log("DEBUG LOG MENU:", { userName, userEmail, currentRole, isAuthorizedYahya });
 
         if (isAuthorizedYahya) {
             const logLink = document.createElement('a');
