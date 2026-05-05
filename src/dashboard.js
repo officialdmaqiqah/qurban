@@ -1,8 +1,9 @@
 import { supabase } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Check Session & Profile
-    const { data: { session } } = await supabase.auth.getSession();
+    try {
+        // 1. Check Session & Profile
+        const { data: { session } } = await supabase.auth.getSession();
     if (!session) return; // layout.js handles redirect
 
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
@@ -423,4 +424,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Auto Refresh every 5 minutes
     setInterval(updateDashboard, 5 * 60 * 1000);
+    } catch (err) {
+        console.error("DASHBOARD CRASH:", err);
+    }
 });
