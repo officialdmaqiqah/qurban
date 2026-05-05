@@ -1,0 +1,7 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = 'https://juscihvfmgibmrhmclab.supabase.co';
+const supabaseKey = 'sb_publishable_K6phM9DpcT4aqm1nvXdkYA_h9N1fQTQ';
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
+window.supabase = supabase; // Agar bisa diakses dari console untuk diagnosa
