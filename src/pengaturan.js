@@ -1003,20 +1003,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.addCategory = async (type) => {
         const title = type === 'IN' ? 'Kategori Pemasukan' : 'Kategori Pengeluaran';
-        const name = prompt(`Ketik nama ${title} baru:`);
-        if (!name || !name.trim()) return;
-
-        const key = type === 'IN' ? 'KAT_KEU_IN' : 'KAT_KEU_OUT';
-        const { data } = await supabase.from('master_data').select('val').eq('key', key).single();
-        const list = data?.val || [];
-
-        if (list.includes(name.trim())) return showAlert('Kategori sudah ada!', 'warning');
         
-        list.push(toTitleCase(name.trim()));
-        await supabase.from('master_data').upsert({ id: 'ID-' + key, key, val: list }, { onConflict: 'key' });
-        
-        showToast('Kategori baru ditambahkan');
-        renderKatFinance();
+        window.showInput(`Masukkan nama ${title} yang baru:`, '', async (name) => {
+            if (!name || !name.trim()) return;
+
+            const key = type === 'IN' ? 'KAT_KEU_IN' : 'KAT_KEU_OUT';
+            const { data } = await supabase.from('master_data').select('val').eq('key', key).single();
+            const list = data?.val || [];
+
+            if (list.includes(name.trim())) return showAlert('Kategori sudah ada!', 'warning');
+            
+            list.push(toTitleCase(name.trim()));
+            await supabase.from('master_data').upsert({ id: 'ID-' + key, key, val: list }, { onConflict: 'key' });
+            
+            showToast('Kategori baru ditambahkan');
+            renderKatFinance();
+        }, null, `Tambah ${title}`, 'Contoh: Modal Awal, Biaya Pakan, dll');
     };
 
     window.deleteCategory = async (type, name) => {

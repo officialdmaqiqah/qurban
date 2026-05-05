@@ -230,8 +230,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Kirim ke nomor Admin (dari profile atau prompt jika tidak ada)
         let adminNumber = profile?.phone || '';
         if (!adminNumber) {
-            adminNumber = prompt("Masukkan No WhatsApp Admin untuk menerima laporan:", "08...");
-            if (!adminNumber) return;
+            window.showInput("Masukkan No WhatsApp Admin untuk menerima laporan:", "", async (num) => {
+                if (!num || !num.trim()) return;
+                adminNumber = num.trim();
+                
+                showToast('🚀 Mengirim Laporan Audit ke WhatsApp...', 'info');
+                const res = await window.sendWa(adminNumber, msg);
+                
+                if (res.success) {
+                    showToast('✅ Laporan Audit Berhasil Terkirim!', 'success');
+                } else {
+                    window.showConfirm(`WA Laporan Gagal: ${res.msg}\n\nIngin kirim manual?`, () => {
+                        window.open(res.link, '_blank');
+                    }, null, 'WA Gateway Masalah', 'Kirim Manual', 'btn-primary');
+                }
+            }, null, 'Kirim Laporan Audit', 'Contoh: 08123456789');
+            return;
         }
 
         showToast('🚀 Mengirim Laporan Audit ke WhatsApp...', 'info');

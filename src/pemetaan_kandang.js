@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (err) {
             console.error('Error loading pen data:', err);
             if (window.showAlert) window.showAlert('Gagal memuat data kandang: ' + err.message, 'danger');
-            else alert('Gagal memuat data kandang: ' + err.message);
+            else showAlert('Gagal memuat data kandang: ' + err.message, 'danger');
         }
     };
 

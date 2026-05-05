@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             if (typeof showToast === 'function') showToast(`Status ${goatNoTali} diperbarui!`);
-            else alert(`Status ${goatNoTali} diperbarui!`);
+            else showAlert(`Status ${goatNoTali} diperbarui!`, 'success');
             
             await loadGoats(true);
             renderTable();
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderTable();
         } else {
             if(window.showAlert) window.showAlert('Gagal menyimpan data: ' + error.message, 'danger');
-            else alert('Gagal menyimpan: ' + error.message);
+            else showAlert('Gagal menyimpan: ' + error.message, 'danger');
         }
     });
 
