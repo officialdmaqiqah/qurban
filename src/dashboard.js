@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const ketLine = (f.keterangan || '').toLowerCase().trim();
                         const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
                         const isRefund = katLine.includes('pengembalian dana') || katLine.includes('refund') || (f.id || '').startsWith('REF-') || ketLine.includes('refund');
-                        const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan') || isRefund || katLine.includes('penarikan') || katLine.includes('modal') || katLine.includes('prive') || katLine.includes('investasi');
+                        const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan') || isRefund || katLine.includes('penarikan') || katLine.includes('modal') || katLine.includes('prive') || katLine.includes('investasi') || katLine.includes('pinjaman');
                         
                         if (!isExclusion) {
                             operatingExpenses += nom;

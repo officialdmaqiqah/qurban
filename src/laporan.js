@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const ketLine = (f.keterangan || '').toLowerCase().trim();
                     const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
                     const isRefund = katLine.includes('pengembalian dana') || katLine.includes('refund') || (f.id || '').startsWith('REF-') || ketLine.includes('refund');
-                    const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan') || isRefund || katLine.includes('penarikan') || katLine.includes('modal') || katLine.includes('prive') || katLine.includes('investasi');
+                    const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan') || isRefund || katLine.includes('penarikan') || katLine.includes('modal') || katLine.includes('prive') || katLine.includes('investasi') || katLine.includes('pinjaman');
                     
                     if (!isExclusion) {
                         opex += nom;
@@ -414,7 +414,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isRef = kl.includes('pengembalian dana') || kl.includes('refund') || (f.id || '').startsWith('REF-') || ketl.includes('refund');
             const isEx = kl.includes('bayar supplier') || kl.includes('pelunasan supplier') || kl.includes('komisi') || 
                          kl.includes('bagi hasil') || kl.includes('mutasi') || kl.includes('titipan') || kl.includes('beli kambing') ||
-                         isRef || kl.includes('penarikan') || kl.includes('modal') || kl.includes('prive') || kl.includes('investasi') ||
+                         isRef || kl.includes('penarikan') || kl.includes('modal') || kl.includes('prive') || kl.includes('investasi') || kl.includes('pinjaman') ||
                          f.kategori === 'Kerugian (Mati/Hilang)';
             return !isEx;
         };
