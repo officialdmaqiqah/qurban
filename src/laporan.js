@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 if (f.tipe === 'pengeluaran') {
                     const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
-                    const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan') || katLine.includes('pengembalian dana') || katLine.includes('refund') || katLine.includes('penarikan modal') || katLine.includes('prive') || katLine.includes('investasi');
+                    const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan') || katLine.includes('pengembalian dana') || katLine.includes('refund') || katLine.includes('penarikan') || katLine.includes('modal') || katLine.includes('prive') || katLine.includes('investasi');
                     
                     if (!isExclusion) {
                         opex += nom;
@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const kl = (f.kategori || '').toLowerCase();
             const isEx = kl.includes('bayar supplier') || kl.includes('pelunasan supplier') || kl.includes('komisi') || 
                          kl.includes('bagi hasil') || kl.includes('mutasi') || kl.includes('titipan') || kl.includes('beli kambing') ||
-                         kl.includes('pengembalian dana') || kl.includes('refund') || kl.includes('penarikan modal') || kl.includes('prive') || kl.includes('investasi') ||
+                         kl.includes('pengembalian dana') || kl.includes('refund') || kl.includes('penarikan') || kl.includes('modal') || kl.includes('prive') || kl.includes('investasi') ||
                          f.kategori === 'Kerugian (Mati/Hilang)';
             return !isEx;
         };
