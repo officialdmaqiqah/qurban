@@ -501,7 +501,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const allowedMenus = profile.allowed_menus || [];
         
-        /* 
         if (!isAdmin) {
             // FORCE: Redirect away from protected pages if not admin and not in allowed menus
             const protectedPages = ['dashboard.html', 'keuangan.html', 'laporan.html', 'pemetaan_kandang.html'];
@@ -514,16 +513,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             document.querySelectorAll('.nav-item').forEach(item => {
                 const href = item.getAttribute('href');
-                // Hide if not in allowed menus
-                if (href && !allowedMenus.includes(href)) {
-                    // Kecuali pengaturan.html, kita ijinkan agar bisa edit profil personal
-                    if (href !== 'pengaturan.html') {
-                        item.style.display = 'none';
-                    }
+                if (href && !allowedMenus.includes(href) && href !== 'pengaturan.html') {
+                    item.style.display = 'none';
                 }
             });
         }
-        */
 
         // Show topbar actions
         if (window.actionsDiv) {
@@ -592,8 +586,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Cleanup legacy sidebar logout button if exists
-    document.getElementById('logoutBtn')?.closest('div')?.remove();
+    // Cleanup legacy sidebar logout button if exists (SAFE VERSION)
+    const oldLogout = document.getElementById('logoutBtnLegacy');
+    if (oldLogout) oldLogout.remove();
 
     // 4. VERSION INDICATOR & CREDITS
     const sidebar = document.querySelector('.sidebar');
@@ -602,7 +597,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         const userId = profile?.id || 'NO_ID';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.5.9 [OVERRIDE]</span></div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.6.0 [STABLE]</span></div>
             <div style="font-size:0.5rem; color:var(--primary);">ID: ${userId}</div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;
