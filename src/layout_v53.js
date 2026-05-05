@@ -630,7 +630,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sidebarNav = document.querySelector('.sidebar-nav');
     if (sidebarNav) {
         // CHECK PERMISSION: Only inject if Admin or specifically allowed
-        // const userRole already defined above at line 493
+        const profile = window.CURRENT_USER;
+        const userRole = (profile?.role || 'staff').toLowerCase().trim();
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const allowedMenus = profile?.allowed_menus || [];
         const isAllowed = isAdmin || allowedMenus.includes('pemetaan_kandang.html');
