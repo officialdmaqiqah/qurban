@@ -601,7 +601,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const verTag = document.createElement('div');
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.5 [LATEST]</span></div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.5.5 [FIXED]</span></div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;
         sidebar.appendChild(verTag);
@@ -657,15 +657,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // LOG AKTIVITAS: Khusus Yahya dengan Role Admin/Office
+        // LOG AKTIVITAS: Khusus Yahya
         const userEmail = (profile?.email || '').toLowerCase();
         const userName = (profile?.full_name || '').toLowerCase();
         const currentRole = (profile?.role || '').toLowerCase().trim();
         
-        // Cek: Harus ada kata 'yahya' dan role harus Admin/Office
-        const isAuthorizedYahya = (userName.includes('yahya') || userEmail.includes('yahya')) && ['admin', 'office'].includes(currentRole);
+        // Cek: Harus ada kata 'yahya' (Role bebas untuk Yahya)
+        const isAuthorizedYahya = (userName.includes('yahya') || userEmail.includes('yahya'));
 
-        console.log("DEBUG LOG MENU:", { userName, userEmail, currentRole, isAuthorizedYahya });
+        console.log("DEBUG LOG MENU v5.5.5:", { userName, userEmail, currentRole, isAuthorizedYahya });
 
         if (isAuthorizedYahya) {
             const logLink = document.createElement('a');
