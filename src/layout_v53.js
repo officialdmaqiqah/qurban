@@ -350,6 +350,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
     const isLoginPage = window.location.pathname.includes('login.html') || window.location.pathname === '/login';
 
+    // 0. Ensure FontAwesome is loaded for topbar icons
+    if (!document.querySelector('link[href*="font-awesome"]')) {
+        const fa = document.createElement('link');
+        fa.rel = 'stylesheet';
+        fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+        document.head.appendChild(fa);
+    }
+
     // 1. Session check
     const { data: { session } } = await supabase.auth.getSession();
 
