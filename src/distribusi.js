@@ -207,16 +207,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </div>
                             <div style="text-align:right;">
                                 ${i.status === 'Terdistribusi' ? '<span style="color:var(--success); font-size:1.25rem;">✅</span>' : 
-                                  `<button class="btn btn-sm btn-shimmer" onclick="window.openLaporDist('${t.id}','${i.goatId}','${i.konsumen}')" style="background:var(--primary); padding:6px 14px; font-size:0.75rem; border-radius:8px; border:none; box-shadow:0 4px 10px var(--primary-transparent);">Lapor</button>`}
+                                  `<button class="btn btn-sm btn-shimmer" onclick="window.openLaporDist('${t.id}','${i.goatId}','${i.konsumen}')" style="background:var(--primary); padding:6px 14px; font-size:0.75rem; border-radius:8px; border:none; box-shadow:0 4px 10px var(--primary-transparent);">📷</button>`}
                             </div>
                         </div>
                     `).join('')}
                 </div>
                 <div class="trip-footer" style="padding-top:0.5rem; justify-content:space-between;">
-                     <button class="btn btn-sm" onclick="window.printTrip('${t.id}')" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid rgba(255,255,255,0.1); border-radius:6px;">🖨️ Cetak</button>
+                     <button class="btn btn-sm" onclick="window.printTrip('${t.id}')" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid rgba(255,255,255,0.1); border-radius:6px;">🖨️</button>
                      <div style="display:flex; gap:8px;">
-                        ${isDone && !isSopir ? `<button class="btn btn-sm" onclick="window.rollbackDistribution('${t.id}')" style="color:var(--danger); background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); border-radius:6px; font-size:0.7rem;">↩️ Batalkan</button>` : ''}
-                        ${!isSopir ? `<button class="btn btn-sm" onclick="window.deleteTrip('${t.id}')" style="color:var(--danger); background:transparent; border:none; opacity:0.6;">🗑️ Hapus</button>` : ''}
+                        ${isDone && !isSopir ? `<button class="btn btn-sm" onclick="window.rollbackDistribution('${t.id}')" style="color:var(--danger); background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); border-radius:6px; font-size:0.7rem;">↩️</button>` : ''}
+                        ${!isSopir ? `<button class="btn btn-sm" onclick="window.deleteTrip('${t.id}')" style="color:var(--danger); background:transparent; border:none; opacity:0.6;" title="Hapus">🗑️</button>` : ''}
                      </div>
                 </div>
 

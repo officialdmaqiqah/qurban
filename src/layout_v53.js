@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 4. Logout Button in Header
         const logoutHeader = document.createElement('div');
         logoutHeader.className = 'action-icon logout-icon';
-        logoutHeader.innerHTML = '🔴';
+        logoutHeader.innerHTML = '⏻';
         logoutHeader.title = 'Logout';
         logoutHeader.onclick = async () => {
             window.showConfirm('Yakin ingin keluar?', async () => {
@@ -670,7 +670,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
         console.error("CRITICAL LAYOUT ERROR:", err);
     }
-    console.log("%c>> DMQ SYSTEM ACTIVE: v10.0 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
+    console.log("%c>> DMQ SYSTEM ACTIVE: v10.9 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
 });
 
 // --- UNIVERSAL CAMERA UI (Webcam & Mobile) ---

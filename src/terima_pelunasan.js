@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                 </td>
-                <td data-label="AKSI"><button class="btn btn-sm" style="padding:6px 16px; font-size:0.8rem; background:rgba(16,185,129,0.1); color:var(--success); border:1px solid rgba(16,185,129,0.2); border-radius:8px; font-weight:600;">Pilih Order</button></td>
+                <td data-label="AKSI"><button class="btn btn-sm" style="padding:6px 16px; font-size:0.8rem; background:rgba(16,185,129,0.1); color:var(--success); border:1px solid rgba(16,185,129,0.2); border-radius:8px; font-weight:600;" title="Pilih Order">✔️</button></td>
             `;
             tr.onclick = () => {
                 // Clear selected state from all rows
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </td>
                 <td data-label="KELEBIHAN" style="font-weight:700; color:var(--warning);">${window.formatRp(t.total_overpaid || 0)}</td>
-                <td data-label="AKSI"><button class="btn btn-sm" style="padding:6px 16px; font-size:0.8rem; background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.2); border-radius:8px; font-weight:600;">Refund Dana</button></td>
+                <td data-label="AKSI"><button class="btn btn-sm" style="padding:6px 16px; font-size:0.8rem; background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.2); border-radius:8px; font-weight:600;" title="Refund Dana">💸</button></td>
             `;
             tr.onclick = () => openRefundModal(t);
         }

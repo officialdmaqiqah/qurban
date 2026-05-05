@@ -214,6 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <td data-label="TIPE" style="font-size:0.8rem; text-transform:capitalize;">${item.tipe}</td>
                             <td data-label="CHANNEL" style="font-size:0.8rem; color:var(--text-muted)">${item.channel || '-'}</td>
                             <td data-label="PHOTO" style="text-align:center;">
+                                ${item.related_trx_id ? `<button class="btn btn-sm btn-info" onclick="window.viewTrxDetail('${item.related_trx_id}')" title="Detail Transaksi">🔍</button>` : ''}
                                 ${item.bukti_url ? `<button class="btn btn-sm" onclick="window.viewPhoto('${item.bukti_url}')" style="width:30px; height:30px; border-radius:4px; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1);"><img src="${window.getDirectDriveLink(item.bukti_url)}" style="width:100%; height:100%; object-fit:cover;"></button>` : '🚫'}
                             </td>
                             <td data-label="AKSI" style="white-space:nowrap;">

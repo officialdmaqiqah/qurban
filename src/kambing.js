@@ -245,8 +245,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
                 <td>
                     <div class="action-btns">
-                        <button class="btn-edit-action" data-id="${item.id}">Edit</button>
-                        ${isAdmin ? `<button class="btn-delete-action" data-id="${item.id}">Hapus</button>` : ''}
+                        <button class="btn-edit-action" data-id="${item.id}" title="Edit Data">✏️</button>
+                        ${isAdmin ? `<button class="btn-delete-action" data-id="${item.id}" title="Hapus Data">🗑️</button>` : ''}
                     </div>
                 </td>
             `;

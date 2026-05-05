@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted); line-height:1.3;">${item.catatan_keluar || '-'}</div>
                 </td>
                 <td>
-                    <button class="btn btn-sm btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="window.rollbackMati('${item.id}')">🗑️ Batal</button>
+                    <button class="btn btn-sm btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="window.rollbackMati('${item.id}')" title="Batalkan">↩️</button>
                 </td>
             `;
             tableBody.appendChild(tr);

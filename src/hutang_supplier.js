@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         data-name="${item.nama}" 
                         data-batch="${item.batch}" 
                         data-sisa="${item.batchSisa}"
-                        style="background:var(--primary); color:#ffffff; border:none; padding:6px 12px;">💸 Bayar</button>
+                        style="background:var(--primary); color:#ffffff; border:none; padding:6px 12px;" title="Bayar">💸</button>
                 </td>
             `;
             tableBody.appendChild(tr);

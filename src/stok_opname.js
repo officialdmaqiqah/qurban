@@ -90,8 +90,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>
                     <div style="display:flex; gap:5px; align-items:center;">
                         <span class="badge" style="background:rgba(255,255,255,0.1); color:var(--text-main);">${item.status_transaksi}</span>
-                        ${isChecked ? '✅' : '<button class="btn btn-sm btn-verify-single" data-id="${item.id}">Check</button>'}
-                        <button class="btn btn-sm btn-delete-action btn-quick-dead" data-id="${item.id}">💀 Mati/Hilang</button>
+                        ${isChecked ? '✅' : `<button class="btn btn-sm btn-verify-single" data-id="${item.id}" title="Verifikasi">✔️</button>`}
+                        <button class="btn btn-sm btn-delete-action btn-quick-dead" data-id="${item.id}" title="Mati/Hilang">💀</button>
                     </div>
                 </td>
             `;

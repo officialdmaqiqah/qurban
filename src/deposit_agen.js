@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td class="text-right text-danger">${window.formatRp(b.out)}</td>
                     <td class="text-right font-bold">${window.formatRp(b.in - b.out)}</td>
                     <td class="text-right">
-                        <button class="btn btn-sm btn-detail-agen" data-name="${name}">Detail</button>
+                        <button class="btn btn-sm btn-detail-agen" data-name="${name}" title="Detail Riwayat">🔍</button>
                     </td>
                 `;
                 tableBodySaldo.appendChild(tr);

@@ -497,8 +497,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${u.role}</td>
                 <td>${u.status}</td>
                 <td style="display:flex; gap:0.4rem; flex-wrap:nowrap;">
-                    <button class="btn btn-sm" onclick="window.editUserAkses('${u.id}')" title="Edit Akses">Akses</button>
-                    <button class="btn btn-sm" style="background:#4b5563; color:white; border:none;" onclick="window.repairAccountDoctor('${u.email}', '${u.id}')" title="🩺 Perbaiki Akun (Auth Sync)">🩺 Doctor</button>
+                    <button class="btn btn-sm" onclick="window.editUserAkses('${u.id}')" title="Edit Hak Akses">🔑</button>
+                    <button class="btn btn-sm" style="background:#4b5563; color:white; border:none;" onclick="window.repairAccountDoctor('${u.email}', '${u.id}')" title="🩺 Perbaiki Akun (Auth Sync)">🩺</button>
                     <button class="btn btn-sm" style="background:var(--danger); color:white; border:none;" onclick="window.deleteUser('${u.id}', '${u.full_name}')" title="Hapus User">🗑️</button>
                 </td>
             `;
