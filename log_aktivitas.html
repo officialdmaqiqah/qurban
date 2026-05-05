@@ -80,107 +80,51 @@
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <div id="sidebarHeaderWrapper"></div>
-        <nav class="sidebar-nav"></nav>
-    </div>
+    <div class="app-layout">
+                <!-- Sidebar (Hardcoded for Guaranteed Visibility v10.7) -->
+                <aside class="sidebar" id="sidebar">
+                        <div class="sidebar-header" id="sidebarHeaderWrapper">
+                            <div class="sidebar-logo">
+                                <span style="font-weight: 600;">Daarul Mahabbah Qurban</span>
+                            </div>
+                        </div>
+                        <nav class="sidebar-nav">
+                                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
+                                <div class="nav-header">📁 DATA STOCK</div>
+                                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
+                                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
+                                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                                <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
+                                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
+                                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
+                                <a href="pemetaan_kandang.html" class="nav-item">&bull; Pemetaan Kandang</a>
+                                <div class="nav-header">💰 DATA FINANCE</div>
+                                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
+                                <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
+                                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
+                                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;">📊 LAPORAN</a>
+                        </nav>
+                        <div style="padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; margin-top: auto;">
+                            <div>System Version: <span style="color:var(--primary); font-weight:700;">v10.7</span></div>
+                            <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
+                        </div>
+                </aside>
 
-    <div class="main-content">
-        <header class="topbar">
-            <div class="page-title">
-                <h1>📜 Log Aktivitas User</h1>
-                <p>Memantau aktivitas real-time seluruh personil DMQ</p>
-            </div>
-            <div class="user-menu">
-                <span id="userEmailDisplay"></span>
-            </div>
-        </header>
-
-        <main class="content-area">
-            <div class="filter-bar">
-                <div class="search-box">
-                    <input type="text" id="inpSearchLog" class="form-control" placeholder="Cari nama user, aksi, atau halaman...">
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">📜 Log Aktivitas User</div>
+                <div class="user-menu" id="topbarUserMenu">
+                    <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem; margin-right: 15px;">Yahya</span>
+                    <div class="topbar-actions" style="display: flex; gap: 15px; align-items: center;">
+                        <div class="action-icon" title="Ganti Tema" onclick="document.documentElement.classList.toggle('light-mode'); localStorage.setItem('QURBAN_THEME', document.documentElement.classList.contains('light-mode') ? 'light' : 'dark');" style="cursor:pointer; font-size:1.1rem;">☀️</div>
+                        <div class="action-icon" title="Pengaturan" onclick="window.location.href='pengaturan.html'" style="cursor:pointer; font-size:1.1rem;">⚙️</div>
+                        <div class="action-icon logout-icon" title="Logout" onclick="window.showConfirm ? window.showConfirm('Yakin ingin keluar?', () => { localStorage.clear(); window.location.href='login.html'; }) : (confirm('Yakin ingin keluar?') ? (localStorage.clear(), window.location.href='login.html') : null)" style="cursor:pointer; font-size:1.1rem;">🔴</div>
+                    </div>
                 </div>
-                <select id="filterAction" class="form-control" style="width: 200px;">
-                    <option value="">Semua Aksi</option>
-                    <option value="OPEN_PAGE">Membuka Halaman</option>
-                    <option value="SAVE_DATA">Simpan Data</option>
-                    <option value="DELETE">Hapus Data</option>
-                    <option value="LOGIN">Login</option>
-                </select>
-                <button class="btn btn-primary" id="btnRefreshLog">🔄 Refresh</button>
-            </div>
-
-            <div id="logContainer">
-                <!-- Data will be loaded here -->
-                <div class="empty-state">
-                    <div class="empty-icon">⏳</div>
-                    <p>Memuat data aktivitas...</p>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- v8.2 [THE DATA RESTORATION] - EMERGENCY BYPASS -->
-    <script type="module">
-        import { supabase } from './src/supabase.js';
-        
-        // Re-define essential global functions
-        window.formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) return;
-
-                const userId = session.user.id;
-                const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId);
-                
-                if (isYahya) {
-                    const nav = document.querySelector('.sidebar-nav');
-                    if (nav) {
-                        nav.innerHTML = `
-                            <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
-                            <div class="nav-header">📁 DATA STOCK</div>
-                            <a href="kambing.html" class="nav-item">&bull; Master Data</a>
-                            <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
-                            <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
-                            <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
-                            <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
-                            <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
-                            <a href="pemetaan_kandang.html" class="nav-item">&bull; Pemetaan Kandang</a>
-                            <div class="nav-header">💰 DATA FINANCE</div>
-                            <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
-                            <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
-                            <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
-                            <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
-                            <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                            <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;">📊 LAPORAN</a>
-                            <a href="log_aktivitas.html" class="nav-item" style="color:#10b981 !important; margin-top:10px; font-weight:600; border-top:1px solid rgba(255,255,255,0.05); padding-top:10px;">🛡️ BUKA LOG AKTIVITAS (v8.2)</a>
-                        `;
-                        nav.querySelectorAll('.nav-item').forEach(item => {
-                            item.style.setProperty('display', 'flex', 'important');
-                            if (window.location.pathname.includes(item.getAttribute('href'))) item.classList.add('active');
-                        });
-                    }
-
-                    const userMenu = document.querySelector('.user-menu');
-                    if (userMenu && !userMenu.querySelector('.topbar-actions')) {
-                        const actions = document.createElement('div');
-                        actions.className = 'topbar-actions';
-                        actions.style.display = 'flex';
-                        actions.style.gap = '10px';
-                        actions.innerHTML = `
-                            <div class="action-icon" title="Theme" onclick="document.documentElement.classList.toggle('light-mode');" style="cursor:pointer">☀️</div>
-                            <div class="action-icon" title="Settings" onclick="window.location.href='pengaturan.html'" style="cursor:pointer">⚙️</div>
-                            <div class="action-icon logout-icon" title="Logout" onclick="supabase.auth.signOut().then(()=>window.location.href='login.html')" style="cursor:pointer">🚪</div>
-                        `;
-                        userMenu.appendChild(actions);
-                    }
-                }
-            } catch (e) { console.error("EMBEDDED ERROR:", e); }
-        });
-    </script>
+            </header>
     <script type="module" src="/layout_v53.js?v=8.0"></script>
     <script type="module" src="/log_aktivitas.js?v=8.0"></script>
 </body>
