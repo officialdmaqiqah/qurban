@@ -667,6 +667,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 item.style.setProperty('display', 'flex', 'important');
                 item.style.setProperty('opacity', '1', 'important');
                 item.style.setProperty('visibility', 'visible', 'important');
+                const href = item.getAttribute('href');
+                if (href && window.location.pathname.includes(href)) {
+                    item.classList.add('active');
+                }
+            });
+            nav.querySelectorAll('.nav-item').forEach(item => {
+                item.style.setProperty('display', 'flex', 'important');
+                item.style.setProperty('opacity', '1', 'important');
+                item.style.setProperty('visibility', 'visible', 'important');
                 if (window.location.pathname.includes(item.getAttribute('href'))) {
                     item.classList.add('active');
                 }
