@@ -36,8 +36,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const reksData = (reNew?.data?.val && reNew.data.val.length > 0) ? reNew.data : (reOld?.data || null);
         const rekeningDb = reksData?.val || [];
         const userRole = (profile.role || 'staff').toLowerCase().trim();
-        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
-
+        const userEmail = (profile.email || '').toLowerCase();
+        const userName = (profile.full_name || '').toLowerCase();
+        const userId = profile.id;
+        const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId) || userName.includes('yahya') || userEmail.includes('yahya');
+        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
+        const isAgenRole = userRole === 'agen' && !isYahya;
         const permissions = profile.permissions || {};
         const linkedAgen = profile.linked_agen_nama || permissions.linkedAgen || '';
         const agenLinkedId = profile.linked_agen_id || permissions.linkedAgenId || '';
@@ -392,9 +396,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // --- AFFILIATE LINK LOGIC ---
         const isMarketing = ['marketing_dm', 'marketing_ext', 'marketing_kandang', 'reseller'].includes(userRole);
-        const isAgen = userRole === 'agen' || !!linkedAgen || isMarketing;
+        const isAgenForAffiliate = userRole === 'agen' || !!linkedAgen || isMarketing;
         const affiliateCard = document.getElementById('affiliateCard');
-        if (isAgen && affiliateCard) {
+        if (isAgenForAffiliate && affiliateCard) {
             affiliateCard.style.display = 'block';
             const username = (profile.email || '').split('@')[0];
             const baseUrl = 'dmqurban.com/etalase.html';
