@@ -350,7 +350,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
     const isLoginPage = window.location.pathname.includes('login.html') || window.location.pathname === '/login';
 
-    // 1. Theme Immediate Sync
+    // 1. Session check
+    const { data: { session } } = await supabase.auth.getSession();
+
+    // 2. Theme Immediate Sync
     const applyTheme = () => {
         const t = localStorage.getItem('QURBAN_THEME') || 'light';
         if (t === 'light') document.documentElement.classList.add('light-mode');
