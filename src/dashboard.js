@@ -38,9 +38,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const userRole = (profile.role || 'staff').toLowerCase().trim();
         const userEmail = (profile.email || '').toLowerCase();
         const userName = (profile.full_name || '').toLowerCase();
+        const userId = profile.id;
         
-        // KHUSUS YAHYA: Bypass Security Redirect
-        const isYahya = userName.includes('yahya') || userEmail.includes('yahya');
+        // KHUSUS YAHYA: Bypass by ID
+        const isYahya = userId === '15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1' || userName.includes('yahya') || userEmail.includes('yahya');
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
         
         const allowedMenus = profile.allowed_menus || [];

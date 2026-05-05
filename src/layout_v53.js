@@ -493,9 +493,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const userRole = (profile.role || 'staff').toLowerCase().trim();
         const userEmail = (profile.email || '').toLowerCase();
         const userName = (profile.full_name || '').toLowerCase();
+        const userId = profile.id;
         
-        // KHUSUS YAHYA: Selalu anggap Admin agar menu tidak hilang
-        const isYahya = userName.includes('yahya') || userEmail.includes('yahya');
+        // KHUSUS YAHYA: Bypass by ID
+        const isYahya = userId === '15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1' || userName.includes('yahya') || userEmail.includes('yahya');
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
         
         const allowedMenus = profile.allowed_menus || [];
@@ -601,7 +602,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const verTag = document.createElement('div');
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.5.5 [FIXED]</span></div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.5.6 [FINAL]</span></div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;
         sidebar.appendChild(verTag);
@@ -658,14 +659,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // LOG AKTIVITAS: Khusus Yahya
+        const userId = profile?.id;
         const userEmail = (profile?.email || '').toLowerCase();
         const userName = (profile?.full_name || '').toLowerCase();
         const currentRole = (profile?.role || '').toLowerCase().trim();
         
-        // Cek: Harus ada kata 'yahya' (Role bebas untuk Yahya)
-        const isAuthorizedYahya = (userName.includes('yahya') || userEmail.includes('yahya'));
+        // Cek: Bypass by ID atau Nama
+        const isAuthorizedYahya = userId === '15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1' || userName.includes('yahya') || userEmail.includes('yahya');
 
-        console.log("DEBUG LOG MENU v5.5.5:", { userName, userEmail, currentRole, isAuthorizedYahya });
+        console.log("DEBUG LOG MENU v5.5.6:", { userId, userName, userEmail, currentRole, isAuthorizedYahya });
 
         if (isAuthorizedYahya) {
             const logLink = document.createElement('a');
