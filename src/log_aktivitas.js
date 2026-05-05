@@ -14,17 +14,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const email = (profile.email || '').toLowerCase();
-    const name = (profile.full_name || '').toLowerCase();
-    const role = (profile.role || '').toLowerCase();
-    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(role);
+    const isAdminRole = ['admin', 'office'].includes(role);
+    const isAuthorizedYahya = (name.includes('yahya') || email.includes('yahya')) && isAdminRole;
 
-    if (!( (email.includes('yahya') || name.includes('yahya')) && isAdmin )) {
+    if (!isAuthorizedYahya) {
         document.body.innerHTML = `
             <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0f172a; color:white; font-family:sans-serif;">
                 <h1 style="font-size:4rem;">🚫</h1>
                 <h2>Akses Ditolak</h2>
-                <p style="color:#94a3b8;">Halaman ini hanya dapat diakses oleh Yahya Kurniawan.</p>
+                <p style="color:#94a3b8;">Halaman ini hanya dapat diakses oleh Akun Admin (Yahya).</p>
                 <a href="dashboard.html" style="margin-top:20px; color:#10b981; text-decoration:none;">Kembali ke Dashboard</a>
             </div>
         `;

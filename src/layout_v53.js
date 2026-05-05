@@ -650,20 +650,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // LOG AKTIVITAS: Khusus Yahya (Admin/Office/Staf)
+        // LOG AKTIVITAS: Khusus Yahya dengan Role Admin/Office
         const userEmail = (profile?.email || '').toLowerCase();
         const userName = (profile?.full_name || '').toLowerCase();
-        // const userRole already defined above
-        const isAdminRole = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+        const isAdminRole = ['admin', 'office'].includes(userRole);
         
-        if ((userEmail.includes('yahya') || userName.includes('yahya')) && isAdminRole) {
+        // Cek: Harus ada kata 'yahya' dan role harus Admin/Office
+        const isAuthorizedYahya = (userName.includes('yahya') || userEmail.includes('yahya')) && isAdminRole;
+
+        if (isAuthorizedYahya) {
             const logLink = document.createElement('a');
             logLink.href = 'log_aktivitas.html';
             logLink.className = 'nav-item';
+            logLink.style.color = '#10b981'; // Green color
             logLink.innerHTML = '&bull; Log Aktivitas';
             if (window.location.pathname.includes('log_aktivitas.html')) logLink.classList.add('active');
-            
-            // Insert at the very bottom of sidebar nav
             sidebarNav.appendChild(logLink);
         }
     }
