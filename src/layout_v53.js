@@ -626,49 +626,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.logActivity('OPEN_PAGE', pageName);
     }
 
-    // --- GLOBAL MENU INJECTION (PEMETAAN KANDANG) ---
-    const sidebarNav = document.querySelector('.sidebar-nav');
-    if (sidebarNav) {
-        // CHECK PERMISSION: Only inject if Admin or specifically allowed
-        const profile = window.CURRENT_USER;
-        const userRole = (profile?.role || 'staff').toLowerCase().trim();
-        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
-        const allowedMenus = profile?.allowed_menus || [];
-        const isAllowed = isAdmin || allowedMenus.includes('pemetaan_kandang.html');
-
-        if (isAllowed) {
-            // Find "Distribusi" or "Stok Opname" to insert after
-            const targetLink = Array.from(sidebarNav.querySelectorAll('.nav-item')).find(a => a.href.includes('distribusi.html')) || 
-                               Array.from(sidebarNav.querySelectorAll('.nav-item')).find(a => a.href.includes('stok_opname.html'));
-            
-            if (targetLink && !sidebarNav.querySelector('a[href="pemetaan_kandang.html"]')) {
-                const mapLink = document.createElement('a');
-                mapLink.href = 'pemetaan_kandang.html';
-                mapLink.className = 'nav-item';
-                mapLink.innerHTML = '&bull; Pemetaan Kandang';
-                if (window.location.pathname.includes('pemetaan_kandang.html')) mapLink.classList.add('active');
-                targetLink.after(mapLink);
+    // --- FORCE RENDER SIDEBAR (RESCUE MISSION v6.8) ---
+    if (isAdmin) {
+        const nav = document.querySelector('.sidebar-nav');
+        if (nav) {
+            // Check if dashboard link exists, if not, something is wrong, FORCE RENDER ALL
+            if (!nav.querySelector('a[href="dashboard.html"]')) {
+                console.log("SIDEBAR EMPTY! Performing Rescue Render...");
+                nav.innerHTML = `
+                    <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
+                    <div class="nav-header">📁 DATA STOCK</div>
+                    <a href="kambing.html" class="nav-item">&bull; Master Data</a>
+                    <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
+                    <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                    <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
+                    <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
+                    <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
+                    <div class="nav-header">💰 DATA FINANCE</div>
+                    <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
+                    <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
+                    <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
+                    <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                    <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                    <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;">📊 LAPORAN</a>
+                `;
             }
-        }
 
-        // LOG AKTIVITAS: Khusus Admin & Yahya
-        const isAdminForLogs = ['admin', 'office'].includes(userRole) || isYahya;
-
-        if (isAdminForLogs) {
-            const logLink = document.createElement('a');
-            logLink.href = 'log_aktivitas.html';
-            logLink.className = 'nav-item';
-            logLink.style.color = '#10b981'; // Green color
-            logLink.innerHTML = '&bull; Log Aktivitas';
-            if (window.location.pathname.includes('log_aktivitas.html')) logLink.classList.add('active');
-            sidebarNav.appendChild(logLink);
+            // FORCE SHOW: Ensure all items are visible
+            nav.querySelectorAll('.nav-item').forEach(item => {
+                item.style.setProperty('display', 'flex', 'important');
+                item.style.setProperty('opacity', '1', 'important');
+                item.style.setProperty('visibility', 'visible', 'important');
+            });
         }
     }
 
     } catch (err) {
         console.error("CRITICAL LAYOUT ERROR:", err);
     }
-    console.log("%c>> DMQ SYSTEM ACTIVE: v6.7 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
+    console.log("%c>> DMQ SYSTEM ACTIVE: v6.8 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
 });
 
 // --- UNIVERSAL CAMERA UI (Webcam & Mobile) ---
