@@ -165,8 +165,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 else if (f.tipe === 'pemasukan') deadKomp += nom;
             } else {
                 if (f.tipe === 'pengeluaran') {
+                    const ketLine = (f.keterangan || '').toLowerCase().trim();
                     const isPurchasing = katLine.includes('bayar supplier') || katLine.includes('pelunasan supplier') || katLine.includes('beli kambing');
-                    const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan') || katLine.includes('pengembalian dana') || katLine.includes('refund') || katLine.includes('penarikan') || katLine.includes('modal') || katLine.includes('prive') || katLine.includes('investasi');
+                    const isRefund = katLine.includes('pengembalian dana') || katLine.includes('refund') || (f.id || '').startsWith('REF-') || ketLine.includes('refund');
+                    const isExclusion = isPurchasing || katLine.includes('komisi') || katLine.includes('bagi hasil') || katLine.includes('mutasi') || katLine.includes('titipan') || isRefund || katLine.includes('penarikan') || katLine.includes('modal') || katLine.includes('prive') || katLine.includes('investasi');
                     
                     if (!isExclusion) {
                         opex += nom;
@@ -408,10 +410,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const isOpex = f => {
             if(f.tipe !== 'pengeluaran') return false;
-            const kl = (f.kategori || '').toLowerCase();
+            const ketl = (f.keterangan || '').toLowerCase();
+            const isRef = kl.includes('pengembalian dana') || kl.includes('refund') || (f.id || '').startsWith('REF-') || ketl.includes('refund');
             const isEx = kl.includes('bayar supplier') || kl.includes('pelunasan supplier') || kl.includes('komisi') || 
                          kl.includes('bagi hasil') || kl.includes('mutasi') || kl.includes('titipan') || kl.includes('beli kambing') ||
-                         kl.includes('pengembalian dana') || kl.includes('refund') || kl.includes('penarikan') || kl.includes('modal') || kl.includes('prive') || kl.includes('investasi') ||
+                         isRef || kl.includes('penarikan') || kl.includes('modal') || kl.includes('prive') || kl.includes('investasi') ||
                          f.kategori === 'Kerugian (Mati/Hilang)';
             return !isEx;
         };
