@@ -3,52 +3,22 @@
 <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-        <title>Master Stock -  Qurban Manager</title>
+        <title>Master Stock - DM Qurban</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700" rel="stylesheet">
-    <link rel="stylesheet" href="src/style.css?v=3.9">
+    <link rel="stylesheet" href="src/style.css?v=4.4">
     <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
 </head>
 <body>
         <div class="app-layout">
                 <!-- Sidebar -->
-                <aside class="sidebar">
-                        <div class="sidebar-header">
-    <div class="sidebar-logo">
-        <span style="font-weight: 600;">Daarul Mahabbah Qurban</span>
-    </div>
-</div>
-                        <nav class="sidebar-nav">
-                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
-                <div class="nav-header">&#128188; DATA STOCK</div>
-                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
-                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
-                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
-                <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
-                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
-                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
-                <div class="nav-header">&#128176; DATA FINANCE</div>
-                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
-                <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
-                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
-                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
-                
-                                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight: 300; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
-
-            </nav>
-                        <div style="padding: 1.5rem;">
-                                <button id="logoutBtn" class="btn btn-sm" style="width: 100%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted);">
-                                        Logout
-                                </button>
-                        </div>
-                </aside>
+                <aside class="sidebar" id="sidebar"></aside>
 
                 <!-- Main Content -->
                 <main class="main-content">
                         <header class="topbar">
                                 <div class="page-title">Master Stock</div>
                                 <div class="user-menu">
-                                        <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">admin@qurban.com</span>
+                                        <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">Memuat...</span>
                                 </div>
                         </header>
 
@@ -141,21 +111,19 @@
                                                                         <th>Aksi</th>
                                                                 </tr>
                                                         </thead>
-                                                        <tbody id="tableBodyKambing">
-                                                                <!-- Data will be loaded here via JS -->
-                                                        </tbody>
+                                                        <tbody id="tableBodyKambing"></tbody>
                                                 </table>
                                         </div>
                                         
                                         <div id="emptyState" style="text-align: center; padding: 3rem 0; display: none;">
-                                                <p style="color: var(--text-muted);">Belum ada data di Master Stock. Silakan input dari Data Masuk (Draft).</p>
+                                                <p style="color: var(--text-muted);">Belum ada data di Master Stock.</p>
                                         </div>
                                 </div>
                         </div>
                 </main>
         </div>
 
-        <!-- Modal Form Edit Status/Data -->
+        <!-- Modal Form -->
         <div class="modal-overlay" id="modalKambing">
                 <div class="modal-content" style="max-width: 800px;">
                         <div class="modal-header">
@@ -166,171 +134,34 @@
                                 <div class="modal-body">
                                         <input type="hidden" id="kambingIdOriginal" value="">
                                            <div class="responsive-grid-2">
-                                                 <div class="form-group">
-                                                          <label class="form-label" for="inpBatch">Batch Code</label>
-                                                          <input type="text" id="inpBatch" class="form-control" required>
-                                                  </div>
-                                                  <div class="form-group">
-                                                          <label class="form-label" for="inpTgl">Tanggal Masuk</label>
-                                                          <input type="date" id="inpTgl" class="form-control" required>
-                                                  </div>
-                                                  <div class="form-group">
-                                                          <label class="form-label" for="inpSupplier">Nama Supplier</label>
-                                                          <select id="inpSupplier" class="form-control" required></select>
-                                                  </div>
-                                                  <div class="form-group">
-                                                          <label class="form-label" for="inpNoTali">No Tali</label>
-                                                          <input type="text" id="inpNoTali" class="form-control" required>
-                                                  </div>
-                                                  <div class="form-group">
-                                                          <label class="form-label" for="inpWarnaTali">Warna Tali</label>
-                                                          <input type="text" id="inpWarnaTali" class="form-control" required>
-                                                  </div>
-                                                  <div class="form-group">
-                                                          <label class="form-label" for="inpSex">Sex (Kelamin)</label>
-                                                          <select id="inpSex" class="form-control" required>
-                                                                  <option value="Jantan">Jantan</option>
-                                                                  <option value="Betina">Betina</option>
-                                                          </select>
-                                                  </div>
-                                                  <div class="form-group">
-                                                          <label class="form-label" for="inpLokasi">Lokasi (Opsional)</label>
-                                                          <select id="inpLokasi" class="form-control">
-                                                                  <option value="">Belum diset</option>
-                                                          </select>
-                                                  </div>
-                                                  <div class="form-group">
-                                                          <label class="form-label" for="inpBerat">Berat Badan (kg)</label>
-                                                          <input type="number" id="inpBerat" class="form-control" step="0.1" placeholder="Ex: 35.5">
-                                                  </div>
+                                                  <div class="form-group"><label class="form-label">Batch Code</label><input type="text" id="inpBatch" class="form-control" required></div>
+                                                  <div class="form-group"><label class="form-label">Tanggal Masuk</label><input type="date" id="inpTgl" class="form-control" required></div>
+                                                  <div class="form-group"><label class="form-label">Nama Supplier</label><select id="inpSupplier" class="form-control" required></select></div>
+                                                  <div class="form-group"><label class="form-label">No Tali</label><input type="text" id="inpNoTali" class="form-control" required></div>
+                                                  <div class="form-group"><label class="form-label">Warna Tali</label><input type="text" id="inpWarnaTali" class="form-control" required></div>
+                                                  <div class="form-group"><label class="form-label">Sex</label><select id="inpSex" class="form-control" required><option value="Jantan">Jantan</option><option value="Betina">Betina</option></select></div>
+                                                  <div class="form-group"><label class="form-label">Lokasi</label><select id="inpLokasi" class="form-control"><option value="">Belum diset</option></select></div>
+                                                  <div class="form-group"><label class="form-label">Berat Badan (kg)</label><input type="number" id="inpBerat" class="form-control" step="0.1"></div>
                                            </div>
-
                                            <div class="form-section">
                                                 <div class="responsive-grid-4">
-                                                         <div class="form-group">
-                                                                 <label class="form-label" for="inpHargaNota">Harga Nota (Rp)</label>
-                                                                 <input type="text" id="inpHargaNota" class="form-control money-input" required>
-                                                         </div>
-                                                         <div class="form-group">
-                                                                 <label class="form-label" for="inpSaving">Nilai Saving (Rp)</label>
-                                                                 <input type="text" id="inpSaving" class="form-control money-input" required>
-                                                         </div>
-                                                         <div class="form-group">
-                                                                 <label class="form-label" for="inpProfit">Est. Profit (Rp)</label>
-                                                                 <input type="text" id="inpProfit" class="form-control money-input" required>
-                                                         </div>
-                                                         <div class="form-group">
-                                                                 <label class="form-label" for="inpHargaKandang" style="color:var(--success); font-weight: 500;">Harga Kandang (Rp) ⭐</label>
-                                                                 <input type="text" id="inpHargaKandang" class="form-control money-input" required style="border: 2px solid var(--success); font-weight: 500;">
-                                                         </div>
+                                                         <div class="form-group"><label class="form-label">Harga Nota (Rp)</label><input type="text" id="inpHargaNota" class="form-control money-input" required></div>
+                                                         <div class="form-group"><label class="form-label">Nilai Saving (Rp)</label><input type="text" id="inpSaving" class="form-control money-input" required></div>
+                                                         <div class="form-group"><label class="form-label">Est. Profit (Rp)</label><input type="text" id="inpProfit" class="form-control money-input" required></div>
+                                                         <div class="form-group"><label class="form-label">Harga Kandang (Rp)</label><input type="text" id="inpHargaKandang" class="form-control money-input" required></div>
                                                 </div>
                                            </div>
-
-                                           <div class="form-section">
-                                               <div class="form-group mb-0">
-                                                   <label class="form-label">📸 Foto Fisik (Opsional)</label>
-                                                   <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem;">
-                                                       <input type="file" id="inpFotoFisik" class="form-control" accept="image/*" style="flex: 1; min-width: 200px;">
-                                                       <button type="button" id="btnOpenCamera" class="btn btn-sm" style="background:#4b5563; color:white; padding:8px 16px; min-height:46px; border-radius:8px; border:none; display:flex; align-items:center; gap:8px;" title="Ambil Foto Langsung dari Kamera">📸 Kamera</button>
-                                                       
-                                                       <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                                           <div id="previewFotoFisik" style="width: 46px; height: 46px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-                                                               <span style="font-size: 0.7rem; color: var(--text-muted);">No Pic</span>
-                                                           </div>
-                                                           <button type="button" id="btnRemovePhoto" class="btn" style="display:none; background:#ef4444; color:white; padding:8px 12px; font-size:0.85rem; border:none; border-radius:8px; height:46px;" title="Hapus foto yang sudah ada">🗑️ Hapus</button>
-                                                       </div>
-                                                   </div>
-                                                   <small style="color: var(--text-muted); display: block; margin-top: 0.5rem; font-style: italic;">Foto akan otomatis dikompres & disimpan di cloud.</small>
-                                               </div>
-                                           </div>
-                                 </div>
-                                 <div class="modal-footer">
-                                        <button type="button" class="btn" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1);" id="btnCancelModal">Batal</button>
-                                        <button type="button" class="btn" id="btnResetDistribusi" style="background:var(--danger); color:white; display:none; flex:1;">Batal Distribusi (Reset)</button>
+                                  </div>
+                                  <div class="modal-footer">
+                                        <button type="button" class="btn" id="btnCancelModal">Batal</button>
                                         <button type="submit" class="btn btn-primary" id="btnSaveModal">Simpan Perubahan</button>
                                 </div>
                         </form>
                 </div>
         </div>
 
-        <!-- LIGHTBOX PHOTO VIEW -->
-        <div id="photoLightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; flex-direction:column; align-items:center; justify-content:center; cursor:zoom-out; padding: 20px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);" onclick="this.style.display='none'">
-            <div id="lightboxLoading" style="position:absolute; color:white; font-style:italic; top:50%; left:50%; transform:translate(-50%, -50%); z-index:100000;">Memuat Foto...</div>
-            
-            <img id="lightboxImg" style="max-width:95vw; max-height:80vh; border-radius:12px; box-shadow:0 20px 50px rgba(0,0,0,0.7); object-fit:contain; display:none; border: 3px solid rgba(255,255,255,0.1);" onload="document.getElementById('lightboxLoading').style.display='none'; this.style.display='block';" onclick="event.stopPropagation()">
-            
-            <!-- Floating Download Bar -->
-            <div style="position:absolute; bottom:30px; left:0; width:100%; display:flex; justify-content:center; pointer-events:none; z-index:100001;">
-                <button id="btnDownloadLightbox" class="btn" style="pointer-events:auto; background:#10b981 !important; color:white !important; border:none !important; padding:15px 30px !important; border-radius:50px !important; display:flex !important; align-items:center !important; gap:10px !important; font-weight: 300 !important; font-size:1rem !important; box-shadow:0 10px 30px rgba(0,0,0,0.5) !important; cursor:pointer;" onclick="event.stopPropagation()">
-                    📥 Download Foto Kambing
-                </button>
-            </div>
-
-            <div style="position:absolute; top:20px; right:20px; color:white; font-size:3rem; font-weight: 300; cursor:pointer; line-height:1; opacity:0.8; z-index:100002;" onclick="this.parentElement.style.display='none'">&times;</div>
-        </div>
-
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-        <!-- v8.2 [THE DATA RESTORATION] - EMERGENCY BYPASS -->
-        <script type="module">
-            import { supabase } from './src/supabase.js';
-            
-            // Re-define essential global functions
-            window.formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
-
-            document.addEventListener('DOMContentLoaded', async () => {
-                try {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (!session) return;
-
-                    const userId = session.user.id;
-                    const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId);
-                    
-                    if (isYahya) {
-                        const nav = document.querySelector('.sidebar-nav');
-                        if (nav) {
-                            nav.innerHTML = `
-                                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
-                                <div class="nav-header">📁 DATA STOCK</div>
-                                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
-                                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
-                                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
-                                <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
-                                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
-                                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
-                                <a href="pemetaan_kandang.html" class="nav-item">&bull; Pemetaan Kandang</a>
-                                <div class="nav-header">💰 DATA FINANCE</div>
-                                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
-                                <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
-                                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
-                                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
-                                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;">📊 LAPORAN</a>
-                                <a href="log_aktivitas.html" class="nav-item" style="color:#10b981 !important; margin-top:10px; font-weight:600; border-top:1px solid rgba(255,255,255,0.05); padding-top:10px;">🛡️ BUKA LOG AKTIVITAS (v8.2)</a>
-                            `;
-                            nav.querySelectorAll('.nav-item').forEach(item => {
-                                item.style.setProperty('display', 'flex', 'important');
-                                if (window.location.pathname.includes(item.getAttribute('href'))) item.classList.add('active');
-                            });
-                        }
-
-                        const userMenu = document.querySelector('.user-menu');
-                        if (userMenu && !userMenu.querySelector('.topbar-actions')) {
-                            const actions = document.createElement('div');
-                            actions.className = 'topbar-actions';
-                            actions.style.display = 'flex';
-                            actions.style.gap = '10px';
-                            actions.innerHTML = `
-                                <div class="action-icon" title="Theme" onclick="document.documentElement.classList.toggle('light-mode');" style="cursor:pointer">☀️</div>
-                                <div class="action-icon" title="Settings" onclick="window.location.href='pengaturan.html'" style="cursor:pointer">⚙️</div>
-                                <div class="action-icon logout-icon" title="Logout" onclick="supabase.auth.signOut().then(()=>window.location.href='login.html')" style="cursor:pointer">🚪</div>
-                            `;
-                            userMenu.appendChild(actions);
-                        }
-                    }
-                } catch (e) { console.error("EMBEDDED ERROR:", e); }
-            });
-        </script>
-        <script type="module" src="/layout_v53.js?v=7.5"></script>
-        <script type="module" src="/kambing.js?v=7.5"></script>
+        <script type="module" src="/src/layout_v53.js?v=10.0"></script>
+        <script type="module" src="/src/kambing.js?v=10.0"></script>
 </body>
 </html>

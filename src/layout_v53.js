@@ -348,20 +348,6 @@ window.checkSaldoCukup = async (channelKey, nominal, label) => {
 // --- CORE LAYOUT ENGINE ---
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // --- PRE-EMPTIVE MENU INJECTION (v7.3) ---
-        // PUBLIC ACCESS: Munculin buat semua orang untuk tes apakah script jalan
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            const sidebarNav = document.querySelector('.sidebar-nav');
-            if (sidebarNav && !sidebarNav.querySelector('a[href="log_aktivitas.html"]')) {
-                const logLink = document.createElement('a');
-                logLink.href = 'log_aktivitas.html';
-                logLink.className = 'nav-item';
-                logLink.style.cssText = 'color:#10b981 !important; font-weight:700 !important; border: 2px solid #10b981; padding: 10px; margin-bottom: 10px; border-radius: 8px; text-align: center; display: block;';
-                logLink.innerHTML = '🛡️ TEST LOG AKTIVITAS (v7.3)';
-                sidebarNav.prepend(logLink);
-            }
-        }
     const isLoginPage = window.location.pathname.includes('login.html') || window.location.pathname === '/login';
 
     // 1. Theme Immediate Sync
@@ -608,7 +594,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         const userId = profile?.id || 'NO_ID';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v8.2 [THE DATA RESTORATION]</span></div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v10.0 [THE RESET]</span></div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;
         sidebar.appendChild(verTag);
@@ -676,15 +662,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 else nav.appendChild(mapLink);
             }
 
-            if (!nav.querySelector('a[href="log_aktivitas.html"]')) {
-                const logLink = document.createElement('a');
-                logLink.href = 'log_aktivitas.html';
-                logLink.className = 'nav-item';
-                logLink.style.cssText = 'color:#10b981 !important; margin-top:10px; font-weight:600; border-top:1px solid rgba(255,255,255,0.05); padding-top:10px;';
-                logLink.innerHTML = '&bull; Log Aktivitas';
-                nav.appendChild(logLink);
-            }
-
             // 3. FORCE VISIBILITY for all items
             nav.querySelectorAll('.nav-item').forEach(item => {
                 item.style.setProperty('display', 'flex', 'important');
@@ -700,7 +677,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
         console.error("CRITICAL LAYOUT ERROR:", err);
     }
-    console.log("%c>> DMQ SYSTEM ACTIVE: v6.8 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
+    console.log("%c>> DMQ SYSTEM ACTIVE: v10.0 <<", "color: #10b981; font-weight: bold; font-size: 14px;");
 });
 
 // --- UNIVERSAL CAMERA UI (Webcam & Mobile) ---

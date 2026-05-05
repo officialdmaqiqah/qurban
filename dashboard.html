@@ -187,38 +187,15 @@
 </head>
 <body>
         <div class="app-layout">
-                <!-- Sidebar -->
-                <aside class="sidebar" id="sidebar">
-                        <div class="sidebar-header" id="sidebarHeaderWrapper">
-                            <div class="sidebar-logo">
-                                <span style="font-weight: 600;">Daarul Mahabbah Qurban</span>
-                            </div>
-                        </div>
-                        <nav class="sidebar-nav">
-                                <a href="dashboard.html" class="nav-item active"> Dashboard Keuangan</a>
-                                <div class="nav-header">📁 DATA STOCK</div>
-                                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
-                                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
-                                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
-                                <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
-                                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
-                                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
-                                <div class="nav-header">💰 DATA FINANCE</div>
-                                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
-                                <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
-                                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
-                                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
-                                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;"><span style="margin-right:8px;">📊</span> LAPORAN</a>
-                        </nav>
-                </aside>
+                <!-- Sidebar (Restored to original dynamic loading) -->
+                <aside class="sidebar" id="sidebar"></aside>
 
                 <!-- Main Content -->
                 <main class="main-content">
                         <header class="topbar">
                                 <div class="page-title" style="font-weight: 300;">Management <span style="font-weight: 700;">Overview</span></div>
-                                <div class="user-menu">
-                                        <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">Yahya</span>
+                                <div class="user-menu" id="topbarUserMenu">
+                                        <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem;">Memuat...</span>
                                 </div>
                         </header>
 
@@ -306,88 +283,7 @@
                 </main>
         </div>
 
-        <!-- v9.0 [THE OMEGA INTEGRATION] - EMERGENCY BYPASS -->
-        <script type="module">
-            import { supabase } from './src/supabase.js';
-            
-            // 1. Re-define essential global functions
-            window.formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
-
-            document.addEventListener('DOMContentLoaded', async () => {
-                try {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (!session) { window.location.href='login.html'; return; }
-
-                    const userId = session.user.id;
-                    const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
-                    if (!profile) return;
-
-                    // 2. Sidebar Logic (Yahya Bypass)
-                    const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId);
-                    const nav = document.querySelector('.sidebar-nav');
-                    if (nav && isYahya) {
-                        nav.innerHTML = `
-                            <a href="dashboard.html" class="nav-item active"> Dashboard Keuangan</a>
-                            <div class="nav-header">📁 DATA STOCK</div>
-                            <a href="kambing.html" class="nav-item">&bull; Master Data</a>
-                            <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
-                            <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
-                            <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
-                            <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
-                            <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
-                            <a href="pemetaan_kandang.html" class="nav-item">&bull; Pemetaan Kandang</a>
-                            <div class="nav-header">💰 DATA FINANCE</div>
-                            <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
-                            <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
-                            <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
-                            <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
-                            <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
-                            <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;">📊 LAPORAN</a>
-                            <a href="log_aktivitas.html" class="nav-item" style="color:#10b981 !important; margin-top:10px; font-weight:600; border-top:1px solid rgba(255,255,255,0.05); padding-top:10px;">🛡️ BUKA LOG AKTIVITAS (v9.0)</a>
-                        `;
-                    }
-
-                    // 3. Topbar Actions
-                    const userMenu = document.querySelector('.user-menu');
-                    if (userMenu) {
-                        const emailDisp = document.getElementById('userEmailDisplay');
-                        if(emailDisp) emailDisp.textContent = profile.email;
-                        
-                        const actions = document.createElement('div');
-                        actions.className = 'topbar-actions';
-                        actions.style.cssText = 'display:flex; gap:15px; align-items:center; margin-left:15px;';
-                        actions.innerHTML = `
-                            <div class="action-icon" title="Theme" onclick="document.documentElement.classList.toggle('light-mode');" style="cursor:pointer; font-size:1.1rem;">☀️</div>
-                            <div class="action-icon" title="Settings" onclick="window.location.href='pengaturan.html'" style="cursor:pointer; font-size:1.1rem;">⚙️</div>
-                            <div class="action-icon logout-icon" title="Logout" onclick="supabase.auth.signOut().then(()=>window.location.href='login.html')" style="cursor:pointer; font-size:1.1rem;">🚪</div>
-                        `;
-                        userMenu.appendChild(actions);
-                    }
-
-                    // 4. Data Logic
-                    const updateDashboard = async () => {
-                        const [ { data: goatsDb }, { data: trxDbAll }, { data: keuanganDb } ] = await Promise.all([
-                            supabase.from('stok_kambing').select('*'),
-                            supabase.from('transaksi').select('*'),
-                            supabase.from('keuangan').select('*')
-                        ]);
-
-                        const parseNum = (val) => parseFloat(String(val || 0).replace(/[^0-9.-]+/g, "")) || 0;
-                        const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-
-                        let omzet = (trxDbAll || []).reduce((acc, t) => acc + parseNum(t.total_deal || t.totalDeal), 0);
-                        let totalSaldo = (keuanganDb || []).reduce((acc, f) => acc + (f.tipe === 'pemasukan' ? parseNum(f.nominal) : -parseNum(f.nominal)), 0);
-                        
-                        setText('dashTerjualRp', window.formatRp(omzet));
-                        setText('dashTotalSaldoKas', window.formatRp(totalSaldo));
-                        setText('dashTotalKambing', (goatsDb || []).length);
-                        setText('dashTersedia', (goatsDb || []).filter(k => k.status_transaksi === 'Tersedia').length);
-                        setText('dashTerjual', (goatsDb || []).filter(k => k.status_transaksi === 'Terjual').length);
-                    };
-                    updateDashboard();
-
-                } catch (e) { console.error("OMEGA ERROR:", e); }
-            });
-        </script>
+        <script type="module" src="/src/layout_v53.js?v=10.0"></script>
+        <script type="module" src="/src/dashboard.js?v=10.0"></script>
 </body>
 </html>
