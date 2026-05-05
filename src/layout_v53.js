@@ -501,6 +501,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const allowedMenus = profile.allowed_menus || [];
         
+        /* 
         if (!isAdmin) {
             // FORCE: Redirect away from protected pages if not admin and not in allowed menus
             const protectedPages = ['dashboard.html', 'keuangan.html', 'laporan.html', 'pemetaan_kandang.html'];
@@ -521,10 +522,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
             });
-            
-            // Special handling for nav-headers (hide if all items below it are hidden)
-            // But for now, just filtering individual items is enough for the user.
         }
+        */
 
         // Show topbar actions
         if (window.actionsDiv) {
@@ -603,7 +602,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         const userId = profile?.id || 'NO_ID';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.5.8 [SUCCESS]</span></div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.5.9 [OVERRIDE]</span></div>
             <div style="font-size:0.5rem; color:var(--primary);">ID: ${userId}</div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;

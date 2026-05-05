@@ -46,11 +46,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const allowedMenus = profile.allowed_menus || [];
         
-        // --- REDUNDANT SAFETY REDIRECT ---
+        // --- REDUNDANT SAFETY REDIRECT (DISABLED) ---
+        /*
         if (!isAdmin && !allowedMenus.includes('dashboard.html')) {
             window.location.href = 'kambing.html';
             return;
         }
+        */
 
         const permissions = profile.permissions || {};
         const linkedAgen = profile.linked_agen_nama || permissions.linkedAgen || '';
