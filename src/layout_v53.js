@@ -491,7 +491,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Permissions & Menu Filtering
         const userRole = (profile.role || 'staff').toLowerCase().trim();
-        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+        const userEmail = (profile.email || '').toLowerCase();
+        const userName = (profile.full_name || '').toLowerCase();
+        
+        // KHUSUS YAHYA: Selalu anggap Admin agar menu tidak hilang
+        const isYahya = userName.includes('yahya') || userEmail.includes('yahya');
+        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
+        
         const allowedMenus = profile.allowed_menus || [];
         
         if (!isAdmin) {
