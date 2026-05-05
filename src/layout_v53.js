@@ -595,7 +595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         const userId = profile?.id || 'NO_ID';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v6.9 [THE COMPLETE MENU]</span></div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v7.0 [THE ULTIMATE REBORN]</span></div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;
         sidebar.appendChild(verTag);
@@ -626,11 +626,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.logActivity('OPEN_PAGE', pageName);
     }
 
-    // --- FORCE RENDER SIDEBAR (RESCUE MISSION v6.8) ---
+    // --- FORCE RENDER SIDEBAR (RESCUE MISSION v7.0) ---
     if (isAdmin) {
         const nav = document.querySelector('.sidebar-nav');
         if (nav) {
-            // Check if dashboard link exists, if not, something is wrong, FORCE RENDER ALL
+            // 1. Check if Dashboard exists, if not, rescue the whole sidebar
             if (!nav.querySelector('a[href="dashboard.html"]')) {
                 console.log("SIDEBAR EMPTY! Performing Rescue Render...");
                 nav.innerHTML = `
@@ -642,7 +642,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
                     <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
                     <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
-                    <a href="pemetaan_kandang.html" class="nav-item">&bull; Pemetaan Kandang</a>
                     <div class="nav-header">💰 DATA FINANCE</div>
                     <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
                     <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
@@ -650,15 +649,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                     <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
                     <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;">📊 LAPORAN</a>
-                    <a href="log_aktivitas.html" class="nav-item" style="color:#10b981 !important; margin-top:10px;">&bull; Log Aktivitas</a>
                 `;
             }
 
-            // FORCE SHOW: Ensure all items are visible
+            // 2. Always ensure Pemetaan Kandang & Log Aktivitas exist for Admin
+            if (!nav.querySelector('a[href="pemetaan_kandang.html"]')) {
+                const mapLink = document.createElement('a');
+                mapLink.href = 'pemetaan_kandang.html';
+                mapLink.className = 'nav-item';
+                mapLink.innerHTML = '&bull; Pemetaan Kandang';
+                const distLink = Array.from(nav.querySelectorAll('.nav-item')).find(a => a.href.includes('distribusi.html'));
+                if (distLink) distLink.after(mapLink);
+                else nav.appendChild(mapLink);
+            }
+
+            if (!nav.querySelector('a[href="log_aktivitas.html"]')) {
+                const logLink = document.createElement('a');
+                logLink.href = 'log_aktivitas.html';
+                logLink.className = 'nav-item';
+                logLink.style.cssText = 'color:#10b981 !important; margin-top:10px; font-weight:600; border-top:1px solid rgba(255,255,255,0.05); padding-top:10px;';
+                logLink.innerHTML = '&bull; Log Aktivitas';
+                nav.appendChild(logLink);
+            }
+
+            // 3. FORCE VISIBILITY for all items
             nav.querySelectorAll('.nav-item').forEach(item => {
                 item.style.setProperty('display', 'flex', 'important');
                 item.style.setProperty('opacity', '1', 'important');
                 item.style.setProperty('visibility', 'visible', 'important');
+                if (window.location.pathname.includes(item.getAttribute('href'))) {
+                    item.classList.add('active');
+                }
             });
         }
     }
