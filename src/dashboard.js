@@ -36,21 +36,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const reksData = (reNew?.data?.val && reNew.data.val.length > 0) ? reNew.data : (reOld?.data || null);
         const rekeningDb = reksData?.val || [];
         const userRole = (profile.role || 'staff').toLowerCase().trim();
-        const userEmail = (profile.email || '').toLowerCase();
-        const userName = (profile.full_name || '').toLowerCase();
-        const userId = profile.id;
-        
-        // KHUSUS YAHYA: Bypass by ID
-        const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId) || userName.includes('yahya') || userEmail.includes('yahya');
-        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
-        
-        const allowedMenus = profile.allowed_menus || [];
-        
-        // --- REDUNDANT SAFETY REDIRECT ---
-        if (!isAdmin && !allowedMenus.includes('dashboard.html')) {
-            window.location.href = 'kambing.html';
-            return;
-        }
+        const isAdmin = ['admin', 'owner'].includes(userRole);
+        const isAgen = userRole === 'agen';
 
         const permissions = profile.permissions || {};
         const linkedAgen = profile.linked_agen_nama || permissions.linkedAgen || '';

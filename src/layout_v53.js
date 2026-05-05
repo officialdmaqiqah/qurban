@@ -494,22 +494,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const userEmail = (profile.email || '').toLowerCase();
         const userName = (profile.full_name || '').toLowerCase();
         const userId = profile.id;
-        
-        // KHUSUS YAHYA: Bypass by ID
-        const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId) || userName.includes('yahya') || userEmail.includes('yahya');
-        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
+        const userRole = (profile.role || 'staff').toLowerCase().trim();
+        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const allowedMenus = profile.allowed_menus || [];
         
-        // KHUSUS YAHYA: FORCE SHOW ALL (NUCLEAR OPTION)
-        if (isYahya) {
-            console.log("NUCLEAR OPTION ACTIVATED FOR YAHYA");
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.style.setProperty('display', 'block', 'important');
-                item.style.setProperty('visibility', 'visible', 'important');
-                item.style.setProperty('opacity', '1', 'important');
-            });
-        }
-
         if (!isAdmin) {
             // FORCE: Redirect away from protected pages if not admin and not in allowed menus
             const protectedPages = ['dashboard.html', 'keuangan.html', 'laporan.html', 'pemetaan_kandang.html'];
@@ -606,8 +594,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         const userId = profile?.id || 'NO_ID';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.6.2 [NUCLEAR]</span></div>
-            <div style="font-size:0.5rem; color:var(--primary);">ID: ${userId}</div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v6.0 [STABLE]</span></div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;
         sidebar.appendChild(verTag);
@@ -663,18 +650,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // LOG AKTIVITAS: Khusus Yahya
-        const userId = profile?.id;
-        const userEmail = (profile?.email || '').toLowerCase();
-        const userName = (profile?.full_name || '').toLowerCase();
-        const currentRole = (profile?.role || '').toLowerCase().trim();
-        
-        // Cek: Bypass by ID atau Nama
-        const isAuthorizedYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId) || userName.includes('yahya') || userEmail.includes('yahya');
+        // LOG AKTIVITAS: Khusus Admin
+        const isAdminForLogs = ['admin', 'office'].includes(userRole);
 
-        console.log("DEBUG LOG MENU v5.5.8:", { userId, userName, userEmail, currentRole, isAuthorizedYahya });
-
-        if (isAuthorizedYahya) {
+        if (isAdminForLogs) {
             const logLink = document.createElement('a');
             logLink.href = 'log_aktivitas.html';
             logLink.className = 'nav-item';
