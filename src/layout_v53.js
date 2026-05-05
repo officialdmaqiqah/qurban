@@ -630,7 +630,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sidebarNav = document.querySelector('.sidebar-nav');
     if (sidebarNav) {
         // CHECK PERMISSION: Only inject if Admin or specifically allowed
-        const userRole = (profile?.role || 'staff').toLowerCase().trim();
+        // const userRole already defined above at line 493
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const allowedMenus = profile?.allowed_menus || [];
         const isAllowed = isAdmin || allowedMenus.includes('pemetaan_kandang.html');
@@ -653,7 +653,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // LOG AKTIVITAS: Khusus Yahya (Admin/Office/Staf)
         const userEmail = (profile?.email || '').toLowerCase();
         const userName = (profile?.full_name || '').toLowerCase();
-        const userRole = (profile?.role || '').toLowerCase();
+        // const userRole already defined above
         const isAdminRole = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         
         if ((userEmail.includes('yahya') || userName.includes('yahya')) && isAdminRole) {

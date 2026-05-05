@@ -103,7 +103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (status === 'Mati') { color = '#ef4444'; bg = 'rgba(239, 68, 68, 0.1)'; }
             else { color = '#64748b'; bg = 'rgba(100, 116, 139, 0.1)'; }
         }
-        }
         return `<span class="badge" style="background:${bg}; color:${color}; border: 1px solid ${color}">${text}</span>`;
     }
 
@@ -242,7 +241,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
                 <td>
                     <div class="action-btns">
-                        `}
+                        <button class="btn-edit-action" data-id="${item.id}">Edit</button>
+                        ${isAdmin ? `<button class="btn-delete-action" data-id="${item.id}">Hapus</button>` : ''}
                     </div>
                 </td>
             `;
