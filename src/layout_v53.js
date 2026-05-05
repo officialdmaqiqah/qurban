@@ -597,7 +597,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         const userId = profile?.id || 'NO_ID';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.6.0 [STABLE]</span></div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v5.6.1 [TOTAL FIX]</span></div>
             <div style="font-size:0.5rem; color:var(--primary);">ID: ${userId}</div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;
