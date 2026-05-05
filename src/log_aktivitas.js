@@ -14,8 +14,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    const role = (profile.role || 'staff').toLowerCase().trim();
+    const email = (profile.email || '').toLowerCase();
+    const name = (profile.full_name || '').toLowerCase();
+    const userId = profile.id;
+
     const isAdminRole = ['admin', 'office'].includes(role);
-    const isAuthorizedYahya = (name.includes('yahya') || email.includes('yahya')) && isAdminRole;
+    const isAuthorizedYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId) || (name.includes('yahya') || email.includes('yahya'));
 
     if (!isAuthorizedYahya) {
         document.body.innerHTML = `

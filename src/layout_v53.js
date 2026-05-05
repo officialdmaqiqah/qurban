@@ -497,15 +497,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId) || userName.includes('yahya') || userEmail.includes('yahya');
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
         const allowedMenus = profile.allowed_menus || [];
-
-        console.log("%c DIAGNOSA YAHYA v6.3:", "background: #222; color: #bada55; font-size: 14px; font-weight: bold;");
-        console.log("ID User:", userId);
-        console.log("Email:", userEmail);
-        console.log("Nama:", userName);
-        console.log("Role di DB:", userRole);
-        console.log("Is Yahya Bypass:", isYahya);
-        console.log("Is Admin Total:", isAdmin);
-        console.log("Allowed Menus:", allowedMenus);
         
         if (!isAdmin) {
             // FORCE: Redirect away from protected pages if not admin and not in allowed menus
@@ -603,7 +594,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         verTag.style.cssText = 'padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); cursor: default; text-align: center; margin-top: auto; line-height: 1.6;';
         const userId = profile?.id || 'NO_ID';
         verTag.innerHTML = `
-            <div>System Version: <span style="color:var(--primary); font-weight:700;">v6.3 [DIAGNOSTIC]</span></div>
+            <div>System Version: <span style="color:var(--primary); font-weight:700;">v6.4 [FINAL FIX]</span></div>
             <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
         `;
         sidebar.appendChild(verTag);
