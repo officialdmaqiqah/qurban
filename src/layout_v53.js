@@ -471,7 +471,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         actionsDiv.appendChild(logoutHeader);
         
         // Use appendChild so icons appear TO THE RIGHT of User Name
-        topbar.querySelector('.user-menu')?.appendChild(actionsDiv);
+        const userMenu = topbar.querySelector('.user-menu');
+        if (userMenu) {
+            // Hapus ikon hardcoded dari HTML agar tidak dobel
+            const existingActions = userMenu.querySelector('.topbar-actions');
+            if (existingActions) existingActions.remove();
+            
+            userMenu.appendChild(actionsDiv);
+        }
 
         // Store references to admin-only icons to be shown later
         window.bellIcon = bell;
