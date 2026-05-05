@@ -50,7 +50,7 @@
                                         <div class="topbar-actions" style="display: flex; gap: 15px; align-items: center;">
                                             <div class="action-icon" title="Ganti Tema" onclick="document.documentElement.classList.toggle('light-mode'); localStorage.setItem('QURBAN_THEME', document.documentElement.classList.contains('light-mode') ? 'light' : 'dark');" style="cursor:pointer; font-size:1.1rem;">☀️</div>
                                             <div class="action-icon" title="Pengaturan" onclick="window.location.href='pengaturan.html'" style="cursor:pointer; font-size:1.1rem;">⚙️</div>
-                                            <div class="action-icon logout-icon" title="Keluar" onclick="window.showConfirm ? window.showConfirm('Yakin ingin keluar?', () => { localStorage.clear(); window.location.href='login.html'; }) : (confirm('Yakin ingin keluar?') ? (localStorage.clear(), window.location.href='login.html') : null)" style="cursor:pointer; font-size:1.1rem;">🚪</div>
+                                            <div class="action-icon logout-icon" title="Logout" onclick="window.showConfirm ? window.showConfirm('Yakin ingin keluar?', () => { localStorage.clear(); window.location.href='login.html'; }) : (confirm('Yakin ingin keluar?') ? (localStorage.clear(), window.location.href='login.html') : null)" style="cursor:pointer; font-size:1.1rem;">🔴</div>
                                         </div>
                                 </div>
                         </header>
