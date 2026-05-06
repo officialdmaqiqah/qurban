@@ -197,6 +197,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderGrid = (pens, masterLocations) => {
         penGrid.innerHTML = '';
         const sortedPenNames = Object.keys(pens).sort();
+        
+        const selKategoriKandang = document.getElementById('selKategoriKandang');
+        if (selKategoriKandang) {
+            const currentVal = selKategoriKandang.value;
+            selKategoriKandang.innerHTML = '<option value="all">Semua Kandang</option>';
+            sortedPenNames.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = `pen-${name.replace(/\s+/g, '-')}`;
+                opt.textContent = `Kandang ${name}`;
+                selKategoriKandang.appendChild(opt);
+            });
+            // Try to keep previous selection, otherwise 'all'
+            if (Array.from(selKategoriKandang.options).some(o => o.value === currentVal)) {
+                selKategoriKandang.value = currentVal;
+            } else {
+                selKategoriKandang.value = 'all';
+            }
+
+            selKategoriKandang.onchange = (e) => {
+                const val = e.target.value;
+                const cards = document.querySelectorAll('.pen-card');
+                cards.forEach(c => {
+                    if (val === 'all') {
+                        c.style.display = 'flex';
+                    } else {
+                        if (c.id === val) c.style.display = 'flex';
+                        else c.style.display = 'none';
+                    }
+                });
+            };
+        }
 
         sortedPenNames.forEach(name => {
             const pen = pens[name];
