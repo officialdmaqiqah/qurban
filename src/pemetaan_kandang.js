@@ -115,6 +115,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('goatNoPhoto').style.display = 'block';
         document.getElementById('goatTagBadge').textContent = '...';
         document.getElementById('goatSohibul').textContent = 'Memuat...';
+        // Hide warna badge & download btn while loading
+        const warnaBadge = document.getElementById('goatWarnaBadge');
+        if (warnaBadge) { warnaBadge.style.display = 'none'; warnaBadge.textContent = '-'; }
+        const dlBtn = document.getElementById('btnDownloadGoatPhoto');
+        if (dlBtn) dlBtn.style.display = 'none';
         
         modal.classList.add('active');
 
@@ -127,6 +132,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('goatLocation').textContent = goat.lokasi || '-';
             document.getElementById('goatNote').textContent = goat.keterangan || 'Tidak ada catatan khusus.';
             
+            // Warna tali badge
+            if (warnaBadge && goat.warna_tali) {
+                warnaBadge.textContent = '🪢 ' + goat.warna_tali;
+                warnaBadge.style.display = 'block';
+            }
+
             // Status Badge
             const statusBadge = document.getElementById('goatStatusBadge');
             statusBadge.textContent = `STATUS FISIK: ${goat.status_fisik || 'ADA'}`;
@@ -175,16 +186,67 @@ document.addEventListener('DOMContentLoaded', async () => {
             const img = document.getElementById('goatPhoto');
             const noPhoto = document.getElementById('goatNoPhoto');
             const rawUrl = goat.foto_fisik || goat.foto_thumb;
+            let finalPhotoUrl = null;
             
             if (rawUrl) {
                 // Use getDirectDriveLink if available (usually in layout.js or global)
-                const finalUrl = (typeof window.getDirectDriveLink === 'function') ? window.getDirectDriveLink(rawUrl) : rawUrl;
-                img.src = finalUrl;
+                finalPhotoUrl = (typeof window.getDirectDriveLink === 'function') ? window.getDirectDriveLink(rawUrl) : rawUrl;
+                img.src = finalPhotoUrl;
                 img.style.display = 'block';
                 noPhoto.style.display = 'none';
             } else {
                 img.style.display = 'none';
                 noPhoto.style.display = 'block';
+            }
+
+            // Wire up Download Button
+            if (dlBtn) {
+                if (finalPhotoUrl) {
+                    dlBtn.style.display = 'block';
+                    // Remove old listener by cloning
+                    const newDlBtn = dlBtn.cloneNode(true);
+                    dlBtn.parentNode.replaceChild(newDlBtn, dlBtn);
+                    newDlBtn.addEventListener('click', async (ev) => {
+                        ev.stopPropagation();
+                        const noTali = goat.no_tali || 'kambing';
+                        const warnaTali = goat.warna_tali || '-';
+                        try {
+                            newDlBtn.innerHTML = '⏳ Menyiapkan...';
+                            newDlBtn.style.opacity = '0.7';
+                            const tImg = new Image();
+                            tImg.crossOrigin = 'anonymous';
+                            tImg.src = finalPhotoUrl;
+                            await new Promise((res, rej) => { tImg.onload = res; tImg.onerror = rej; });
+                            const cv = document.createElement('canvas');
+                            cv.width = tImg.naturalWidth; cv.height = tImg.naturalHeight;
+                            const ctx = cv.getContext('2d');
+                            ctx.drawImage(tImg, 0, 0);
+                            // Draw watermark bar
+                            const fs = Math.round(cv.width * 0.035);
+                            const bh = fs * 2.2;
+                            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                            ctx.fillRect(0, cv.height - bh, cv.width, bh);
+                            ctx.fillStyle = 'white';
+                            ctx.font = `bold ${fs}px Inter, sans-serif`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(`No Tali : ${noTali} | Warna : ${warnaTali}`, cv.width / 2, cv.height - (bh / 2));
+                            const a = document.createElement('a');
+                            a.href = cv.toDataURL('image/jpeg', 0.95);
+                            a.download = `kambing_${noTali}.jpg`;
+                            a.click();
+                            if (window.showToast) window.showToast('Foto Berhasil Diunduh!', 'success');
+                        } catch (err) {
+                            // Fallback: open in new tab
+                            window.open(finalPhotoUrl, '_blank');
+                        } finally {
+                            newDlBtn.innerHTML = '📥 Unduh Foto';
+                            newDlBtn.style.opacity = '1';
+                        }
+                    });
+                } else {
+                    dlBtn.style.display = 'none';
+                }
             }
 
         } catch (err) {
