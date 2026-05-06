@@ -275,83 +275,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.btn-view-photo').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
-                e.stopPropagation(); 
+                e.stopPropagation();
                 const url = e.currentTarget.getAttribute('data-url');
                 const noTali = e.currentTarget.getAttribute('data-notali') || 'foto';
-                const modal = document.getElementById('photoLightbox');
-                const img = document.getElementById('lightboxImg');
-                const loader = document.getElementById('lightboxLoading');
-                const btnDownload = document.getElementById('btnDownloadLightbox');
-                
-                if(modal && img) {
-                    img.style.display = 'none'; 
-                    if(loader) {
-                        loader.style.display = 'block';
-                        loader.textContent = 'Memuat Foto...';
-                        loader.style.color = 'white';
-                    }
-                    img.src = url;
-                    modal.style.display = 'flex';
+                const warnaTali = e.currentTarget.getAttribute('data-warna') || '-';
 
-                    // Get metadata from button
-                    const warnaTali = e.currentTarget.getAttribute('data-warna') || '-';
+                // Gunakan window.viewPhoto dari layout_v53.js (sudah terbukti bekerja)
+                if (window.viewPhoto) {
+                    window.viewPhoto(url);
+                    // Tambahkan tombol download ke globalPhotoLightbox setelah dibuka
+                    setTimeout(() => {
+                        const lb = document.getElementById('globalPhotoLightbox');
+                        if (!lb) return;
+                        // Hapus tombol download lama jika ada
+                        const oldDl = lb.querySelector('#kambingDownloadBtn');
+                        if (oldDl) oldDl.remove();
 
-                    // Setup Download Button
-                    if (btnDownload) {
-                        btnDownload.onclick = async (ev) => {
+                        const dlBtn = document.createElement('button');
+                        dlBtn.id = 'kambingDownloadBtn';
+                        dlBtn.className = 'btn btn-primary';
+                        dlBtn.style.cssText = 'background:#10b981; border:none; margin-top:12px; position:relative; z-index:2;';
+                        dlBtn.innerHTML = '📥 Unduh Foto';
+                        dlBtn.onclick = async (ev) => {
                             ev.stopPropagation();
                             try {
-                                const originalText = btnDownload.innerHTML;
-                                btnDownload.innerHTML = '⏳ Menyiapkan...';
-                                btnDownload.style.opacity = '0.7';
-                                btnDownload.style.pointerEvents = 'none';
-                                
-                                const tempImg = new Image();
-                                tempImg.crossOrigin = "anonymous"; 
-                                tempImg.src = url;
-                                await new Promise((res, rej) => { tempImg.onload = res; tempImg.onerror = rej; });
-
-                                const canvas = document.createElement('canvas');
-                                const ctx = canvas.getContext('2d');
-                                canvas.width = tempImg.naturalWidth;
-                                canvas.height = tempImg.naturalHeight;
-                                ctx.drawImage(tempImg, 0, 0);
-
-                                // --- DRAW OVERLAY ---
-                                const fontSize = Math.round(canvas.width * 0.035); // Responsive font size
-                                const barHeight = fontSize * 2.2;
-                                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-                                ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
-
+                                dlBtn.innerHTML = '⏳ Menyiapkan...';
+                                dlBtn.style.opacity = '0.7';
+                                const tImg = new Image();
+                                tImg.crossOrigin = 'anonymous';
+                                tImg.src = url;
+                                await new Promise((res, rej) => { tImg.onload = res; tImg.onerror = rej; });
+                                const cv = document.createElement('canvas');
+                                cv.width = tImg.naturalWidth; cv.height = tImg.naturalHeight;
+                                const ctx = cv.getContext('2d');
+                                ctx.drawImage(tImg, 0, 0);
+                                const fs = Math.round(cv.width * 0.035);
+                                const bh = fs * 2.2;
+                                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                                ctx.fillRect(0, cv.height - bh, cv.width, bh);
                                 ctx.fillStyle = 'white';
-                                ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                                ctx.font = `bold ${fs}px Inter, sans-serif`;
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                ctx.fillText(`No Tali : ${noTali} | Warna : ${warnaTali}`, canvas.width / 2, canvas.height - (barHeight / 2));
-                                
+                                ctx.fillText(`No Tali : ${noTali} | Warna : ${warnaTali}`, cv.width / 2, cv.height - (bh / 2));
                                 const a = document.createElement('a');
-                                a.href = canvas.toDataURL('image/jpeg', 0.95);
+                                a.href = cv.toDataURL('image/jpeg', 0.95);
                                 a.download = `kambing_${noTali}.jpg`;
                                 a.click();
-                                
-                                if(window.showToast) window.showToast('Foto Berhasil Diunduh!');
-                                btnDownload.innerHTML = originalText;
-                            } catch (error) {
-                                console.error('Download failed:', error);
+                                if (window.showToast) window.showToast('Foto Berhasil Diunduh!', 'success');
+                            } catch (err) {
                                 window.open(url, '_blank');
                             } finally {
-                                btnDownload.style.opacity = '1';
-                                btnDownload.style.pointerEvents = 'auto';
+                                dlBtn.innerHTML = '📥 Unduh Foto';
+                                dlBtn.style.opacity = '1';
                             }
                         };
-                    }
-
-                    img.onerror = () => {
-                        if(loader) {
-                            loader.innerHTML = `Gagal memuat foto.<br><span style="font-size:0.7rem; color:white; font-style:normal;">Pastikan file di Google Drive sudah diset ke <b>"Anyone with the link can view"</b>.</span>`;
-                            loader.style.color = '#ef4444';
-                        }
-                    };
+                        lb.appendChild(dlBtn);
+                    }, 100);
                 }
             });
         });
