@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userId = profile.id;
 
     const isAdminRole = ['admin', 'office'].includes(role);
-    const isAuthorizedYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId) || (name.includes('yahya') || email.includes('yahya'));
+    const isAuthorizedYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId);
 
     if (!isAuthorizedYahya) {
         document.body.innerHTML = `
