@@ -252,12 +252,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const status = getStatusInfo(percentage);
 
             // Separate goats into available vs sold/distributed
-            const availableGoats = pen.goats.filter(g =>
-                g.status_transaksi !== 'Terjual' && g.status_transaksi !== 'Terdistribusi'
-            );
-            const soldGoats = pen.goats.filter(g =>
-                g.status_transaksi === 'Terjual' || g.status_transaksi === 'Terdistribusi'
-            );
+            const sortByTag = (a, b) => parseInt(a.no_tali || 0) - parseInt(b.no_tali || 0);
+            const availableGoats = pen.goats
+                .filter(g => g.status_transaksi !== 'Terjual' && g.status_transaksi !== 'Terdistribusi')
+                .sort(sortByTag);
+            const soldGoats = pen.goats
+                .filter(g => g.status_transaksi === 'Terjual' || g.status_transaksi === 'Terdistribusi')
+                .sort(sortByTag);
             const availCount = availableGoats.length;
             const soldCount = soldGoats.length;
 
