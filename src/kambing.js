@@ -237,8 +237,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${statusBayarBadge}</td>
                 <td style="text-align:center; vertical-align:middle;">
                     ${(item.foto_thumb || item.foto_fisik || item.foto_nota_url) 
-                        ? `<button class="btn btn-sm btn-view-photo" data-url="${getDirectDriveLink(item.foto_fisik || item.foto_nota_url)}" data-notali="${item.no_tali}" data-warna="${item.warna_tali || '-'}" title="Klik untuk Perbesar" style="width:32px; height:32px; border-radius:50%; padding:0; overflow:hidden; border:2px solid var(--primary-transparent); background:rgba(255,255,255,0.05);">
-                             <img src="${getDirectDriveLink(item.foto_thumb || item.foto_fisik || item.foto_nota_url)}" style="width:100%; height:100%; object-fit:cover;">
+                        ? `<button class="btn btn-sm btn-view-photo" data-url="${window.getDirectDriveLink(item.foto_fisik || item.foto_nota_url)}" data-notali="${item.no_tali}" data-warna="${item.warna_tali || '-'}" title="Klik untuk Perbesar" style="width:32px; height:32px; border-radius:50%; padding:0; overflow:hidden; border:2px solid var(--primary-transparent); background:rgba(255,255,255,0.05);">
+                             <img src="${window.getDirectDriveLink(item.foto_thumb || item.foto_fisik || item.foto_nota_url)}" style="width:100%; height:100%; object-fit:cover;">
                            </button>`
                         : `<span style="opacity:0.1; font-size:1rem;" title="Tanpa foto">🚫</span>`
                     }
@@ -950,5 +950,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    renderTable();
 });
