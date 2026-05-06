@@ -230,6 +230,43 @@
         }
         .goat-unit.empty:hover { transform: none; }
 
+        /* Sold goat indicator */
+        .goat-unit.sold {
+            opacity: 0.6;
+            outline: 2px solid #10b981;
+            outline-offset: -2px;
+        }
+        .goat-unit.sold::after {
+            content: '✓';
+            position: absolute;
+            top: -1px;
+            right: 1px;
+            font-size: 0.45rem;
+            color: #10b981;
+            font-weight: 900;
+            line-height: 1;
+            text-shadow: none;
+        }
+
+        /* Section labels inside visual-map grid */
+        .map-section-label {
+            grid-column: 1 / -1;
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            padding: 3px 0 1px;
+            margin-top: 4px;
+            border-top: 1px dashed rgba(255,255,255,0.08);
+        }
+        .map-section-label:first-child {
+            border-top: none;
+            margin-top: 0;
+        }
+        .map-section-label.label-available { color: #3b82f6; }
+        .map-section-label.label-sold { color: #10b981; }
+
         .unit-tooltip {
             position: absolute;
             bottom: 100%;

@@ -251,20 +251,46 @@ document.addEventListener('DOMContentLoaded', async () => {
             const percentage = capacity > 0 ? Math.round((count / capacity) * 100) : 0;
             const status = getStatusInfo(percentage);
 
-            let unitsHtml = '';
-            pen.goats.forEach(g => {
+            // Separate goats into available vs sold/distributed
+            const availableGoats = pen.goats.filter(g =>
+                g.status_transaksi !== 'Terjual' && g.status_transaksi !== 'Terdistribusi'
+            );
+            const soldGoats = pen.goats.filter(g =>
+                g.status_transaksi === 'Terjual' || g.status_transaksi === 'Terdistribusi'
+            );
+            const availCount = availableGoats.length;
+            const soldCount = soldGoats.length;
+
+            const buildUnitHtml = (g, isSold) => {
                 const style = getUnitStyle(g.warna_tali);
-                unitsHtml += `
-                    <div class="goat-unit" 
+                const soldClass = isSold ? ' sold' : '';
+                const soldLabel = isSold ? ' (Terjual ✓)' : '';
+                return `<div class="goat-unit${soldClass}" 
                          data-id="${g.id}" 
                          data-tag="${g.no_tali}" 
                          data-customer="${g._searchContext.customer}" 
                          data-sohibul="${g._searchContext.sohibul}"
-                         title="No Tali: ${g.no_tali}" style="${style}">
+                         title="No Tali: ${g.no_tali}${soldLabel}" style="${style}">
                         ${g.no_tali}
-                        <div class="unit-tooltip">Klik untuk Detail (#${g.no_tali})</div>
+                        <div class="unit-tooltip">Detail #${g.no_tali}${soldLabel}</div>
                     </div>`;
-            });
+            };
+
+            let unitsHtml = '';
+
+            // === Available section ===
+            if (availableGoats.length > 0) {
+                unitsHtml += `<div class="map-section-label label-available">🟢 Tersedia (${availCount})</div>`;
+                availableGoats.forEach(g => { unitsHtml += buildUnitHtml(g, false); });
+            }
+
+            // === Sold section ===
+            if (soldGoats.length > 0) {
+                unitsHtml += `<div class="map-section-label label-sold">✅ Terjual (${soldCount})</div>`;
+                soldGoats.forEach(g => { unitsHtml += buildUnitHtml(g, true); });
+            }
+
+            // === Empty slots ===
             const emptyCount = Math.max(0, capacity - count);
             for(let i = 0; i < emptyCount; i++) {
                 unitsHtml += `<div class="goat-unit empty"></div>`;
@@ -283,8 +309,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="stat-value">${count}</span>
                         <span class="stat-label">ekor</span>
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
-                        ${percentage}% Kapasitas
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
+                        <div style="font-size:0.72rem; color:#3b82f6; font-weight:700;">🟢 ${availCount} Tersedia</div>
+                        <div style="font-size:0.72rem; color:#10b981; font-weight:700;">✅ ${soldCount} Terjual</div>
                     </div>
                 </div>
 
