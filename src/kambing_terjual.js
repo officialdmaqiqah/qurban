@@ -874,7 +874,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     // Fetch Official Accounts
                     const reks = await getRekeningDb();
-                    const rekStr = (reks || []).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
+                    const rekStr = (reks || []).filter(r => !(r.bank || '').toLowerCase().includes('bsi')).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
 
                     const agentTipe = (newTrx.agen?.tipe || '').toUpperCase();
                     const skipCustWA = agentTipe.includes('DM') || agentTipe.includes('EXT');

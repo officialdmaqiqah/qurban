@@ -393,7 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Fetch Official Accounts
                     const { data: mdRek } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single();
                     const reks = mdRek?.val || [];
-                    const rekStr = reks.map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
+                    const rekStr = reks.filter(r => !(r.bank || '').toLowerCase().includes('bsi')).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
 
                     const commonData = {
                         nama: trx.customer.nama,

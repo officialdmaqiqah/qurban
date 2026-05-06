@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const skipCustWA = agentTipe.includes('DM') || agentTipe.includes('EXT');
                 // Fetch Official Accounts
                 const reks = await getBankAccounts();
-                const rekStr = (reks || []).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
+                const rekStr = (reks || []).filter(r => !(r.bank || '').toLowerCase().includes('bsi')).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
 
                 const historyStr = (updatedHistory || []).length > 0
                     ? (updatedHistory || []).map((h, idx) => `• ${formatTgl(h.tgl)}: ${window.formatRp(h.nominal)} (${idx === 0 ? 'DP' : 'Pelunasan'})`).join('\n')
