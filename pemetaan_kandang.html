@@ -177,9 +177,9 @@
             gap: 4px;
             margin: 0.5rem 0;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(180, 180, 180, 0.1);
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(180, 180, 180, 0.15);
             min-height: 40px;
         }
 
@@ -230,10 +230,10 @@
         }
         .goat-unit.empty:hover { transform: none; }
 
-        /* Sold goat indicator - dimmed only, no outline */
+        /* Sold goat indicator - full brightness, no dimming */
         .goat-unit.sold {
-            opacity: 0.5;
-            filter: saturate(0.6);
+            opacity: 1;
+            filter: none;
         }
 
         /* Section labels inside visual-map grid */
