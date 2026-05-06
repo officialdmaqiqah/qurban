@@ -200,14 +200,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const selKategoriKandang = document.getElementById('selKategoriKandang');
         if (selKategoriKandang) {
+            // Extract unique categories from pen names
+            // Category = leading letter(s) before digits, e.g. "A" from "A1", "B" from "B3"
+            const categorySet = new Set();
+            sortedPenNames.forEach(name => {
+                const match = name.match(/^([A-Za-z]+)/);
+                if (match) categorySet.add(match[1].toUpperCase());
+            });
+            const categories = Array.from(categorySet).sort();
+
             const currentVal = selKategoriKandang.value;
             selKategoriKandang.innerHTML = '<option value="all">Semua Kandang</option>';
-            sortedPenNames.forEach(name => {
+            categories.forEach(cat => {
                 const opt = document.createElement('option');
-                opt.value = `pen-${name.replace(/\s+/g, '-')}`;
-                opt.textContent = `Kandang ${name}`;
+                opt.value = `cat-${cat}`;
+                opt.textContent = `Kandang ${cat}`;
                 selKategoriKandang.appendChild(opt);
             });
+
             // Try to keep previous selection, otherwise 'all'
             if (Array.from(selKategoriKandang.options).some(o => o.value === currentVal)) {
                 selKategoriKandang.value = currentVal;
@@ -222,8 +232,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (val === 'all') {
                         c.style.display = 'flex';
                     } else {
-                        if (c.id === val) c.style.display = 'flex';
-                        else c.style.display = 'none';
+                        // val = "cat-A", card id = "pen-A1", "pen-A2", etc.
+                        const selectedCat = val.replace(/^cat-/, '').toUpperCase();
+                        // Get pen name from card id: "pen-A1" -> "A1"
+                        const penName = c.id.replace(/^pen-/, '');
+                        const penMatch = penName.match(/^([A-Za-z]+)/);
+                        const penCat = penMatch ? penMatch[1].toUpperCase() : '';
+                        c.style.display = (penCat === selectedCat) ? 'flex' : 'none';
                     }
                 });
             };
