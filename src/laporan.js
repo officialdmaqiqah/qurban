@@ -410,6 +410,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const isOpex = f => {
             if(f.tipe !== 'pengeluaran') return false;
+            const kl = (f.kategori || '').toLowerCase();
             const ketl = (f.keterangan || '').toLowerCase();
             const isRef = kl.includes('pengembalian dana') || kl.includes('refund') || (f.id || '').startsWith('REF-') || ketl.includes('refund');
             const isEx = kl.includes('bayar supplier') || kl.includes('pelunasan supplier') || kl.includes('komisi') || 
