@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!body) return 0;
         body.innerHTML = '';
 
-        let omzet = 0, hpp = 0, komisi = 0, saving = 0;
+        let omzet = 0, hpp = 0, komisi = 0, saving = 0, penjualanKarkas = 0;
         const savingDetails = [];
 
         trxs.filter(t => {
@@ -178,6 +178,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (katLine.includes('kompensasi')) {
                         deadKomp += nom;
                     }
+                    // Penjualan Karkas: diakui sebagai pendapatan sampingan
+                    if (katLine === 'penjualan karkas') {
+                        penjualanKarkas += nom;
+                    }
                 }
             }
         });
@@ -186,9 +190,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const addRow = (l, v, cls='') => body.innerHTML += `<tr class="${cls}"><td>${l}</td><td class="text-right">${formatRp(v)}</td></tr>`;
         
-        addRow('Total Omzet Penjualan', omzet, 'text-premium');
+        addRow('Total Omzet Penjualan Kambing', omzet, 'text-premium');
+        if (penjualanKarkas > 0) addRow('(+) Penjualan Karkas', penjualanKarkas, 'text-success');
+        addRow('Total Pendapatan', omzet + penjualanKarkas, 'row-total text-premium');
         addRow('(-) HPP (Harga Nota)', -hpp, 'text-muted');
-        addRow('LABA KOTOR', omzet - hpp, 'row-total text-premium');
+        addRow('LABA KOTOR', omzet + penjualanKarkas - hpp, 'row-total text-premium');
         addRow('(-) Komisi Agen', -komisi);
         
         // Breakdown Opex
@@ -235,7 +241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        const netProfit = omzet - hpp - komisi - opex - deadLossNet - saving - internalTransfers;
+        const netProfit = omzet + penjualanKarkas - hpp - komisi - opex - deadLossNet - saving - internalTransfers;
         addRow('LABA BERSIH', netProfit, 'row-grand-total text-premium');
         return netProfit;
     };

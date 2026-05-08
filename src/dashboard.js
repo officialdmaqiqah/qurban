@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        let omzet = 0, hpp = 0, komisi = 0, saving = 0, totalPaidFinance = 0;
+        let omzet = 0, hpp = 0, komisi = 0, saving = 0, totalPaidFinance = 0, penjualanKarkas = 0;
         
         // 4.1 PENJUALAN & HPP
         (trxDbAll || []).forEach(t => {
@@ -257,12 +257,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (isInSeason && katLine.includes('kompensasi')) {
                         deadKomp += nom;
                     }
+                    // Penjualan Karkas: diakui sebagai pendapatan sampingan
+                    if (isInSeason && katLine === 'penjualan karkas') {
+                        penjualanKarkas += nom;
+                    }
                 }
             }
         });
 
         const deadLossNet = deadLossRaw - deadKomp;
-        const netProfit = omzet - hpp - komisi - operatingExpenses - deadLossNet - saving - internalTransfers;
+        const netProfit = omzet + penjualanKarkas - hpp - komisi - operatingExpenses - deadLossNet - saving - internalTransfers;
         const piutang = omzet - totalPaidInFinance;
         const totalProfitSales = omzet - hpp - komisi - saving;
         const unitsSold = countTerjual + countDistribusi;
