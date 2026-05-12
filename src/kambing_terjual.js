@@ -595,13 +595,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (kMeta?.status_kesehatan === 'Mati') badgeColor = 'var(--danger)';
 
                 return `
-                    <div style="display:inline-flex; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:4px 8px; font-size:0.75rem; transition: var(--transition); cursor:pointer;" 
+                    <div style="display:inline-flex; flex-direction:column; gap:2px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:6px 10px; min-width:80px; transition: var(--transition); cursor:pointer;" 
                          onclick="window.viewGoatPhoto('${item.goatId}')">
-                        <span style="color:${badgeColor}; font-weight:600; margin-right:4px;">
-                            No.${item.noTali} <small style="opacity:0.7; font-weight:400;">(${kMeta?.lokasi || '-'})</small>
-                            ${item.label_printed ? `<span title="Label Sudah Dicetak (Klik untuk Batalkan/Reset)" style="cursor:pointer; font-size:1rem; margin-left:4px;" onclick="event.stopPropagation(); window.resetLabelStatus('${t.id}', '${item.goatId}')">🏷️</span>` : ''}
-                        </span>
-                        <span style="color:var(--text-muted); font-size:0.65rem;">${kMeta?.warna_tali || item.warnaTali || '-'}</span>
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                            <span style="color:${badgeColor}; font-weight:700; font-size:0.85rem;">No.${item.noTali}</span>
+                            <span style="background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; font-size:0.65rem; color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);">${kMeta?.lokasi || '-'}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:2px;">
+                            <span style="color:var(--text-muted); font-size:0.65rem; opacity:0.8;">${kMeta?.warna_tali || item.warnaTali || '-'}</span>
+                            ${item.label_printed ? `<span title="Label Sudah Dicetak" style="font-size:0.9rem; line-height:1;" onclick="event.stopPropagation(); window.resetLabelStatus('${t.id}', '${item.goatId}')">🏷️</span>` : ''}
+                        </div>
                     </div>`; 
             }).join('') + `</div>`;
             

@@ -224,7 +224,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="font-weight:600; display:none;">${displayBatch}</td>
                 <td style="white-space:nowrap; display:none;">${formatTgl(item.tgl_masuk)}</td>
                 <td class="sticky-col">
-                    <div style="font-weight:600;">${item.no_tali} <small style="opacity:0.7; font-weight:400;">(${item.lokasi || '-'})</small></div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <div style="font-weight:700; font-size:0.9rem;">${item.no_tali}</div>
+                        <div style="background:rgba(255,255,255,0.08); padding:1px 4px; border-radius:4px; font-size:0.65rem; color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);">${item.lokasi || '-'}</div>
+                    </div>
                     <div style="font-size:0.7rem; color:var(--text-muted); font-weight:400; margin-top:2px;">${item.warna_tali || '-'}</div>
                 </td>
                 <td>${getSexBadge(item.sex)}</td>
