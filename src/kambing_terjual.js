@@ -1356,6 +1356,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Tipe Deli': t.delivery?.tipe || '',
                         'No Tali': it.noTali || dbGoat?.no_tali || '',
                         'Warna Tali': warnaActual,
+                        'Lokasi Kandang': it.lokasi || dbGoat?.lokasi || '-',
                         'Nama Sohibul': it.namaSohibul || '',
                         'Harga Deal Item': parseFloat(it.hargaDeal) || 0,
                         'Total Nota': idx === 0 ? (parseFloat(t.total_deal) || 0) : 0,
