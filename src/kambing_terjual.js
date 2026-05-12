@@ -597,18 +597,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (kMeta?.status_kesehatan === 'Mati') badgeColor = 'var(--danger)';
 
                 return `
-                    <div style="display:inline-flex; flex-direction:column; gap:2px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:6px 10px; min-width:80px; transition: var(--transition); cursor:pointer;" 
+                    <div style="display:inline-flex; flex-direction:column; gap:4px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px 12px; min-width:110px; transition: var(--transition); cursor:pointer;" 
                          onclick="window.viewGoatPhoto('${item.goatId}')">
-                        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                            <span style="color:${badgeColor}; font-weight:700; font-size:0.85rem; display:flex; align-items:center; gap:4px;">
-                                <span style="font-size:1.1rem; line-height:1;">${(kMeta?.sex || '').toLowerCase().startsWith('b') ? '♀️' : '♂️'}</span>
-                                No.${item.noTali}
-                            </span>
-                            <span style="background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; font-size:0.65rem; color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);">${kMeta?.lokasi || '-'}</span>
+                        <!-- Baris 1: No Tali & Warna -->
+                        <div style="font-weight:700; font-size:0.85rem; color:${badgeColor}; white-space:nowrap;">
+                            No.${item.noTali} <span style="font-weight:400; opacity:0.7; font-size:0.75rem; color:var(--text-main);">${kMeta?.warna_tali || item.warnaTali || '-'}</span>
                         </div>
-                        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:2px;">
-                            <span style="color:var(--text-muted); font-size:0.65rem; opacity:0.8;">${kMeta?.warna_tali || item.warnaTali || '-'}</span>
-                            ${item.label_printed ? `<span title="Label Sudah Dicetak" style="font-size:0.9rem; line-height:1;" onclick="event.stopPropagation(); window.resetLabelStatus('${t.id}', '${item.goatId}')">🏷️</span>` : ''}
+                        <!-- Baris 2: Jenis Kelamin & Lokasi -->
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <span style="font-size:1.1rem; line-height:1;">${(kMeta?.sex || '').toLowerCase().startsWith('b') ? '♀️' : '♂️'}</span>
+                                <span style="background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px; font-size:0.7rem; color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);">${kMeta?.lokasi || '-'}</span>
+                            </div>
+                            ${item.label_printed ? `<span title="Label Sudah Dicetak" style="font-size:0.95rem; line-height:1;" onclick="event.stopPropagation(); window.resetLabelStatus('${t.id}', '${item.goatId}')">🏷️</span>` : ''}
                         </div>
                     </div>`; 
             }).join('') + `</div>`;
