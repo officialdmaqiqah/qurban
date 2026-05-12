@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="font-weight:600; display:none;">${displayBatch}</td>
                 <td style="white-space:nowrap; display:none;">${formatTgl(item.tgl_masuk)}</td>
                 <td class="sticky-col">
-                    <div style="font-weight:600;">${item.no_tali}</div>
+                    <div style="font-weight:600;">${item.no_tali} <small style="opacity:0.7; font-weight:400;">(${item.lokasi || '-'})</small></div>
                     <div style="font-size:0.7rem; color:var(--text-muted); font-weight:400; margin-top:2px;">${item.warna_tali || '-'}</div>
                 </td>
                 <td>${getSexBadge(item.sex)}</td>

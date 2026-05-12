@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Signature unik No Tali + Batch agar tidak tertukar
             const signature = `No.${k.no_tali} | ${k.batch}`;
             opt.value = signature;
-            opt.textContent = `No.${k.no_tali} - ${k.warna_tali}${extraStat} - ${formatNum(k.harga_kandang)}`;
+            opt.textContent = `No.${k.no_tali} [${k.lokasi || '-'}] - ${k.warna_tali}${extraStat} - ${formatNum(k.harga_kandang)}`;
             listKambing.appendChild(opt);
         });
     };
@@ -449,6 +449,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="cart-item-header">
                     <div class="cart-item-id">
                         <span style="color:var(--primary);"># ${item.noTali || '?'}</span>
+                        <span class="badge" style="background:rgba(var(--primary-rgb),0.1); color:var(--primary); font-size:0.7rem;">${item.lokasi || '-'}</span>
                         <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${item.warnaTali || ''}</span>
                         <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${String(item.batch || '-').replace('undefined', '-')}</span>
                     </div>
@@ -597,7 +598,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="display:inline-flex; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:4px 8px; font-size:0.75rem; transition: var(--transition); cursor:pointer;" 
                          onclick="window.viewGoatPhoto('${item.goatId}')">
                         <span style="color:${badgeColor}; font-weight:600; margin-right:4px;">
-                            No.${item.noTali} 
+                            No.${item.noTali} <small style="opacity:0.7; font-weight:400;">(${kMeta?.lokasi || '-'})</small>
                             ${item.label_printed ? `<span title="Label Sudah Dicetak (Klik untuk Batalkan/Reset)" style="cursor:pointer; font-size:1rem; margin-left:4px;" onclick="event.stopPropagation(); window.resetLabelStatus('${t.id}', '${item.goatId}')">🏷️</span>` : ''}
                         </span>
                         <span style="color:var(--text-muted); font-size:0.65rem;">${kMeta?.warna_tali || item.warnaTali || '-'}</span>
@@ -1144,7 +1145,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 batch: dbRef?.batch || it.batch || '-',
                 noTali: dbRef?.no_tali || it.noTali || '?',
                 warnaTali: dbRef?.warna_tali || it.warnaTali || '-',
-                hargaKandang: dbRef?.harga_kandang || it.hargaKandang || 0
+                hargaKandang: dbRef?.harga_kandang || it.hargaKandang || 0,
+                lokasi: dbRef?.lokasi || it.lokasi || '-'
             };
         });
         renderCart();
@@ -1260,7 +1262,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         if(goat) { 
-            currentCart.push({ goatId: goat.id, noTali: goat.no_tali, batch: goat.batch, hargaKandang: goat.harga_kandang, hargaDeal: goat.harga_kandang, warnaTali: goat.warna_tali }); 
+            currentCart.push({ 
+                goatId: goat.id, 
+                noTali: goat.no_tali, 
+                batch: goat.batch, 
+                hargaKandang: goat.harga_kandang, 
+                hargaDeal: goat.harga_kandang, 
+                warnaTali: goat.warna_tali,
+                lokasi: goat.lokasi || '-'
+            }); 
             renderCart(); 
             await refreshKambingDropdown(); 
             inpSearchKambing.value = ''; 
