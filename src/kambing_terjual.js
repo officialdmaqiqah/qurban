@@ -600,7 +600,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="display:inline-flex; flex-direction:column; gap:2px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:6px 10px; min-width:80px; transition: var(--transition); cursor:pointer;" 
                          onclick="window.viewGoatPhoto('${item.goatId}')">
                         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                            <span style="color:${badgeColor}; font-weight:700; font-size:0.85rem;">No.${item.noTali}</span>
+                            <span style="color:${badgeColor}; font-weight:700; font-size:0.85rem;">${(kMeta?.sex || '').toLowerCase().startsWith('b') ? '♀' : '♂'} No.${item.noTali}</span>
                             <span style="background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; font-size:0.65rem; color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);">${kMeta?.lokasi || '-'}</span>
                         </div>
                         <div style="display:flex; align-items:center; justify-content:space-between; margin-top:2px;">
@@ -1359,6 +1359,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Tgl Deli': t.delivery?.tgl || '',
                         'Tipe Deli': t.delivery?.tipe || '',
                         'No Tali': it.noTali || dbGoat?.no_tali || '',
+                        'Jenis Kelamin': dbGoat?.sex || it.sex || 'Jantan',
                         'Warna Tali': warnaActual,
                         'Lokasi Kandang': it.lokasi || dbGoat?.lokasi || '-',
                         'Nama Sohibul': it.namaSohibul || '',
