@@ -74,16 +74,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         return { goats: cachedGoats, finance: cachedFinance };
     };
 
-    const updateStats = (supplierStats) => {
+    const updateStats = (supplierStats, selectedSupplier = 'all') => {
         let totalHutang = 0;
         let totalPaid = 0;
         let totalKomp = 0;
 
-        Object.values(supplierStats).forEach(s => {
-            totalHutang += s.totalTags;
-            totalPaid += s.totalPaid;
-            totalKomp += s.totalKomp;
-        });
+        if (selectedSupplier === 'all') {
+            Object.values(supplierStats).forEach(s => {
+                totalHutang += s.totalTags;
+                totalPaid += s.totalPaid;
+                totalKomp += s.totalKomp;
+            });
+        } else {
+            const s = supplierStats[selectedSupplier];
+            if (s) {
+                totalHutang = s.totalTags;
+                totalPaid = s.totalPaid;
+                totalKomp = s.totalKomp;
+            }
+        }
 
         const sisaHutang = totalHutang - totalKomp - totalPaid;
 
@@ -140,7 +149,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        updateStats(supplierStats);
+        // Populate selSupplier if empty
+        const selSupp = document.getElementById('selSupplier');
+        if (selSupp && selSupp.options.length <= 1) {
+            const sortedSuppliers = Object.keys(supplierStats).sort();
+            sortedSuppliers.forEach(s => {
+                const o = document.createElement('option'); o.value = s; o.textContent = s;
+                selSupp.appendChild(o);
+            });
+        }
+
+        const supplierFilter = selSupp?.value || 'all';
+        updateStats(supplierStats, supplierFilter);
 
         let flattenedData = [];
         Object.values(supplierStats).forEach(s => {
@@ -186,7 +206,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             let matchStatus = true;
             if (statusFilter === 'hutang') matchStatus = !d.isLunas;
             else if (statusFilter === 'lunas') matchStatus = d.isLunas;
-            return matchSearch && matchStatus;
+
+            let matchSupplier = true;
+            if (supplierFilter !== 'all') matchSupplier = d.nama === supplierFilter;
+
+            return matchSearch && matchStatus && matchSupplier;
         });
 
         displayData.sort((a,b) => {
@@ -451,6 +475,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     inpSearch?.addEventListener('input', renderTable);
+    document.getElementById('selStatusHutang')?.addEventListener('change', renderTable);
+    document.getElementById('selSupplier')?.addEventListener('change', renderTable);
     document.getElementById('btnCancelModal')?.addEventListener('click', () => modalBayar.classList.remove('active'));
 
     document.getElementById('btnBayarGlobal')?.addEventListener('click', async () => {
