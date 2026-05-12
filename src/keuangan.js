@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         const getTransaksiMap = async () => {
-            const { data } = await supabase.from('transaksi').select('id, customer, agen');
+            const { data } = await supabase.from('transaksi').select('id, customer, agen, items');
             const map = {};
             (data || []).forEach(t => map[t.id] = t);
             return map;
@@ -559,6 +559,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     }
 
+                    let sohibul = '-';
+                    if (trx && trx.items) {
+                        if (item.related_goat_id) {
+                            const target = trx.items.find(it => it.goatId === item.related_goat_id);
+                            sohibul = target?.namaSohibul || '-';
+                        } else {
+                            sohibul = trx.items.map(it => it.namaSohibul).filter(Boolean).join(', ') || '-';
+                        }
+                    }
+
                     return {
                         'ID': item.id,
                         'Tanggal': item.tanggal,
@@ -568,6 +578,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Channel': item.channel || '-',
                         'Nama Konsumen': customerName,
                         'Nama Agen': agenName,
+                        'Nama Sohibul': sohibul,
                         'Keterangan': keterangan,
                         'Ref ID Transaksi': item.related_trx_id || '-'
                     };
