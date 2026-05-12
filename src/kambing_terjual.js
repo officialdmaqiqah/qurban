@@ -364,8 +364,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Signature unik No Tali + Batch agar tidak tertukar
             const signature = `No.${k.no_tali} | ${k.batch}`;
+            const sexSymbol = (k.sex || '').toLowerCase().startsWith('b') ? '♀' : '♂';
             opt.value = signature;
-            opt.textContent = `No.${k.no_tali} [${k.lokasi || '-'}] - ${k.warna_tali}${extraStat} - ${formatNum(k.harga_kandang)}`;
+            opt.textContent = `No.${k.no_tali} [${k.lokasi || '-'}] - ${sexSymbol} ${k.warna_tali}${extraStat} - ${formatNum(k.harga_kandang)}`;
             listKambing.appendChild(opt);
         });
     };
@@ -449,6 +450,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="cart-item-header">
                     <div class="cart-item-id">
                         <span style="color:var(--primary);"># ${item.noTali || '?'}</span>
+                        <span class="badge" style="background:rgba(var(--primary-rgb),0.1); color:var(--primary); font-size:0.75rem; font-weight:700;">${(item.sex || '').toLowerCase().startsWith('b') ? '♀' : '♂'}</span>
                         <span class="badge" style="background:rgba(var(--primary-rgb),0.1); color:var(--primary); font-size:0.7rem;">${item.lokasi || '-'}</span>
                         <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${item.warnaTali || ''}</span>
                         <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${String(item.batch || '-').replace('undefined', '-')}</span>
@@ -1149,7 +1151,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 noTali: dbRef?.no_tali || it.noTali || '?',
                 warnaTali: dbRef?.warna_tali || it.warnaTali || '-',
                 hargaKandang: dbRef?.harga_kandang || it.hargaKandang || 0,
-                lokasi: dbRef?.lokasi || it.lokasi || '-'
+                lokasi: dbRef?.lokasi || it.lokasi || '-',
+                sex: dbRef?.sex || it.sex || 'Jantan'
             };
         });
         renderCart();
@@ -1272,7 +1275,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 hargaKandang: goat.harga_kandang, 
                 hargaDeal: goat.harga_kandang, 
                 warnaTali: goat.warna_tali,
-                lokasi: goat.lokasi || '-'
+                lokasi: goat.lokasi || '-',
+                sex: goat.sex
             }); 
             renderCart(); 
             await refreshKambingDropdown(); 
