@@ -467,22 +467,47 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const reader = new FileReader();
         reader.onload = async (ev) => {
-            const lines = ev.target.result.split('\n');
+            let content = ev.target.result;
+            // Handle BOM
+            if (content.charCodeAt(0) === 0xFEFF) content = content.slice(1);
+            
+            const lines = content.split(/\r?\n/);
+            if (lines.length < 2) return;
+
+            // Detect delimiter (comma or semicolon)
+            const firstLine = lines[0];
+            const delimiter = firstLine.includes(';') ? ';' : ',';
+
             const batch = await generateBatchId();
             for(let i=1; i<lines.length; i++){
-                const cols = lines[i].split(',');
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const cols = line.split(delimiter).map(c => c.trim());
                 if(cols.length < 5) continue;
+
                 draftData.push({
                     id: makeCustomId(batch, cols[1], cols[3], cols[2], cols[4]),
-                    batch, tglMasuk: parseDateString(cols[0]), supplier: cols[1], noTali: cols[2], warnaTali: cols[3], sex: cols[4],
+                    batch, 
+                    tglMasuk: parseDateString(cols[0]), 
+                    supplier: cols[1], 
+                    noTali: cols[2], 
+                    warnaTali: cols[3], 
+                    sex: cols[4],
                     berat: cols[9] || '',
-                    hargaNota: window.parseNum(cols[5]), saving: window.parseNum(cols[6]), profit: window.parseNum(cols[7]),
-                    lokasi: cols[8]||'', hargaKandang: window.parseNum(cols[5]) + window.parseNum(cols[6]) + window.parseNum(cols[7]),
-                    statusTransaksi: 'Tersedia', statusKesehatan: 'Sehat', statusFisik: 'Ada'
+                    hargaNota: window.parseNum(cols[5]), 
+                    saving: window.parseNum(cols[6]), 
+                    profit: window.parseNum(cols[7]),
+                    lokasi: cols[8] || '', 
+                    hargaKandang: window.parseNum(cols[5]) + window.parseNum(cols[6]) + window.parseNum(cols[7]),
+                    statusTransaksi: 'Tersedia', 
+                    statusKesehatan: 'Sehat', 
+                    statusFisik: 'Ada'
                 });
             }
             saveDraft();
             fileInput.value = '';
+            window.showToast(`Berhasil memuat ${lines.length - 1} baris data ke draft.`, 'success');
         };
         reader.readAsText(file);
     });
