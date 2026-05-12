@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="cart-item-header">
                     <div class="cart-item-id">
                         <span style="color:var(--primary);"># ${item.noTali || '?'}</span>
-                        <span class="badge" style="background:rgba(var(--primary-rgb),0.1); color:var(--primary); font-size:0.75rem; font-weight:700;">${(item.sex || '').toLowerCase().startsWith('b') ? '♀' : '♂'}</span>
+                        <span class="badge" style="background:${(item.sex || '').toLowerCase().startsWith('b') ? 'rgba(168,85,247,0.15)' : 'rgba(59,130,246,0.15)'}; color:${(item.sex || '').toLowerCase().startsWith('b') ? '#d8b4fe' : '#60a5fa'}; font-size:0.9rem; font-weight:900; border:1px solid ${(item.sex || '').toLowerCase().startsWith('b') ? 'rgba(168,85,247,0.3)' : 'rgba(59,130,246,0.3)'}; padding:2px 6px;">${(item.sex || '').toLowerCase().startsWith('b') ? '♀' : '♂'}</span>
                         <span class="badge" style="background:rgba(var(--primary-rgb),0.1); color:var(--primary); font-size:0.7rem;">${item.lokasi || '-'}</span>
                         <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${item.warnaTali || ''}</span>
                         <span class="badge" style="background:rgba(255,255,255,0.05); font-size:0.7rem; font-weight:400; color:var(--text-muted);">${String(item.batch || '-').replace('undefined', '-')}</span>
@@ -600,7 +600,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="display:inline-flex; flex-direction:column; gap:2px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:6px 10px; min-width:80px; transition: var(--transition); cursor:pointer;" 
                          onclick="window.viewGoatPhoto('${item.goatId}')">
                         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                            <span style="color:${badgeColor}; font-weight:700; font-size:0.85rem;">${(kMeta?.sex || '').toLowerCase().startsWith('b') ? '♀' : '♂'} No.${item.noTali}</span>
+                            <span style="color:${badgeColor}; font-weight:700; font-size:0.85rem;">
+                                <span style="color:${(kMeta?.sex || '').toLowerCase().startsWith('b') ? '#a855f7' : '#3b82f6'}; font-weight:900; margin-right:2px; font-size:1rem;">${(kMeta?.sex || '').toLowerCase().startsWith('b') ? '♀' : '♂'}</span>
+                                No.${item.noTali}
+                            </span>
                             <span style="background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; font-size:0.65rem; color:var(--text-muted); border:1px solid rgba(255,255,255,0.05);">${kMeta?.lokasi || '-'}</span>
                         </div>
                         <div style="display:flex; align-items:center; justify-content:space-between; margin-top:2px;">
