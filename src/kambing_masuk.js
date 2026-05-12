@@ -240,7 +240,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${item.sex || '-'}</td>
                     <td style="font-weight:600; color:var(--primary);">${item.berat ? item.berat + ' kg' : '-'}</td>
                     <td><span class="badge" style="background:rgba(255,255,255,0.1);">${item.lokasi || '-'}</span></td>
-                    <td style="font-weight:bold; color:var(--success);">${formatRp(item.hargaKandang)}</td>
+                    <td style="font-weight:600; color:var(--success);">${window.formatRp(item.hargaNota)}</td>
+                    <td style="color:var(--text-muted); font-size:0.85rem;">${window.formatRp(item.saving)}</td>
+                    <td style="color:var(--text-muted); font-size:0.85rem;">${window.formatRp(item.profit)}</td>
+                    <td style="font-weight:bold; color:var(--success);">${window.formatRp(item.hargaKandang)}</td>
                     <td style="text-align:right;">
                         <div class="action-btns">
                             <button class="btn btn-sm btn-edit" onclick="editDraft('${item.id}')" title="Edit">✏️</button>
