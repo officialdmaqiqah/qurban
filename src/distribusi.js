@@ -34,10 +34,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const user = profile;
     const isAdmin = user.role === 'admin';
+    const isSopir = user.role === 'sopir';
     const email = profile.email;
     if (email) {
         const display = document.getElementById('userEmailDisplay');
         if (display) display.textContent = email;
+    }
+
+    // --- ROLE BASED UI FILTERING (PROTECTION) ---
+    if (isSopir) {
+        document.getElementById('btnBuatTrip')?.remove();
+        document.getElementById('btnSembelih')?.remove();
+        document.getElementById('btnSyncTrips')?.remove();
     }
 
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
@@ -216,7 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                      <button class="btn btn-sm" onclick="window.printTrip('${t.id}')" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid rgba(255,255,255,0.1); border-radius:6px;">🖨️</button>
                      <div style="display:flex; gap:8px;">
                         ${isDone && !isSopir ? `<button class="btn btn-sm" onclick="window.rollbackDistribution('${t.id}')" style="color:var(--danger); background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); border-radius:6px; font-size:0.7rem;">↩️</button>` : ''}
-                        ${!isSopir ? `<button class="btn btn-sm" onclick="window.deleteTrip('${t.id}')" style="color:var(--danger); background:transparent; border:none; opacity:0.6;" title="Hapus">🗑️</button>` : ''}
+                        <button class="btn btn-sm" onclick="window.deleteTrip('${t.id}')" style="color:var(--danger); background:transparent; border:none; opacity:0.6;" title="Hapus">🗑️</button>
                      </div>
                 </div>
 

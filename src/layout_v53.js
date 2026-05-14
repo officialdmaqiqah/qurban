@@ -512,15 +512,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const allowedMenus = profile.allowed_menus || [];
         
         if (!isAdmin) {
-            // FORCE: Redirect away from protected pages if not admin and not in allowed menus
-            const protectedPages = ['dashboard.html', 'keuangan.html', 'laporan.html', 'pemetaan_kandang.html'];
-            const currentPage = window.location.pathname.split('/').pop();
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            const publicPages = ['login.html', 'pengaturan.html', 'etalase.html', 'index.html'];
             
-            if (protectedPages.includes(currentPage) && !allowedMenus.includes(currentPage)) {
-                window.location.href = 'kambing.html';
+            // Check if current page is allowed
+            if (!publicPages.includes(currentPage) && !allowedMenus.includes(currentPage)) {
+                console.warn(`Access Denied: ${currentPage}. Redirecting...`);
+                
+                if (allowedMenus.length > 0) {
+                    // Redirect to the first available menu (prioritizing non-settings)
+                    const target = allowedMenus.find(m => m !== 'pengaturan.html') || allowedMenus[0];
+                    window.location.href = target;
+                } else {
+                    // Last resort: settings page
+                    window.location.href = 'pengaturan.html';
+                }
                 return;
             }
 
+            // Hide sidebar items that are not in allowed menus
             document.querySelectorAll('.nav-item').forEach(item => {
                 const href = item.getAttribute('href');
                 if (href && !allowedMenus.includes(href) && href !== 'pengaturan.html') {

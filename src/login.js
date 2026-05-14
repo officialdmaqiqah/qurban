@@ -18,7 +18,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (profile && (profile.status === 'approved' || isLocal)) {
             const userRole = (profile.role || 'staff').toLowerCase().trim();
             const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
-            window.location.href = isAdmin ? 'dashboard.html' : 'kambing.html';
+            const allowedMenus = profile.allowed_menus || [];
+            
+            if (isAdmin) {
+                window.location.href = 'dashboard.html';
+            } else if (allowedMenus.length > 0) {
+                const firstMenu = allowedMenus.find(m => m !== 'pengaturan.html') || allowedMenus[0];
+                window.location.href = firstMenu;
+            } else {
+                window.location.href = 'kambing.html';
+            }
             return;
         } else if (profile && profile.status !== 'approved' && !isLocal) {
             // Logout if not approved and not on localhost
@@ -141,7 +150,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             setTimeout(() => {
                 const userRole = (profile.role || 'staff').toLowerCase().trim();
                 const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
-                window.location.href = isAdmin ? 'dashboard.html' : 'kambing.html';
+                const allowedMenus = profile.allowed_menus || [];
+
+                if (isAdmin) {
+                    window.location.href = 'dashboard.html';
+                } else if (allowedMenus.length > 0) {
+                    const firstMenu = allowedMenus.find(m => m !== 'pengaturan.html') || allowedMenus[0];
+                    window.location.href = firstMenu;
+                } else {
+                    window.location.href = 'kambing.html';
+                }
             }, 500);
 
         } catch (err) {
