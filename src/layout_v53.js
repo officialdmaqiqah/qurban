@@ -512,11 +512,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const allowedMenus = profile.allowed_menus || [];
         
         if (!isAdmin) {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            const publicPages = ['login.html', 'pengaturan.html', 'etalase.html', 'index.html'];
+            const rawPage = window.location.pathname.split('/').pop() || 'index.html';
+            const currentPage = rawPage.replace('.html', '');
+            const publicPages = ['login', 'pengaturan', 'etalase', 'index'];
+            
+            // Normalize allowedMenus for comparison
+            const allowedMenusBase = (allowedMenus || []).map(m => m.replace('.html', ''));
             
             // Check if current page is allowed
-            if (!publicPages.includes(currentPage) && !allowedMenus.includes(currentPage)) {
+            if (!publicPages.includes(currentPage) && !allowedMenusBase.includes(currentPage)) {
                 console.warn(`Access Denied: ${currentPage}. Redirecting...`);
                 
                 if (allowedMenus.length > 0) {
@@ -533,8 +537,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Hide sidebar items that are not in allowed menus
             document.querySelectorAll('.nav-item').forEach(item => {
                 const href = item.getAttribute('href');
-                if (href && !allowedMenus.includes(href) && href !== 'pengaturan.html') {
-                    item.style.display = 'none';
+                if (href) {
+                    const hrefBase = href.replace('.html', '');
+                    if (!allowedMenusBase.includes(hrefBase) && hrefBase !== 'pengaturan') {
+                        item.style.display = 'none';
+                    }
                 }
             });
         }
