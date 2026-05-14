@@ -384,7 +384,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         items: trips[tIdx].items[iIdx].noTali,
                         sisa: formatRp((trx.total_deal || 0) - (trx.total_paid || 0)),
                         nama_agen: trips[tIdx].sopirNama,
-                        rekening: rekStr || '-'
+                        rekening: rekStr || '-',
+                        bukti: url || '-'
                     };
 
                     // 1. Notif ke Konsumen
