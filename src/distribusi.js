@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const config = await window.getWaConfig();
                 const { data: trx } = await supabase.from('transaksi').select('*, customer').contains('items', [{ goatId: modal._goatId }]).single();
-                if (trx && trx.customer?.wa1) {
+                if (trx) {
                     // Fetch Official Accounts
                     const { data: mdRek } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single();
                     const reks = mdRek?.val || [];
@@ -386,10 +386,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                         nama_agen: trips[tIdx].sopirNama,
                         rekening: rekStr || '-'
                     };
-                    const msg = await window.parseWaTemplate(config.templateDistribusiTerkirim, commonData);
-                    const res = await window.sendWa(trx.customer.wa1, msg);
-                    if (!res.success) {
-                        window.showToast('WA Distribusi gagal dikirim otomatis (Gateway error).', 'warning');
+
+                    // 1. Notif ke Konsumen
+                    if (trx.customer?.wa1) {
+                        const msg = await window.parseWaTemplate(config.templateDistribusiTerkirim, commonData);
+                        const res = await window.sendWa(trx.customer.wa1, msg);
+                        if (!res.success) window.showToast('WA Distribusi gagal dikirim ke Konsumen.', 'warning');
+                    }
+
+                    // 2. Notif ke Agen
+                    if (trx.agen) {
+                        const { data: mdAgen } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single();
+                        const agenList = mdAgen?.val || [];
+                        const matchedAgen = agenList.find(a => a.nama === trx.agen.nama || a.id === trx.agen.id);
+                        if (matchedAgen && matchedAgen.wa) {
+                            const msgAgen = await window.parseWaTemplate(config.templateDistribusiTerkirim, { 
+                                ...commonData, 
+                                JUDUL: "NOTIFIKASI PENGIRIMAN (AGEN)" 
+                            });
+                            await window.sendWa(matchedAgen.wa, msgAgen);
+                        }
                     }
                 }
             } catch (waErr) {
