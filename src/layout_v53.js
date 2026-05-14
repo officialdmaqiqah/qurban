@@ -622,6 +622,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }, 2000);
                 };
             }
+        }
 
     // Cleanup legacy sidebar logout button if exists (SAFE VERSION)
     const oldLogout = document.getElementById('logoutBtnLegacy');
@@ -711,6 +712,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
     }
+}
     } catch (err) {
         console.error("CRITICAL LAYOUT ERROR:", err);
     }
