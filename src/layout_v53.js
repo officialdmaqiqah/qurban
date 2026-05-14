@@ -488,6 +488,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 3. Profile & Permissions
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+
+    // Permissions & Menu Filtering
+    let userRole = 'staff';
+    let userEmail = '';
+    let userName = '';
+    let userId = '';
+    let isYahya = false;
+    let isAdmin = false;
+    let allowedMenus = [];
+
     if (profile) {
         window.CURRENT_USER = profile;
         const emailDisplay = document.getElementById('userEmailDisplay');
@@ -502,14 +512,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>`;
         }
 
-        // Permissions & Menu Filtering
-        const userRole = (profile.role || 'staff').toLowerCase().trim();
-        const userEmail = (profile.email || '').toLowerCase();
-        const userName = (profile.full_name || '').toLowerCase();
-        const userId = profile.id;
-        const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId);
-        const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
-        const allowedMenus = profile.allowed_menus || [];
+
+
+        userRole = (profile.role || 'staff').toLowerCase().trim();
+        userEmail = (profile.email || '').toLowerCase();
+        userName = (profile.full_name || '').toLowerCase();
+        userId = profile.id;
+        isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId);
+        isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
+        window.isAdmin = isAdmin; // Export to window for other scripts
+        allowedMenus = profile.allowed_menus || [];
         
         if (!isAdmin) {
             const rawPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -610,8 +622,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }, 2000);
                 };
             }
-        }
-    }
 
     // Cleanup legacy sidebar logout button if exists (SAFE VERSION)
     const oldLogout = document.getElementById('logoutBtnLegacy');
@@ -701,7 +711,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
     }
-
     } catch (err) {
         console.error("CRITICAL LAYOUT ERROR:", err);
     }
