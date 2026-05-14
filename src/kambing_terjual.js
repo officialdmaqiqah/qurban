@@ -23,7 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (email && userEmailDisplay) userEmailDisplay.textContent = email;
 
     const userRole = (profile.role || '').toLowerCase().replace(/_/g, ' ').trim();
-    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+    const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(profile.id);
+    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
+    window.isAdmin = isAdmin; // Export for global usage if needed
     const marketingRoles = [
         'agen',
         'reseller', 
@@ -251,7 +253,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // RBAC: Show "Order Baru" button ONLY for Admin/Office
     const btnTambah = document.getElementById('btnTambahTerjual');
-    const isAuthorizedToOrder = ['admin', 'office', 'staf', 'operator'].includes(userRole);
+    const isAuthorizedToOrder = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
     
     if (isAuthorizedToOrder && btnTambah) {
         btnTambah.style.display = 'block'; // Show if authorized
