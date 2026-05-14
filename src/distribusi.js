@@ -62,33 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return p.length >= 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
     };
 
-    const GDRIVE_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwVd01SmNkuoUwinekKbDAh3meqs8ZsbR-OZoCBPUcHZ3_jcBQST6p5vrSVJULt_t8/exec';
 
-    async function compressImage(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader(); reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                const img = new Image(); img.src = e.target.result;
-                img.onload = () => {
-                    const cv = document.createElement('canvas'); const ctx = cv.getContext('2d');
-                    let w = img.width, h = img.height; const max = 800;
-                    if (w > h) { if (w > max) { h *= max / w; w = max; } } else { if (h > max) { w *= max / h; h = max; } }
-                    cv.width = w; cv.height = h; ctx.drawImage(img, 0, 0, w, h);
-                    resolve(cv.toDataURL('image/jpeg', 0.6).split(',')[1]);
-                };
-            };
-        });
-    }
-
-    async function uploadToGDrive(base64, folderName) {
-        try {
-            const resp = await fetch(GDRIVE_PROXY_URL, {
-                method: 'POST',
-                body: JSON.stringify({ base64, mimeType: "image/jpeg", fileName: "dist_" + Date.now(), folderName })
-            });
-            const res = await resp.json(); return res.success ? res.url : null;
-        } catch (e) { return null; }
-    }
 
     const getTrips = async () => { const { data } = await supabase.from('master_data').select('val').eq('key', 'TRIPS').single(); return data?.val || []; };
     const containerTrip = document.getElementById('containerTrip');
@@ -363,15 +337,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const img = document.getElementById('previewBukti');
         const btn = document.getElementById('btnSimpanBukti');
         
-        if (!img.src || img.src.length < 100) return showAlert('Ambil foto bukti dulu!', 'warning');
+        const fileInput = document.getElementById('inpBuktiFoto');
+        if (!fileInput.files || fileInput.files.length === 0) return showAlert('Ambil foto bukti dulu!', 'warning');
 
         try {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span> Mengunggah...';
-            showToast('Mengunggah bukti ke Cloud...', 'info');
-
-            const url = await uploadToGDrive(img.src, 'DISTRIBUSI_FOTO');
-            if(!url) throw new Error("Gagal mengunggah foto.");
+            const file = document.getElementById('inpBuktiFoto').files[0];
+            const url = await window.processImageUpload(file, 'DISTRIBUSI_FOTO', 'dist_' + Date.now() + '.jpg');
+            if(!url) return; // processImageUpload already shows alert on failure
 
             const { trips } = await loadData();
             const tIdx = trips.findIndex(t => t.id === modal._tripId);
