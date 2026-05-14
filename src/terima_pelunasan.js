@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     kategori: 'Pemakaian Titipan Agen', 
                     nominal, 
                     channel: 'Tunai / Cash', // Harus sama dengan channel IN agar saldo tidak double count
-                    related_trx_id: trxId, 
+                    related_trx_id: null, // JANGAN hubungkan OUT titipan ke TRX agar tidak mengurangi total_paid
                     agen_name: agenName,
                     keterangan: `Pemakaian titipan untuk Pelunasan Order ${trxId}`
                 },
@@ -708,16 +708,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     // 4. Hitung ulang total (HANYA Pemasukan atau Refund Pelanggan)
                     const newTotalPaid = rebuiltHistory.reduce((s, h) => {
-                        // Jika pengeluaran tapi bukan komisi, pasti itu uang refund yg dikembalikan ke pelanggan
-                        // KHUSUS: Internal Transfer / Aqiqah dianggap sebagai kredit/pemasukan internal yang mengurangi sisa tagihan
                         const isIncome = h.tipe === 'pemasukan';
                         const categoryLower = (h.category || '').toLowerCase();
                         const isAdjustment = categoryLower.includes('internal') || categoryLower.includes('aqiqah') || (h.id || h.payId || '').startsWith('ADJ-');
-                        const isRefund = h.tipe === 'pengeluaran' && categoryLower.includes('pengembalian dana');
+                        const isRefund = h.tipe === 'pengeluaran' && (categoryLower.includes('pengembalian dana') || categoryLower.includes('refund'));
                         
                         if (isIncome) return s + h.nominal;
-                        if (isAdjustment) return s + Math.abs(h.nominal); // Selalu positifkan nominal adjustment agar mengurangi tagihan
-                        if (isRefund) return s + h.nominal; // h.nominal negatif untuk pengeluaran, mengurangi total_paid
+                        if (isAdjustment) return s + Math.abs(h.nominal);
+                        if (isRefund) return s + h.nominal; // nominal negatif untuk pengeluaran
                         
                         return s;
                     }, 0);
@@ -861,7 +859,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const isIncome = h.tipe === 'pemasukan';
                     const categoryLower = (h.category || '').toLowerCase();
                     const isAdjustment = categoryLower.includes('internal') || categoryLower.includes('aqiqah') || (h.id || h.payId || '').startsWith('ADJ-');
-                    const isRefund = h.tipe === 'pengeluaran' && categoryLower.includes('pengembalian dana');
+                    const isRefund = h.tipe === 'pengeluaran' && (categoryLower.includes('pengembalian dana') || categoryLower.includes('refund'));
                     
                     if (isIncome) return s + h.nominal;
                     if (isAdjustment) return s + Math.abs(h.nominal);
