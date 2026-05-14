@@ -180,25 +180,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="color:var(--text-muted); font-size:0.75rem;">📋 ${t.nopol || '-'} • ${t.note || 'Tanpa catatan'}</div>
                 </div>
                 <div class="trip-items" style="background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.05); margin-top: 1rem;">
-                    ${t.items.map(i => `
+                    ${t.items.map(i => {
+                        const isItemDone = i.status === 'Terdistribusi';
+                        return `
                         <div class="trip-item" style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-                            <div style="max-width:75%;">
+                            <div style="max-width:70%;">
                                 <div style="font-weight:700; color:var(--primary); font-size:0.95rem; letter-spacing:0.02em;">${i.noTali}</div>
                                 <div style="font-size:0.8rem; color:var(--text-main); font-weight:500; margin: 2px 0;">${i.konsumen}</div>
                                 <div style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8;">📍 ${i.alamat}</div>
                             </div>
-                            <div style="text-align:right;">
-                                ${i.status === 'Terdistribusi' ? '<span style="color:var(--success); font-size:1.25rem;">✅</span>' : 
-                                  `<button class="btn btn-sm btn-shimmer" onclick="window.openLaporDist('${t.id}','${i.goatId}','${i.konsumen}')" style="background:var(--primary); padding:6px 14px; font-size:0.75rem; border-radius:8px; border:none; box-shadow:0 4px 10px var(--primary-transparent);">📷</button>`}
+                            <div style="text-align:right; display:flex; align-items:center; gap:8px; justify-content:flex-end;">
+                                ${isItemDone ? `
+                                    <span style="color:var(--success); font-size:1.1rem;">✅</span>
+                                    <button class="btn btn-sm" onclick="window.rollbackItemDist('${t.id}','${i.goatId}')" style="color:var(--text-muted); background:transparent; border:none; padding:4px; cursor:pointer; font-size:0.9rem;" title="Reset / Batal Tuntas">↩️</button>
+                                ` : `
+                                    ${!isSopir ? `<button class="btn btn-sm" onclick="window.removeItemFromTrip('${t.id}','${i.goatId}')" style="color:var(--danger); background:transparent; border:none; padding:4px; opacity:0.6; cursor:pointer; font-size:0.9rem;" title="Keluarkan dari Trip">❌</button>` : ''}
+                                    <button class="btn btn-sm btn-shimmer" onclick="window.openLaporDist('${t.id}','${i.goatId}','${i.konsumen}')" style="background:var(--primary); padding:6px 14px; font-size:0.75rem; border-radius:8px; border:none; box-shadow:0 4px 10px var(--primary-transparent);">📷</button>
+                                `}
                             </div>
                         </div>
-                    `).join('')}
+                    `;}).join('')}
                 </div>
                 <div class="trip-footer" style="padding-top:0.5rem; justify-content:space-between;">
                      <button class="btn btn-sm" onclick="window.printTrip('${t.id}')" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid rgba(255,255,255,0.1); border-radius:6px;">🖨️</button>
                      <div style="display:flex; gap:8px;">
-                        ${isDone && !isSopir ? `<button class="btn btn-sm" onclick="window.rollbackDistribution('${t.id}')" style="color:var(--danger); background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); border-radius:6px; font-size:0.7rem;">↩️</button>` : ''}
-                        <button class="btn btn-sm" onclick="window.deleteTrip('${t.id}')" style="color:var(--danger); background:transparent; border:none; opacity:0.6;" title="Hapus">🗑️</button>
+                        ${!isSopir ? `
+                            <button class="btn btn-sm" onclick="window.rollbackDistribution('${t.id}')" style="color:var(--danger); background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); border-radius:6px; font-size:0.7rem;" title="Batalkan Semua & Kembalikan ke Antrean">↩️ Batal Trip</button>
+                            <button class="btn btn-sm" onclick="window.deleteTrip('${t.id}')" style="color:var(--danger); background:transparent; border:none; opacity:0.6;" title="Hapus Rekaman">🗑️</button>
+                        ` : ''}
                      </div>
                 </div>
 
@@ -291,6 +300,84 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
+    window.rollbackItemDist = async (tripId, goatId) => {
+        showConfirm(`Batalkan status tuntas untuk kambing ini? Foto bukti akan dihapus dan Anda bisa melapor ulang.`, async () => {
+            try {
+                showToast('Mereset status item...', 'info');
+                const { trips } = await loadData();
+                const tIdx = trips.findIndex(t => t.id === tripId);
+                if (tIdx === -1) return;
+                const iIdx = trips[tIdx].items.findIndex(i => i.goatId === goatId);
+                if (iIdx === -1) return;
+
+                // 1. Reset Trip Item
+                trips[tIdx].items[iIdx].status = 'Pengiriman';
+                trips[tIdx].items[iIdx].buktiUrl = null;
+                trips[tIdx].items[iIdx].tglDistribusi = null;
+                
+                // 2. If trip was "Selesai", set it back to "Pengiriman"
+                if (trips[tIdx].status === 'Selesai') {
+                    trips[tIdx].status = 'Pengiriman';
+                }
+
+                // 3. Save Trip
+                await saveTrips(trips);
+
+                // 4. Update Goat Status in DB
+                await supabase.from('stok_kambing').update({ 
+                    status_transaksi: 'Terjual', 
+                    status_fisik: 'Ada',
+                    updated_at: new Date().toISOString()
+                }).eq('id', goatId);
+
+                showToast('✅ Berhasil direset. Silakan lapor ulang.', 'success');
+                await loadData(true);
+                renderTrips();
+            } catch (err) {
+                showAlert('Gagal reset: ' + err.message, 'danger');
+            }
+        });
+    };
+
+    window.removeItemFromTrip = async (tripId, goatId) => {
+        showConfirm(`Keluarkan kambing ini dari trip? Status akan kembali menjadi 'Menunggu Kirim'.`, async () => {
+            try {
+                showToast('Mengeluarkan item...', 'info');
+                const { trips } = await loadData();
+                const tIdx = trips.findIndex(t => t.id === tripId);
+                if (tIdx === -1) return;
+                
+                // Remove item from trip
+                trips[tIdx].items = trips[tIdx].items.filter(i => i.goatId !== goatId);
+                
+                // If trip becomes empty, delete it
+                let finalTrips = trips;
+                if (trips[tIdx].items.length === 0) {
+                    finalTrips = trips.filter(t => t.id !== tripId);
+                } else if (trips[tIdx].status === 'Selesai' && trips[tIdx].items.every(i => i.status === 'Terdistribusi')) {
+                    // Stay Selesai
+                } else if (trips[tIdx].status === 'Selesai') {
+                    trips[tIdx].status = 'Pengiriman';
+                }
+
+                await saveTrips(finalTrips);
+
+                // Update Goat Status in DB
+                await supabase.from('stok_kambing').update({ 
+                    status_transaksi: 'Terjual', 
+                    status_fisik: 'Ada',
+                    updated_at: new Date().toISOString()
+                }).eq('id', goatId);
+
+                showToast('✅ Kambing berhasil dikeluarkan dari trip.');
+                await loadData(true);
+                renderTrips();
+            } catch (err) {
+                showAlert('Gagal: ' + err.message, 'danger');
+            }
+        });
+    };
+
 
 
     window.openLaporDist = (tripId, goatId, nama) => {
@@ -370,15 +457,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Kirim Notifikasi WA Terdistribusi
             try {
                 const config = await window.getWaConfig();
-                const { data: trx } = await supabase.from('transaksi').select('*, customer').contains('items', [{ goatId: modal._goatId }]).single();
+                const { data: trx, error: trxErr } = await supabase.from('transaksi').select('*').contains('items', [{ goatId: modal._goatId }]).maybeSingle();
+                
+                if (trxErr) console.error('[WA Debug] Gagal mencari transaksi:', trxErr);
+                
                 if (trx) {
+                    console.log('[WA Debug] Transaksi ditemukan:', trx.id);
                     // Fetch Official Accounts
                     const { data: mdRek } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single();
                     const reks = mdRek?.val || [];
                     const rekStr = reks.filter(r => !(r.bank || '').toLowerCase().includes('bsi')).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
 
                     const commonData = {
-                        nama: trx.customer.nama,
+                        nama: trx.customer?.nama || '-',
                         id: trx.id,
                         tgl: new Date().toLocaleDateString('id-ID'),
                         items: trips[tIdx].items[iIdx].noTali,
@@ -392,7 +483,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (trx.customer?.wa1) {
                         const msg = await window.parseWaTemplate(config.templateDistribusiTerkirim, commonData);
                         const res = await window.sendWa(trx.customer.wa1, msg);
-                        if (!res.success) window.showToast('WA Distribusi gagal dikirim ke Konsumen.', 'warning');
+                        if (!res.success) {
+                            console.warn('[WA Debug] Gagal kirim ke Konsumen:', res.msg);
+                            window.showToast('WA ke Konsumen gagal dikirim otomatis.', 'warning');
+                        } else {
+                            console.log('[WA Debug] Sukses kirim ke Konsumen');
+                        }
                     }
 
                     // 2. Notif ke Agen
@@ -405,9 +501,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 ...commonData, 
                                 JUDUL: "NOTIFIKASI PENGIRIMAN (AGEN)" 
                             });
-                            await window.sendWa(matchedAgen.wa, msgAgen);
+                            const resA = await window.sendWa(matchedAgen.wa, msgAgen);
+                            if (!resA.success) {
+                                console.warn('[WA Debug] Gagal kirim ke Agen:', resA.msg);
+                                window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
+                            } else {
+                                console.log('[WA Debug] Sukses kirim ke Agen');
+                            }
+                        } else {
+                            console.warn('[WA Debug] WA Agen tidak ditemukan untuk:', trx.agen.nama);
                         }
                     }
+                } else {
+                    console.warn('[WA Debug] Transaksi tidak ditemukan untuk GoatID:', modal._goatId);
                 }
             } catch (waErr) {
                 console.warn('Opsi notifikasi WA gagal:', waErr);
