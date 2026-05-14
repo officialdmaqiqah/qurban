@@ -651,6 +651,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const updatedData = {
                 batch: document.getElementById('inpBatch').value,
                 tgl_masuk: document.getElementById('inpTgl').value,
+                supplier: document.getElementById('inpSupplier').value,
                 no_tali: document.getElementById('inpNoTali').value,
                 warna_tali: document.getElementById('inpWarnaTali').value,
                 sex: document.getElementById('inpSex').value,

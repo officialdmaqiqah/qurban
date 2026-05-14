@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let newData = { id: id || 'ID-'+Date.now() };
 
         if (document.getElementById('inpNama')) newData.nama = toTitleCase(document.getElementById('inpNama').value.trim());
-        if (document.getElementById('inpWa')) newData.wa = cleanWhatsApp(document.getElementById('inpWa').value);
+        if (document.getElementById('inpWa')) newData.wa = (window.cleanWhatsApp ? window.cleanWhatsApp(document.getElementById('inpWa').value) : document.getElementById('inpWa').value);
         if (document.getElementById('inpJenis')) newData.jenis = document.getElementById('inpJenis').value;
         if (document.getElementById('inpBank')) newData.bank = document.getElementById('inpBank').value;
         if (document.getElementById('inpNorek')) newData.norek = document.getElementById('inpNorek').value;
