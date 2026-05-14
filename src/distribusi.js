@@ -468,7 +468,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const { goats, trxs } = await loadData();
         const { data: sops } = await supabase.from('master_data').select('val').eq('key', 'SOPIR').single();
+        const { data: driverAccounts } = await supabase.from('profiles').select('full_name').eq('role', 'sopir');
         
+        // Combine master data drivers and registered driver accounts
+        const driverNames = new Set();
+        (sops?.val || []).forEach(s => { if(s.nama) driverNames.add(s.nama.trim()); });
+        (driverAccounts || []).forEach(p => { if(p.full_name) driverNames.add(p.full_name.trim()); });
+
+        const sopirsList = document.getElementById('listSopir');
+        if (sopirsList) {
+            sopirsList.innerHTML = '';
+            Array.from(driverNames).sort().forEach(name => {
+                const o = document.createElement('option');
+                o.value = name;
+                sopirsList.appendChild(o);
+            });
+        }
+
         // Populate Channels for Internal Transfer
         const [reNew, reOld, finData] = await Promise.all([
             supabase.from('master_data').select('val').eq('key', 'REKENING').single(),
@@ -507,10 +523,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-
-        const sopirsList = document.getElementById('listSopir');
-        sopirsList.innerHTML = '';
-        (sops?.val || []).forEach(s => { const o = document.createElement('option'); o.value = s.nama; sopirsList.appendChild(o); });
 
         const eligible = goats.filter(k => k.status_transaksi === 'Terjual');
 
