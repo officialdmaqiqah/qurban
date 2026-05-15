@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js';
 
+async function init() {
     console.log('%c >> DISTRIBUSI SYSTEM: v1.1 << ', 'background: #222; color: #bada55; font-weight: bold;');
     
     // 0. Immediate UI Wiring (Before any Async calls to ensure modal can always close)
@@ -518,6 +519,7 @@ import { supabase } from './supabase.js';
                     }).eq('id', modal._goatId);
 
                     console.log('[WA Debug] Memulai proses notifikasi untuk GoatID:', modal._goatId);
+                    try {
                 
                     const currentTrips = (await loadData()).trips;
                     const trip = currentTrips.find(t => t.id === modal._tripId);
@@ -1065,5 +1067,7 @@ import { supabase } from './supabase.js';
 
     window.setupMoneyMask('inpInternalPrice');
     renderTrips();
-});
+}
+
+init();
 
