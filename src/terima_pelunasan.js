@@ -1057,46 +1057,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.setupMoneyMask('inpNominalRefund');
 
     renderStats(); renderList();
-
-    // --- TOMBOL NUKLIR (PERBAIKAN TERAKHIR) ---
-    const addNuclearBtn = () => {
-        const btn = document.createElement('button');
-        btn.innerHTML = '💥 HAPUS TRX BERMASALAH';
-        btn.style.cssText = 'position:fixed; bottom:20px; left:20px; font-size:0.8rem; background:#7c3aed; color:white; padding:12px 20px; border-radius:10px; z-index:999999; cursor:pointer; box-shadow:0 10px 20px rgba(124,58,237,0.4); border:none; font-weight:bold;';
-        btn.onclick = async () => {
-            const status = confirm("⚠️ PERINGATAN KERAS!\n\nSistem akan MEMAKSA TRX00030, TRX00031, dan TRX00023 menjadi LUNAS di database sekarang juga.\n\nLanjutkan?");
-            if (!status) return;
-            
-            const ids = ['TRX00030', 'TRX00031', 'TRX00023'];
-            let successCount = 0;
-            
-            for (const id of ids) {
-                console.log(`[Nuclear] Fixing ${id}...`);
-                // 1. Ambil data asli dulu untuk tahu total_deal-nya
-                const { data: trx } = await supabase.from('transaksi').select('id, total_deal').eq('id', id).maybeSingle();
-                
-                if (trx) {
-                    const { error: upErr } = await supabase.from('transaksi').update({
-                        total_paid: trx.total_deal,
-                        total_overpaid: 0,
-                        updated_at: new Date().toISOString()
-                    }).eq('id', id);
-
-                    if (!upErr) {
-                        successCount++;
-                        console.log(`[Nuclear] ${id} FIXED!`);
-                    } else {
-                        console.error(`[Nuclear] Failed ${id}:`, upErr);
-                    }
-                } else {
-                    console.warn(`[Nuclear] ${id} not found in DB.`);
-                }
-            }
-
-            alert(`✅ SELESAI!\n\n${successCount} transaksi berhasil dipaksa lunas.\n\nKlik OK untuk muat ulang.`);
-            window.location.reload();
-        };
-        document.body.appendChild(btn);
-    };
-    addNuclearBtn();
 });
