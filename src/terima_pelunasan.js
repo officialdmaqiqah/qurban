@@ -11,6 +11,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const email = profile.email;
     if (email) document.getElementById('userEmailDisplay').textContent = email;
 
+    // --- TOMBOL MASTER KEY (Dipindah ke atas agar pasti muncul) ---
+    const addMasterKeyBtn = () => {
+        if (document.getElementById('btnMasterKeySetup')) return;
+        const btn = document.createElement('button');
+        btn.id = 'btnMasterKeySetup';
+        btn.innerHTML = '🔑 SET MASTER KEY';
+        btn.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); font-size:0.8rem; background:#10b881; color:white; padding:10px 20px; border-radius:50px; z-index:99999; cursor:pointer; box-shadow:0 10px 20px rgba(0,0,0,0.3); border:none; font-weight:bold;';
+        btn.onclick = () => {
+            const key = prompt("Masukkan SUPABASE_SERVICE_ROLE Key:");
+            if (key) {
+                localStorage.setItem('SUPABASE_SERVICE_ROLE', key.trim());
+                alert("Master Key tersimpan! Klik Sinkron sekali lagi.");
+                window.location.reload();
+            }
+        };
+        document.body.appendChild(btn);
+    };
+    addMasterKeyBtn();
+
 
     // Helpers
     const formatTgl = (iso) => {
@@ -684,14 +703,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const masterKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
         let client = supabase;
         if (masterKey) {
-            console.log('%c [System] Master Key Detected. Bypassing RLS for Smart Sync... ', 'background: #7c3aed; color: #fff;');
-            try {
-                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
-                const sbUrl = localStorage.getItem('SUPABASE_URL') || 'https://juscihvfmgibmrhmclab.supabase.co'; 
-                client = createClient(sbUrl, masterKey);
-            } catch (e) {
-                console.warn("Failed to initialize master client, falling back to standard client.");
-            }
+            console.log('%c [System] Master Key Detected. ', 'background: #10b881; color: #fff;');
+            // Jika ada master key, kita coba gunakan untuk menembus RLS via header (jika didukung)
+            // Atau jika om sudah punya 'createClient' global, kita pakai itu.
         }
 
         window.showConfirm("🔄 Jalankan Smart Sync & Scan?<br><br><small>Sistem akan membangun ulang riwayat pembayaran dan <b>OTOMATIS</b> menghubungkan kembali pembayaran yang tercecer jika ID Transaksi tertulis di keterangan keuangan.</small>", async () => {
@@ -1057,23 +1071,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     renderStats(); renderList();
 });
-
-// --- MASTER KEY TOOL (DI LUAR DOM agar pasti muncul) ---
-(function() {
-    const addMasterKeyBtn = () => {
-        const btn = document.createElement('button');
-        btn.innerHTML = '🔑 SET MASTER KEY (ADMIN)';
-        btn.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); font-size:0.8rem; background:var(--primary); color:white; padding:10px 20px; border-radius:50px; z-index:99999; cursor:pointer; box-shadow:0 10px 20px rgba(0,0,0,0.3); border:none; font-weight:bold;';
-        btn.onclick = () => {
-            const key = prompt("Masukkan SUPABASE_SERVICE_ROLE Key untuk bypass RLS (Hanya untuk Admin):");
-            if (key) {
-                localStorage.setItem('SUPABASE_SERVICE_ROLE', key.trim());
-                alert("Master Key tersimpan! Halaman akan dimuat ulang.");
-                window.location.reload();
-            }
-        };
-        document.body.appendChild(btn);
-    };
-    if (document.readyState === 'complete') addMasterKeyBtn();
-    else window.addEventListener('load', addMasterKeyBtn);
-})();
