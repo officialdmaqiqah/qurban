@@ -315,34 +315,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 for (const trx of trxs) {
                     const tId = trx.id.toUpperCase();
                     const rawName = (trx.customer?.nama || '').toLowerCase().trim();
+                    const honorifics = ['haji', 'hj', 'pak', 'bpk', 'ibu', 'ny', 'tn', 'kak', 'bang', 'mas', 'mbak'];
+                    const nameParts = rawName.split(' ').filter(p => p.length >= 3 && !honorifics.includes(p));
                     
-                    // Filter Gelar/Honorifics agar tidak salah tangkap (Haji, Pak, Ibu, dkk)
-                    const honorifics = ['haji', 'hj', 'pak', 'bpk', 'ibu', 'ibu', 'ny', 'tn', 'kak', 'bang', 'mas', 'mbak'];
-                    const nameParts = rawName.split(' ')
-                        .filter(p => p.length >= 3 && !honorifics.includes(p)); // Minimal 3 huruf dan bukan gelar
-                    
+                    const logs = [];
                     const history = (allFins || []).filter(f => {
                         const fId = (f.related_trx_id || '').toUpperCase();
                         const fDesc = (f.keterangan || '').toLowerCase();
                         const fCat = (f.kategori || '').toLowerCase();
                         
-                        // 1. Prioritas ID Transaksi (Pasti Benar)
-                        if (fId === tId || fDesc.includes(tId.toLowerCase())) return true;
+                        // 1. HARD MATCH: ID Transaksi (Haram diambil orang lain jika fId diisi)
+                        if (fId === tId) return true;
+                        if (fId && fId !== tId) return false; // Sudah milik orang lain
                         
-                        // 2. Nama Lengkap (Sangat Akurat)
-                        if (rawName.length > 4 && (fDesc.includes(rawName) || fCat.includes(rawName))) return true;
-                        
-                        // 3. Nama Panggilan Unik (Detektif Smart)
-                        // Hanya jalan jika ada kata unik (bukan gelar)
-                        if (nameParts.length > 0) {
-                            return nameParts.some(p => p.length >= 4 && fDesc.includes(p)); // Minimal 4 huruf untuk potongan nama
+                        // 2. ID Match via Keterangan
+                        if (fDesc.includes(tId.toLowerCase())) return true;
+
+                        // 3. FUZZY MATCH: Nama (Hanya jika fId kosong)
+                        if (!fId) {
+                            // Nama Lengkap
+                            if (rawName.length > 4 && (fDesc.includes(rawName) || fCat.includes(rawName))) return true;
+                            // Nama Panggilan Unik
+                            if (nameParts.length > 0) {
+                                return nameParts.some(p => p.length >= 4 && fDesc.includes(p));
+                            }
                         }
                         
                         return false;
-                    }).map(f => ({
-                        id: f.id, tgl: f.tanggal,
-                        nominal: f.tipe === 'pengeluaran' ? -Math.abs(f.nominal) : Math.abs(f.nominal),
-                        category: f.kategori, tipe: f.tipe, channel: f.channel, keterangan: f.keterangan || ''
                     }));
 
                     let total = history.reduce((sum, h) => {
