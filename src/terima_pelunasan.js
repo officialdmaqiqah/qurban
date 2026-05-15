@@ -694,14 +694,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // 2. SMART SCAN: Cari keuangan yang terkait (Direct Link ATAU Mention di Keterangan)
                     const relatedFins = fins.filter(f => {
                         if (f.related_trx_id === trx.id) return true;
-                        
-                        // Cari ID di keterangan (Case-Insensitive)
+                        if (f.related_trx_id) return false; // Sudah terhubung ke TRX lain
+
                         const desc = (f.keterangan || '').toUpperCase();
                         const idMatch = desc.includes(trx.id.toUpperCase());
                         
-                        // Hanya hubungkan jika ditemukan match dan belum terhubung ke TRX lain
-                        if (idMatch && !f.related_trx_id) {
-                            f.tempLinked = true; // Tandai untuk di-update ke DB nanti
+                        // TAMBAHAN: Cari berdasarkan Nama Konsumen (Jika ID tidak ada)
+                        let nameMatch = false;
+                        if (!idMatch) {
+                            const custName = (trx.customer?.nama || '').toUpperCase();
+                            // Minimal 3 karakter untuk menghindari salah deteksi
+                            if (custName && custName.length > 3 && desc.includes(custName)) {
+                                nameMatch = true;
+                            }
+                        }
+
+                        if (idMatch || nameMatch) {
+                            f.tempLinked = true; 
                             f.related_trx_id = trx.id;
                             autoLinkedCount++;
                             return true;
