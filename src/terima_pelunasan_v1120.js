@@ -72,7 +72,7 @@ export const syncAllBalances = async () => {
                         if (fId === tId) reason = "ID MATCH (PASTI)";
                         else if (fId && fId !== tId) return false;
                         else if (fDesc.includes(tId.toLowerCase())) reason = "ID DI KETERANGAN";
-                        else if (rawName.length >= 5 && (fDesc === rawName || fDesc.includes('bayar ' + rawName) || fDesc.includes('lunas ' + rawName))) {
+                        else if (rawName.length >= 5 && fDesc.includes(rawName)) {
                             // Cek apakah ada ID TRX lain yang disebut di keterangan
                             const otherTrxMatch = fDesc.match(/trx\d+/g);
                             if (otherTrxMatch && !otherTrxMatch.includes(tId.toLowerCase())) return false;
@@ -114,9 +114,7 @@ export const syncAllBalances = async () => {
                         }
                     }, 0);
 
-                    let finalPaid = Math.max(0, total);
-                    if (total === 0 && history.length === 0) finalPaid = Math.max(0, trx.total_paid || 0);
-
+                    let finalPaid = total;
                     await supabase.from('transaksi').update({
                         total_paid: finalPaid,
                         total_overpaid: Math.max(0, finalPaid - (trx.total_deal || 0)),
