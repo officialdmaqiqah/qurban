@@ -678,7 +678,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
     // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
-    window.syncAllBalances = async () => {
+    // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
+    async function syncAllBalances() {
         // --- BYPASS RLS IF MASTER KEY EXISTS ---
         const masterKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
         let client = supabase;
@@ -733,6 +734,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let updatedTrxCount = 0;
 
                 for (const trx of trxs) {
+                    // Beri tahu user ID mana yang sedang diproses
+                    window.showToast(`Memproses ${trx.id}...`, "info");
+                    
                     // 2. SMART SCAN: Cari keuangan yang terkait (Direct Link ATAU Mention di Keterangan)
                     const relatedFins = fins.filter(f => {
                         if (f.related_trx_id === trx.id) return true;
@@ -851,7 +855,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, null, "Smart Sync & Deep Scan", "Ya, Jalankan Perbaikan", "btn-warning");
     };
 
-    document.getElementById('btnSyncBalances')?.addEventListener('click', syncAllBalances);
+    document.getElementById('btnSyncBalances')?.addEventListener('click', () => {
+        syncAllBalances();
+    });
 
     // --- MANUAL LINK PAYMENT LOGIC ---
     const btnLinkManualPay = document.getElementById('btnLinkManualPay');
