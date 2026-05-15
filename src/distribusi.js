@@ -80,16 +80,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const [
             { data: rawTrips },
             { data: rawGoats },
-            { data: rawTrxs }
+            { data: rawTrxs },
+            { data: rawMdAgens }
         ] = await Promise.all([
             supabase.from('master_data').select('val').eq('key', 'TRIPS').single(),
             supabase.from('stok_kambing').select('*'),
-            supabase.from('transaksi').select('*')
+            supabase.from('transaksi').select('*'),
+            supabase.from('master_data').select('val').eq('key', 'AGENS').single()
         ]);
         
         cachedTrips = rawTrips?.val || [];
         cachedGoats = rawGoats || [];
         cachedTransactions = rawTrxs || [];
+        window._cachedAgens = rawMdAgens?.val || [];
+
         return { trips: cachedTrips, goats: cachedGoats, trxs: cachedTransactions };
     };
 
@@ -108,14 +112,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const gId = i.goatId || i.id; // Support both old and new keys
                 if (!gId) return;
 
-                if (!i.customerWa || !i.transactionId || !i.goatId) {
+                if (!i.customerWa || !i.transactionId || !i.goatId || !i.agenWa) {
                     const trx = trxs.find(tx => tx.items && tx.items.some(it => (it.goatId || it.id) === gId));
                     if (trx) {
                         i.customerWa = trx.customer?.wa1 || '';
                         i.transactionId = trx.id;
                         i.goatId = gId; // Pastikan key goatId seragam
+                        
+                        // Temukan nomor WA Agen
+                        const matchedAgen = (window._cachedAgens || []).find(a => a.nama === trx.agen?.nama || a.id === trx.agen?.id);
+                        i.agenWa = matchedAgen?.wa || '';
+                        i.agenNama = trx.agen?.nama || '';
+                        
                         changed = true;
-                        patchCount++;
                     }
                 }
             });
@@ -578,10 +587,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
 
                         // 2. Notif ke Agen
-                        if (trx.agen) {
+                        const aWa = item?.agenWa || '';
+                        const aNama = item?.agenNama || (typeof trx?.agen === 'object' ? trx?.agen?.nama : trx?.agen) || '';
+
+                        if (aWa) {
+                            console.log('[WA Debug] Menyiapkan WA Agen (Embed):', aNama, aWa);
+                            const msgAgen = await window.parseWaTemplate(config.templateDistribusiTerkirim, { 
+                                ...commonData, 
+                                judul: "*NOTIFIKASI PENGIRIMAN (AGEN)*",
+                                nama_agen: aNama
+                            });
+                            const resA = await window.sendWa(aWa, msgAgen);
+                            if (resA.success) {
+                                sentToAgen = true;
+                                console.log('[WA Debug] Sukses kirim ke Agen (via Embed)');
+                            }
+                        } else if (trx?.agen) {
+                            console.log('[WA Debug] Mencoba WA Agen via Transaksi...');
                             const { data: mdAgen } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single();
                             const agenList = mdAgen?.val || [];
-                            const matchedAgen = agenList.find(a => a.nama === trx.agen.nama || a.id === trx.agen.id);
+                            const tAgenNama = (typeof trx.agen === 'object' ? trx.agen.nama : trx.agen);
+                            const matchedAgen = agenList.find(a => a.nama === tAgenNama || a.id === trx.agen.id);
                             if (matchedAgen && matchedAgen.wa) {
                                 const msgAgen = await window.parseWaTemplate(config.templateDistribusiTerkirim, { 
                                     ...commonData, 
@@ -590,9 +616,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 const resA = await window.sendWa(matchedAgen.wa, msgAgen);
                                 if (resA.success) {
                                     sentToAgen = true;
-                                    console.log('[WA Debug] Sukses kirim ke Agen');
-                                } else {
-                                    console.warn('[WA Debug] Gagal kirim ke Agen:', resA.msg);
+                                    console.log('[WA Debug] Sukses kirim ke Agen (via Trx)');
                                 }
                             }
                         }
@@ -757,9 +781,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             filtered.forEach((k, idx) => {
                 const trx = trxs.find(t => t.id === k.transaction_id);
+                const agenName = (typeof trx?.agen === 'object' ? trx?.agen?.nama : trx?.agen) || trx?.agen_nama || '';
+                const matchedAgen = (window._cachedAgens || []).find(a => a.nama === agenName);
+                const agenWa = matchedAgen?.wa || '';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-konsumen="${trx?.customer?.nama}" data-alamat="${trx?.delivery?.alamat?.alamat || '-'}" data-wa="${trx?.customer?.wa1 || ''}" data-trxid="${k.transaction_id || ''}"></td>
+                    <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-konsumen="${trx?.customer?.nama}" data-alamat="${trx?.delivery?.alamat?.alamat || '-'}" data-wa="${trx?.customer?.wa1 || ''}" data-trxid="${k.transaction_id || ''}" data-agenwa="${agenWa}" data-agennama="${agenName}"></td>
                     <td>${idx + 1}</td>
                     <td class="sticky-col">
                         <div style="font-weight:700; color:var(--primary);">${k.no_tali}</div>
@@ -825,6 +853,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alamat: cb.dataset.alamat,
                 customerWa: cb.dataset.wa,
                 transactionId: cb.dataset.trxid,
+                agenWa: cb.dataset.agenwa,
+                agenNama: cb.dataset.agennama,
                 status: isSembelih ? 'Terdistribusi' : 'Pengiriman',
                 tglDistribusi: isSembelih ? new Date().toISOString() : null,
                 buktiUrl: isSembelih ? 'SEM_KANDANG' : null
