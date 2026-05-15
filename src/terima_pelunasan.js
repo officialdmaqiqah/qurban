@@ -712,196 +712,105 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Fetch Trxs
                 let pageT = 0;
-                while(true) {
-                    const { data: p, error: e } = await client.from('transaksi').select('*').range(pageT*1000, (pageT+1)*1000 - 1);
-                    if(e) {
-                        if(e.code === '42501' || e.message?.includes('403')) {
-                            throw new Error("Izin Ditolak (403): Database membatasi akses Anda. Pastikan Master Key aktif atau gunakan akun Super Admin.");
-                        }
-                        throw e;
-                    }
-                    if(!p || p.length === 0) break;
-                    trxs = [...trxs, ...p];
-                    if(p.length < 1000) break;
-                    pageT++;
+                // 1. Ambil SEMUA data Transaksi (Pagination)
+                let trxs = [];
+                let fromT = 0;
+                while (true) {
+                    const { data: batch, error: err } = await client.from('transaksi').select('*').range(fromT, fromT + 999);
+                    if (err) throw err;
+                    if (!batch || batch.length === 0) break;
+                    trxs = [...trxs, ...batch];
+                    if (batch.length < 1000) break;
+                    fromT += 1000;
                 }
 
-                // Fetch Fins
-                let pageF = 0;
-                while(true) {
-                    const { data: p, error: e } = await client.from('keuangan').select('*').range(pageF*1000, (pageF+1)*1000 - 1);
-                    if(e) throw e;
-                    if(!p || p.length === 0) break;
-                    fins = [...fins, ...p];
-                    if(p.length < 1000) break;
-                    pageF++;
+                // 2. Ambil SEMUA data Keuangan (Pagination)
+                let allFins = [];
+                let fromF = 0;
+                while (true) {
+                    const { data: batch, error: err } = await client.from('keuangan').select('*').range(fromF, fromF + 999);
+                    if (err) throw err;
+                    if (!batch || batch.length === 0) break;
+                    allFins = [...allFins, ...batch];
+                    if (batch.length < 1000) break;
+                    fromF += 1000;
                 }
 
-                if (trxs.length === 0 || fins.length === 0) throw new Error("Gagal mengambil data dari server atau data kosong.");
-
-                let autoLinkedCount = 0;
+                console.log(`[MegaSync] Memproses ${trxs.length} Transaksi & ${allFins.length} Keuangan...`);
                 let updatedTrxCount = 0;
 
                 for (const trx of trxs) {
-                    // Beri tahu user ID mana yang sedang diproses
-                    window.showToast(`Memproses ${trx.id}...`, "info");
-                    
-                    // 2. SMART SCAN: Cari keuangan yang terkait (Direct Link ATAU Mention di Keterangan)
-                    const relatedFins = fins.filter(f => {
-                        if (f.related_trx_id === trx.id) return true;
-                        if (f.related_trx_id) return false; // Sudah terhubung ke TRX lain
+                    const trxIdClean = trx.id.toUpperCase().replace(/\s+/g, '');
+                    const customerName = (trx.customer_name || '').toLowerCase();
+                    const logs = [];
 
-                        const desc = (f.keterangan || '').toUpperCase();
-                        const idMatch = desc.includes(trx.id.toUpperCase());
+                    // Filter history untuk transaksi ini
+                    const rebuiltHistory = allFins.filter(h => {
+                        const hId = (h.related_trx_id || '').toUpperCase();
+                        const hDesc = (h.keterangan || '').toLowerCase();
+                        const hDescClean = hDesc.toUpperCase().replace(/\s+/g, '');
                         
-                        // TAMBAHAN: Cari berdasarkan Nama Konsumen (Jika ID tidak ada)
-                        let nameMatch = false;
-                        if (!idMatch) {
-                            const custName = (trx.customer?.nama || '').toUpperCase();
-                            if (custName && custName.length > 3) {
-                                // Cek di keterangan
-                                const descMatch = desc.includes(custName);
-                                // Cek di seluruh kolom (misal ada kolom konsumen_name, agen_name, dll)
-                                const anyMatch = Object.values(f).some(v => typeof v === 'string' && v.toUpperCase().includes(custName));
-                                nameMatch = descMatch || anyMatch;
-                            }
-                        }
-
-                        if (idMatch || nameMatch) {
-                            f.tempLinked = true; 
-                            f.related_trx_id = trx.id;
-                            autoLinkedCount++;
-                            console.log(`[SmartSync] MATCH FOUND: ${trx.id} <-> ${f.id} (${nameMatch ? 'by Name' : 'by ID'})`);
-                            return true;
-                        }
-                        return false;
-                    });
-                    
-                    // 3. Bangun ulang history_bayar
-                    const rebuiltHistory = relatedFins.map(f => {
-                        // Bersihkan nominal dari titik/koma/simbol (Penting untuk format Indonesia)
+                        const isMatchId = (hId === trxIdClean) || hDescClean.includes(trxIdClean);
+                        const isMatchName = customerName && hDesc.includes(customerName);
+                        return isMatchId || isMatchName;
+                    }).map(f => {
                         let cleanNom = String(f.nominal || '0').replace(/[^0-9,-]/g, '').replace(',', '.');
                         let parsedNom = parseFloat(cleanNom) || 0;
-
                         return {
-                            payId: f.id,
-                            id: f.id, 
-                            tgl: f.tanggal,
+                            payId: f.id, id: f.id, tgl: f.tanggal,
                             nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parsedNom)) : parsedNom,
-                            category: f.kategori,
-                            tipe: f.tipe,
-                            channel: f.channel,
-                            buktiUrl: f.bukti_url,
-                            keterangan: f.keterangan || ''
+                            category: f.kategori, tipe: f.tipe, channel: f.channel,
+                            buktiUrl: f.bukti_url, keterangan: f.keterangan || ''
                         };
                     }).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
-                    // 4. Hitung ulang total secara akurat (Hanya Pemasukan & Refund)
-                    let logs = [];
-                    const trxIdClean = trx.id.toUpperCase().replace(/\s+/g, '');
-
+                    // Hitung Ulang Nominal
                     const newTotalPaid = rebuiltHistory.reduce((sum, item) => {
                         const isIncome = item.tipe === 'pemasukan';
                         const cat = (item.category || '').toLowerCase();
                         const desc = (item.keterangan || '').toLowerCase();
-                        const descClean = desc.toUpperCase().replace(/\s+/g, '');
-                        const id = (item.id || '').toUpperCase();
-                        
-                        // Pencarian Berlapis: ID TRX atau Nama Konsumen (Fuzzy)
-                        const isMatchId = (item.payId === trx.id) || descClean.includes(trxIdClean);
-                        const customerName = (trx.customer_name || '').toLowerCase();
-                        const isMatchName = customerName && desc.includes(customerName);
-                        
-                        if (!isMatchId && !isMatchName) return sum;
-
-                        // Kriteria Refund / Tarik Dana / Penyesuaian
-                        const isRefund = id.startsWith('REF-') || 
-                                        cat.includes('refund') || 
-                                        cat.includes('pengembalian') || 
-                                        cat.includes('titipan') || 
-                                        desc.includes('refund') || 
-                                        desc.includes('tarik') || 
-                                        desc.includes('potong') || 
-                                        desc.includes('titipan');
+                        const isRefund = item.id?.startsWith('REF-') || cat.includes('refund') || cat.includes('tarik') || desc.includes('tarik') || desc.includes('refund');
 
                         if (isIncome) {
-                            // Abaikan Karkas, Daging, Komisi, dll agar tidak merusak saldo utama kambing
-                            const isExcluded = cat.includes('komisi') || 
-                                              cat.includes('karkas') || 
-                                              cat.includes('daging') ||
-                                              desc.includes('karkas') ||
-                                              desc.includes('daging');
-
+                            const isExcluded = cat.includes('komisi') || cat.includes('karkas') || cat.includes('daging') || desc.includes('karkas') || desc.includes('daging');
                             if (isExcluded && !cat.includes('pelunasan')) return sum;
-                            
                             logs.push(`+ ${window.formatRp(item.nominal)} (${item.keterangan || item.category})`);
                             return sum + (item.nominal || 0);
-                        } else {
-                            if (isRefund) {
-                                logs.push(`- ${window.formatRp(item.nominal)} (${item.keterangan || item.category})`);
-                                return sum - Math.abs(item.nominal || 0);
-                            }
-                            return sum;
+                        } else if (isRefund) {
+                            logs.push(`- ${window.formatRp(item.nominal)} (${item.keterangan || item.category})`);
+                            return sum - Math.abs(item.nominal || 0);
                         }
+                        return sum;
                     }, 0);
 
-                    // Simpan log ke global untuk dilihat nanti
-                    window._AUDIT_LOGS = window._AUDIT_LOGS || {};
-                    window._AUDIT_LOGS[trx.id] = {
-                        deal: trx.total_deal,
-                        paid: newTotalPaid,
-                        items: logs
-                    };
-
-                    // --- SISTEM KEAMANAN GANDA (ANTI-HAPUS) ---
-                    // Jika tidak ada history keuangan sama sekali, JANGAN timpa data lama (mungkin input manual)
-                    let finalPaid = newTotalPaid;
-                    if (logs.length === 0 && (trx.total_paid || 0) > 0) {
-                        finalPaid = trx.total_paid; // Pertahankan data lama
+                    // ATURAN KESELAMATAN (SAFETY FIRST)
+                    let finalPaid = trx.total_paid || 0;
+                    if (newTotalPaid > finalPaid) {
+                        finalPaid = newTotalPaid; 
+                    } else if (newTotalPaid < finalPaid && logs.some(l => l.includes('-'))) {
+                        finalPaid = newTotalPaid; 
+                    } else if (newTotalPaid === 0 && logs.length === 0) {
+                        finalPaid = trx.total_paid || 0; 
+                    } else if (logs.length > 0) {
+                        finalPaid = newTotalPaid; // Jika ada history tapi lebih kecil, percayakan history
                     }
 
-                    // Simpan log ke global untuk dilihat nanti
+                    // Simpan Audit untuk klik detail
                     window._AUDIT_LOGS = window._AUDIT_LOGS || {};
-                    window._AUDIT_LOGS[trx.id] = {
-                        deal: trx.total_deal,
-                        paid: finalPaid,
-                        items: logs
-                    };
+                    window._AUDIT_LOGS[trx.id] = { deal: trx.total_deal, paid: finalPaid, items: logs };
 
-                    // 5. Update di DB
-                    if (trx.total_deal > 0) {
-                        const { error: upErr } = await client.from('transaksi').update({
-                            total_paid: finalPaid,
-                            total_overpaid: Math.max(0, finalPaid - (trx.total_deal || 0)),
-                            history_bayar: rebuiltHistory,
-                            updated_at: new Date().toISOString()
-                        }).eq('id', trx.id);
-                        
-                        if (!upErr) {
-                            updatedTrxCount++;
-                        } else {
-                            console.error(`[SmartSync] Update Failed for ${trx.id}:`, upErr);
-                            // Jika kena 403, kita beri tahu user cara mengatasinya
-                            if (upErr.code === '42501' || upErr.message?.includes('403')) {
-                                window.showAlert(`<b>PENTING: Izin Ditolak (403)</b><br><br>Database menolak perubahan pada <b>${trx.id}</b>. <br><br>Hal ini terjadi karena akun Anda (${profile.email}) tidak memiliki izin 'Update' di tabel transaksi. <br><br>Silakan hubungi Super Admin untuk membuka izin RLS atau berikan saya kunci Master Key.`, "danger");
-                                throw new Error("STOP: Izin database tidak cukup.");
-                            }
-                        }
-                    }
+                    // Update DB
+                    const { error: upErr } = await client.from('transaksi').update({
+                        total_paid: finalPaid,
+                        total_overpaid: Math.max(0, finalPaid - (trx.total_deal || 0)),
+                        history_bayar: rebuiltHistory,
+                        updated_at: new Date().toISOString()
+                    }).eq('id', trx.id);
+
+                    if (!upErr) updatedTrxCount++;
                 }
 
-                // 6. Permanenkan hubungan pembayaran yang baru ditemukan (Deep Scan results)
-                const toUpdateFins = fins.filter(f => f.tempLinked);
-                for (const f of toUpdateFins) {
-                    await client.from('keuangan').update({ related_trx_id: f.related_trx_id }).eq('id', f.id);
-                }
-
-                const msg = `🩺 <b>SMART SYNC SELESAI!</b><br><br>` +
-                            `• <b>${autoLinkedCount}</b> pembayaran tercecer berhasil dihubungkan.<br>` +
-                            `• <b>${updatedTrxCount}</b> saldo transaksi telah dibangun ulang.<br><br>` +
-                            `Klik OK untuk memuat ulang halaman dan melihat perubahan.`;
-
-                window.showAlert(msg, "success", () => {
+                window.showAlert(`🩺 <b>SINKRONISASI SELESAI!</b><br><br>Berhasil memproses <b>${updatedTrxCount}</b> transaksi.<br><br>Data lama yang tidak memiliki catatan keuangan tetap dipertahankan sesuai aslinya.`, "success", () => {
                     window.location.reload();
                 });
             } catch (err) {
