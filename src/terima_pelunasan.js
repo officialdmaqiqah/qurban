@@ -678,23 +678,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
     const syncAllBalances = async () => {
-        window.showConfirm("🔄 Sinkronkan ULANG seluruh saldo berdasarkan Data Keuangan?<br><br><small>Ini akan membangun ulang riwayat pembayaran dari nol untuk memastikan angka duplikat (seperti 2 Juta) atau error data lainnya hilang.</small>", async () => {
-            window.showToast("Memulai sinkronisasi data asli...", "info");
+        window.showConfirm("🔄 Jalankan Smart Sync & Scan?<br><br><small>Sistem akan membangun ulang riwayat pembayaran dan <b>OTOMATIS</b> menghubungkan kembali pembayaran yang tercecer jika ID Transaksi tertulis di keterangan keuangan.</small>", async () => {
+            window.showToast("Menganalisis data & mencari pembayaran tercecer...", "info");
             try {
-                // 1. Ambil data transaksi & keuangan
-                const { data: trxs, error: tErr } = await supabase.from('transaksi').select('*').range(0, 9999);
-                if (tErr) throw tErr;
+                // 1. Ambil semua data (Tanpa filter agar bisa Deep Scan)
+                const { data: trxs } = await supabase.from('transaksi').select('*').range(0, 9999);
+                const { data: fins } = await supabase.from('keuangan').select('*').range(0, 9999);
 
-                // Ambil keuangan yang ada related_trx_id nya (Pemasukan/Pengeluaran terkait order)
-                const { data: fins, error: fErr } = await supabase.from('keuangan').select('*').not('related_trx_id', 'is', null).range(0, 9999);
-                if (fErr) throw fErr;
+                if (!trxs || !fins) throw new Error("Gagal mengambil data dari server.");
 
-                let updatedCount = 0;
+                let autoLinkedCount = 0;
+                let updatedTrxCount = 0;
+
                 for (const trx of trxs) {
-                    // 2. Filter catatan keuangan (berdasarkan ID relasi)
-                    const relatedFins = (fins || []).filter(f => f.related_trx_id === trx.id);
+                    // 2. SMART SCAN: Cari keuangan yang terkait (Direct Link ATAU Mention di Keterangan)
+                    const relatedFins = fins.filter(f => {
+                        if (f.related_trx_id === trx.id) return true;
+                        
+                        // Cari ID di keterangan (Case-Insensitive)
+                        const desc = (f.keterangan || '').toUpperCase();
+                        const idMatch = desc.includes(trx.id.toUpperCase());
+                        
+                        // Hanya hubungkan jika ditemukan match dan belum terhubung ke TRX lain
+                        if (idMatch && !f.related_trx_id) {
+                            f.tempLinked = true; // Tandai untuk di-update ke DB nanti
+                            f.related_trx_id = trx.id;
+                            autoLinkedCount++;
+                            return true;
+                        }
+                        return false;
+                    });
                     
-                    // 3. Bangun ulang history_bayar dari data keuangan murni
+                    // 3. Bangun ulang history_bayar
                     const rebuiltHistory = relatedFins.map(f => ({
                         payId: f.id,
                         id: f.id, 
@@ -706,22 +721,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                         buktiUrl: f.bukti_url
                     })).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
-                    // 4. Hitung ulang total (HANYA Pemasukan atau Refund Pelanggan)
+                    // 4. Hitung ulang total
                     const newTotalPaid = rebuiltHistory.reduce((s, h) => {
                         const isIncome = h.tipe === 'pemasukan';
-                        const categoryLower = (h.category || '').toLowerCase();
-                        const isAdjustment = categoryLower.includes('internal') || categoryLower.includes('aqiqah') || (h.id || h.payId || '').startsWith('ADJ-');
-                        const isRefund = h.tipe === 'pengeluaran' && (categoryLower.includes('pengembalian dana') || categoryLower.includes('refund'));
+                        const cat = (h.category || '').toLowerCase();
+                        const isAdj = cat.includes('internal') || cat.includes('aqiqah') || (h.id || '').startsWith('ADJ-');
+                        const isRefund = h.tipe === 'pengeluaran' && (cat.includes('pengembalian dana') || cat.includes('refund'));
                         
                         if (isIncome) return s + h.nominal;
-                        if (isAdjustment) return s + Math.abs(h.nominal);
-                        if (isRefund) return s + h.nominal; // nominal negatif untuk pengeluaran
-                        
+                        if (isAdj) return s + Math.abs(h.nominal);
+                        if (isRefund) return s + h.nominal;
                         return s;
                     }, 0);
-                    const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
 
-                    // 5. Update jika ada perbedaan & harga deal valid
+                    // 5. Update jika ada perbedaan
                     const isDiff = newTotalPaid !== trx.total_paid || (JSON.stringify(rebuiltHistory) !== JSON.stringify(trx.history_bayar));
                     
                     if (isDiff && (trx.total_deal > 0)) {
@@ -731,18 +744,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                             history_bayar: rebuiltHistory,
                             updated_at: new Date().toISOString()
                         }).eq('id', trx.id);
-                        updatedCount++;
+                        updatedTrxCount++;
                     }
                 }
 
-                window.showAlert(`Sinkronisasi Selesai! <b>${updatedCount}</b> data telah divalidasi dan diperbaiki menggunakan Data Keuangan asli. Sisa saldo duplikat seharusnya sudah hilang.`, "success", () => {
+                // 6. Permanenkan hubungan pembayaran yang baru ditemukan (Deep Scan results)
+                const toUpdateFins = fins.filter(f => f.tempLinked);
+                for (const f of toUpdateFins) {
+                    await supabase.from('keuangan').update({ related_trx_id: f.related_trx_id }).eq('id', f.id);
+                }
+
+                window.showAlert(`🩺 SMART SYNC SELESAI!<br><br>• <b>${autoLinkedCount}</b> pembayaran tercecer berhasil dihubungkan kembali.<br>• <b>${updatedTrxCount}</b> saldo transaksi telah diperbaiki.<br><br>Sekarang saldo Anda seharusnya sudah kembali normal.`, "success", () => {
                     window.location.reload();
                 });
             } catch (err) {
-                console.error("Advanced Sync Error:", err);
-                window.showAlert("Gagal sinkronisasi data asli: " + err.message, "danger");
+                console.error("Smart Sync Error:", err);
+                window.showAlert("Gagal melakukan Smart Sync: " + err.message, "danger");
             }
-        }, null, "Smart Integrity Sync", "Ya, Perbaiki Semua", "btn-warning");
+        }, null, "Smart Sync & Deep Scan", "Ya, Jalankan Perbaikan", "btn-warning");
     };
 
     document.getElementById('btnSyncBalances')?.addEventListener('click', syncAllBalances);
