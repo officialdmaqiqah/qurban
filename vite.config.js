@@ -27,13 +27,7 @@ export default defineConfig({
         deposit_agen: resolve(__dirname, 'deposit_agen.html'),
         pemetaan_kandang: resolve(__dirname, 'pemetaan_kandang.html'),
         log_aktivitas: resolve(__dirname, 'log_aktivitas.html'),
-        perbaiki_keuangan: resolve(__dirname, 'perbaiki_keuangan.html'),
-        mega_sync: resolve(__dirname, 'mega_sync_v1113.html'),
-        mega_sync_v1114: resolve(__dirname, 'mega_sync_v1114.html'),
-        mega_sync_v1115: resolve(__dirname, 'mega_sync_v1115.html'),
-        mega_sync_v1116: resolve(__dirname, 'mega_sync_v1116.html'),
-        mega_sync_v1117: resolve(__dirname, 'mega_sync_v1117.html'),
-        mega_sync_v1118: resolve(__dirname, 'mega_sync_v1118.html')
+        perbaiki_keuangan: resolve(__dirname, 'perbaiki_keuangan.html')
       }
     }
   },
