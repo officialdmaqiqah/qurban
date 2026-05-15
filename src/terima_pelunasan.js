@@ -800,30 +800,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const desc = (h.keterangan || '').toLowerCase();
                         const id = (h.id || '').toUpperCase();
                         
-                        // Kriteria Adjustment (Pembayaran dari Titipan/Dana Internal) -> Menambah total bayar
-                        const isAdj = id.startsWith('ADJ-') || 
-                                     cat.includes('internal') || 
-                                     cat.includes('aqiqah') || 
-                                     cat.includes('titipan') || 
-                                     desc.includes('penyesuaian') ||
-                                     desc.includes('internal transfer');
-
-                        // Kriteria Refund (Pengembalian Dana ke Konsumen) -> Mengurangi total bayar
+                    const newPaid = hists.reduce((s, h) => {
+                        const isIncome = h.tipe === 'pemasukan';
+                        const cat = (h.kategori || '').toLowerCase();
+                        const desc = (h.keterangan || '').toLowerCase();
+                        const id = (h.id || '').toUpperCase();
+                        
+                        // Kriteria Refund (Pengembalian Dana ke Konsumen)
                         const isRefund = id.startsWith('REF-') || 
                                         cat.includes('refund') || 
                                         cat.includes('pengembalian') || 
                                         desc.includes('refund') || 
                                         desc.includes('kelebihan');
 
-                        if (isIncome) return s + h.nominal;
-                        
-                        // Jika Adjustment (dan bukan refund): Paksa jadi POSITIF (pembayaran dari dana internal)
-                        if (isAdj && !isRefund) return s + Math.abs(h.nominal);
-                        
-                        // Jika Refund atau Pengeluaran biasa: KURANGI saldo bayar
-                        if (h.tipe === 'pengeluaran') return s - h.nominal;
-                        
-                        return s;
+                        if (isIncome) {
+                            // Abaikan jika kategori mengandung 'komisi' tapi bukan pelunasan (pencegahan)
+                            if (cat.includes('komisi') && !cat.includes('pelunasan')) return s;
+                            return s + (h.nominal || 0);
+                        } else {
+                            // HANYA kurangi jika ini adalah REFUND/PENGEMBALIAN
+                            if (isRefund || cat.includes('refund') || desc.includes('refund')) {
+                                return s - (h.nominal || 0);
+                            }
+                            // Pengeluaran lain (Komisi, Operasional, dll) TIDAK BOLEH mengurangi total bayar konsumen
+                            return s;
+                        }
                     }, 0);
 
                     // 5. Update di DB (FORCE UPDATE - Selalu update untuk memastikan integritas)
