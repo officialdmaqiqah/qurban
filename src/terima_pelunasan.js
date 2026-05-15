@@ -725,9 +725,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         let nameMatch = false;
                         if (!idMatch) {
                             const custName = (trx.customer?.nama || '').toUpperCase();
-                            // Minimal 3 karakter untuk menghindari salah deteksi
-                            if (custName && custName.length > 3 && desc.includes(custName)) {
-                                nameMatch = true;
+                            if (custName && custName.length > 3) {
+                                // Cek di keterangan
+                                const descMatch = desc.includes(custName);
+                                // Cek di seluruh kolom (misal ada kolom konsumen_name, agen_name, dll)
+                                const anyMatch = Object.values(f).some(v => typeof v === 'string' && v.toUpperCase().includes(custName));
+                                nameMatch = descMatch || anyMatch;
                             }
                         }
 
@@ -741,16 +744,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                     });
                     
                     // 3. Bangun ulang history_bayar
-                    const rebuiltHistory = relatedFins.map(f => ({
-                        payId: f.id,
-                        id: f.id, 
-                        tgl: f.tanggal,
-                        nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
-                        category: f.kategori,
-                        tipe: f.tipe,
-                        channel: f.channel,
-                        buktiUrl: f.bukti_url
-                    })).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
+                    const rebuiltHistory = relatedFins.map(f => {
+                        // Bersihkan nominal dari titik/koma/simbol (Penting untuk format Indonesia)
+                        let cleanNom = String(f.nominal || '0').replace(/[^0-9,-]/g, '').replace(',', '.');
+                        let parsedNom = parseFloat(cleanNom) || 0;
+
+                        return {
+                            payId: f.id,
+                            id: f.id, 
+                            tgl: f.tanggal,
+                            nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parsedNom)) : parsedNom,
+                            category: f.kategori,
+                            tipe: f.tipe,
+                            channel: f.channel,
+                            buktiUrl: f.bukti_url,
+                            keterangan: f.keterangan || ''
+                        };
+                    }).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
                     // 4. Hitung ulang total
                     const newTotalPaid = rebuiltHistory.reduce((s, h) => {
@@ -764,7 +774,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                                      cat.includes('internal') || 
                                      cat.includes('aqiqah') || 
                                      cat.includes('titipan') || 
-                                     desc.includes('penyesuaian');
+                                     desc.includes('penyesuaian') ||
+                                     desc.includes('internal transfer');
 
                         // Kriteria Refund (Pengembalian Dana ke Konsumen) -> Mengurangi total bayar
                         const isRefund = id.startsWith('REF-') || 
