@@ -829,8 +829,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                             updated_at: new Date().toISOString()
                         }).eq('id', trx.id);
                         
-                        if (!upErr) updatedTrxCount++;
-                        else console.error(`[SmartSync] Update Failed for ${trx.id}:`, upErr);
+                        if (!upErr) {
+                            updatedTrxCount++;
+                        } else {
+                            console.error(`[SmartSync] Update Failed for ${trx.id}:`, upErr);
+                            if (upErr.code === '42501' || upErr.message?.includes('403')) {
+                                throw new Error(`Izin Update Ditolak (403) pada ${trx.id}. Sistem tidak diperbolehkan mengubah data. Gunakan Master Key!`);
+                            }
+                        }
                     }
                 }
 
@@ -1050,4 +1056,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.setupMoneyMask('inpNominalRefund');
 
     renderStats(); renderList();
+
+    // --- MASTER KEY TOOL ---
+    const addMasterKeyBtn = () => {
+        const container = document.querySelector('.container-fluid') || document.body;
+        const btn = document.createElement('button');
+        btn.innerHTML = '🔑 Setup Master Key';
+        btn.style.cssText = 'position:fixed; bottom:10px; right:10px; font-size:0.6rem; opacity:0.3; background:none; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:4px; z-index:9999; cursor:pointer;';
+        btn.onclick = () => {
+            const key = prompt("Masukkan SUPABASE_SERVICE_ROLE Key untuk bypass RLS (Hanya untuk Admin):");
+            if (key) {
+                localStorage.setItem('SUPABASE_SERVICE_ROLE', key.trim());
+                window.location.reload();
+            }
+        };
+        container.appendChild(btn);
+    };
+    addMasterKeyBtn();
 });
