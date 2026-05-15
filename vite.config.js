@@ -32,7 +32,8 @@ export default defineConfig({
         mega_sync_v1114: resolve(__dirname, 'mega_sync_v1114.html'),
         mega_sync_v1115: resolve(__dirname, 'mega_sync_v1115.html'),
         mega_sync_v1116: resolve(__dirname, 'mega_sync_v1116.html'),
-        mega_sync_v1117: resolve(__dirname, 'mega_sync_v1117.html')
+        mega_sync_v1117: resolve(__dirname, 'mega_sync_v1117.html'),
+        mega_sync_v1118: resolve(__dirname, 'mega_sync_v1118.html')
       }
     }
   },
