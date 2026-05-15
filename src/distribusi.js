@@ -215,12 +215,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             card.className = 'trip-card glass-panel';
             const isDone = t.status === 'Selesai';
             card.innerHTML = `
-                <div class="trip-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <div>
+                <div class="trip-header" style="border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1;">
                         <div class="trip-id text-premium">${t.id} ${t.id.startsWith('SMB-') ? '<span class="badge-sembelih">🔪 Sembelih</span>' : ''}</div>
                         <div class="trip-date">${formatTgl(t.tglKirim)}</div>
+                        ${!isSopir ? `<div class="patch-zone" style="margin-top: 6px;"><button class="btn btn-sm" onclick="window.patchMissingTripData()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-muted); font-size:0.6rem; padding: 3px 10px; border-radius: 6px;">🩺 Patch WA</button></div>` : ''}
                     </div>
-                    ${isAdmin ? `<div id="adminPatchArea" style="margin-top: 5px;"><button class="btn btn-sm" onclick="window.patchMissingTripData()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-muted); font-size:0.6rem;">🩺 Patch WA</button></div>` : ''}
                     <span class="badge ${isDone ? 'badge-success' : 'badge-warning'}" style="padding:4px 10px; font-size:0.75rem; border-radius:30px;">${t.status.toUpperCase()}</span>
                 </div>
 
