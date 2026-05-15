@@ -555,20 +555,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                             bukti: url || '-'
                         };
 
+                        let sentToCust = false;
+                        let sentToAgen = false;
+
                         // 1. Notif ke Konsumen
                         if (trx.customer?.wa1) {
                             const msg = await window.parseWaTemplate(config.templateDistribusiTerkirim, commonData);
                             const res = await window.sendWa(trx.customer.wa1, msg);
-                            if (!res.success) {
+                            if (res.success) {
+                                sentToCust = true;
+                                console.log('[WA Debug] Sukses kirim ke Konsumen');
+                            } else {
                                 console.warn('[WA Debug] Gagal kirim ke Konsumen:', res.msg);
                                 if (window.showConfirm) {
                                     window.showConfirm(`WA Konsumen Gagal: ${res.msg}\n\nKirim manual lewat WA Web/App?`, () => {
                                         window.open(res.link, '_blank');
                                     }, null, 'WA Otomatis Gagal', 'Kirim Manual', 'btn-primary');
                                 }
-                            } else {
-                                console.log('[WA Debug] Sukses kirim ke Konsumen');
                             }
+                        } else {
+                            console.log('[WA Debug] WA Konsumen kosong, skip.');
                         }
 
                         // 2. Notif ke Agen
@@ -582,23 +588,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     judul: "*NOTIFIKASI PENGIRIMAN (AGEN)*" 
                                 });
                                 const resA = await window.sendWa(matchedAgen.wa, msgAgen);
-                                if (!resA.success) {
-                                    console.warn('[WA Debug] Gagal kirim ke Agen:', resA.msg);
-                                    if (window.showConfirm) {
-                                        window.showConfirm(`WA Agen Gagal: ${resA.msg}\n\nKirim manual ke Agen?`, () => {
-                                            window.open(resA.link, '_blank');
-                                        }, null, 'WA Agen Gagal', 'Kirim Manual', 'btn-primary');
-                                    }
-                                } else {
+                                if (resA.success) {
+                                    sentToAgen = true;
                                     console.log('[WA Debug] Sukses kirim ke Agen');
+                                } else {
+                                    console.warn('[WA Debug] Gagal kirim ke Agen:', resA.msg);
                                 }
-                            } else {
-                                console.warn('[WA Debug] WA Agen tidak ditemukan untuk:', trx.agen.nama);
                             }
+                        }
+
+                        if (!sentToCust && !sentToAgen) {
+                            window.showToast('Foto tersimpan. WA dilewati (nomor tidak tersedia).', 'info');
+                        } else {
+                            window.showToast('✅ Laporan Tuntas & WA Terkirim!', 'success');
                         }
                     } else {
                         console.warn('[WA Debug] Transaksi tidak ditemukan untuk GoatID:', modal._goatId);
-                        window.showToast('Data transaksi tidak ditemukan, WA tidak dikirim.', 'warning');
+                        window.showToast('Foto tersimpan. (Data transaksi pelengkap WA tidak ditemukan)', 'info');
                     }
                 } catch (waErr) {
                     console.warn('Opsi notifikasi WA gagal:', waErr);
