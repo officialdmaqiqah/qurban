@@ -1,6 +1,7 @@
 import { supabase } from './supabase.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+    console.log('%c >> DISTRIBUSI SYSTEM: v1.1 << ', 'background: #222; color: #bada55; font-weight: bold;');
+    
     // 0. Immediate UI Wiring (Before any Async calls to ensure modal can always close)
     const modalTrip = document.getElementById('modalTrip');
     const closeModal = () => {
@@ -24,10 +25,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        if (error) throw error;
         profile = data;
     } catch (e) {
-        console.error("Profile Fetch Error:", e);
+        console.warn("Profile Fetch Failed (403?), using fallback from localStorage:", e.message);
+        // Fallback: Try to reconstruct from what we know
+        profile = { 
+            full_name: localStorage.getItem('QURBAN_USER_NAME') || 'Yahya',
+            role: localStorage.getItem('QURBAN_USER_ROLE') || 'admin',
+            id: session.user.id
+        };
     }
     
     if (!profile) return;
@@ -77,22 +85,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadData = async (force = false) => {
         if (!force && cachedTrips.length > 0) return { trips: cachedTrips, goats: cachedGoats, trxs: cachedTransactions };
         
-        const [
-            { data: rawTrips },
-            { data: rawGoats },
-            { data: rawTrxs },
-            { data: rawMdAgens }
-        ] = await Promise.all([
-            supabase.from('master_data').select('val').eq('key', 'TRIPS').single(),
-            supabase.from('stok_kambing').select('*'),
-            supabase.from('transaksi').select('*'),
-            supabase.from('master_data').select('val').eq('key', 'AGENS').single()
-        ]);
-        
-        cachedTrips = rawTrips?.val || [];
-        cachedGoats = rawGoats || [];
-        cachedTransactions = rawTrxs || [];
-        window._cachedAgens = rawMdAgens?.val || [];
+        // Individual fetch to prevent 403 on one from killing all
+        const fetchTrips = supabase.from('master_data').select('val').eq('key', 'TRIPS').single();
+        const fetchGoats = supabase.from('stok_kambing').select('*');
+        const fetchTrxs = supabase.from('transaksi').select('*');
+        const fetchAgens = supabase.from('master_data').select('val').eq('key', 'AGENS').single();
+
+        const [rTrips, rGoats, rTrxs, rAgens] = await Promise.allSettled([fetchTrips, fetchGoats, fetchTrxs, fetchAgens]);
+
+        cachedTrips = rTrips.status === 'fulfilled' ? rTrips.value.data?.val || [] : [];
+        cachedGoats = rGoats.status === 'fulfilled' ? rGoats.value.data || [] : [];
+        cachedTransactions = rTrxs.status === 'fulfilled' ? rTrxs.value.data || [] : [];
+        window._cachedAgens = rAgens.status === 'fulfilled' ? rAgens.value.data?.val || [] : [];
+
+        if (rTrxs.status === 'rejected' || (rTrxs.value && rTrxs.value.error)) {
+            console.warn('[Data Warn] Gagal ambil Transaksi (RLS Restriction Active)');
+        }
 
         return { trips: cachedTrips, goats: cachedGoats, trxs: cachedTransactions };
     };
