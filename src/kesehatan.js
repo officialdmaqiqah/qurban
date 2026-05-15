@@ -24,12 +24,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!force && cachedGoats.length > 0) return cachedGoats;
         
         // Ambil semua data kambing yang:
-        // 1. Sedang Sakit/Perawatan
-        // 2. Pernah Sakit lalu Sembuh (Histori)
-        // 3. Mati / Hilang / Disembelih
+        // 1. Sedang Sakit/Perawatan/Disembelih Darurat (Kesehatan != Sehat)
+        // 2. Mati / Hilang (Fisik in Mati, Hilang)
         const { data } = await supabase.from('stok_kambing')
             .select('*')
-            .or('status_kesehatan.neq.Sehat,status_fisik.neq.Ada');
+            .or('status_kesehatan.neq.Sehat,status_fisik.in.(Mati,Hilang)');
             
         cachedGoats = data || [];
         return cachedGoats;
