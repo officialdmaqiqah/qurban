@@ -793,41 +793,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                         };
                     }).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
-                    // 4. Hitung ulang total
-                    const newTotalPaid = rebuiltHistory.reduce((s, h) => {
-                        const isIncome = h.tipe === 'pemasukan';
-                        const cat = (h.category || '').toLowerCase();
-                        const desc = (h.keterangan || '').toLowerCase();
-                        const id = (h.id || '').toUpperCase();
+                    // 4. Hitung ulang total secara akurat (Hanya Pemasukan & Refund)
+                    const newTotalPaid = rebuiltHistory.reduce((sum, item) => {
+                        const isIncome = item.tipe === 'pemasukan';
+                        const cat = (item.category || '').toLowerCase();
+                        const desc = (item.keterangan || '').toLowerCase();
+                        const id = (item.id || '').toUpperCase();
                         
-                    const newPaid = hists.reduce((s, h) => {
-                        const isIncome = h.tipe === 'pemasukan';
-                        const cat = (h.kategori || '').toLowerCase();
-                        const desc = (h.keterangan || '').toLowerCase();
-                        const id = (h.id || '').toUpperCase();
-                        
-                        // Kriteria Refund (Pengembalian Dana ke Konsumen)
-                        const isRefund = id.startsWith('REF-') || 
-                                        cat.includes('refund') || 
-                                        cat.includes('pengembalian') || 
-                                        desc.includes('refund') || 
-                                        desc.includes('kelebihan');
+                        // Kriteria Refund
+                        const isRefund = id.startsWith('REF-') || cat.includes('refund') || cat.includes('pengembalian');
 
                         if (isIncome) {
-                            // Abaikan jika kategori mengandung 'komisi' tapi bukan pelunasan (pencegahan)
-                            if (cat.includes('komisi') && !cat.includes('pelunasan')) return s;
-                            return s + (h.nominal || 0);
+                            // Abaikan jika kategori mengandung 'komisi'
+                            if (cat.includes('komisi') && !cat.includes('pelunasan')) return sum;
+                            return sum + (item.nominal || 0);
                         } else {
-                            // HANYA kurangi jika ini adalah REFUND/PENGEMBALIAN
+                            // HANYA kurangi jika ini adalah REFUND
                             if (isRefund || cat.includes('refund') || desc.includes('refund')) {
-                                return s - (h.nominal || 0);
+                                return sum - Math.abs(item.nominal || 0);
                             }
-                            // Pengeluaran lain (Komisi, Operasional, dll) TIDAK BOLEH mengurangi total bayar konsumen
-                            return s;
+                            return sum;
                         }
                     }, 0);
 
-                    // 5. Update di DB (FORCE UPDATE - Selalu update untuk memastikan integritas)
+                    // 5. Update di DB
                     if (trx.total_deal > 0) {
                         const { error: upErr } = await client.from('transaksi').update({
                             total_paid: newTotalPaid,
