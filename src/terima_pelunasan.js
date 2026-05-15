@@ -710,7 +710,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Fetch Trxs
                 let pageT = 0;
                 while(true) {
-                    const { data: p, error: e } = await client.from('transaksi').select('*, customer:profiles(nama)').range(pageT*1000, (pageT+1)*1000 - 1);
+                    const { data: p, error: e } = await client.from('transaksi').select('*').range(pageT*1000, (pageT+1)*1000 - 1);
                     if(e) {
                         if(e.code === '42501' || e.message?.includes('403')) {
                             throw new Error("Izin Ditolak (403): Database membatasi akses Anda. Pastikan Master Key aktif atau gunakan akun Super Admin.");
