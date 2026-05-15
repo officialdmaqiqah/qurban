@@ -94,32 +94,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // Auto-Patch for Admin: Menambal data WA/TRX ID yang hilang di Trip lama
-    const patchMissingTripData = async () => {
+    window.patchMissingTripData = async () => {
         const isSopirRole = (window.profile?.role || '').toLowerCase() === 'sopir' || (localStorage.getItem('QURBAN_USER_ROLE') === 'sopir');
         if (isSopirRole) return; 
         
-        const { trips, trxs } = await loadData();
+        console.log('[Admin Patch] Memulai pemindaian data Trip...');
+        const { trips, trxs } = await loadData(true); // Force refresh
         let changed = false;
+        let patchCount = 0;
         
         trips.forEach(t => {
             t.items.forEach(i => {
-                if (!i.customerWa || !i.transactionId) {
-                    const trx = trxs.find(tx => tx.items && tx.items.some(it => it.goatId === i.goatId));
+                const gId = i.goatId || i.id; // Support both old and new keys
+                if (!gId) return;
+
+                if (!i.customerWa || !i.transactionId || !i.goatId) {
+                    const trx = trxs.find(tx => tx.items && tx.items.some(it => (it.goatId || it.id) === gId));
                     if (trx) {
                         i.customerWa = trx.customer?.wa1 || '';
                         i.transactionId = trx.id;
+                        i.goatId = gId; // Pastikan key goatId seragam
                         changed = true;
+                        patchCount++;
                     }
                 }
             });
         });
 
         if (changed) {
-            console.log('[Admin Patch] Mengupdate data Trip dengan WA/TRX ID yang hilang...');
+            console.log(`[Admin Patch] Menambal ${patchCount} data. Mengupdate ke Cloud...`);
             await saveTrips(trips);
+            if (window.showToast) window.showToast(`Berhasil menambal ${patchCount} data WA Trip!`, 'success');
+            renderTrips();
+        } else {
+            console.log('[Admin Patch] Semua data Trip sudah sinkron.');
         }
     };
-    setTimeout(patchMissingTripData, 3500);
+    setTimeout(window.patchMissingTripData, 3500);
 
     const updateStatsDist = (trips, allGoats) => {
         const today = new Date().toISOString().split('T')[0];
@@ -200,6 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="trip-id text-premium">${t.id} ${t.id.startsWith('SMB-') ? '<span class="badge-sembelih">🔪 Sembelih</span>' : ''}</div>
                         <div class="trip-date">${formatTgl(t.tglKirim)}</div>
                     </div>
+                    ${isAdmin ? `<div id="adminPatchArea" style="margin-top: 5px;"><button class="btn btn-sm" onclick="window.patchMissingTripData()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-muted); font-size:0.6rem;">🩺 Patch WA</button></div>` : ''}
                     <span class="badge ${isDone ? 'badge-success' : 'badge-warning'}" style="padding:4px 10px; font-size:0.75rem; border-radius:30px;">${t.status.toUpperCase()}</span>
                 </div>
 
@@ -210,6 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="trip-items" style="background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.05); margin-top: 1rem;">
                     ${t.items.map(i => {
                         const isItemDone = i.status === 'Terdistribusi';
+                        const currentGoatId = i.goatId || i.id;
                         return `
                         <div class="trip-item" style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
                             <div style="max-width:70%;">
@@ -220,10 +233,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <div style="text-align:right; display:flex; align-items:center; gap:8px; justify-content:flex-end;">
                                 ${isItemDone ? `
                                     <span style="color:var(--success); font-size:1.1rem;">✅</span>
-                                    <button class="btn btn-sm" onclick="window.rollbackItemDist('${t.id}','${i.goatId}')" style="color:var(--text-muted); background:transparent; border:none; padding:4px; cursor:pointer; font-size:0.9rem;" title="Reset / Batal Tuntas">↩️</button>
+                                    <button class="btn btn-sm" onclick="window.rollbackItemDist('${t.id}','${currentGoatId}')" style="color:var(--text-muted); background:transparent; border:none; padding:4px; cursor:pointer; font-size:0.9rem;" title="Reset / Batal Tuntas">↩️</button>
                                 ` : `
-                                    ${!isSopir ? `<button class="btn btn-sm" onclick="window.removeItemFromTrip('${t.id}','${i.goatId}')" style="color:var(--danger); background:transparent; border:none; padding:4px; opacity:0.6; cursor:pointer; font-size:0.9rem;" title="Keluarkan dari Trip">❌</button>` : ''}
-                                    <button class="btn btn-sm btn-shimmer" onclick="window.openLaporDist('${t.id}','${i.goatId}','${i.konsumen}')" style="background:var(--primary); padding:6px 14px; font-size:0.75rem; border-radius:8px; border:none; box-shadow:0 4px 10px var(--primary-transparent);">📷</button>
+                                    ${!isSopir ? `<button class="btn btn-sm" onclick="window.removeItemFromTrip('${t.id}','${currentGoatId}')" style="color:var(--danger); background:transparent; border:none; padding:4px; opacity:0.6; cursor:pointer; font-size:0.9rem;" title="Keluarkan dari Trip">❌</button>` : ''}
+                                    <button class="btn btn-sm btn-shimmer" onclick="window.openLaporDist('${t.id}','${currentGoatId}','${i.konsumen}')" style="background:var(--primary); padding:6px 14px; font-size:0.75rem; border-radius:8px; border:none; box-shadow:0 4px 10px var(--primary-transparent);">📷</button>
                                 `}
                             </div>
                         </div>
