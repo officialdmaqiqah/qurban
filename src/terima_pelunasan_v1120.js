@@ -72,9 +72,9 @@ export const syncAllBalances = async () => {
                         if (fId === tId) reason = "ID MATCH (PASTI)";
                         else if (fId && fId !== tId) return false;
                         else if (fDesc.includes(tId.toLowerCase())) reason = "ID DI KETERANGAN";
-                        else if (rawName.length >= 4 && (fDesc.includes(rawName) || fCat.includes(rawName))) reason = "NAMA LENGKAP";
-                        else if (nameParts.length > 0 && nameParts.some(p => fDesc.includes(p))) reason = "POTONGAN NAMA";
-
+                        else if (rawName.length >= 5 && (fDesc === rawName || fDesc.includes('bayar ' + rawName) || fDesc.includes('lunas ' + rawName))) reason = "NAMA LENGKAP (STRICT)";
+                        // HAPUS POTONGAN NAMA UNTUK MENGHINDARI GHOST PAYMENT
+                        
                         if (reason) {
                             f._matchReason = reason;
                             return true;
@@ -89,14 +89,19 @@ export const syncAllBalances = async () => {
 
                     let total = history.reduce((sum, h) => {
                         const cat = (h.category || '').toLowerCase();
+                        const fDesc = (h.keterangan || '').toLowerCase();
+                        
+                        // GLOBAL FILTER: Sulam, Tumbal, Komisi, Karkas, Titipan
+                        const isGarbage = cat.includes('sulam') || cat.includes('tumbal') || 
+                                          fDesc.includes('sulam') || fDesc.includes('tumbal') ||
+                                          cat.includes('komisi') || cat.includes('karkas') ||
+                                          cat === 'titipan dana agen';
+
                         if (h.tipe === 'pemasukan') {
-                            const fDesc = (h.keterangan || '').toLowerCase();
-                            if (cat === 'titipan dana agen' || cat.includes('komisi') || cat.includes('karkas') || 
-                                cat.includes('sulam') || cat.includes('tumbal') || 
-                                fDesc.includes('sulam') || fDesc.includes('tumbal')) return sum;
-                            
+                            if (isGarbage) return sum;
                             return sum + h.nominal;
                         } else {
+                            // Pengeluaran: Hanya hitung jika itu Refund/Kelebihan
                             if (cat.includes('refund') || cat.includes('pengembalian') || cat.includes('kelebihan')) {
                                 return sum + h.nominal; 
                             }
