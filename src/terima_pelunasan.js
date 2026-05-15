@@ -314,13 +314,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let updatedCount = 0;
                 for (const trx of trxs) {
                     const tId = trx.id.toUpperCase();
-                    const cName = (trx.customer_name || '').toLowerCase();
+                    const rawName = (trx.customer?.nama || trx.customer_name || '').toLowerCase().trim();
                     
+                    // Ambil kata pertama dan kedua dari nama (biasanya nama utama)
+                    const nameParts = rawName.split(' ').filter(p => p.length > 2);
                     const logs = [];
+                    
                     const history = allFins.filter(f => {
                         const fId = (f.related_trx_id || '').toUpperCase();
                         const fDesc = (f.keterangan || '').toLowerCase();
-                        return (fId === tId) || fDesc.includes(tId.toLowerCase()) || (cName && fDesc.includes(cName));
+                        const fCat = (f.kategori || '').toLowerCase();
+                        
+                        // 1. Match by ID (Paling Akurat)
+                        if (fId === tId || fDesc.includes(tId.toLowerCase())) return true;
+                        
+                        // 2. Match by Name (Fuzzy)
+                        if (rawName && (fDesc.includes(rawName) || fCat.includes(rawName))) return true;
+                        
+                        // 3. Match by Name Parts (Smart Search)
+                        if (nameParts.length > 0) {
+                            return nameParts.some(p => fDesc.includes(p));
+                        }
+                        
+                        return false;
                     }).map(f => ({
                         payId: f.id, id: f.id, tgl: f.tanggal,
                         nominal: f.tipe === 'pengeluaran' ? -Math.abs(f.nominal) : Math.abs(f.nominal),
