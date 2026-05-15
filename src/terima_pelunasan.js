@@ -820,8 +820,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         // Jika Adjustment (dan bukan refund): Paksa jadi POSITIF (pembayaran dari dana internal)
                         if (isAdj && !isRefund) return s + Math.abs(h.nominal);
                         
-                        // Jika Refund atau Pengeluaran biasa: Biarkan NEGATIF (mengurangi saldo bayar)
-                        if (h.tipe === 'pengeluaran') return s + h.nominal;
+                        // Jika Refund atau Pengeluaran biasa: KURANGI saldo bayar
+                        if (h.tipe === 'pengeluaran') return s - h.nominal;
                         
                         return s;
                     }, 0);
