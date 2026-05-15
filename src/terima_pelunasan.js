@@ -318,30 +318,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const honorifics = ['haji', 'hj', 'pak', 'bpk', 'ibu', 'ny', 'tn', 'kak', 'bang', 'mas', 'mbak'];
                     const nameParts = rawName.split(' ').filter(p => p.length >= 3 && !honorifics.includes(p));
                     
-                    const logs = [];
                     const history = (allFins || []).filter(f => {
                         const fId = (f.related_trx_id || '').toUpperCase();
                         const fDesc = (f.keterangan || '').toLowerCase();
                         const fCat = (f.kategori || '').toLowerCase();
-                        
-                        // 1. HARD MATCH: ID Transaksi (Haram diambil orang lain jika fId diisi)
                         if (fId === tId) return true;
-                        if (fId && fId !== tId) return false; // Sudah milik orang lain
-                        
-                        // 2. ID Match via Keterangan
+                        if (fId && fId !== tId) return false;
                         if (fDesc.includes(tId.toLowerCase())) return true;
-
-                        // 3. FUZZY MATCH: Nama (Hanya jika fId kosong)
                         if (!fId) {
-                            // Nama Lengkap
                             if (rawName.length > 4 && (fDesc.includes(rawName) || fCat.includes(rawName))) return true;
-                            // Nama Panggilan Unik
-                            if (nameParts.length > 0) {
-                                return nameParts.some(p => p.length >= 4 && fDesc.includes(p));
-                            }
+                            if (nameParts.length > 0) return nameParts.some(p => p.length >= 4 && fDesc.includes(p));
                         }
-                        
                         return false;
+                    }).map(f => ({
+                        id: f.id, tgl: f.tanggal,
+                        nominal: f.tipe === 'pengeluaran' ? -Math.abs(f.nominal) : Math.abs(f.nominal),
+                        category: f.kategori, tipe: f.tipe, channel: f.channel, keterangan: f.keterangan || ''
                     }));
 
                     let total = history.reduce((sum, h) => {
@@ -382,13 +374,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     tabBtns.forEach(btn => {
         btn.onclick = function() {
             const tabId = this.dataset.tab;
-            console.log('Switching to tab:', tabId);
-            
-            // Toggle Buttons
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-
-            // Toggle Contents
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             const targetId = 'tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1);
             const target = document.getElementById(targetId);

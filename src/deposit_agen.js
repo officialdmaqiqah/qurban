@@ -240,18 +240,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // Global window functions
-    window.deleteDeposit = (id) => {
-        window.showConfirm('Hapus transaksi ini?', async () => {
+    window.deleteDeposit = function(id) {
+        window.showConfirm('Hapus transaksi ini?', async function() {
             try {
                 const { error } = await supabase.from('keuangan').delete().eq('id', id);
                 if (error) throw error;
                 window.showToast('Terhapus'); 
                 refreshData();
             } catch (err) { window.showAlert('Gagal menghapus: ' + err.message, 'danger'); }
-        }, null, 'Hapus Riwayat', 'Ya, Hapus', 'btn-danger');
+        });
     };
 
-    window.viewAgentHistory = (name) => {
+    window.viewAgentHistory = function(name) {
         window.showToast('Filter: ' + name);
         const rows = tableBodyRiwayat.querySelectorAll('tr');
         rows.forEach(r => {
