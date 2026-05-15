@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     window.syncAllBalances = async () => {
-        window.showConfirm(`🚀 <b>JALANKAN MEGA-SYNC v11.6?</b><br><br>Sistem akan menghitung ulang semua saldo dari nol berdasarkan laporan keuangan.`, async () => {
+        window.showConfirm(`🚀 <b>JALANKAN MEGA-SYNC v11.8?</b><br><br>Sistem akan menghitung ulang semua saldo dari nol (Sistem Anti-Ganda Aktif).`, async () => {
             try {
                 window.showToast("Sinkronisasi sedang berjalan...", "info");
                 const { data: trxs } = await supabase.from('transaksi').select('*');
