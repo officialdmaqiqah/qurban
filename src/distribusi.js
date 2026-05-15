@@ -93,6 +93,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         return { trips: cachedTrips, goats: cachedGoats, trxs: cachedTransactions };
     };
 
+    // Auto-Patch for Admin: Menambal data WA/TRX ID yang hilang di Trip lama
+    const patchMissingTripData = async () => {
+        const isSopirRole = (window.profile?.role || '').toLowerCase() === 'sopir' || (localStorage.getItem('QURBAN_USER_ROLE') === 'sopir');
+        if (isSopirRole) return; 
+        
+        const { trips, trxs } = await loadData();
+        let changed = false;
+        
+        trips.forEach(t => {
+            t.items.forEach(i => {
+                if (!i.customerWa || !i.transactionId) {
+                    const trx = trxs.find(tx => tx.items && tx.items.some(it => it.goatId === i.goatId));
+                    if (trx) {
+                        i.customerWa = trx.customer?.wa1 || '';
+                        i.transactionId = trx.id;
+                        changed = true;
+                    }
+                }
+            });
+        });
+
+        if (changed) {
+            console.log('[Admin Patch] Mengupdate data Trip dengan WA/TRX ID yang hilang...');
+            await saveTrips(trips);
+        }
+    };
+    setTimeout(patchMissingTripData, 3500);
+
     const updateStatsDist = (trips, allGoats) => {
         const today = new Date().toISOString().split('T')[0];
         const tripToday = trips.filter(t => t.tglKirim === today).length;
@@ -456,10 +484,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     console.log('[WA Debug] Memulai proses notifikasi untuk GoatID:', modal._goatId);
                 
+                    const currentTrips = (await loadData()).trips;
+                    const trip = currentTrips.find(t => t.id === modal._tripId);
+                    const item = trip?.items.find(i => i.goatId === modal._goatId);
+
                     // 1. Cari Transaction ID dari data kambing (yang sudah di-load di memori)
                     const goatRec = goats.find(g => g.id === modal._goatId);
-                    const trxIdFromGoat = goatRec?.transaction_id;
-                    console.log('[WA Debug] TRX ID dari Goat Record:', trxIdFromGoat);
+                    const trxIdFromGoat = item?.transactionId || goatRec?.transaction_id;
+                    console.log('[WA Debug] TRX ID dari item/goat record:', trxIdFromGoat);
 
                     let trx = null;
                     if (trxIdFromGoat) {
@@ -476,8 +508,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (error) console.warn('[WA Debug] Error fetch by contains:', error.message);
                     }
 
+                    // 3. FALLBACK TERAKHIR: Gunakan data yang tertempel di Trip Item (Paling Ampuh untuk Sopir)
+                    if (!trx && item?.customerWa) {
+                        console.log('[WA Debug] Menggunakan data dari Trip Item (Bypass lookup)...');
+                        trx = {
+                            id: item.transactionId || '-',
+                            customer: { nama: item.konsumen, wa1: item.customerWa },
+                            total_deal: 0, 
+                            total_paid: 0,
+                            is_partial: true 
+                        };
+                    }
+
                     if (trx) {
-                        console.log('[WA Debug] Transaksi ditemukan:', trx.id);
+                        console.log('[WA Debug] Transaksi siap digunakan:', trx.id);
+                        const config = await window.getWaConfig();
+                        
                         // Fetch Official Accounts
                         const { data: mdRek } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single();
                         const reks = mdRek?.val || [];
@@ -485,12 +531,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                         const commonData = {
                             judul: "*NOTIFIKASI PENGIRIMAN* 🚚",
-                            nama: trx.customer?.nama || '-',
+                            nama: trx.customer?.nama || item?.konsumen || '-',
                             id: trx.id,
                             tgl: new Date().toLocaleDateString('id-ID'),
-                            items: trips[tIdx].items[iIdx].noTali,
-                            sisa: formatRp((trx.total_deal || 0) - (trx.total_paid || 0)),
-                            nama_agen: trips[tIdx].sopirNama,
+                            items: item?.noTali || '-',
+                            sisa: trx.is_partial ? '*(Silakan cek nota/kontak agen)*' : formatRp((trx.total_deal || 0) - (trx.total_paid || 0)),
+                            nama_agen: trip?.sopirNama || '-',
                             rekening: rekStr || '-',
                             foto: url || '-',
                             bukti: url || '-'
