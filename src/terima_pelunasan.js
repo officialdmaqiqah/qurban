@@ -11,24 +11,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     const email = profile.email;
     if (email) document.getElementById('userEmailDisplay').textContent = email;
 
-    // --- TOMBOL MASTER KEY (Dipindah ke atas agar pasti muncul) ---
-    const addMasterKeyBtn = () => {
-        if (document.getElementById('btnMasterKeySetup')) return;
+    // --- FORCE FIX BUTTON ---
+    const addForceFixBtn = () => {
+        if (document.getElementById('btnForceFix')) return;
         const btn = document.createElement('button');
-        btn.id = 'btnMasterKeySetup';
-        btn.innerHTML = '🔑 SET MASTER KEY';
-        btn.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); font-size:0.8rem; background:#10b881; color:white; padding:10px 20px; border-radius:50px; z-index:99999; cursor:pointer; box-shadow:0 10px 20px rgba(0,0,0,0.3); border:none; font-weight:bold;';
-        btn.onclick = () => {
-            const key = prompt("Masukkan SUPABASE_SERVICE_ROLE Key:");
-            if (key) {
-                localStorage.setItem('SUPABASE_SERVICE_ROLE', key.trim());
-                alert("Master Key tersimpan! Klik Sinkron sekali lagi.");
-                window.location.reload();
+        btn.id = 'btnForceFix';
+        btn.innerHTML = '🛠️ SYNC DATA';
+        btn.style.cssText = 'position:fixed; bottom:20px; right:20px; font-size:0.7rem; background:#ef4444; color:white; padding:8px 15px; border-radius:50px; z-index:99999; cursor:pointer; box-shadow:0 4px 10px rgba(239,68,68,0.3); border:none; font-weight:bold;';
+        btn.onclick = async () => {
+            const status = confirm("Jalankan sinkronisasi paksa? Pastikan koneksi stabil.");
+            if (!status) return;
+            try {
+                btn.disabled = true;
+                btn.textContent = 'Menyinkronkan...';
+                // Trigger logic: Re-fetch and force refresh UI
+                await renderStats();
+                await renderList();
+                alert("Sinkronisasi selesai!");
+            } catch (err) {
+                console.error(err);
+                alert("Gagal sinkronisasi: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🛠️ SYNC DATA';
             }
         };
         document.body.appendChild(btn);
     };
-    addMasterKeyBtn();
+    addForceFixBtn();
+
+    renderStats(); renderList();
+});
 
 
     // Helpers
@@ -697,18 +710,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
     // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
-    // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
     async function syncAllBalances() {
-        // --- BYPASS RLS IF MASTER KEY EXISTS ---
-        const masterKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
         let client = supabase;
-        if (masterKey) {
-            console.log('%c [System] Master Key Detected. ', 'background: #10b881; color: #fff;');
-            // Jika ada master key, kita coba gunakan untuk menembus RLS via header (jika didukung)
-            // Atau jika om sudah punya 'createClient' global, kita pakai itu.
-        }
-
-        window.showConfirm("🔄 Jalankan Smart Sync & Scan?<br><br><small>Sistem akan membangun ulang riwayat pembayaran dan <b>OTOMATIS</b> menghubungkan kembali pembayaran yang tercecer jika ID Transaksi tertulis di keterangan keuangan.</small>", async () => {
+        
+        window.showConfirm("🔄 Jalankan Sinkronisasi Saldo?<br><small>Sistem akan menghitung ulang total bayar berdasarkan data laporan keuangan.</small>", async () => {
             window.showToast("Menganalisis data & mencari pembayaran tercecer...", "info");
             try {
                 // 1. Ambil SEMUA data (Pagination untuk menghindari limit 1000)
@@ -847,8 +852,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                             updatedTrxCount++;
                         } else {
                             console.error(`[SmartSync] Update Failed for ${trx.id}:`, upErr);
+                            // Jika kena 403, kita beri tahu user cara mengatasinya
                             if (upErr.code === '42501' || upErr.message?.includes('403')) {
-                                throw new Error(`Izin Update Ditolak (403) pada ${trx.id}. Sistem tidak diperbolehkan mengubah data. Gunakan Master Key!`);
+                                window.showAlert(`<b>PENTING: Izin Ditolak (403)</b><br><br>Database menolak perubahan pada <b>${trx.id}</b>. <br><br>Hal ini terjadi karena akun Anda (${profile.email}) tidak memiliki izin 'Update' di tabel transaksi. <br><br>Silakan hubungi Super Admin untuk membuka izin RLS atau berikan saya kunci Master Key.`, "danger");
+                                throw new Error("STOP: Izin database tidak cukup.");
                             }
                         }
                     }
