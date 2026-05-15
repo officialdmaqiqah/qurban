@@ -167,7 +167,8 @@ export const renderList = async () => {
         const sortedTrxs = [...filtered].sort((a,b) => b.id.localeCompare(a.id));
         let dropdownHtml = '';
         sortedTrxs.forEach(t => {
-            dropdownHtml += `<option value="${t.id}">${t.id} - ${t.customer?.nama || '-'}</option>`;
+            const label = `${t.id} - ${t.customer?.nama || '-'} [Agen: ${t.agen?.nama || '-'}]`;
+            dropdownHtml += `<option value="${t.id}">${label}</option>`;
         });
         listOrders.innerHTML = dropdownHtml;
     }
@@ -177,7 +178,8 @@ export const renderList = async () => {
     if (perbaikiSelOrder && perbaikiSelOrder.tagName === 'SELECT') {
         let options = '<option value="">-- Pilih Order --</option>';
         filtered.forEach(t => {
-            options += `<option value="${t.id}">${t.id} - ${t.customer?.nama || '-'}</option>`;
+            const label = `${t.id} - ${t.customer?.nama || '-'} [Agen: ${t.agen?.nama || '-'}]`;
+            options += `<option value="${t.id}">${label}</option>`;
         });
         perbaikiSelOrder.innerHTML = options;
     }
