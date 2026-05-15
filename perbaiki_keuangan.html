@@ -16,7 +16,7 @@
     <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
         <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 25px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="margin:0;">💳 Rekonsiliasi Pelunasan</h2>
+                <div class="page-title">💳 Perbaikan Keuangan <span style="font-size:0.6rem; background:#ef4444; color:white; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:middle;">[VERSI 11.19 - TERPADU FINAL]</span></div>
                 <button id="btnSync" style="background:var(--primary); color:white; border:none; padding:12px 25px; border-radius:8px; font-weight:bold; cursor:pointer;">
                     🔄 SINKRON SEMUA DATA
                 </button>
@@ -49,11 +49,13 @@
         </div>
     </div>
 
+    <script type="module" src="src/layout_v53.js?v=11.19_FINAL"></script>
     <script type="module">
-        import { syncAllBalances, renderList, renderStats } from './src/terima_pelunasan_v1118.js?v=final_1118';
+        import { syncAllBalances, renderList } from './src/terima_pelunasan_v1119.js?v=11.19_FINAL';
         
         const btn = document.getElementById('btnSync');
         btn.onclick = async () => {
+            alert("Sistem sedang loading kode baru (v11.19). Tunggu 5 detik lalu klik lagi. Jika tetap muncul pesan ini, Logout lalu Login lagi.");
             btn.disabled = true;
             btn.innerText = '⌛ SEDANG PROSES...';
             await syncAllBalances();
