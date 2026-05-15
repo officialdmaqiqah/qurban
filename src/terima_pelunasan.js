@@ -314,15 +314,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 for (const trx of trxs) {
                     const tId = trx.id.toUpperCase();
-                    const rawName = (trx.customer?.nama || '').toLowerCase();
-                    const nameParts = rawName.split(' ').filter(p => p.length > 2);
+                    const rawName = (trx.customer?.nama || '').toLowerCase().trim();
+                    
+                    // Filter Gelar/Honorifics agar tidak salah tangkap (Haji, Pak, Ibu, dkk)
+                    const honorifics = ['haji', 'hj', 'pak', 'bpk', 'ibu', 'ibu', 'ny', 'tn', 'kak', 'bang', 'mas', 'mbak'];
+                    const nameParts = rawName.split(' ')
+                        .filter(p => p.length >= 3 && !honorifics.includes(p)); // Minimal 3 huruf dan bukan gelar
                     
                     const history = (allFins || []).filter(f => {
                         const fId = (f.related_trx_id || '').toUpperCase();
                         const fDesc = (f.keterangan || '').toLowerCase();
+                        const fCat = (f.kategori || '').toLowerCase();
+                        
+                        // 1. Prioritas ID Transaksi (Pasti Benar)
                         if (fId === tId || fDesc.includes(tId.toLowerCase())) return true;
-                        if (rawName && fDesc.includes(rawName)) return true;
-                        if (nameParts.length > 0) return nameParts.some(p => fDesc.includes(p));
+                        
+                        // 2. Nama Lengkap (Sangat Akurat)
+                        if (rawName.length > 4 && (fDesc.includes(rawName) || fCat.includes(rawName))) return true;
+                        
+                        // 3. Nama Panggilan Unik (Detektif Smart)
+                        // Hanya jalan jika ada kata unik (bukan gelar)
+                        if (nameParts.length > 0) {
+                            return nameParts.some(p => p.length >= 4 && fDesc.includes(p)); // Minimal 4 huruf untuk potongan nama
+                        }
+                        
                         return false;
                     }).map(f => ({
                         id: f.id, tgl: f.tanggal,
