@@ -74,13 +74,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sf = (item.status_fisik || '').toLowerCase().trim();
             const sk = (item.status_kesehatan || '').toLowerCase().trim();
 
-            // 1. Jika sudah Terdistribusi atau Terjual, hilangkan dari monitor kesehatan jika sudah Sehat
+            // 1. Filter Dasar: Sembunyikan yang sudah keluar kandang (Terdistribusi/Terjual) jika sudah Sehat
             if (st.includes('distribusi') || sf.includes('distribusi') || st.includes('jual')) {
-                if (sk === 'sehat') return false;
+                // Kecuali jika user memang memfilter khusus yang 'mati' atau 'hilang'
+                if (filter !== 'mati' && filter !== 'hilang') {
+                    if (sk === 'sehat' || sk === 'ada' || sk === '') return false;
+                }
             }
             
-            // 2. Jika status transaksi menunjukkan Terdistribusi secara eksplisit, hilangkan apapun kondisinya
-            if (st === 'terdistribusi' || sf === 'terdistribusi') return false;
+            // 2. Tambahan: Jika statusnya SEHAT dan sedang melihat "Semua Histori" atau filter lain selain "Sembuh",
+            // sembunyikan jika kambing tersebut sudah tidak tersedia (sudah dibeli/keluar)
+            if (sk === 'sehat' && filter !== 'sembuh') {
+                if (st !== 'tersedia') return false;
+            }
 
             const matchSearch = (item.no_tali || '').toLowerCase().includes(term) || 
                                (item.batch || '').toLowerCase().includes(term) ||
