@@ -688,8 +688,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Fetch Trxs
                 let pageT = 0;
                 while(true) {
-                    const { data: p, error: e } = await supabase.from('transaksi').select('*, customer:profiles(nama)').range(pageT*1000, (pageT+1)*1000 - 1);
-                    if(e) throw e;
+                    const { data: p, error: e } = await client.from('transaksi').select('*, customer:profiles(nama)').range(pageT*1000, (pageT+1)*1000 - 1);
+                    if(e) {
+                        if(e.code === '42501' || e.message?.includes('403')) {
+                            throw new Error("Izin Ditolak (403): Database membatasi akses Anda. Pastikan Master Key aktif atau hubungi Super Admin.");
+                        }
+                        throw e;
+                    }
                     if(!p || p.length === 0) break;
                     trxs = [...trxs, ...p];
                     if(p.length < 1000) break;
@@ -699,7 +704,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Fetch Fins
                 let pageF = 0;
                 while(true) {
-                    const { data: p, error: e } = await supabase.from('keuangan').select('*').range(pageF*1000, (pageF+1)*1000 - 1);
+                    const { data: p, error: e } = await client.from('keuangan').select('*').range(pageF*1000, (pageF+1)*1000 - 1);
                     if(e) throw e;
                     if(!p || p.length === 0) break;
                     fins = [...fins, ...p];
@@ -798,7 +803,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     // 5. Update di DB (FORCE UPDATE - Selalu update untuk memastikan integritas)
                     if (trx.total_deal > 0) {
-                        const { error: upErr } = await supabase.from('transaksi').update({
+                        const { error: upErr } = await client.from('transaksi').update({
                             total_paid: newTotalPaid,
                             total_overpaid: Math.max(0, newTotalPaid - (trx.total_deal || 0)),
                             history_bayar: rebuiltHistory,
@@ -813,7 +818,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // 6. Permanenkan hubungan pembayaran yang baru ditemukan (Deep Scan results)
                 const toUpdateFins = fins.filter(f => f.tempLinked);
                 for (const f of toUpdateFins) {
-                    await supabase.from('keuangan').update({ related_trx_id: f.related_trx_id }).eq('id', f.id);
+                    await client.from('keuangan').update({ related_trx_id: f.related_trx_id }).eq('id', f.id);
                 }
 
                 const msg = `🩺 <b>SMART SYNC SELESAI!</b><br><br>` +
