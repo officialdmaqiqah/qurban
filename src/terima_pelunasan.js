@@ -1,47 +1,27 @@
 import { supabase } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Check Session & Profile
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return; // layout.js handles redirect
-
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-    if (!profile) return;
-
-    const email = profile.email;
-    if (email) document.getElementById('userEmailDisplay').textContent = email;
-
-    // --- FORCE FIX BUTTON ---
+    // --- FORCE FIX BUTTON (Paling Atas Agar Pasti Muncul) ---
     const addForceFixBtn = () => {
         if (document.getElementById('btnForceFix')) return;
         const btn = document.createElement('button');
         btn.id = 'btnForceFix';
-        btn.innerHTML = '🛠️ SYNC DATA';
-        btn.style.cssText = 'position:fixed; bottom:20px; right:20px; font-size:0.7rem; background:#ef4444; color:white; padding:8px 15px; border-radius:50px; z-index:99999; cursor:pointer; box-shadow:0 4px 10px rgba(239,68,68,0.3); border:none; font-weight:bold;';
+        btn.innerHTML = '🛠️ SYNC DATA (PAKSA)';
+        btn.style.cssText = 'position:fixed; bottom:20px; right:20px; font-size:0.75rem; background:#ef4444; color:white; padding:12px 20px; border-radius:50px; z-index:99999; cursor:pointer; box-shadow:0 10px 20px rgba(239,68,68,0.4); border:none; font-weight:bold;';
         btn.onclick = async () => {
-            const status = confirm("Jalankan sinkronisasi paksa? Pastikan koneksi stabil.");
-            if (!status) return;
-            try {
-                btn.disabled = true;
-                btn.textContent = 'Menyinkronkan...';
-                // Trigger logic: Re-fetch and force refresh UI
-                await renderStats();
-                await renderList();
-                alert("Sinkronisasi selesai!");
-            } catch (err) {
-                console.error(err);
-                alert("Gagal sinkronisasi: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '🛠️ SYNC DATA';
-            }
+            syncAllBalances();
         };
         document.body.appendChild(btn);
     };
     addForceFixBtn();
 
-    renderStats(); renderList();
-});
+    // 1. Check Session & Profile
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return; 
+
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+    if (!profile) return;
+
 
 
     // Helpers
