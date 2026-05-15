@@ -268,9 +268,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         list.innerHTML = '';
         if (eligible) {
             eligible.forEach(k => {
-                const o = document.createElement('option'); o.value = k.no_tali;
+                const o = document.createElement('option');
                 const warna = k.warna_tali || 'Tanpa Warna';
-                o.textContent = `No ${k.no_tali} [${warna}] | Batch ${k.batch} | ${k.status_transaksi}`;
+                const label = `No ${k.no_tali} [${warna}] | Batch ${k.batch} | ${k.status_transaksi}`;
+                o.value = label;
+                o.textContent = label;
                 list.appendChild(o);
             });
         }
