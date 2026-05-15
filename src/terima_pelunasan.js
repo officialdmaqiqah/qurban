@@ -681,11 +681,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.showConfirm("🔄 Jalankan Smart Sync & Scan?<br><br><small>Sistem akan membangun ulang riwayat pembayaran dan <b>OTOMATIS</b> menghubungkan kembali pembayaran yang tercecer jika ID Transaksi tertulis di keterangan keuangan.</small>", async () => {
             window.showToast("Menganalisis data & mencari pembayaran tercecer...", "info");
             try {
-                // 1. Ambil semua data (Tanpa filter agar bisa Deep Scan)
-                const { data: trxs } = await supabase.from('transaksi').select('*').range(0, 9999);
-                const { data: fins } = await supabase.from('keuangan').select('*').range(0, 9999);
+                // 1. Ambil SEMUA data (Pagination untuk menghindari limit 1000)
+                let trxs = [];
+                let fins = [];
+                
+                // Fetch Trxs
+                let pageT = 0;
+                while(true) {
+                    const { data: p, error: e } = await supabase.from('transaksi').select('*, customer:profiles(nama)').range(pageT*1000, (pageT+1)*1000 - 1);
+                    if(e) throw e;
+                    if(!p || p.length === 0) break;
+                    trxs = [...trxs, ...p];
+                    if(p.length < 1000) break;
+                    pageT++;
+                }
 
-                if (!trxs || !fins) throw new Error("Gagal mengambil data dari server.");
+                // Fetch Fins
+                let pageF = 0;
+                while(true) {
+                    const { data: p, error: e } = await supabase.from('keuangan').select('*').range(pageF*1000, (pageF+1)*1000 - 1);
+                    if(e) throw e;
+                    if(!p || p.length === 0) break;
+                    fins = [...fins, ...p];
+                    if(p.length < 1000) break;
+                    pageF++;
+                }
+
+                if (trxs.length === 0 || fins.length === 0) throw new Error("Gagal mengambil data dari server atau data kosong.");
 
                 let autoLinkedCount = 0;
                 let updatedTrxCount = 0;
@@ -741,6 +763,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const isAdj = id.startsWith('ADJ-') || 
                                      cat.includes('internal') || 
                                      cat.includes('aqiqah') || 
+                                     cat.includes('titipan') || 
                                      desc.includes('penyesuaian');
 
                         // Kriteria Refund (Pengembalian Dana ke Konsumen) -> Mengurangi total bayar
