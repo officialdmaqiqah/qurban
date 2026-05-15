@@ -106,8 +106,11 @@ export const syncAllBalances = async () => {
                             if (isGarbage) return sum;
                             return sum + h.nominal;
                         } else {
-                            // Pengeluaran: Hitung sebagai pengurang saldo jika itu Refund/Kelebihan
-                            if (cat.includes('refund') || cat.includes('pengembalian') || cat.includes('kelebihan')) {
+                            // Pengeluaran: Hitung sebagai pengurang saldo jika itu Refund/Kelebihan (Cek Kategori & Keterangan)
+                            const isRefund = cat.includes('refund') || cat.includes('pengembalian') || cat.includes('kelebihan') ||
+                                             fDesc.includes('refund') || fDesc.includes('pengembalian') || fDesc.includes('kelebihan');
+                            
+                            if (isRefund) {
                                 return sum + h.nominal; 
                             }
                             return sum;
