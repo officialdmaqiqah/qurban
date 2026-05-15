@@ -494,21 +494,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
         if (!trx) return window.showAlert("Data tidak ditemukan.", "danger");
         
-        let msg = `<div style="text-align:left;">`;
-        msg += `<b>Audit Keuangan: ${trxId}</b><br><br>`;
-        msg += `Total Deal: ${window.formatRp(trx.total_deal)}<br>`;
-        msg += `Total Dibayar: ${window.formatRp(trx.total_paid)}<br><br>`;
-        msg += `<b>Rincian Sumber Uang:</b><br>`;
+        let msg = `<div style="text-align:left; font-size: 0.9rem;">`;
+        msg += `<b style="font-size:1.1rem; color:var(--primary);">Audit Keuangan: ${trxId}</b><br><br>`;
+        msg += `Konsumen: <b>${trx.customer?.nama || '-'}</b><br>`;
+        msg += `Total Deal: <b>${window.formatRp(trx.total_deal)}</b><br>`;
+        msg += `Total Dibayar: <b style="color:var(--success);">${window.formatRp(trx.total_paid)}</b><br>`;
+        msg += `Kelebihan: <b style="color:var(--warning);">${window.formatRp(trx.total_overpaid || 0)}</b><br><br>`;
+        
+        msg += `<b style="border-bottom: 2px solid var(--primary);">Rincian Sumber Uang (Sesuai Filter):</b><br>`;
         if (trx.history_bayar && trx.history_bayar.length > 0) {
             trx.history_bayar.forEach(h => {
                 msg += `<div style="border-bottom:1px solid rgba(255,255,255,0.1); padding:8px 0;">`;
-                msg += `• ${formatTgl(h.tgl)}: <b>${window.formatRp(h.nominal)}</b><br>`;
-                msg += `<small style="color:var(--primary); font-weight:700;">[SUMBER: ${h.reason || 'MANUAL'}]</small><br>`;
-                msg += `<small style="color:var(--text-muted);">${h.category || '-'} - ${h.keterangan || '-'}</small>`;
+                msg += `📅 ${formatTgl(h.tgl)}: <b style="color:var(--primary);">${window.formatRp(h.nominal)}</b><br>`;
+                msg += `🏷️ Kategori: <b>${h.category || '-'}</b><br>`;
+                msg += `📝 Ket: <i>"${h.keterangan || '-'}"</i><br>`;
+                msg += `<span style="background:var(--primary); color:#000; padding:2px 4px; border-radius:3px; font-size:0.7rem; font-weight:bold;">SUMBER: ${h.reason || 'MANUAL'}</span>`;
                 msg += `</div>`;
             });
         } else {
-            msg += `<i>Tidak ada catatan keuangan yang terhubung.</i>`;
+            msg += `<div style="padding:15px 0;"><i>⚠️ Tidak ada catatan keuangan yang terhubung. Saldo ini mungkin "hantu" atau sisa data lama yang belum tersinkron sempurna.</i></div>`;
         }
         msg += `</div>`;
         window.showAlert(msg, "info");
