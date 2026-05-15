@@ -167,7 +167,8 @@ export const renderList = async () => {
         const sortedTrxs = [...filtered].sort((a,b) => b.id.localeCompare(a.id));
         let dropdownHtml = '';
         sortedTrxs.forEach(t => {
-            const label = `${t.id} - ${t.customer?.nama || '-'} [Agen: ${t.agen?.nama || '-'}]`;
+            const sisa = (t.total_deal || 0) - (t.total_paid || 0);
+            const label = `${t.id} - ${t.customer?.nama || '-'} [Agen: ${t.agen?.nama || '-'}] (Sisa: ${window.formatRp(sisa)})`;
             dropdownHtml += `<option value="${t.id}">${label}</option>`;
         });
         listOrders.innerHTML = dropdownHtml;
@@ -178,7 +179,8 @@ export const renderList = async () => {
     if (perbaikiSelOrder && perbaikiSelOrder.tagName === 'SELECT') {
         let options = '<option value="">-- Pilih Order --</option>';
         filtered.forEach(t => {
-            const label = `${t.id} - ${t.customer?.nama || '-'} [Agen: ${t.agen?.nama || '-'}]`;
+            const sisa = (t.total_deal || 0) - (t.total_paid || 0);
+            const label = `${t.id} - ${t.customer?.nama || '-'} [Agen: ${t.agen?.nama || '-'}] (Sisa: ${window.formatRp(sisa)})`;
             options += `<option value="${t.id}">${label}</option>`;
         });
         perbaikiSelOrder.innerHTML = options;
