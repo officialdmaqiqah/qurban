@@ -822,7 +822,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         desc.includes('titipan');
 
                         if (isIncome) {
-                            if (cat.includes('komisi') && !cat.includes('pelunasan')) return sum;
+                            // Abaikan Karkas, Daging, Komisi, dll agar tidak merusak saldo utama kambing
+                            const isExcluded = cat.includes('komisi') || 
+                                              cat.includes('karkas') || 
+                                              cat.includes('daging') ||
+                                              desc.includes('karkas') ||
+                                              desc.includes('daging');
+
+                            if (isExcluded && !cat.includes('pelunasan')) return sum;
+                            
                             logs.push(`+ ${window.formatRp(item.nominal)} (${item.keterangan || item.category})`);
                             return sum + (item.nominal || 0);
                         } else {
