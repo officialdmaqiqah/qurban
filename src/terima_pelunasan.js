@@ -278,6 +278,67 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.showAlert('Refund Berhasil!', 'success', () => { window.location.reload(); });
     });
 
+    document.getElementById('btnCloseRefund')?.addEventListener('click', () => {
+        document.getElementById('modalRefundKelebihan').classList.remove('active');
+    });
+    document.getElementById('btnCancelRefund')?.addEventListener('click', () => {
+        document.getElementById('modalRefundKelebihan').classList.remove('active');
+    });
+
+    document.getElementById('inpChannelRefund')?.addEventListener('change', async () => {
+        const chan = document.getElementById('inpChannelRefund').value;
+        const container = document.getElementById('containerRekRefund');
+        const select = document.getElementById('inpRekIdRefund');
+        if (chan === 'Transfer Bank') {
+            container.style.display = 'block';
+            const reks = await getBankAccounts();
+            select.innerHTML = '<option value="">-- Pilih Rekening --</option>';
+            reks.forEach(r => {
+                const o = document.createElement('option');
+                o.value = r.id;
+                o.textContent = `${r.bank} - ${r.norek} (${r.an})`;
+                select.appendChild(o);
+            });
+        } else {
+            container.style.display = 'none';
+        }
+    });
+
+    // --- AUDIT DETAIL TOOL ---
+    window.showAuditDetail = async (trxId) => {
+        if (!window._AUDIT_LOGS || !window._AUDIT_LOGS[trxId]) {
+            const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
+            if (!trx) return window.showAlert("Data tidak ditemukan.", "danger");
+            
+            let msg = `<b>Audit Keuangan: ${trxId}</b><br><br>`;
+            msg += `Total Deal: ${window.formatRp(trx.total_deal)}<br>`;
+            msg += `Total Dibayar: ${window.formatRp(trx.total_paid)}<br><br>`;
+            msg += `<b>History Catatan:</b><br>`;
+            if (trx.history_bayar && trx.history_bayar.length > 0) {
+                trx.history_bayar.forEach(h => {
+                    msg += `• ${formatTgl(h.tgl)}: ${window.formatRp(h.nominal)} (${h.channel || h.keterangan || '?'})<br>`;
+                });
+            } else {
+                msg += `<i>Tidak ada catatan keuangan yang terdeteksi.</i>`;
+            }
+            return window.showAlert(msg, "info");
+        }
+
+        const audit = window._AUDIT_LOGS[trxId];
+        let msg = `<b>Audit Sinkronisasi: ${trxId}</b><br><br>`;
+        msg += `Total Deal: ${window.formatRp(audit.deal)}<br>`;
+        msg += `Hasil Hitung: ${window.formatRp(audit.paid)}<br><br>`;
+        msg += `<b>Item yang ditemukan:</b><br>`;
+        if (audit.items.length > 0) {
+            audit.items.forEach(item => {
+                msg += `• ${item}<br>`;
+            });
+        } else {
+            msg += `<i>Tidak ada catatan di laporan keuangan.</i>`;
+        }
+        window.showAlert(msg, "info");
+    };
+
     // --- REPAIR TOOL: MEGA-SYNC v11.3 ---
     window.syncAllBalances = async () => {
         window.showConfirm(`
