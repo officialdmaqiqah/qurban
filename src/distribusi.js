@@ -510,8 +510,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const resA = await window.sendWa(matchedAgen.wa, msgAgen);
                             if (!resA.success) {
                                 console.warn('[WA Debug] Gagal kirim ke Agen:', resA.msg);
-                                // Untuk agen, cukup toast atau confirm opsional
-                                if (window.showToast) window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
+                                if (window.showConfirm) {
+                                    window.showConfirm(`WA Agen Gagal: ${resA.msg}\n\nKirim manual ke Agen?`, () => {
+                                        window.open(resA.link, '_blank');
+                                    }, null, 'WA Agen Gagal', 'Kirim Manual', 'btn-primary');
+                                }
                             } else {
                                 console.log('[WA Debug] Sukses kirim ke Agen');
                             }

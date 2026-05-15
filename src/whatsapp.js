@@ -44,10 +44,16 @@ export const getWaConfig = async () => {
     
     if (data && data.val) {
         config = { ...WA_DEFAULT_CONFIG, ...data.val };
+        console.log('[WA] Config loaded from Cloud (Sync OK)');
     } else {
         // Fallback to localStorage if no cloud data yet (for migration)
         const saved = localStorage.getItem('QURBAN_WA_CONFIG');
-        if (saved) config = { ...WA_DEFAULT_CONFIG, ...JSON.parse(saved) };
+        if (saved) {
+            config = { ...WA_DEFAULT_CONFIG, ...JSON.parse(saved) };
+            console.log('[WA] Config loaded from Local Cache');
+        } else {
+            console.warn('[WA] Config not found in Cloud or Local. Using Defaults (Stale?).');
+        }
     }
 
     // Patch known templates if they are old/missing
@@ -120,6 +126,8 @@ export const parseWaTemplate = async (template, data = {}) => {
         '[[KOMISI]]': data.komisi || 'Rp 0',
         '[[FOTO]]': data.foto || data.bukti || '-',
         '[[BUKTI]]': data.bukti || data.foto || '-',
+        '[[NAMA_SOHIBUL]]': data.nama_sohibul || '-',
+        '[[PEMBELI]]': data.pembeli || data.nama || '-',
         '[[EMAIL]]': data.email || '-',
         '[[PASSWORD]]': '****', // Proteksi (Selalu rahasiakan password dalam WA)
         '[[SUDAH]]': data.sudah || '0',
