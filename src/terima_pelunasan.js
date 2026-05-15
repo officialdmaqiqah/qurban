@@ -807,9 +807,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const descClean = desc.toUpperCase().replace(/\s+/g, '');
                         const id = (item.id || '').toUpperCase();
                         
-                        // Cek apakah transaksi ini milik order ini
-                        const isMatch = (item.payId === trx.id) || descClean.includes(trxIdClean);
-                        if (!isMatch) return sum;
+                        // Pencarian Berlapis: ID TRX atau Nama Konsumen (Fuzzy)
+                        const isMatchId = (item.payId === trx.id) || descClean.includes(trxIdClean);
+                        const customerName = (trx.customer_name || '').toLowerCase();
+                        const isMatchName = customerName && desc.includes(customerName);
+                        
+                        if (!isMatchId && !isMatchName) return sum;
 
                         // Kriteria Refund / Tarik Dana / Penyesuaian
                         const isRefund = id.startsWith('REF-') || 
@@ -850,11 +853,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                         items: logs
                     };
 
+                    // --- SISTEM KEAMANAN GANDA (ANTI-HAPUS) ---
+                    // Jika tidak ada history keuangan sama sekali, JANGAN timpa data lama (mungkin input manual)
+                    let finalPaid = newTotalPaid;
+                    if (logs.length === 0 && (trx.total_paid || 0) > 0) {
+                        finalPaid = trx.total_paid; // Pertahankan data lama
+                    }
+
+                    // Simpan log ke global untuk dilihat nanti
+                    window._AUDIT_LOGS = window._AUDIT_LOGS || {};
+                    window._AUDIT_LOGS[trx.id] = {
+                        deal: trx.total_deal,
+                        paid: finalPaid,
+                        items: logs
+                    };
+
                     // 5. Update di DB
                     if (trx.total_deal > 0) {
                         const { error: upErr } = await client.from('transaksi').update({
-                            total_paid: newTotalPaid,
-                            total_overpaid: Math.max(0, newTotalPaid - (trx.total_deal || 0)),
+                            total_paid: finalPaid,
+                            total_overpaid: Math.max(0, finalPaid - (trx.total_deal || 0)),
                             history_bayar: rebuiltHistory,
                             updated_at: new Date().toISOString()
                         }).eq('id', trx.id);
