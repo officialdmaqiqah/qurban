@@ -281,29 +281,50 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     formSakit?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        // Logika Ekstra Robust untuk mengambil No Tali
+        // Logika Ekstra Robust untuk mengambil data kambing yang spesifik
         const rawVal = selectTarget.value.trim();
-        let noTali = rawVal.replace(/^No\s+/i, '').split(' ')[0].split('[')[0].trim();
         
-        console.log("Mencari Kambing:", noTali);
+        // Parsing Format: "No 14 [Orange] | Batch BT006 | Tersedia"
+        let noTali = '';
+        let warna = '';
+        let batch = '';
 
-        // 1. Cari kambing yang 'Ada' (Case-Insensitive)
-        const { data: goats, error } = await supabase
-            .from('stok_kambing')
-            .select('*')
-            .ilike('no_tali', noTali) 
-            .eq('status_fisik', 'Ada')
-            .limit(1);
+        if (rawVal.includes('|')) {
+            const parts = rawVal.split('|');
+            // Part 1: "No 14 [Orange] "
+            const p1 = parts[0].trim();
+            noTali = p1.replace(/^No\s+/i, '').split('[')[0].trim();
+            const wMatch = p1.match(/\[(.*?)\]/);
+            warna = wMatch ? wMatch[1].trim() : '';
+            
+            // Part 2: " Batch BT006 "
+            batch = parts[1].replace(/Batch/i, '').trim();
+        } else {
+            // Fallback: Jika diinput manual angka saja
+            noTali = rawVal.replace(/^No\s+/i, '').split(' ')[0].split('[')[0].trim();
+        }
+        
+        console.log("Mencari Kambing Spesifik:", { noTali, warna, batch });
+
+        // 1. Cari kambing yang 'Ada' dengan kriteria spesifik
+        let query = supabase.from('stok_kambing').select('*').ilike('no_tali', noTali).eq('status_fisik', 'Ada');
+        if (warna) query = query.eq('warna_tali', warna);
+        if (batch) query = query.eq('batch', batch);
+
+        const { data: goats, error } = await query.limit(1);
 
         const goat = (goats && goats.length > 0) ? goats[0] : null;
 
         // 2. Jika tidak ketemu, coba cari tanpa filter 'Ada' untuk diagnosa
         if (!goat) {
-            const { data: checkAny } = await supabase.from('stok_kambing').select('id, no_tali, status_fisik').ilike('no_tali', noTali).limit(1);
+            let diagQuery = supabase.from('stok_kambing').select('id, no_tali, status_fisik').ilike('no_tali', noTali);
+            if (warna) diagQuery = diagQuery.eq('warna_tali', warna);
+            const { data: checkAny } = await diagQuery.limit(1);
+            
             if (checkAny && checkAny.length > 0) {
-                return window.showAlert(`Kambing <b>${noTali}</b> ditemukan, tapi statusnya <b>${checkAny[0].status_fisik}</b> (Bukan 'Ada').`, 'warning');
+                return window.showAlert(`Kambing <b>${noTali} ${warna}</b> ditemukan, tapi statusnya <b>${checkAny[0].status_fisik}</b>.`, 'warning');
             }
-            return window.showAlert(`Kambing <b>${noTali}</b> benar-benar tidak ditemukan di database. Tolong cek nomornya lagi.`, 'danger');
+            return window.showAlert(`Kambing <b>${noTali} ${warna}</b> tidak ditemukan.`, 'danger');
         }
 
         const note = document.getElementById('inpCatatan').value;
