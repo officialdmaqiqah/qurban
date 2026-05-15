@@ -734,12 +734,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const newTotalPaid = rebuiltHistory.reduce((s, h) => {
                         const isIncome = h.tipe === 'pemasukan';
                         const cat = (h.category || '').toLowerCase();
-                        const isAdj = cat.includes('internal') || cat.includes('aqiqah') || (h.id || '').startsWith('ADJ-');
-                        const isRefund = h.tipe === 'pengeluaran' && (cat.includes('pengembalian dana') || cat.includes('refund'));
+                        const desc = (h.keterangan || '').toLowerCase();
+                        const id = (h.id || '').toUpperCase();
                         
+                        // Kriteria Adjustment (Pembayaran dari Titipan/Dana Internal) -> Menambah total bayar
+                        const isAdj = id.startsWith('ADJ-') || 
+                                     cat.includes('internal') || 
+                                     cat.includes('aqiqah') || 
+                                     desc.includes('penyesuaian');
+
+                        // Kriteria Refund (Pengembalian Dana ke Konsumen) -> Mengurangi total bayar
+                        const isRefund = id.startsWith('REF-') || 
+                                        cat.includes('refund') || 
+                                        cat.includes('pengembalian') || 
+                                        desc.includes('refund') || 
+                                        desc.includes('kelebihan');
+
                         if (isIncome) return s + h.nominal;
-                        if (isAdj) return s + Math.abs(h.nominal);
-                        if (isRefund) return s + h.nominal;
+                        
+                        // Jika Adjustment (dan bukan refund): Paksa jadi POSITIF (pembayaran dari dana internal)
+                        if (isAdj && !isRefund) return s + Math.abs(h.nominal);
+                        
+                        // Jika Refund atau Pengeluaran biasa: Biarkan NEGATIF (mengurangi saldo bayar)
+                        if (h.tipe === 'pengeluaran') return s + h.nominal;
+                        
                         return s;
                     }, 0);
 
