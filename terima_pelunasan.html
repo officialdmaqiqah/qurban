@@ -396,8 +396,25 @@
         </main>
     </div>
 
-    <script type="module" src="src/layout_v53.js?v=5.5"></script>
-    <script type="module" src="src/terima_pelunasan.js?v=5.5"></script>
+    <script type="module" src="src/layout_v53.js?v=9.9"></script>
+    <script type="module" src="src/terima_pelunasan.js?v=9.9"></script>
+
+    <!-- EMERGENCY INLINE SCRIPT (ANTI-CACHE) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.createElement('button');
+            btn.innerHTML = '🛠️ FIX DATA SEKARANG (ANTI-CACHE)';
+            btn.style.cssText = 'position:fixed; bottom:20px; right:20px; font-size:0.8rem; background:#ef4444; color:white; padding:15px 25px; border-radius:50px; z-index:999999; cursor:pointer; box-shadow:0 10px 30px rgba(239,68,68,0.5); border:3px solid white; font-weight:bold;';
+            btn.onclick = () => {
+                if (typeof window.syncAllBalances === 'function') {
+                    window.syncAllBalances();
+                } else {
+                    alert("Sistem sedang loading kode baru (Versi 9.9). Tunggu 3 detik lalu klik lagi. Jika tetap muncul pesan ini, tekan CTRL + F5.");
+                }
+            };
+            document.body.appendChild(btn);
+        });
+    </script>
 
     <!-- MODAL KEMBALIKAN KELEBIHAN BAYAR -->
     <div class="modal-overlay" id="modalRefundKelebihan">
