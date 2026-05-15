@@ -1,18 +1,32 @@
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
 
-import { createClient } from '@supabase/supabase-js'
+const supabaseFile = fs.readFileSync('src/supabase.js', 'utf8');
+const urlMatch = supabaseFile.match(/const supabaseUrl = ['"](.*?)['"]/);
+const keyMatch = supabaseFile.match(/const supabaseKey = ['"](.*?)['"]/);
+const supabase = createClient(urlMatch[1], keyMatch[1]);
 
-const supabaseUrl = 'https://juscihvfmgibmrhmclab.supabase.co';
-const supabaseKey = 'sb_publishable_K6phM9DpcT4aqm1nvXdkYA_h9N1fQTQ';
+async function checkEverything() {
+    console.log("=== CHECKING SCHEMA ===");
+    
+    // Check master_data keys
+    const { data: md } = await supabase.from('master_data').select('key');
+    console.log("Master Data Keys:", md?.map(m => m.key));
 
-const supabase = createClient(supabaseUrl, supabaseKey)
+    // Check a few rows from transaksi without filter
+    const { data: trxs } = await supabase.from('transaksi').select('id').limit(5);
+    console.log("Sample IDs in transaksi:", trxs?.map(t => t.id));
 
-async function checkSchema() {
-    const { data, error } = await supabase.from('keuangan').select('*').limit(1);
-    if (error) {
-        console.error('Error:', error);
-    } else {
-        console.log('Sample Row:', JSON.stringify(data[0], null, 2));
+    // Check if there is a 'temp_transaksi' or similar
+    const { data: tables, error: tableErr } = await supabase.rpc('get_tables'); // If RPC exists
+    if (tableErr) {
+        // Fallback: try to guess common names
+        const names = ['transaksi', 'keuangan', 'profiles', 'orders', 'sales', 'pembayaran'];
+        for (const name of names) {
+            const { error } = await supabase.from(name).select('count').limit(1);
+            console.log(`Table ${name}: ${error ? 'NOT FOUND or NO ACCESS' : 'EXISTS'}`);
+        }
     }
 }
 
-checkSchema();
+checkEverything();
