@@ -794,27 +794,41 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
                     // 4. Hitung ulang total secara akurat (Hanya Pemasukan & Refund)
+                    let auditLogs = [];
                     const newTotalPaid = rebuiltHistory.reduce((sum, item) => {
                         const isIncome = item.tipe === 'pemasukan';
                         const cat = (item.category || '').toLowerCase();
                         const desc = (item.keterangan || '').toLowerCase();
                         const id = (item.id || '').toUpperCase();
                         
-                        // Kriteria Refund
-                        const isRefund = id.startsWith('REF-') || cat.includes('refund') || cat.includes('pengembalian');
+                        // Kriteria Refund / Tarik Dana / Penyesuaian
+                        const isRefund = id.startsWith('REF-') || 
+                                        cat.includes('refund') || 
+                                        cat.includes('pengembalian') || 
+                                        cat.includes('titipan') || 
+                                        desc.includes('refund') || 
+                                        desc.includes('tarik') || 
+                                        desc.includes('potong') || 
+                                        desc.includes('titipan');
 
                         if (isIncome) {
                             // Abaikan jika kategori mengandung 'komisi'
                             if (cat.includes('komisi') && !cat.includes('pelunasan')) return sum;
+                            auditLogs.push(`[${trx.id}] +${item.nominal} (${desc})`);
                             return sum + (item.nominal || 0);
                         } else {
-                            // HANYA kurangi jika ini adalah REFUND
-                            if (isRefund || cat.includes('refund') || desc.includes('refund')) {
+                            // HANYA kurangi jika ini adalah REFUND/TARIK
+                            if (isRefund) {
+                                auditLogs.push(`[${trx.id}] -${item.nominal} (${desc})`);
                                 return sum - Math.abs(item.nominal || 0);
                             }
                             return sum;
                         }
                     }, 0);
+
+                    if (auditLogs.length > 0) {
+                        console.log(`Audit ${trx.id}:`, auditLogs);
+                    }
 
                     // 5. Update di DB
                     if (trx.total_deal > 0) {
