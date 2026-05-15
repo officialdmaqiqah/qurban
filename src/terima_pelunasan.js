@@ -153,8 +153,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         }
 
-        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
-        const overpaid = filtered.filter(t => (t.total_overpaid || 0) > 0 || (t.total_paid > t.total_deal)).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
+        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 100).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
+        const overpaid = filtered.filter(t => (t.total_overpaid || 0) > 100 || (t.total_paid - t.total_deal) > 100).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
 
         tableBodyBelumLunas.innerHTML = belumLunas.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:1.5rem; font-size:0.8rem; color:var(--text-muted);">Semua lunas!</td></tr>' : '';
         belumLunas.forEach(t => tableBodyBelumLunas.appendChild(createOrderRow(t, 'belum')));
