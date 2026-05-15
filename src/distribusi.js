@@ -469,6 +469,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const rekStr = reks.filter(r => !(r.bank || '').toLowerCase().includes('bsi')).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
 
                     const commonData = {
+                        judul: "*NOTIFIKASI PENGIRIMAN* 🚚",
                         nama: trx.customer?.nama || '-',
                         id: trx.id,
                         tgl: new Date().toLocaleDateString('id-ID'),
@@ -476,6 +477,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         sisa: formatRp((trx.total_deal || 0) - (trx.total_paid || 0)),
                         nama_agen: trips[tIdx].sopirNama,
                         rekening: rekStr || '-',
+                        foto: url || '-',
                         bukti: url || '-'
                     };
 
@@ -485,7 +487,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const res = await window.sendWa(trx.customer.wa1, msg);
                         if (!res.success) {
                             console.warn('[WA Debug] Gagal kirim ke Konsumen:', res.msg);
-                            window.showToast('WA ke Konsumen gagal dikirim otomatis.', 'warning');
+                            if (window.showConfirm) {
+                                window.showConfirm(`WA Konsumen Gagal: ${res.msg}\n\nKirim manual lewat WA Web/App?`, () => {
+                                    window.open(res.link, '_blank');
+                                }, null, 'WA Otomatis Gagal', 'Kirim Manual', 'btn-primary');
+                            }
                         } else {
                             console.log('[WA Debug] Sukses kirim ke Konsumen');
                         }
@@ -499,12 +505,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (matchedAgen && matchedAgen.wa) {
                             const msgAgen = await window.parseWaTemplate(config.templateDistribusiTerkirim, { 
                                 ...commonData, 
-                                JUDUL: "NOTIFIKASI PENGIRIMAN (AGEN)" 
+                                judul: "*NOTIFIKASI PENGIRIMAN (AGEN)*" 
                             });
                             const resA = await window.sendWa(matchedAgen.wa, msgAgen);
                             if (!resA.success) {
                                 console.warn('[WA Debug] Gagal kirim ke Agen:', resA.msg);
-                                window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
+                                // Untuk agen, cukup toast atau confirm opsional
+                                if (window.showToast) window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
                             } else {
                                 console.log('[WA Debug] Sukses kirim ke Agen');
                             }
@@ -514,6 +521,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 } else {
                     console.warn('[WA Debug] Transaksi tidak ditemukan untuk GoatID:', modal._goatId);
+                    window.showToast('Data transaksi tidak ditemukan, WA tidak dikirim.', 'warning');
                 }
             } catch (waErr) {
                 console.warn('Opsi notifikasi WA gagal:', waErr);
