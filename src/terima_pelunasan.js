@@ -1056,21 +1056,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.setupMoneyMask('inpNominalRefund');
 
     renderStats(); renderList();
+});
 
-    // --- MASTER KEY TOOL ---
+// --- MASTER KEY TOOL (DI LUAR DOM agar pasti muncul) ---
+(function() {
     const addMasterKeyBtn = () => {
-        const container = document.querySelector('.container-fluid') || document.body;
         const btn = document.createElement('button');
-        btn.innerHTML = '🔑 Setup Master Key';
-        btn.style.cssText = 'position:fixed; bottom:10px; right:10px; font-size:0.6rem; opacity:0.3; background:none; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:4px; z-index:9999; cursor:pointer;';
+        btn.innerHTML = '🔑 SET MASTER KEY (ADMIN)';
+        btn.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); font-size:0.8rem; background:var(--primary); color:white; padding:10px 20px; border-radius:50px; z-index:99999; cursor:pointer; box-shadow:0 10px 20px rgba(0,0,0,0.3); border:none; font-weight:bold;';
         btn.onclick = () => {
             const key = prompt("Masukkan SUPABASE_SERVICE_ROLE Key untuk bypass RLS (Hanya untuk Admin):");
             if (key) {
                 localStorage.setItem('SUPABASE_SERVICE_ROLE', key.trim());
+                alert("Master Key tersimpan! Halaman akan dimuat ulang.");
                 window.location.reload();
             }
         };
-        container.appendChild(btn);
+        document.body.appendChild(btn);
     };
-    addMasterKeyBtn();
-});
+    if (document.readyState === 'complete') addMasterKeyBtn();
+    else window.addEventListener('load', addMasterKeyBtn);
+})();
