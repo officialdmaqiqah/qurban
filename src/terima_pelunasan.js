@@ -1,28 +1,12 @@
 import { supabase } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- FORCE FIX BUTTON (Paling Atas Agar Pasti Muncul) ---
-    const addForceFixBtn = () => {
-        if (document.getElementById('btnForceFix')) return;
-        const btn = document.createElement('button');
-        btn.id = 'btnForceFix';
-        btn.innerHTML = '🛠️ SYNC DATA (PAKSA)';
-        btn.style.cssText = 'position:fixed; bottom:20px; right:20px; font-size:0.75rem; background:#ef4444; color:white; padding:12px 20px; border-radius:50px; z-index:99999; cursor:pointer; box-shadow:0 10px 20px rgba(239,68,68,0.4); border:none; font-weight:bold;';
-        btn.onclick = async () => {
-            syncAllBalances();
-        };
-        document.body.appendChild(btn);
-    };
-    addForceFixBtn();
-
     // 1. Check Session & Profile
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return; 
 
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
     if (!profile) return;
-
-
 
     // Helpers
     const formatTgl = (iso) => {
@@ -67,15 +51,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) { console.error('GDrive failed:', e); return null; }
     }
 
-    // DB Helpers
     const getTrxData = async () => { const { data } = await supabase.from('transaksi').select('*'); return data || []; };
     const getBankAccounts = async () => { 
         const { data } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single(); 
-        if (data && data.val && data.val.length > 0) return data.val;
-        
-        // Fallback to old key
-        const { data: oldData } = await supabase.from('master_data').select('val').eq('key', 'BANK_ACCOUNTS').single();
-        return oldData?.val || [];
+        return data?.val || [];
     };
     const getAgenDb = async () => { const { data } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single(); return data?.val || []; };
 
@@ -87,7 +66,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const nom = parseFloat(f.nominal) || 0;
             const isDepositIn = f.kategori === 'Titipan Dana Agen' && f.tipe === 'pemasukan';
             const isDepositOut = ['Pemakaian Titipan Agen', 'Penarikan Titipan Agen'].includes(f.kategori) || (f.kategori === 'Titipan Dana Agen' && f.tipe === 'pengeluaran');
-            
             if (isDepositIn) saldo += nom;
             else if (isDepositOut) saldo -= nom;
         });
@@ -97,7 +75,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const selOrder = document.getElementById('selOrder');
     const boxInfoOrder = document.getElementById('boxInfoOrder');
     const gridInfoOrder = document.getElementById('gridInfoOrder');
-    const displaySisa = document.getElementById('displaySisa');
     const boxHistoriPay = document.getElementById('boxHistoriPay');
     const listHistoriPay = document.getElementById('listHistoriPay');
     const formBayar = document.getElementById('formBayar');
@@ -111,24 +88,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inpRekIdBayar = document.getElementById('inpRekIdBayar');
     const inpBuktiBayar = document.getElementById('inpBuktiBayar');
     const previewBuktiBayar = document.getElementById('previewBuktiBayar');
-    const btnOpenCameraTP = document.getElementById('btnOpenCameraTP');
-    const btnRemoveTPPhoto = document.getElementById('btnRemoveTPPhoto');
     const tableBodyOverpaid = document.getElementById('tableBodyOverpaid');
     const badgeOverpaidCount = document.getElementById('badgeOverpaidCount');
 
-    // Set default date
     if(inpTglBayar) inpTglBayar.value = window.getLocalDate();
 
-    // setupMoneyMask will be called at the end of file for all IDs
-
     const renderStats = async () => {
-        const { data: trxs } = await supabase.from('transaksi').select('*');
+        const { data: trxs } = await supabase.from('transaksi').select('total_deal, total_paid, agen');
         const userRole = (profile?.role || '').toLowerCase().replace(/_/g, ' ').trim();
         const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole);
         const linkedAgenId = profile?.linked_agen_id;
         let filtered = isAdmin ? trxs : trxs.filter(t => t.agen?.id === linkedAgenId);
 
-        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 0);
+        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 1000);
         const totalSisa = belumLunas.reduce((s, t) => s + (t.total_deal - t.total_paid), 0);
         const totalPaid = filtered.reduce((s, t) => s + (t.total_paid || 0), 0);
 
@@ -157,29 +129,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const overpaid = filtered.filter(t => {
             const over1 = Math.floor(t.total_overpaid || 0);
             const over2 = Math.floor(t.total_paid || 0) - Math.floor(t.total_deal || 0);
-            if (t.id === 'TRX00080' || t.id === 'TRX00072') {
-                console.log(`[Debug] ${t.id}: over1=${over1}, over2=${over2}`);
-            }
             return over1 > 1000 || over2 > 1000;
         }).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
 
-        tableBodyBelumLunas.innerHTML = belumLunas.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:1.5rem; font-size:0.8rem; color:var(--text-muted);">Semua lunas!</td></tr>' : '';
+        tableBodyBelumLunas.innerHTML = belumLunas.length === 0 ? '<tr><td colspan="5" style="text-align:center;">Semua lunas!</td></tr>' : '';
         belumLunas.forEach(t => tableBodyBelumLunas.appendChild(createOrderRow(t, 'belum')));
 
-        tableBodyOverpaid.innerHTML = overpaid.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:1rem; font-size:0.75rem; color:var(--text-muted);">Tidak ada kelebihan bayar</td></tr>' : '';
+        tableBodyOverpaid.innerHTML = overpaid.length === 0 ? '<tr><td colspan="4" style="text-align:center;">Tidak ada kelebihan bayar</td></tr>' : '';
         overpaid.forEach(t => tableBodyOverpaid.appendChild(createOrderRow(t, 'overpaid')));
         
         badgeOverpaidCount.textContent = overpaid.length;
         badgeOverpaidCount.style.display = overpaid.length > 0 ? 'inline-block' : 'none';
-        
-        // Highlight active row if any
-        if (selOrder.value) {
-            const rows = tableBodyBelumLunas.querySelectorAll('tr');
-            rows.forEach(r => {
-                if(r.dataset.id === selOrder.value) r.classList.add('row-selected');
-                else r.classList.remove('row-selected');
-            });
-        }
     };
 
     const createOrderRow = (t, type) => {
@@ -192,51 +152,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (type === 'belum') {
             tr.innerHTML = `
                 <td data-label="ID ORDER" style="font-weight:700; color:var(--primary);">${t.id}</td>
-                <td data-label="KONSUMEN">
-                    <div class="cell-content" style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
-                        <div style="font-weight:600; font-size:0.95rem;">${t.customer.nama || '-'}</div>
-                        <div style="font-size:0.7rem; color:var(--primary); font-weight:500;">Agen: ${t.agen?.nama || '-'}</div>
-                        <div style="font-size:0.65rem; color:var(--text-muted); opacity:0.7;">${formatTgl(t.tgl_trx)}</div>
-                    </div>
+                <td data-label="KONSUMEN" style="text-align:right;">
+                    <div style="font-weight:600;">${t.customer.nama || '-'}</div>
+                    <div style="font-size:0.7rem; color:var(--primary);">Agen: ${t.agen?.nama || '-'}</div>
+                    <div style="font-size:0.6rem; opacity:0.6;">${formatTgl(t.tgl_trx)}</div>
                 </td>
                 <td data-label="SISA TAGIHAN" style="font-weight:700; color:var(--warning);">${window.formatRp(sisa)}</td>
-                <td data-label="PENYELESAIAN">
-                    <div class="cell-content" style="width:140px; display:flex; flex-direction:column; align-items:flex-end;">
-                        <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:4px;">Terbayar ${pct}%</div>
-                        <div style="background:rgba(0,0,0,0.1); height:6px; border-radius:4px; width:100%; border:1px solid rgba(255,255,255,0.05);">
-                            <div style="width:${Math.min(100, pct)}%; height:100%; background:var(--success); border-radius:4px; box-shadow:0 0 10px rgba(16,185,129,0.3);"></div>
-                        </div>
+                <td data-label="PENYELESAIAN" style="text-align:right;">
+                    <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:4px;">Terbayar ${pct}%</div>
+                    <div style="background:rgba(0,0,0,0.1); height:6px; border-radius:4px; width:100px; margin-left:auto;">
+                        <div style="width:${Math.min(100, pct)}%; height:100%; background:var(--success); border-radius:4px;"></div>
                     </div>
                 </td>
-                <td data-label="AKSI"><button class="btn btn-sm" style="padding:6px 16px; font-size:0.8rem; background:rgba(16,185,129,0.1); color:var(--success); border:1px solid rgba(16,185,129,0.2); border-radius:8px; font-weight:600;" title="Pilih Order">✔️</button></td>
+                <td data-label="AKSI"><button class="btn btn-sm">✔️</button></td>
             `;
             tr.onclick = () => {
-                // Clear selected state from all rows
-                tableBodyBelumLunas.querySelectorAll('tr').forEach(r => r.classList.remove('row-selected'));
-                tr.classList.add('row-selected');
-                
                 selOrder.value = t.id;
                 selOrder.dispatchEvent(new Event('input'));
-                
-                // Scroll the form into view if on mobile
-                if (window.innerWidth <= 768) {
-                    document.querySelector('.card-box').scrollIntoView({ behavior: 'smooth' });
-                }
             };
         } else {
             tr.innerHTML = `
                 <td data-label="ID ORDER" style="font-weight:700; color:var(--primary);">${t.id}</td>
-                <td data-label="KONSUMEN">
-                    <div class="cell-content" style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
-                        <div style="font-weight:600;">${t.customer.nama || '-'}</div>
-                        <div style="font-size:0.7rem; color:var(--primary); font-weight:500;">Agen: ${t.agen?.nama || '-'}</div>
-                    </div>
+                <td data-label="KONSUMEN" style="text-align:right;">
+                    <div style="font-weight:600;">${t.customer.nama || '-'}</div>
+                    <div style="font-size:0.7rem; color:var(--primary);">Agen: ${t.agen?.nama || '-'}</div>
                 </td>
                 <td data-label="KELEBIHAN" style="font-weight:700; color:var(--warning); cursor:pointer;" onclick="window.showAuditDetail('${t.id}')">
                     ${window.formatRp(Math.max(t.total_overpaid || 0, (t.total_paid || 0) - (t.total_deal || 0)))}
-                    <div style="font-size:0.6rem; font-weight:normal; opacity:0.7;">(Klik rincian)</div>
                 </td>
-                <td data-label="AKSI"><button class="btn btn-sm" style="padding:6px 16px; font-size:0.8rem; background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.2); border-radius:8px; font-weight:600;" title="Refund Dana">💸</button></td>
+                <td data-label="AKSI"><button class="btn btn-sm">💸</button></td>
             `;
             tr.onclick = () => openRefundModal(t);
         }
@@ -250,48 +194,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         gridInfoOrder.innerHTML = `
             <div class="info-card"><div class="label">Konsumen</div><div class="value">${trx.customer.nama}</div></div>
             <div class="info-card"><div class="label">Total Deal</div><div class="value">${window.formatRp(trx.total_deal)}</div></div>
-            <div class="info-card"><div class="label">Pernah Bayar</div><div class="value">${window.formatRp(trx.total_paid)}</div></div>
-            <div class="info-card" style="background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2);">
-                <div class="label" style="color:var(--warning); font-weight:700;">SISA TAGIHAN</div>
-                <div class="value" style="color:var(--warning); font-size:1.5rem; font-weight:800;">${window.formatRp(sisa)}</div>
-            </div>
-            <button id="btnDeepScan" class="btn btn-sm" style="width:100%; margin-top:0.5rem; font-size:0.75rem; background:none; border:1px dashed var(--primary); color:var(--primary);" title="Cari pembayaran di laporan keuangan">🔍 Cari Pembayaran Tercecer</button>
+            <div class="info-card"><div class="label">Pernah Bayar</div><div class="value" style="cursor:pointer;" onclick="window.showAuditDetail('${trx.id}')">${window.formatRp(trx.total_paid)}</div></div>
+            <div class="info-card" style="background:rgba(245,158,11,0.05);"><div class="label" style="color:var(--warning);">SISA TAGIHAN</div><div class="value" style="color:var(--warning); font-size:1.5rem;">${window.formatRp(sisa)}</div></div>
         `;
         
-        const btnDeepScan = document.getElementById('btnDeepScan');
-        if(btnDeepScan) btnDeepScan.onclick = () => deepScanTransaction(trx.id);
         listHistoriPay.innerHTML = '';
         (trx.history_bayar || []).forEach(h => {
             const div = document.createElement('div');
             div.className = 'history-item';
-            div.innerHTML = `
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                    <span>• ${formatTgl(h.tgl)}</span>
-                    <span style="font-size:0.65rem; color:var(--text-muted); opacity:0.6;">ID: ${h.payId || '-'}</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="text-align:right;">${window.formatRp(h.nominal)} <span class="history-channel">${h.channel}</span></span>
-                    <button class="btn-unlink-pay" data-payid="${h.payId}" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px;" title="Putuskan Hubungan Pembayaran">🗑️</button>
-                </div>
-            `;
+            div.innerHTML = `<span>• ${formatTgl(h.tgl)}: ${window.formatRp(h.nominal)} (${h.channel})</span>`;
             listHistoriPay.appendChild(div);
         });
-
-        // Add Listeners for Unlink buttons
-        const unlinkBtns = listHistoriPay.querySelectorAll('.btn-unlink-pay');
-        unlinkBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const payId = e.target.closest('button').dataset.payid;
-                unlinkPayment(trx.id, payId);
-            });
-        });
-        
         boxHistoriPay.style.display = (trx.history_bayar?.length > 0) ? 'block' : 'none';
-        
-        // Show Advanced Linking Tool
-        const boxLinkManualPay = document.getElementById('boxLinkManualPay');
-        if (boxLinkManualPay) boxLinkManualPay.style.display = 'block';
-
         inpNominalBayar.value = window.formatNum(sisa);
         boxInfoOrder.style.display = 'block'; formBayar.style.display = 'block';
     });
@@ -316,174 +230,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const updatedHistory = [...(trx.history_bayar || []), { payId, tgl, nominal, channel: finalChannel, buktiUrl }];
         await supabase.from('transaksi').update({ total_paid: trx.total_paid + realPay, total_overpaid: (trx.total_overpaid || 0) + over, history_bayar: updatedHistory }).eq('id', trxId);
-        
-        if (chan === 'Saldo Titipan Agen') {
-            const agenName = trx.agen.nama;
-            const currentSaldo = await getAgentSaldo(agenName);
-            if (currentSaldo < nominal) throw new Error(`Saldo Titipan Agen tidak cukup. Tersedia: ${window.formatRp(currentSaldo)}`);
+        await supabase.from('keuangan').insert([{ id: payId, tipe: 'pemasukan', tanggal: tgl, kategori: 'Pelunasan Order', nominal, channel: finalChannel, related_trx_id: trxId, bukti_url: buktiUrl }]);
 
-            const payIdCommon = 'PAY-' + Date.now();
-            await supabase.from('keuangan').insert([
-                { 
-                    id: payIdCommon + '-OUT', 
-                    tipe: 'pengeluaran', 
-                    tanggal: tgl, 
-                    kategori: 'Pemakaian Titipan Agen', 
-                    nominal, 
-                    channel: 'Tunai / Cash', // Harus sama dengan channel IN agar saldo tidak double count
-                    related_trx_id: null, // JANGAN hubungkan OUT titipan ke TRX agar tidak mengurangi total_paid
-                    agen_name: agenName,
-                    keterangan: `Pemakaian titipan untuk Pelunasan Order ${trxId}`
-                },
-                { 
-                    id: payIdCommon + '-IN', 
-                    tipe: 'pemasukan', 
-                    tanggal: tgl, 
-                    kategori: 'Pelunasan Order', 
-                    nominal, 
-                    channel: 'Tunai / Cash', // Berubah dari 'Saldo Titipan' agar masuk ke kas tunai
-                    related_trx_id: trxId, 
-                    agen_name: agenName,
-                    keterangan: `Pelunasan via Titipan Agen`
-                }
-            ]);
-        } else {
-            await supabase.from('keuangan').insert([{ id: payId, tipe: 'pemasukan', tanggal: tgl, kategori: 'Pelunasan Order', nominal, channel: finalChannel, related_trx_id: trxId, bukti_url: buktiUrl }]);
-        }
-
-        if (sendWA && typeof window.sendWa === 'function') {
-            try {
-                const config = await window.getWaConfig();
-                const waTarget = trx.customer.wa1 || trx.customer.wa2;
-                const agens = await getAgenDb();
-                const matchedAgen = agens.find(a => a.id === trx.agen.id || a.nama === trx.agen.nama);
-                const agentTipe = (trx.agen?.tipe || matchedAgen?.jenis || '').toUpperCase();
-                const skipCustWA = agentTipe.includes('DM') || agentTipe.includes('EXT');
-                // Fetch Official Accounts
-                const reks = await getBankAccounts();
-                const rekStr = (reks || []).filter(r => !(r.bank || '').toLowerCase().includes('bsi')).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
-
-                const historyStr = (updatedHistory || []).length > 0
-                    ? (updatedHistory || []).map((h, idx) => `• ${formatTgl(h.tgl)}: ${window.formatRp(h.nominal)} (${idx === 0 ? 'DP' : 'Pelunasan'})`).join('\n')
-                    : `• Pembayaran: ${window.formatRp(nominal)}`;
-
-                const infoAgen = matchedAgen ? `${matchedAgen.nama} (${matchedAgen.wa || '-'})` : (trx.agen?.nama || '-');
-                const commonData = { 
-                    nama: trx.customer.nama, 
-                    id: trx.id, 
-                    nominal: window.formatRp(nominal), 
-                    sisa: window.formatRp(sisa - realPay),
-                    history: historyStr,
-                    maps: trx.customer?.alamat?.maps || '-',
-                    rekening: rekStr || '-',
-                    info_agen: infoAgen
-                };
-
-                // Hanya kirim ke Konsumen jika BUKAN agen DM/EXT
-                if (waTarget && !skipCustWA) {
-                    const msgCust = await window.parseWaTemplate(config.templateLunas, commonData);
-                    const res = await window.sendWa(waTarget, msgCust);
-                    if (!res.success) {
-                        window.showConfirm(`WA Konsumen Gagal: ${res.msg}\n\nIngin kirim manual?`, () => {
-                            window.open(res.link, '_blank');
-                        }, null, 'WA Gateway Masalah', 'Kirim Manual', 'btn-primary');
-                    }
-                }
-
-                if (matchedAgen?.wa) {
-                    const msgAgen = await window.parseWaTemplate(config.templateLunasAgent, { ...commonData, nama_agen: matchedAgen.nama });
-                    const resA = await window.sendWa(matchedAgen.wa, msgAgen);
-                    if (!resA.success) {
-                        window.showToast('WA ke Agen gagal dikirim otomatis.', 'warning');
-                    }
-
-                    // Kirim Notifikasi Saldo Terpotong jika pakai Titipan
-                    if (chan === 'Saldo Titipan Agen') {
-                        const currentSaldo = await getAgentSaldo(matchedAgen.nama);
-                        const msgSaldo = `*NOTIFIKASI SALDO TITIPAN*\n\nHalo ${matchedAgen.nama},\nSaldo titipan Anda telah terpotong sebesar *${window.formatRp(nominal)}* untuk pelunasan *${trxId}*.\n\nSisa saldo titipan Anda saat ini: *${window.formatRp(currentSaldo)}*.\n\nTerima kasih.`;
-                        await window.sendWa(matchedAgen.wa, msgSaldo);
-                    }
-                }
-            } catch (e) {
-                console.error('WA Lunas Err:', e);
-            }
-        }
-
-        window.showAlert('Pembayaran Berhasil!', 'success', () => { selOrder.value = ''; boxInfoOrder.style.display = 'none'; formBayar.style.display = 'none'; renderStats(); renderList(); });
+        window.showAlert('Pembayaran Berhasil!', 'success', () => { window.location.reload(); });
     };
 
-    // --- CAMERA & BUKTI BAYAR LOGIC ---
-    btnOpenCameraTP?.addEventListener('click', () => {
-        if(typeof window.openCameraUI === 'function') {
-            window.openCameraUI(async (file) => {
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                if(inpBuktiBayar) inpBuktiBayar.files = dt.files;
-                
-                if(previewBuktiBayar) {
-                    const previewImg = previewBuktiBayar.querySelector('img');
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        if(previewImg) previewImg.src = e.target.result;
-                        previewBuktiBayar.style.display = 'flex';
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-    });
-
-    inpBuktiBayar?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file && previewBuktiBayar) {
-            const previewImg = previewBuktiBayar.querySelector('img');
-            const reader = new FileReader();
-            reader.onload = (re) => {
-                if(previewImg) previewImg.src = re.target.result;
-                previewBuktiBayar.style.display = 'flex';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    btnRemoveTPPhoto?.addEventListener('click', () => {
-        if(inpBuktiBayar) inpBuktiBayar.value = '';
-        if(previewBuktiBayar) {
-            previewBuktiBayar.style.display = 'none';
-            const img = previewBuktiBayar.querySelector('img');
-            if(img) img.src = '';
-        }
-    });
-
-    btnSimpanBayar.onclick = () => window.showChoice("Kirim WA resi?", [{ text: "Ya, Kirim", callback: () => performSaveLunas(true) }, { text: "Simpan Saja", callback: () => performSaveLunas(false) }]);
+    btnSimpanBayar.onclick = () => performSaveLunas(false);
 
     inpChannelBayar.addEventListener('change', async () => {
-        const infoDiv = document.getElementById('infoSaldoTitipan');
-        const valSpan = document.getElementById('valSaldoTitipan');
-        if (infoDiv) infoDiv.style.display = 'none';
-
         if(inpChannelBayar.value === 'Transfer Bank') {
             const reks = await getBankAccounts();
             containerRekBayar.style.display = 'block';
             inpRekIdBayar.innerHTML = '<option value="">-- Pilih --</option>';
             reks.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = `${r.bank} - ${r.norek} (${r.an})`; inpRekIdBayar.appendChild(o); });
-        } else if (inpChannelBayar.value === 'Saldo Titipan Agen') {
-            containerRekBayar.style.display = 'none';
-            const trxId = selOrder.value;
-            if (!trxId) {
-                window.showToast('Pilih Order Terlebih Dahulu', 'warning');
-                inpChannelBayar.value = 'Tunai';
-                return;
-            }
-            const { data: trx } = await supabase.from('transaksi').select('agen').eq('id', trxId).single();
-            const agenName = trx?.agen?.nama || '';
-            
-            if (infoDiv && valSpan && agenName) {
-                infoDiv.style.display = 'block';
-                valSpan.textContent = 'Memuat...';
-                const saldo = await getAgentSaldo(agenName);
-                valSpan.textContent = window.formatRp(saldo);
-            }
         } else containerRekBayar.style.display = 'none';
     });
 
@@ -494,548 +253,121 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('refundKonsumen').textContent = trx.customer.nama;
         document.getElementById('refundNominal').textContent = window.formatRp(surplus);
         document.getElementById('inpNominalRefund').value = window.formatNum(surplus);
-        
-        const inpTglRefund = document.getElementById('inpTglRefund');
-        if (inpTglRefund) inpTglRefund.value = window.getLocalDate();
-        
         modal._trx = trx; modal.classList.add('active');
     };
 
-    document.getElementById('btnCloseRefund')?.addEventListener('click', () => {
-        document.getElementById('modalRefundKelebihan').classList.remove('active');
-    });
-    document.getElementById('btnCancelRefund')?.addEventListener('click', () => {
-        document.getElementById('modalRefundKelebihan').classList.remove('active');
-    });
-
     document.getElementById('btnSimpanRefund')?.addEventListener('click', async () => {
-        const btn = document.getElementById('btnSimpanRefund');
-        const oldText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = 'Memproses...';
+        const modal = document.getElementById('modalRefundKelebihan');
+        const trx = modal._trx;
+        const nominal = window.parseNum(document.getElementById('inpNominalRefund').value);
+        const tgl = document.getElementById('inpTglRefund').value;
+        const chan = document.getElementById('inpChannelRefund').value;
+        const refId = 'REF-' + Date.now().toString().slice(-6);
 
-        try {
-            const modal = document.getElementById('modalRefundKelebihan');
-            const trx = modal._trx;
-            const nominal = window.parseNum(document.getElementById('inpNominalRefund').value);
-            const tgl = document.getElementById('inpTglRefund').value;
-            const chan = document.getElementById('inpChannelRefund').value;
-            const refId = 'REF-' + Date.now().toString().slice(-6);
+        const oldOver = (trx.total_overpaid || 0);
+        const oldPaid = (trx.total_paid || 0);
+        const deal = (trx.total_deal || 0);
 
-            let finalChannel = chan;
-            const inpRekIdRefund = document.getElementById('inpRekIdRefund');
-            if (chan === 'Transfer Bank' && inpRekIdRefund?.value) {
-                finalChannel = `TF ${inpRekIdRefund.options[inpRekIdRefund.selectedIndex].textContent}`;
-            }
+        let fromOver = Math.min(nominal, oldOver);
+        let remaining = nominal - fromOver;
+        let fromPaid = Math.min(remaining, Math.max(0, oldPaid - deal));
 
-            let buktiUrl = null;
-            const inpBuktiRefund = document.getElementById('inpBuktiRefund');
-            if (inpBuktiRefund?.files.length > 0) {
-                const b64 = await compressImage(inpBuktiRefund.files[0]);
-                buktiUrl = await uploadToGDrive(b64, 'BUKTI_REFUND');
-            }
-
-            const oldOver = (trx.total_overpaid || 0);
-            const oldPaid = (trx.total_paid || 0);
-            const deal = (trx.total_deal || 0);
-
-            let fromOver = Math.min(nominal, oldOver);
-            let remaining = nominal - fromOver;
-            let fromPaid = Math.min(remaining, Math.max(0, oldPaid - deal));
-
-            await supabase.from('transaksi').update({ 
-                total_overpaid: oldOver - fromOver,
-                total_paid: oldPaid - fromPaid
-            }).eq('id', trx.id);
-            
-            await supabase.from('keuangan').insert([{ 
-                id: refId, 
-                tipe: 'pengeluaran', 
-                tanggal: tgl, 
-                kategori: 'Pengembalian Dana', 
-                nominal, 
-                channel: finalChannel, 
-                related_trx_id: trx.id, 
-                keterangan: 'Refund kelebihan '+trx.id,
-                bukti_url: buktiUrl
-            }]);
-            
-            modal.classList.remove('active');
-            window.showAlert('Refund Berhasil!', 'success', () => { renderStats(); renderList(); });
-        } catch (err) {
-            console.error(err);
-            window.showAlert('Gagal refund: ' + err.message, 'danger');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = oldText;
-        }
-    });
-
-    if (inpChannelRefund) {
-        inpChannelRefund.onchange = async () => {
-            const safeguard = document.getElementById('safeguardRefund');
-            if (safeguard) {
-                safeguard.style.display = (inpChannelRefund.value === 'Kas Operasional') ? 'block' : 'none';
-            }
-            
-            const containerRekRefund = document.getElementById('containerRekRefund');
-            const inpRekIdRefund = document.getElementById('inpRekIdRefund');
-            if (inpChannelRefund.value === 'Transfer Bank') {
-                containerRekRefund.style.display = 'block';
-                const reks = await getBankAccounts();
-                inpRekIdRefund.innerHTML = '<option value="">-- Pilih Rekening --</option>';
-                reks.forEach(r => {
-                    const o = document.createElement('option');
-                    o.value = r.id;
-                    o.textContent = `${r.bank} - ${r.norek} (${r.an})`;
-                    inpRekIdRefund.appendChild(o);
-                });
-            } else {
-                containerRekRefund.style.display = 'none';
-            }
-        };
-    }
-
-    // --- CAMERA & BUKTI REFUND LOGIC ---
-    const btnOpenCameraRefund = document.getElementById('btnOpenCameraRefund');
-    const inpBuktiRefund = document.getElementById('inpBuktiRefund');
-    const previewBuktiRefund = document.getElementById('previewBuktiRefund');
-
-    btnOpenCameraRefund?.addEventListener('click', () => {
-        if(typeof window.openCameraUI === 'function') {
-            window.openCameraUI(async (file) => {
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                if(inpBuktiRefund) inpBuktiRefund.files = dt.files;
-                
-                if(previewBuktiRefund) {
-                    const previewImg = previewBuktiRefund.querySelector('img');
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        if(previewImg) previewImg.src = e.target.result;
-                        previewBuktiRefund.style.display = 'flex';
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-    });
-
-    inpBuktiRefund?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file && previewBuktiRefund) {
-            const previewImg = previewBuktiRefund.querySelector('img');
-            const reader = new FileReader();
-            reader.onload = (re) => {
-                if(previewImg) previewImg.src = re.target.result;
-                previewBuktiRefund.style.display = 'flex';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    document.getElementById('btnRemoveRefundPhoto')?.addEventListener('click', () => {
-        if(inpBuktiRefund) inpBuktiRefund.value = '';
-        if(previewBuktiRefund) {
-            previewBuktiRefund.style.display = 'none';
-            const img = previewBuktiRefund.querySelector('img');
-            if(img) img.src = '';
-        }
-    });
-
-    if (inpChannelBayar) {
-        inpChannelBayar.onchange = () => {
-            const safeguard = document.getElementById('safeguardPay');
-            if (safeguard) {
-                safeguard.style.display = (inpChannelBayar.value === 'Kas Operasional') ? 'block' : 'none';
-            }
-            // Original logic for Saldo Titipan info
-            const boxSaldo = document.getElementById('infoSaldoTitipan');
-            if (inpChannelBayar.value === 'Saldo Titipan Agen') {
-                if (boxSaldo) boxSaldo.style.display = 'block';
-            } else {
-                if (boxSaldo) boxSaldo.style.display = 'none';
-            }
-        };
-    }
-
-    // Populate Datalist
-    const trxsAll = await getTrxData();
-    const listOrders = document.getElementById('listOrders');
-    if(listOrders) {
-        listOrders.innerHTML = '';
-        trxsAll.forEach(t => { 
-            const o = document.createElement('option'); 
-            o.value = t.id; 
-            o.textContent = `${t.id} - ${t.customer?.nama || ''} [Agen: ${t.agen?.nama || '-'}] | Sisa: ${window.formatRp(t.total_deal - t.total_paid)}`; 
-            listOrders.appendChild(o); 
-        });
-    }
-
-    // Tab System Logic
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabBtns.forEach(btn => {
-        btn.onclick = () => {
-            const tabId = btn.dataset.tab;
-            
-            // Toggle buttons
-            tabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            // Toggle contents
-            tabContents.forEach(content => {
-                if (content.id === 'tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1)) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
-            });
-        };
-    });
-
-    // Event Search
-    inpSearchOrder.addEventListener('input', renderList);
-
-    // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
-    // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
-    async function syncAllBalances() {
-        let client = supabase;
+        await supabase.from('transaksi').update({ total_overpaid: oldOver - fromOver, total_paid: oldPaid - fromPaid }).eq('id', trx.id);
+        await supabase.from('keuangan').insert([{ id: refId, tipe: 'pengeluaran', tanggal: tgl, kategori: 'Pengembalian Dana', nominal, channel: chan, related_trx_id: trx.id }]);
         
-        window.showConfirm("🔄 Jalankan Sinkronisasi Saldo?<br><small>Sistem akan menghitung ulang total bayar berdasarkan data laporan keuangan.</small>", async () => {
-            window.showToast("Menganalisis data & mencari pembayaran tercecer...", "info");
+        window.showAlert('Refund Berhasil!', 'success', () => { window.location.reload(); });
+    });
+
+    // --- REPAIR TOOL: MEGA-SYNC v11.3 ---
+    window.syncAllBalances = async () => {
+        window.showConfirm(`
+            <div style="text-align:left;">
+                <h3 style="color:var(--warning);">🚀 JALANKAN MEGA-SYNC v11.3?</h3>
+                <p>Fitur ini akan <b>MENGHAPUS TOTAL</b> angka minus dan menghitung ulang saldo dari nol berdasarkan seluruh laporan keuangan.</p>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Gunakan hanya jika angka "Total Dibayar" terlihat kacau/minus.</p>
+            </div>
+        `, async () => {
             try {
-                // 1. Ambil SEMUA data (Pagination untuk menghindari limit 1000)
-                let trxs = [];
-                let fins = [];
+                window.showToast("Memproses Database (Mega Sync)...", "info");
                 
-                // Fetch Trxs
-                let pageT = 0;
-                // 1. Ambil SEMUA data Transaksi (Pagination)
-                let trxs = [];
-                let fromT = 0;
+                // 1. Ambil SEMUA data (Pagination)
+                let trxs = []; let fromT = 0;
                 while (true) {
-                    const { data: batch, error: err } = await client.from('transaksi').select('*').range(fromT, fromT + 999);
-                    if (err) throw err;
-                    if (!batch || batch.length === 0) break;
-                    trxs = [...trxs, ...batch];
-                    if (batch.length < 1000) break;
+                    const { data: b, error: e } = await supabase.from('transaksi').select('*').range(fromT, fromT + 999);
+                    if (e) throw e;
+                    if (!b || b.length === 0) break;
+                    trxs = [...trxs, ...b];
+                    if (b.length < 1000) break;
                     fromT += 1000;
                 }
 
-                // 2. Ambil SEMUA data Keuangan (Pagination)
-                let allFins = [];
-                let fromF = 0;
+                let allFins = []; let fromF = 0;
                 while (true) {
-                    const { data: batch, error: err } = await client.from('keuangan').select('*').range(fromF, fromF + 999);
-                    if (err) throw err;
-                    if (!batch || batch.length === 0) break;
-                    allFins = [...allFins, ...batch];
-                    if (batch.length < 1000) break;
+                    const { data: b, error: e } = await supabase.from('keuangan').select('*').range(fromF, fromF + 999);
+                    if (e) throw e;
+                    if (!b || b.length === 0) break;
+                    allFins = [...allFins, ...b];
+                    if (b.length < 1000) break;
                     fromF += 1000;
                 }
 
-                console.log(`[NuclearReset] Memproses ${trxs.length} Transaksi & ${allFins.length} Keuangan...`);
-                let updatedTrxCount = 0;
-
+                let updatedCount = 0;
                 for (const trx of trxs) {
-                    const trxIdClean = trx.id.toUpperCase().replace(/\s+/g, '');
-                    const customerName = (trx.customer_name || '').toLowerCase();
+                    const tId = trx.id.toUpperCase();
+                    const cName = (trx.customer_name || '').toLowerCase();
+                    
                     const logs = [];
+                    const history = allFins.filter(f => {
+                        const fId = (f.related_trx_id || '').toUpperCase();
+                        const fDesc = (f.keterangan || '').toLowerCase();
+                        return (fId === tId) || fDesc.includes(tId.toLowerCase()) || (cName && fDesc.includes(cName));
+                    }).map(f => ({
+                        payId: f.id, id: f.id, tgl: f.tanggal,
+                        nominal: f.tipe === 'pengeluaran' ? -Math.abs(f.nominal) : Math.abs(f.nominal),
+                        category: f.kategori, tipe: f.tipe, channel: f.channel, keterangan: f.keterangan || ''
+                    })).sort((a,b) => new Date(a.tgl) - new Date(b.tgl));
 
-                    // Filter history untuk transaksi ini
-                    const rebuiltHistory = allFins.filter(h => {
-                        const hId = (h.related_trx_id || '').toUpperCase();
-                        const hDesc = (h.keterangan || '').toLowerCase();
-                        const hDescClean = hDesc.toUpperCase().replace(/\s+/g, '');
-                        
-                        const isMatchId = (hId === trxIdClean) || hDescClean.includes(trxIdClean);
-                        const isMatchName = customerName && hDesc.includes(customerName);
-                        return isMatchId || isMatchName;
-                    }).map(f => {
-                        let cleanNom = String(f.nominal || '0').replace(/[^0-9,-]/g, '').replace(',', '.');
-                        let parsedNom = parseFloat(cleanNom) || 0;
-                        return {
-                            payId: f.id, id: f.id, tgl: f.tanggal,
-                            nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parsedNom)) : parsedNom,
-                            category: f.kategori, tipe: f.tipe, channel: f.channel,
-                            buktiUrl: f.bukti_url, keterangan: f.keterangan || ''
-                        };
-                    }).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
-
-                    // Hitung Ulang Nominal (START FROM ZERO - NUCLEAR)
-                    let calculatedPaid = rebuiltHistory.reduce((sum, item) => {
-                        const isIncome = item.tipe === 'pemasukan';
-                        const cat = (item.category || '').toLowerCase();
-                        const desc = (item.keterangan || '').toLowerCase();
-                        const isRefund = item.id?.startsWith('REF-') || cat.includes('refund') || cat.includes('tarik') || desc.includes('tarik') || desc.includes('refund');
-
-                        if (isIncome) {
-                            const isExcluded = cat.includes('komisi') || cat.includes('karkas') || cat.includes('daging') || desc.includes('karkas') || desc.includes('daging');
-                            if (isExcluded && !cat.includes('pelunasan')) return sum;
-                            logs.push(`+ ${window.formatRp(item.nominal)} (${item.keterangan || item.category})`);
-                            return sum + (item.nominal || 0);
-                        } else if (isRefund) {
-                            logs.push(`- ${window.formatRp(item.nominal)} (${item.keterangan || item.category})`);
-                            return sum - Math.abs(item.nominal || 0);
+                    let total = history.reduce((sum, h) => {
+                        const cat = (h.category || '').toLowerCase();
+                        if (h.tipe === 'pemasukan') {
+                            if (cat.includes('komisi') || cat.includes('karkas')) return sum;
+                            logs.push(`+ ${h.nominal}`);
+                            return sum + h.nominal;
+                        } else {
+                            if (cat.includes('refund') || cat.includes('tarik')) {
+                                logs.push(`- ${h.nominal}`);
+                                return sum + h.nominal; // h.nominal is already negative
+                            }
+                            return sum;
                         }
-                        return sum;
                     }, 0);
 
-                    // JANGAN BOLEH NEGATIF
-                    if (calculatedPaid < 0) calculatedPaid = 0;
+                    // Safety Rules
+                    let finalPaid = Math.max(0, total);
+                    if (total === 0 && logs.length === 0) finalPaid = Math.max(0, trx.total_paid || 0);
 
-                    // Khusus data lama yang tidak ada di keuangan:
-                    // Jika di DB ada saldo tapi di hitungan 0 (karena tidak ada history), 
-                    // dan saldonya POSITIF, kita PERTAHANKAN.
-                    // Jika saldonya NEGATIF, kita RESET ke 0.
-                    let finalPaid = calculatedPaid;
-                    if (calculatedPaid === 0 && logs.length === 0) {
-                        finalPaid = Math.max(0, trx.total_paid || 0);
-                    }
-
-                    // Simpan Audit
-                    window._AUDIT_LOGS = window._AUDIT_LOGS || {};
-                    window._AUDIT_LOGS[trx.id] = { deal: trx.total_deal, paid: finalPaid, items: logs };
-
-                    // Update DB
-                    const { error: upErr } = await client.from('transaksi').update({
+                    await supabase.from('transaksi').update({
                         total_paid: finalPaid,
-                        total_overpaid: Math.max(0, finalPaid - (trx.total_deal || 0)),
-                        history_bayar: rebuiltHistory,
+                        total_overpaid: Math.max(0, finalPaid - trx.total_deal),
+                        history_bayar: history,
                         updated_at: new Date().toISOString()
                     }).eq('id', trx.id);
-
-                    if (!upErr) updatedTrxCount++;
+                    updatedCount++;
                 }
 
-                window.showAlert(`🩺 <b>SINKRONISASI SELESAI!</b><br><br>Berhasil memproses <b>${updatedTrxCount}</b> transaksi.<br><br>Data lama yang tidak memiliki catatan keuangan tetap dipertahankan sesuai aslinya.`, "success", () => {
-                    window.location.reload();
-                });
+                window.showAlert(`Berhasil menyinkronkan ${updatedCount} data.`, "success", () => window.location.reload());
             } catch (err) {
-                console.error("Smart Sync Error:", err);
-                window.showAlert("Gagal melakukan Smart Sync: " + err.message, "danger");
-            }
-        }, null, "Smart Sync & Deep Scan", "Ya, Jalankan Perbaikan", "btn-warning");
-    };
-
-    document.getElementById('btnSyncBalances')?.addEventListener('click', () => {
-        syncAllBalances();
-    });
-
-    // --- MANUAL LINK PAYMENT LOGIC ---
-    const btnLinkManualPay = document.getElementById('btnLinkManualPay');
-    const inpManualPayId = document.getElementById('inpManualPayId');
-
-    btnLinkManualPay?.addEventListener('click', async () => {
-        const trxId = selOrder.value;
-        const payIdsRaw = inpManualPayId.value.trim();
-        if (!trxId || !payIdsRaw) return window.showToast('Pilih Order & masukkan ID Pembayaran', 'warning');
-
-        const payIds = payIdsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
-        
-        window.showConfirm(`Hubungkan ${payIds.length} pembayaran ke ${trxId}?`, async () => {
-            window.showToast('Menghubungkan data...', 'info');
-            try {
-                // 1. Update Keuangan records
-                for (const pid of payIds) {
-                    await supabase.from('keuangan').update({ related_trx_id: trxId }).eq('id', pid);
-                }
-
-                // 2. Refresh TRX Data & Rebuild History
-                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
-                const { data: relatedFins } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId);
-                
-                const rebuiltHistory = (relatedFins || []).map(f => ({
-                    payId: f.id,
-                    id: f.id,
-                    tgl: f.tanggal,
-                    nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
-                    category: f.kategori,
-                    tipe: f.tipe,
-                    channel: f.channel,
-                    buktiUrl: f.bukti_url
-                })).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
-
-                const newTotalPaid = rebuiltHistory.reduce((s, h) => {
-                    const isIncome = h.tipe === 'pemasukan';
-                    const categoryLower = (h.category || '').toLowerCase();
-                    const isAdjustment = categoryLower.includes('internal') || categoryLower.includes('aqiqah') || (h.id || h.payId || '').startsWith('ADJ-');
-                    const isRefund = h.tipe === 'pengeluaran' && categoryLower.includes('pengembalian dana');
-                    
-                    if (isIncome) return s + h.nominal;
-                    if (isAdjustment) return s + Math.abs(h.nominal);
-                    if (isRefund) return s + h.nominal;
-                    
-                    return s;
-                }, 0);
-                const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
-
-                await supabase.from('transaksi').update({
-                    total_paid: newTotalPaid,
-                    total_overpaid: newTotalOverpaid,
-                    history_bayar: rebuiltHistory,
-                    updated_at: new Date().toISOString()
-                }).eq('id', trxId);
-
-                window.showToast('Berhasil dihubungkan!', 'success');
-                inpManualPayId.value = '';
-                document.getElementById('inpNominalBayar').value = '';
-                selOrder.dispatchEvent(new Event('input'));
-                renderStats(); renderList();
-            } catch (err) {
-                console.error(err);
-                window.showAlert('Gagal menghubungkan: ' + err.message, 'danger');
-            }
-        });
-    });
-
-    // --- DEEP SCAN TRANSACTION LOGIC ---
-    const deepScanTransaction = async (trxId) => {
-        if (!trxId) return;
-        window.showToast('Memulai scan mendalam...', 'info');
-        
-        try {
-            // Scan ALL finance records that have TRX ID in description
-            const { data: allFins } = await supabase.from('keuangan').select('*').or(`tipe.eq.pemasukan,tipe.eq.pengeluaran`).range(0, 9999);
-            const matched = (allFins || []).filter(f => {
-                const desc = (f.keterangan || '').toUpperCase();
-                return desc.includes(trxId.toUpperCase()) && f.related_trx_id !== trxId;
-            });
-
-            if (matched.length === 0) {
-                window.showAlert('Tidak ditemukan pembayaran lain di laporan keuangan yang menyebut ' + trxId, 'info');
-                return;
-            }
-
-            const totalFound = matched.reduce((s, f) => s + (parseFloat(f.nominal)||0), 0);
-            window.showConfirm(`Ditemukan ${matched.length} pembayaran (${window.formatRp(totalFound)}) yang menyebut ${trxId} tapi belum terhubung. Hubungkan sekarang?`, async () => {
-                window.showToast('Menghubungkan...', 'info');
-                
-                // Update all matched records
-                const matchedIds = matched.map(m => m.id);
-                await supabase.from('keuangan').update({ related_trx_id: trxId }).in('id', matchedIds);
-
-                // Rebuild history
-                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
-                const { data: relatedFins } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId);
-                
-                const rebuiltHistory = (relatedFins || []).map(f => ({
-                    payId: f.id,
-                    id: f.id,
-                    tgl: f.tanggal,
-                    nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
-                    category: f.kategori,
-                    tipe: f.tipe,
-                    channel: f.channel,
-                    buktiUrl: f.bukti_url
-                })).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
-
-                const newTotalPaid = rebuiltHistory.reduce((s, h) => {
-                    const isIncome = h.tipe === 'pemasukan';
-                    const categoryLower = (h.category || '').toLowerCase();
-                    const isAdjustment = categoryLower.includes('internal') || categoryLower.includes('aqiqah') || (h.id || h.payId || '').startsWith('ADJ-');
-                    const isRefund = h.tipe === 'pengeluaran' && (categoryLower.includes('pengembalian dana') || categoryLower.includes('refund'));
-                    
-                    if (isIncome) return s + h.nominal;
-                    if (isAdjustment) return s + Math.abs(h.nominal);
-                    if (isRefund) return s + h.nominal;
-                    return s;
-                }, 0);
-                const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
-
-                await supabase.from('transaksi').update({
-                    total_paid: newTotalPaid,
-                    total_overpaid: newTotalOverpaid,
-                    history_bayar: rebuiltHistory,
-                    updated_at: new Date().toISOString()
-                }).eq('id', trxId);
-
-                window.showToast('Sinkronisasi mendalam berhasil!', 'success');
-                selOrder.dispatchEvent(new Event('input')); // Refresh
-                renderStats(); renderList();
-            });
-
-        } catch (err) {
-            console.error(err);
-            window.showAlert('Gagal scan mendalam: ' + err.message, 'danger');
-        }
-    };
-
-    // --- UNLINK PAYMENT LOGIC ---
-    const unlinkPayment = async (trxId, payId) => {
-        if (!trxId || !payId) return;
-
-        window.showConfirm(`Putuskan hubungan pembayaran ini (${payId}) dari transaksi ini?`, async () => {
-            window.showToast('Melepaskan tautan...', 'info');
-            try {
-                // 1. Clear the related_trx_id in Keuangan
-                await supabase.from('keuangan').update({ related_trx_id: null }).eq('id', payId);
-
-                // 2. Refresh TRX Data & Rebuild History
-                const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
-                const { data: relatedFins } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId);
-                
-                const rebuiltHistory = (relatedFins || []).map(f => ({
-                    payId: f.id,
-                    id: f.id,
-                    tgl: f.tanggal,
-                    nominal: f.tipe === 'pengeluaran' ? -(Math.abs(parseFloat(f.nominal)||0)) : (parseFloat(f.nominal) || 0),
-                    category: f.kategori,
-                    tipe: f.tipe,
-                    channel: f.channel,
-                    buktiUrl: f.bukti_url
-                })).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
-
-                const newTotalPaid = rebuiltHistory.reduce((s, h) => {
-                    if (h.tipe === 'pemasukan' || h.category === 'Pengembalian Dana') return s + h.nominal;
-                    return s;
-                }, 0);
-                const newTotalOverpaid = Math.max(0, newTotalPaid - (trx.total_deal || 0));
-
-                await supabase.from('transaksi').update({
-                    total_paid: newTotalPaid,
-                    total_overpaid: newTotalOverpaid,
-                    history_bayar: rebuiltHistory,
-                    updated_at: new Date().toISOString()
-                }).eq('id', trxId);
-
-window.showAuditDetail = (trxId) => {
-    const data = (window._AUDIT_LOGS || {})[trxId];
-    if (!data) {
-        alert(`Detail untuk ${trxId} tidak ditemukan. Silakan klik "SINKRON" terlebih dahulu.`);
-        return;
-    }
-    
-    let msg = `RINCIAN TRANSAKSI ${trxId}\n`;
-    msg += `-----------------------------------\n`;
-    msg += `Total Deal: ${window.formatRp(data.deal)}\n`;
-    msg += `Total Bayar: ${window.formatRp(data.paid)}\n`;
-    msg += `Selisih: ${window.formatRp(data.paid - data.deal)}\n\n`;
-    msg += `HISTORY KEUANGAN:\n`;
-    if (data.items.length === 0) {
-        msg += `- Tidak ada catatan keuangan yang terdeteksi.`;
-    } else {
-        data.items.forEach(item => msg += `- ${item}\n`);
-    }
-    msg += `\n-----------------------------------\n`;
-    msg += `(Jika ada angka yang salah, pastikan Kategori/Keterangan di menu Keuangan sudah benar)`;
-    
-    alert(msg);
-};
-                window.showToast('Tautan berhasil dilepas!', 'success');
-                selOrder.dispatchEvent(new Event('input')); // Refresh view
-                renderStats(); renderList();
-            } catch (err) {
-                console.error(err);
-                window.showAlert('Gagal melepas tautan: ' + err.message, 'danger');
+                window.showAlert("Error: " + err.message, "danger");
             }
         });
     };
 
-    window.setupMoneyMask('inpNominalBayar');
-    window.setupMoneyMask('inpNominalRefund');
+    document.getElementById('btnSyncBalances')?.addEventListener('click', window.syncAllBalances);
 
-    renderStats(); renderList();
+    // Initial Load
+    renderStats();
+    renderList();
+    
+    // Auto refresh every 5 mins
+    setInterval(() => { renderStats(); renderList(); }, 300000);
 });
