@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single(); 
         return data?.val || [];
     };
-    const getAgenDb = async () => { const { data } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single(); return data?.val || []; };
 
     const getAgentSaldo = async (agenName) => {
         if (!agenName) return 0;
@@ -155,7 +154,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td data-label="KONSUMEN" style="text-align:right;">
                     <div style="font-weight:600;">${t.customer.nama || '-'}</div>
                     <div style="font-size:0.7rem; color:var(--primary);">Agen: ${t.agen?.nama || '-'}</div>
-                    <div style="font-size:0.6rem; opacity:0.6;">${formatTgl(t.tgl_trx)}</div>
                 </td>
                 <td data-label="SISA TAGIHAN" style="font-weight:700; color:var(--warning);">${window.formatRp(sisa)}</td>
                 <td data-label="PENYELESAIAN" style="text-align:right;">
@@ -182,7 +180,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
                 <td data-label="AKSI"><button class="btn btn-sm">💸</button></td>
             `;
-            tr.onclick = () => openRefundModal(t);
+            tr.onclick = (e) => {
+                if (e.target.closest('td').dataset.label === 'KELEBIHAN') return;
+                openRefundModal(t);
+            };
         }
         return tr;
     };
@@ -285,154 +286,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('modalRefundKelebihan').classList.remove('active');
     });
 
-    document.getElementById('inpChannelRefund')?.addEventListener('change', async () => {
-        const chan = document.getElementById('inpChannelRefund').value;
-        const container = document.getElementById('containerRekRefund');
-        const select = document.getElementById('inpRekIdRefund');
-        if (chan === 'Transfer Bank') {
-            container.style.display = 'block';
-            const reks = await getBankAccounts();
-            select.innerHTML = '<option value="">-- Pilih Rekening --</option>';
-            reks.forEach(r => {
-                const o = document.createElement('option');
-                o.value = r.id;
-                o.textContent = `${r.bank} - ${r.norek} (${r.an})`;
-                select.appendChild(o);
-            });
-        } else {
-            container.style.display = 'none';
-        }
-    });
-
-    // --- AUDIT DETAIL TOOL ---
+    // Audit & Sync Logic
     window.showAuditDetail = async (trxId) => {
-        if (!window._AUDIT_LOGS || !window._AUDIT_LOGS[trxId]) {
-            const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
-            if (!trx) return window.showAlert("Data tidak ditemukan.", "danger");
-            
-            let msg = `<b>Audit Keuangan: ${trxId}</b><br><br>`;
-            msg += `Total Deal: ${window.formatRp(trx.total_deal)}<br>`;
-            msg += `Total Dibayar: ${window.formatRp(trx.total_paid)}<br><br>`;
-            msg += `<b>History Catatan:</b><br>`;
-            if (trx.history_bayar && trx.history_bayar.length > 0) {
-                trx.history_bayar.forEach(h => {
-                    msg += `• ${formatTgl(h.tgl)}: ${window.formatRp(h.nominal)} (${h.channel || h.keterangan || '?'})<br>`;
-                });
-            } else {
-                msg += `<i>Tidak ada catatan keuangan yang terdeteksi.</i>`;
-            }
-            return window.showAlert(msg, "info");
-        }
-
-        const audit = window._AUDIT_LOGS[trxId];
-        let msg = `<b>Audit Sinkronisasi: ${trxId}</b><br><br>`;
-        msg += `Total Deal: ${window.formatRp(audit.deal)}<br>`;
-        msg += `Hasil Hitung: ${window.formatRp(audit.paid)}<br><br>`;
-        msg += `<b>Item yang ditemukan:</b><br>`;
-        if (audit.items.length > 0) {
-            audit.items.forEach(item => {
-                msg += `• ${item}<br>`;
+        const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
+        if (!trx) return window.showAlert("Data tidak ditemukan.", "danger");
+        
+        let msg = `<b>Audit Keuangan: ${trxId}</b><br><br>`;
+        msg += `Total Deal: ${window.formatRp(trx.total_deal)}<br>`;
+        msg += `Total Dibayar: ${window.formatRp(trx.total_paid)}<br><br>`;
+        msg += `<b>History Catatan:</b><br>`;
+        if (trx.history_bayar && trx.history_bayar.length > 0) {
+            trx.history_bayar.forEach(h => {
+                msg += `• ${formatTgl(h.tgl)}: ${window.formatRp(h.nominal)} (${h.channel || h.keterangan || '?'})<br>`;
             });
         } else {
-            msg += `<i>Tidak ada catatan di laporan keuangan.</i>`;
+            msg += `<i>Tidak ada catatan keuangan yang terdeteksi.</i>`;
         }
         window.showAlert(msg, "info");
     };
 
-    // --- REPAIR TOOL: MEGA-SYNC v11.3 ---
     window.syncAllBalances = async () => {
-        window.showConfirm(`
-            <div style="text-align:left;">
-                <h3 style="color:var(--warning);">🚀 JALANKAN MEGA-SYNC v11.3?</h3>
-                <p>Fitur ini akan <b>MENGHAPUS TOTAL</b> angka minus dan menghitung ulang saldo dari nol berdasarkan seluruh laporan keuangan.</p>
-                <p style="font-size:0.8rem; color:var(--text-muted);">Gunakan hanya jika angka "Total Dibayar" terlihat kacau/minus.</p>
-            </div>
-        `, async () => {
+        window.showConfirm(`🚀 <b>JALANKAN MEGA-SYNC v11.6?</b><br><br>Sistem akan menghitung ulang semua saldo dari nol berdasarkan laporan keuangan.`, async () => {
             try {
-                window.showToast("Memproses Database (Mega Sync)...", "info");
+                window.showToast("Sinkronisasi sedang berjalan...", "info");
+                const { data: trxs } = await supabase.from('transaksi').select('*');
+                const { data: allFins } = await supabase.from('keuangan').select('*');
                 
-                // 1. Ambil SEMUA data (Pagination)
-                let trxs = []; let fromT = 0;
-                while (true) {
-                    const { data: b, error: e } = await supabase.from('transaksi').select('*').range(fromT, fromT + 999);
-                    if (e) throw e;
-                    if (!b || b.length === 0) break;
-                    trxs = [...trxs, ...b];
-                    if (b.length < 1000) break;
-                    fromT += 1000;
-                }
-
-                let allFins = []; let fromF = 0;
-                while (true) {
-                    const { data: b, error: e } = await supabase.from('keuangan').select('*').range(fromF, fromF + 999);
-                    if (e) throw e;
-                    if (!b || b.length === 0) break;
-                    allFins = [...allFins, ...b];
-                    if (b.length < 1000) break;
-                    fromF += 1000;
-                }
-
-                let updatedCount = 0;
                 for (const trx of trxs) {
                     const tId = trx.id.toUpperCase();
-                    const rawName = (trx.customer?.nama || trx.customer_name || '').toLowerCase().trim();
-                    
-                    // Ambil kata pertama dan kedua dari nama (biasanya nama utama)
+                    const rawName = (trx.customer?.nama || '').toLowerCase();
                     const nameParts = rawName.split(' ').filter(p => p.length > 2);
-                    const logs = [];
                     
-                    const history = allFins.filter(f => {
+                    const history = (allFins || []).filter(f => {
                         const fId = (f.related_trx_id || '').toUpperCase();
                         const fDesc = (f.keterangan || '').toLowerCase();
-                        const fCat = (f.kategori || '').toLowerCase();
-                        
-                        // 1. Match by ID (Paling Akurat)
                         if (fId === tId || fDesc.includes(tId.toLowerCase())) return true;
-                        
-                        // 2. Match by Name (Fuzzy)
-                        if (rawName && (fDesc.includes(rawName) || fCat.includes(rawName))) return true;
-                        
-                        // 3. Match by Name Parts (Smart Search)
-                        if (nameParts.length > 0) {
-                            return nameParts.some(p => fDesc.includes(p));
-                        }
-                        
+                        if (rawName && fDesc.includes(rawName)) return true;
+                        if (nameParts.length > 0) return nameParts.some(p => fDesc.includes(p));
                         return false;
                     }).map(f => ({
-                        payId: f.id, id: f.id, tgl: f.tanggal,
+                        id: f.id, tgl: f.tanggal,
                         nominal: f.tipe === 'pengeluaran' ? -Math.abs(f.nominal) : Math.abs(f.nominal),
                         category: f.kategori, tipe: f.tipe, channel: f.channel, keterangan: f.keterangan || ''
-                    })).sort((a,b) => new Date(a.tgl) - new Date(b.tgl));
+                    }));
 
                     let total = history.reduce((sum, h) => {
                         const cat = (h.category || '').toLowerCase();
                         if (h.tipe === 'pemasukan') {
                             if (cat.includes('komisi') || cat.includes('karkas')) return sum;
-                            logs.push(`+ ${h.nominal}`);
                             return sum + h.nominal;
                         } else {
-                            if (cat.includes('refund') || cat.includes('tarik')) {
-                                logs.push(`- ${h.nominal}`);
-                                return sum + h.nominal; // h.nominal is already negative
-                            }
+                            if (cat.includes('refund') || cat.includes('tarik')) return sum + h.nominal;
                             return sum;
                         }
                     }, 0);
 
-                    // Safety Rules
                     let finalPaid = Math.max(0, total);
-                    if (total === 0 && logs.length === 0) finalPaid = Math.max(0, trx.total_paid || 0);
+                    if (total === 0 && history.length === 0) finalPaid = Math.max(0, trx.total_paid || 0);
 
                     await supabase.from('transaksi').update({
                         total_paid: finalPaid,
                         total_overpaid: Math.max(0, finalPaid - trx.total_deal),
-                        history_bayar: history,
-                        updated_at: new Date().toISOString()
+                        history_bayar: history
                     }).eq('id', trx.id);
-                    updatedCount++;
                 }
-
-                window.showAlert(`Berhasil menyinkronkan ${updatedCount} data.`, "success", () => window.location.reload());
+                window.showAlert("Sinkronisasi Selesai!", "success", () => window.location.reload());
             } catch (err) {
                 window.showAlert("Error: " + err.message, "danger");
             }
@@ -442,9 +360,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnSyncBalances')?.addEventListener('click', window.syncAllBalances);
 
     // Initial Load
-    renderStats();
-    renderList();
-    
-    // Auto refresh every 5 mins
-    setInterval(() => { renderStats(); renderList(); }, 300000);
+    await renderStats();
+    await renderList();
+
+    // --- TAB SYSTEM (AT THE VERY END) ---
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => {
+        btn.onclick = function() {
+            const tabId = this.dataset.tab;
+            console.log('Switching to tab:', tabId);
+            
+            // Toggle Buttons
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Toggle Contents
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const targetId = 'tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1);
+            const target = document.getElementById(targetId);
+            if (target) target.classList.add('active');
+        };
+    });
 });
