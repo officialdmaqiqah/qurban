@@ -99,13 +99,14 @@ export const syncAllBalances = async () => {
                         const isGarbage = cat.includes('sulam') || cat.includes('tumbal') || 
                                           fDesc.includes('sulam') || fDesc.includes('tumbal') ||
                                           cat.includes('komisi') || cat.includes('karkas') ||
-                                          cat.includes('titipan');
+                                          cat.includes('titipan') || 
+                                          (h.tipe === 'pemasukan' && cat.includes('kelebihan'));
 
                         if (h.tipe === 'pemasukan') {
                             if (isGarbage) return sum;
                             return sum + h.nominal;
                         } else {
-                            // Pengeluaran: Hanya hitung jika itu Refund/Kelebihan
+                            // Pengeluaran: Hitung sebagai pengurang saldo jika itu Refund/Kelebihan
                             if (cat.includes('refund') || cat.includes('pengembalian') || cat.includes('kelebihan')) {
                                 return sum + h.nominal; 
                             }
