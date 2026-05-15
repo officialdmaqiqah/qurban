@@ -74,11 +74,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sf = (item.status_fisik || '').toLowerCase().trim();
             const sk = (item.status_kesehatan || '').toLowerCase().trim();
 
-            // 1. Jika sudah Terdistribusi (Sembelih Aqiqah/Kirim), hilangkan dari monitor kesehatan
-            if (st === 'terdistribusi' || sf === 'terdistribusi') return false;
+            // 1. Jika sudah Terdistribusi atau Terjual, hilangkan dari monitor kesehatan jika sudah Sehat
+            if (st.includes('distribusi') || sf.includes('distribusi') || st.includes('jual')) {
+                if (sk === 'sehat') return false;
+            }
             
-            // 2. Jika sudah Terjual dan statusnya Sehat, juga hilangkan agar tidak mengotori histori kesehatan aktif
-            if (st === 'terjual' && sk === 'sehat') return false;
+            // 2. Jika status transaksi menunjukkan Terdistribusi secara eksplisit, hilangkan apapun kondisinya
+            if (st === 'terdistribusi' || sf === 'terdistribusi') return false;
 
             const matchSearch = (item.no_tali || '').toLowerCase().includes(term) || 
                                (item.batch || '').toLowerCase().includes(term) ||
