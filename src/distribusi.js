@@ -158,7 +158,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     async function renderTrips() {
         const { trips, goats } = await loadData();
-        const isSopir = profile?.role === 'sopir';
+        const role = (profile?.role || '').toLowerCase();
+        const isSopir = role === 'sopir';
+        const isYahya = (profile?.full_name || '').toLowerCase().includes('yahya');
+        const showAdminTools = !isSopir || isYahya;
+
+        console.log('[Role Debug] User:', profile?.full_name, '| Role:', profile?.role, '| ShowTools:', showAdminTools);
         
         // --- STUCK GOAT DETECTION (Unlinked Distribution) ---
         const goatIdsInTrips = new Set();
@@ -219,7 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="flex: 1;">
                         <div class="trip-id text-premium">${t.id} ${t.id.startsWith('SMB-') ? '<span class="badge-sembelih">🔪 Sembelih</span>' : ''}</div>
                         <div class="trip-date">${formatTgl(t.tglKirim)}</div>
-                        ${!isSopir ? `<div class="patch-zone" style="margin-top: 6px;"><button class="btn btn-sm" onclick="window.patchMissingTripData()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-muted); font-size:0.6rem; padding: 3px 10px; border-radius: 6px;">🩺 Patch WA</button></div>` : ''}
+                        ${showAdminTools ? `<div class="patch-zone" style="margin-top: 6px;"><button class="btn btn-sm" onclick="window.patchMissingTripData()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:var(--primary); font-size:0.6rem; padding: 4px 12px; border-radius: 6px; font-weight:700;">🩺 Patch WA</button></div>` : ''}
                     </div>
                     <span class="badge ${isDone ? 'badge-success' : 'badge-warning'}" style="padding:4px 10px; font-size:0.75rem; border-radius:30px;">${t.status.toUpperCase()}</span>
                 </div>
@@ -244,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     <span style="color:var(--success); font-size:1.1rem;">✅</span>
                                     <button class="btn btn-sm" onclick="window.rollbackItemDist('${t.id}','${currentGoatId}')" style="color:var(--text-muted); background:transparent; border:none; padding:4px; cursor:pointer; font-size:0.9rem;" title="Reset / Batal Tuntas">↩️</button>
                                 ` : `
-                                    ${!isSopir ? `<button class="btn btn-sm" onclick="window.removeItemFromTrip('${t.id}','${currentGoatId}')" style="color:var(--danger); background:transparent; border:none; padding:4px; opacity:0.6; cursor:pointer; font-size:0.9rem;" title="Keluarkan dari Trip">❌</button>` : ''}
+                                    ${showAdminTools ? `<button class="btn btn-sm" onclick="window.removeItemFromTrip('${t.id}','${currentGoatId}')" style="color:var(--danger); background:transparent; border:none; padding:4px; opacity:0.6; cursor:pointer; font-size:0.9rem;" title="Keluarkan dari Trip">❌</button>` : ''}
                                     <button class="btn btn-sm btn-shimmer" onclick="window.openLaporDist('${t.id}','${currentGoatId}','${i.konsumen}')" style="background:var(--primary); padding:6px 14px; font-size:0.75rem; border-radius:8px; border:none; box-shadow:0 4px 10px var(--primary-transparent);">📷</button>
                                 `}
                             </div>
@@ -254,7 +259,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="trip-footer" style="padding-top:0.5rem; justify-content:space-between;">
                      <button class="btn btn-sm" onclick="window.printTrip('${t.id}')" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid rgba(255,255,255,0.1); border-radius:6px;">🖨️</button>
                      <div style="display:flex; gap:8px;">
-                        ${!isSopir ? `
+                        ${showAdminTools ? `
                             <button class="btn btn-sm" onclick="window.rollbackDistribution('${t.id}')" style="color:var(--danger); background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); border-radius:6px; font-size:0.7rem;" title="Batalkan Semua & Kembalikan ke Antrean">↩️ Batal Trip</button>
                             <button class="btn btn-sm" onclick="window.deleteTrip('${t.id}')" style="color:var(--danger); background:transparent; border:none; opacity:0.6;" title="Hapus Rekaman">🗑️</button>
                         ` : ''}
