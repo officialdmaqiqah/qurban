@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div style="font-size:0.7rem; color:var(--primary); font-weight:500;">Agen: ${t.agen?.nama || '-'}</div>
                     </div>
                 </td>
-                <td data-label="KELEBIHAN" style="font-weight:700; color:var(--warning);">${window.formatRp(t.total_overpaid || 0)}</td>
+                <td data-label="KELEBIHAN" style="font-weight:700; color:var(--warning);">${window.formatRp(Math.max(t.total_overpaid || 0, (t.total_paid || 0) - (t.total_deal || 0)))}</td>
                 <td data-label="AKSI"><button class="btn btn-sm" style="padding:6px 16px; font-size:0.8rem; background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.2); border-radius:8px; font-weight:600;" title="Refund Dana">💸</button></td>
             `;
             tr.onclick = () => openRefundModal(t);
