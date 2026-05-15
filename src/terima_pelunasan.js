@@ -738,6 +738,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             f.tempLinked = true; 
                             f.related_trx_id = trx.id;
                             autoLinkedCount++;
+                            console.log(`[SmartSync] MATCH FOUND: ${trx.id} <-> ${f.id} (${nameMatch ? 'by Name' : 'by ID'})`);
                             return true;
                         }
                         return false;
@@ -795,17 +796,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                         return s;
                     }, 0);
 
-                    // 5. Update jika ada perbedaan
-                    const isDiff = newTotalPaid !== trx.total_paid || (JSON.stringify(rebuiltHistory) !== JSON.stringify(trx.history_bayar));
-                    
-                    if (isDiff && (trx.total_deal > 0)) {
-                        await supabase.from('transaksi').update({
+                    // 5. Update di DB (FORCE UPDATE - Selalu update untuk memastikan integritas)
+                    if (trx.total_deal > 0) {
+                        const { error: upErr } = await supabase.from('transaksi').update({
                             total_paid: newTotalPaid,
                             total_overpaid: Math.max(0, newTotalPaid - (trx.total_deal || 0)),
                             history_bayar: rebuiltHistory,
                             updated_at: new Date().toISOString()
                         }).eq('id', trx.id);
-                        updatedTrxCount++;
+                        
+                        if (!upErr) updatedTrxCount++;
+                        else console.error(`[SmartSync] Update Failed for ${trx.id}:`, upErr);
                     }
                 }
 
@@ -815,7 +816,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     await supabase.from('keuangan').update({ related_trx_id: f.related_trx_id }).eq('id', f.id);
                 }
 
-                window.showAlert(`🩺 SMART SYNC SELESAI!<br><br>• <b>${autoLinkedCount}</b> pembayaran tercecer berhasil dihubungkan kembali.<br>• <b>${updatedTrxCount}</b> saldo transaksi telah diperbaiki.<br><br>Sekarang saldo Anda seharusnya sudah kembali normal.`, "success", () => {
+                const msg = `🩺 <b>SMART SYNC SELESAI!</b><br><br>` +
+                            `• <b>${autoLinkedCount}</b> pembayaran tercecer berhasil dihubungkan.<br>` +
+                            `• <b>${updatedTrxCount}</b> saldo transaksi telah dibangun ulang.<br><br>` +
+                            `Klik OK untuk memuat ulang halaman dan melihat perubahan.`;
+
+                window.showAlert(msg, "success", () => {
                     window.location.reload();
                 });
             } catch (err) {
