@@ -70,8 +70,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filter = document.getElementById('selHealthStatus')?.value || 'all';
 
         let filtered = goats.filter(item => {
-            // Exclude already distributed goats
-            if (item.status_transaksi === 'Terdistribusi' || item.status_fisik === 'Terdistribusi') return false;
+            const st = (item.status_transaksi || '').toLowerCase().trim();
+            const sf = (item.status_fisik || '').toLowerCase().trim();
+            const sk = (item.status_kesehatan || '').toLowerCase().trim();
+
+            // 1. Jika sudah Terdistribusi (Sembelih Aqiqah/Kirim), hilangkan dari monitor kesehatan
+            if (st === 'terdistribusi' || sf === 'terdistribusi') return false;
+            
+            // 2. Jika sudah Terjual dan statusnya Sehat, juga hilangkan agar tidak mengotori histori kesehatan aktif
+            if (st === 'terjual' && sk === 'sehat') return false;
 
             const matchSearch = (item.no_tali || '').toLowerCase().includes(term) || 
                                (item.batch || '').toLowerCase().includes(term) ||
