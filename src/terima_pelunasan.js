@@ -232,7 +232,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div style="font-size:0.7rem; color:var(--primary); font-weight:500;">Agen: ${t.agen?.nama || '-'}</div>
                     </div>
                 </td>
-                <td data-label="KELEBIHAN" style="font-weight:700; color:var(--warning);">${window.formatRp(Math.max(t.total_overpaid || 0, (t.total_paid || 0) - (t.total_deal || 0)))}</td>
+                <td data-label="KELEBIHAN" style="font-weight:700; color:var(--warning); cursor:pointer;" onclick="window.showAuditDetail('${t.id}')">
+                    ${window.formatRp(Math.max(t.total_overpaid || 0, (t.total_paid || 0) - (t.total_deal || 0)))}
+                    <div style="font-size:0.6rem; font-weight:normal; opacity:0.7;">(Klik rincian)</div>
+                </td>
                 <td data-label="AKSI"><button class="btn btn-sm" style="padding:6px 16px; font-size:0.8rem; background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.2); border-radius:8px; font-weight:600;" title="Refund Dana">💸</button></td>
             `;
             tr.onclick = () => openRefundModal(t);
@@ -794,13 +797,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
                     // 4. Hitung ulang total secara akurat (Hanya Pemasukan & Refund)
-                    let auditLogs = [];
+                    let logs = [];
+                    const trxIdClean = trx.id.toUpperCase().replace(/\s+/g, '');
+
                     const newTotalPaid = rebuiltHistory.reduce((sum, item) => {
                         const isIncome = item.tipe === 'pemasukan';
                         const cat = (item.category || '').toLowerCase();
                         const desc = (item.keterangan || '').toLowerCase();
+                        const descClean = desc.toUpperCase().replace(/\s+/g, '');
                         const id = (item.id || '').toUpperCase();
                         
+                        // Cek apakah transaksi ini milik order ini
+                        const isMatch = (item.payId === trx.id) || descClean.includes(trxIdClean);
+                        if (!isMatch) return sum;
+
                         // Kriteria Refund / Tarik Dana / Penyesuaian
                         const isRefund = id.startsWith('REF-') || 
                                         cat.includes('refund') || 
@@ -812,23 +822,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         desc.includes('titipan');
 
                         if (isIncome) {
-                            // Abaikan jika kategori mengandung 'komisi'
                             if (cat.includes('komisi') && !cat.includes('pelunasan')) return sum;
-                            auditLogs.push(`[${trx.id}] +${item.nominal} (${desc})`);
+                            logs.push(`+ ${window.formatRp(item.nominal)} (${item.keterangan || item.category})`);
                             return sum + (item.nominal || 0);
                         } else {
-                            // HANYA kurangi jika ini adalah REFUND/TARIK
                             if (isRefund) {
-                                auditLogs.push(`[${trx.id}] -${item.nominal} (${desc})`);
+                                logs.push(`- ${window.formatRp(item.nominal)} (${item.keterangan || item.category})`);
                                 return sum - Math.abs(item.nominal || 0);
                             }
                             return sum;
                         }
                     }, 0);
 
-                    if (auditLogs.length > 0) {
-                        console.log(`Audit ${trx.id}:`, auditLogs);
-                    }
+                    // Simpan log ke global untuk dilihat nanti
+                    window._AUDIT_LOGS = window._AUDIT_LOGS || {};
+                    window._AUDIT_LOGS[trx.id] = {
+                        deal: trx.total_deal,
+                        paid: newTotalPaid,
+                        items: logs
+                    };
 
                     // 5. Update di DB
                     if (trx.total_deal > 0) {
@@ -1054,6 +1066,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                     updated_at: new Date().toISOString()
                 }).eq('id', trxId);
 
+window.showAuditDetail = (trxId) => {
+    const data = (window._AUDIT_LOGS || {})[trxId];
+    if (!data) {
+        alert(`Detail untuk ${trxId} tidak ditemukan. Silakan klik "SINKRON" terlebih dahulu.`);
+        return;
+    }
+    
+    let msg = `RINCIAN TRANSAKSI ${trxId}\n`;
+    msg += `-----------------------------------\n`;
+    msg += `Total Deal: ${window.formatRp(data.deal)}\n`;
+    msg += `Total Bayar: ${window.formatRp(data.paid)}\n`;
+    msg += `Selisih: ${window.formatRp(data.paid - data.deal)}\n\n`;
+    msg += `HISTORY KEUANGAN:\n`;
+    if (data.items.length === 0) {
+        msg += `- Tidak ada catatan keuangan yang terdeteksi.`;
+    } else {
+        data.items.forEach(item => msg += `- ${item}\n`);
+    }
+    msg += `\n-----------------------------------\n`;
+    msg += `(Jika ada angka yang salah, pastikan Kategori/Keterangan di menu Keuangan sudah benar)`;
+    
+    alert(msg);
+};
                 window.showToast('Tautan berhasil dilepas!', 'success');
                 selOrder.dispatchEvent(new Event('input')); // Refresh view
                 renderStats(); renderList();
