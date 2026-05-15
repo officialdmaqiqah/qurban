@@ -677,7 +677,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     inpSearchOrder.addEventListener('input', renderList);
 
     // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
-    const syncAllBalances = async () => {
+    // --- REPAIR TOOL: SMART DATA INTEGRITY SYNC (Source: Keuangan) ---
+    window.syncAllBalances = async () => {
+        // --- BYPASS RLS IF MASTER KEY EXISTS ---
+        const masterKey = localStorage.getItem('SUPABASE_SERVICE_ROLE');
+        let client = supabase;
+        if (masterKey) {
+            console.log('%c [System] Master Key Detected. Bypassing RLS for Smart Sync... ', 'background: #7c3aed; color: #fff;');
+            try {
+                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+                const sbUrl = localStorage.getItem('SUPABASE_URL') || 'https://juscihvfmgibmrhmclab.supabase.co'; 
+                client = createClient(sbUrl, masterKey);
+            } catch (e) {
+                console.warn("Failed to initialize master client, falling back to standard client.");
+            }
+        }
+
         window.showConfirm("🔄 Jalankan Smart Sync & Scan?<br><br><small>Sistem akan membangun ulang riwayat pembayaran dan <b>OTOMATIS</b> menghubungkan kembali pembayaran yang tercecer jika ID Transaksi tertulis di keterangan keuangan.</small>", async () => {
             window.showToast("Menganalisis data & mencari pembayaran tercecer...", "info");
             try {
@@ -691,7 +706,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const { data: p, error: e } = await client.from('transaksi').select('*, customer:profiles(nama)').range(pageT*1000, (pageT+1)*1000 - 1);
                     if(e) {
                         if(e.code === '42501' || e.message?.includes('403')) {
-                            throw new Error("Izin Ditolak (403): Database membatasi akses Anda. Pastikan Master Key aktif atau hubungi Super Admin.");
+                            throw new Error("Izin Ditolak (403): Database membatasi akses Anda. Pastikan Master Key aktif atau gunakan akun Super Admin.");
                         }
                         throw e;
                     }
