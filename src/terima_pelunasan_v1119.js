@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('statTotalPaid').textContent = window.formatRp(totalPaid);
     };
 
-    const renderList = async () => {
+    export const renderList = async () => {
         const trxs = await getTrxData();
         const keyword = (inpSearchOrder.value || '').toLowerCase();
         const userRole = (profile?.role || '').toLowerCase().replace(/_/g, ' ').trim();
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.showAlert(msg, "info");
     };
 
-    window.syncAllBalances = async () => {
+    export const syncAllBalances = async () => {
         window.showConfirm(`🚀 <b>JALANKAN MEGA-SYNC v11.8?</b><br><br>Sistem akan menghitung ulang semua saldo dari nol (Sistem Anti-Ganda Aktif).`, async () => {
             try {
                 window.showToast("Sinkronisasi sedang berjalan...", "info");
