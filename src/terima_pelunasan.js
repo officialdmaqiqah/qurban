@@ -153,8 +153,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         }
 
-        const belumLunas = filtered.filter(t => (t.total_deal - t.total_paid) > 100).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
-        const overpaid = filtered.filter(t => (t.total_overpaid || 0) > 100 || (t.total_paid - t.total_deal) > 100).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
+        const belumLunas = filtered.filter(t => (Math.floor(t.total_deal || 0) - Math.floor(t.total_paid || 0)) > 1000).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
+        const overpaid = filtered.filter(t => {
+            const over1 = Math.floor(t.total_overpaid || 0);
+            const over2 = Math.floor(t.total_paid || 0) - Math.floor(t.total_deal || 0);
+            if (t.id === 'TRX00080' || t.id === 'TRX00072') {
+                console.log(`[Debug] ${t.id}: over1=${over1}, over2=${over2}`);
+            }
+            return over1 > 1000 || over2 > 1000;
+        }).sort((a,b) => new Date(b.tgl_trx) - new Date(a.tgl_trx));
 
         tableBodyBelumLunas.innerHTML = belumLunas.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:1.5rem; font-size:0.8rem; color:var(--text-muted);">Semua lunas!</td></tr>' : '';
         belumLunas.forEach(t => tableBodyBelumLunas.appendChild(createOrderRow(t, 'belum')));
