@@ -449,99 +449,114 @@ document.addEventListener('DOMContentLoaded', async () => {
             await saveTrips(trips);
 
             await supabase.from('stok_kambing').update({ 
-                status_transaksi: 'Terdistribusi', 
-                status_fisik: 'Terdistribusi',
-                updated_at: new Date().toISOString()
-            }).eq('id', modal._goatId);
+                        status_transaksi: 'Terdistribusi', 
+                        status_fisik: 'Terdistribusi',
+                        updated_at: new Date().toISOString()
+                    }).eq('id', modal._goatId);
 
-            // Kirim Notifikasi WA Terdistribusi
-            try {
-                const config = await window.getWaConfig();
-                const { data: trx, error: trxErr } = await supabase.from('transaksi').select('*').contains('items', [{ goatId: modal._goatId }]).maybeSingle();
+                    console.log('[WA Debug] Memulai proses notifikasi untuk GoatID:', modal._goatId);
                 
-                if (trxErr) console.error('[WA Debug] Gagal mencari transaksi:', trxErr);
-                
-                if (trx) {
-                    console.log('[WA Debug] Transaksi ditemukan:', trx.id);
-                    // Fetch Official Accounts
-                    const { data: mdRek } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single();
-                    const reks = mdRek?.val || [];
-                    const rekStr = reks.filter(r => !(r.bank || '').toLowerCase().includes('bsi')).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
+                    // 1. Cari Transaction ID dari data kambing (yang sudah di-load di memori)
+                    const goatRec = goats.find(g => g.id === modal._goatId);
+                    const trxIdFromGoat = goatRec?.transaction_id;
+                    console.log('[WA Debug] TRX ID dari Goat Record:', trxIdFromGoat);
 
-                    const commonData = {
-                        judul: "*NOTIFIKASI PENGIRIMAN* 🚚",
-                        nama: trx.customer?.nama || '-',
-                        id: trx.id,
-                        tgl: new Date().toLocaleDateString('id-ID'),
-                        items: trips[tIdx].items[iIdx].noTali,
-                        sisa: formatRp((trx.total_deal || 0) - (trx.total_paid || 0)),
-                        nama_agen: trips[tIdx].sopirNama,
-                        rekening: rekStr || '-',
-                        foto: url || '-',
-                        bukti: url || '-'
-                    };
-
-                    // 1. Notif ke Konsumen
-                    if (trx.customer?.wa1) {
-                        const msg = await window.parseWaTemplate(config.templateDistribusiTerkirim, commonData);
-                        const res = await window.sendWa(trx.customer.wa1, msg);
-                        if (!res.success) {
-                            console.warn('[WA Debug] Gagal kirim ke Konsumen:', res.msg);
-                            if (window.showConfirm) {
-                                window.showConfirm(`WA Konsumen Gagal: ${res.msg}\n\nKirim manual lewat WA Web/App?`, () => {
-                                    window.open(res.link, '_blank');
-                                }, null, 'WA Otomatis Gagal', 'Kirim Manual', 'btn-primary');
-                            }
-                        } else {
-                            console.log('[WA Debug] Sukses kirim ke Konsumen');
-                        }
+                    let trx = null;
+                    if (trxIdFromGoat) {
+                        const { data, error } = await supabase.from('transaksi').select('*').eq('id', trxIdFromGoat).maybeSingle();
+                        if (data) trx = data;
+                        if (error) console.warn('[WA Debug] Error fetch by ID:', error.message);
                     }
 
-                    // 2. Notif ke Agen
-                    if (trx.agen) {
-                        const { data: mdAgen } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single();
-                        const agenList = mdAgen?.val || [];
-                        const matchedAgen = agenList.find(a => a.nama === trx.agen.nama || a.id === trx.agen.id);
-                        if (matchedAgen && matchedAgen.wa) {
-                            const msgAgen = await window.parseWaTemplate(config.templateDistribusiTerkirim, { 
-                                ...commonData, 
-                                judul: "*NOTIFIKASI PENGIRIMAN (AGEN)*" 
-                            });
-                            const resA = await window.sendWa(matchedAgen.wa, msgAgen);
-                            if (!resA.success) {
-                                console.warn('[WA Debug] Gagal kirim ke Agen:', resA.msg);
+                    // 2. Jika belum ketemu, coba cari via contains (Metode Lama)
+                    if (!trx) {
+                        console.log('[WA Debug] Mencoba cari via contains...');
+                        const { data, error } = await supabase.from('transaksi').select('*').contains('items', [{ goatId: modal._goatId }]).maybeSingle();
+                        if (data) trx = data;
+                        if (error) console.warn('[WA Debug] Error fetch by contains:', error.message);
+                    }
+
+                    if (trx) {
+                        console.log('[WA Debug] Transaksi ditemukan:', trx.id);
+                        // Fetch Official Accounts
+                        const { data: mdRek } = await supabase.from('master_data').select('val').eq('key', 'REKENING').single();
+                        const reks = mdRek?.val || [];
+                        const rekStr = reks.filter(r => !(r.bank || '').toLowerCase().includes('bsi')).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
+
+                        const commonData = {
+                            judul: "*NOTIFIKASI PENGIRIMAN* 🚚",
+                            nama: trx.customer?.nama || '-',
+                            id: trx.id,
+                            tgl: new Date().toLocaleDateString('id-ID'),
+                            items: trips[tIdx].items[iIdx].noTali,
+                            sisa: formatRp((trx.total_deal || 0) - (trx.total_paid || 0)),
+                            nama_agen: trips[tIdx].sopirNama,
+                            rekening: rekStr || '-',
+                            foto: url || '-',
+                            bukti: url || '-'
+                        };
+
+                        // 1. Notif ke Konsumen
+                        if (trx.customer?.wa1) {
+                            const msg = await window.parseWaTemplate(config.templateDistribusiTerkirim, commonData);
+                            const res = await window.sendWa(trx.customer.wa1, msg);
+                            if (!res.success) {
+                                console.warn('[WA Debug] Gagal kirim ke Konsumen:', res.msg);
                                 if (window.showConfirm) {
-                                    window.showConfirm(`WA Agen Gagal: ${resA.msg}\n\nKirim manual ke Agen?`, () => {
-                                        window.open(resA.link, '_blank');
-                                    }, null, 'WA Agen Gagal', 'Kirim Manual', 'btn-primary');
+                                    window.showConfirm(`WA Konsumen Gagal: ${res.msg}\n\nKirim manual lewat WA Web/App?`, () => {
+                                        window.open(res.link, '_blank');
+                                    }, null, 'WA Otomatis Gagal', 'Kirim Manual', 'btn-primary');
                                 }
                             } else {
-                                console.log('[WA Debug] Sukses kirim ke Agen');
+                                console.log('[WA Debug] Sukses kirim ke Konsumen');
                             }
-                        } else {
-                            console.warn('[WA Debug] WA Agen tidak ditemukan untuk:', trx.agen.nama);
                         }
-                    }
-                } else {
-                    console.warn('[WA Debug] Transaksi tidak ditemukan untuk GoatID:', modal._goatId);
-                    window.showToast('Data transaksi tidak ditemukan, WA tidak dikirim.', 'warning');
-                }
-            } catch (waErr) {
-                console.warn('Opsi notifikasi WA gagal:', waErr);
-            }
-            
-            modal.classList.remove('active');
-            showToast('✅ Distribusi tuntas!', 'success');
-            await loadData(true);
-            renderTrips();
 
-        } catch (err) {
-            showAlert('Gagal: ' + err.message, 'danger');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Simpan & Lapor Tuntas';
-        }
-    });
+                        // 2. Notif ke Agen
+                        if (trx.agen) {
+                            const { data: mdAgen } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single();
+                            const agenList = mdAgen?.val || [];
+                            const matchedAgen = agenList.find(a => a.nama === trx.agen.nama || a.id === trx.agen.id);
+                            if (matchedAgen && matchedAgen.wa) {
+                                const msgAgen = await window.parseWaTemplate(config.templateDistribusiTerkirim, { 
+                                    ...commonData, 
+                                    judul: "*NOTIFIKASI PENGIRIMAN (AGEN)*" 
+                                });
+                                const resA = await window.sendWa(matchedAgen.wa, msgAgen);
+                                if (!resA.success) {
+                                    console.warn('[WA Debug] Gagal kirim ke Agen:', resA.msg);
+                                    if (window.showConfirm) {
+                                        window.showConfirm(`WA Agen Gagal: ${resA.msg}\n\nKirim manual ke Agen?`, () => {
+                                            window.open(resA.link, '_blank');
+                                        }, null, 'WA Agen Gagal', 'Kirim Manual', 'btn-primary');
+                                    }
+                                } else {
+                                    console.log('[WA Debug] Sukses kirim ke Agen');
+                                }
+                            } else {
+                                console.warn('[WA Debug] WA Agen tidak ditemukan untuk:', trx.agen.nama);
+                            }
+                        }
+                    } else {
+                        console.warn('[WA Debug] Transaksi tidak ditemukan untuk GoatID:', modal._goatId);
+                        window.showToast('Data transaksi tidak ditemukan, WA tidak dikirim.', 'warning');
+                    }
+                } catch (waErr) {
+                    console.warn('Opsi notifikasi WA gagal:', waErr);
+                }
+                
+                modal.classList.remove('active');
+                showToast('✅ Distribusi tuntas!', 'success');
+                await loadData(true);
+                renderTrips();
+
+            } catch (err) {
+                showAlert('Gagal: ' + err.message, 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Simpan & Lapor Tuntas';
+            }
+        });
 
     document.getElementById('btnBuatTrip')?.addEventListener('click', () => openTripModal(false));
     document.getElementById('btnSembelih')?.addEventListener('click', () => openTripModal(true));
@@ -679,7 +694,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const trx = trxs.find(t => t.id === k.transaction_id);
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-konsumen="${trx?.customer?.nama}" data-alamat="${trx?.delivery?.alamat?.alamat || '-'}"></td>
+                    <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-konsumen="${trx?.customer?.nama}" data-alamat="${trx?.delivery?.alamat?.alamat || '-'}" data-wa="${trx?.customer?.wa1 || ''}" data-trxid="${k.transaction_id || ''}"></td>
                     <td>${idx + 1}</td>
                     <td class="sticky-col">
                         <div style="font-weight:700; color:var(--primary);">${k.no_tali}</div>
@@ -742,7 +757,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 goatId: cb.dataset.id, 
                 noTali: cb.dataset.notali, 
                 konsumen: cb.dataset.konsumen, 
-                alamat: cb.dataset.alamat, 
+                alamat: cb.dataset.alamat,
+                customerWa: cb.dataset.wa,
+                transactionId: cb.dataset.trxid,
                 status: isSembelih ? 'Terdistribusi' : 'Pengiriman',
                 tglDistribusi: isSembelih ? new Date().toISOString() : null,
                 buktiUrl: isSembelih ? 'SEM_KANDANG' : null
@@ -771,7 +788,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     // 2. Handle Internal Price Adjustment (Hidden Ledger Entry)
                     if (internalPriceVal > 0) {
-                        const trx = cachedTransactions.find(t => t.id === cachedGoats.find(g => g.id === item.goatId)?.transaction_id);
+                        const trx = cachedTransactions.find(t => t.id === item.transactionId);
                         if (trx) {
                             // Find item in trx to get deal price
                             const trxItem = (trx.items || []).find(it => it.goatId === item.goatId);
