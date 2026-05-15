@@ -28,7 +28,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 2. Mati / Hilang (Fisik in Mati, Hilang)
         const { data } = await supabase.from('stok_kambing')
             .select('*')
-            .or('status_kesehatan.neq.Sehat,status_fisik.in.(Mati,Hilang)');
+            .or('status_kesehatan.neq.Sehat,status_fisik.in.(Mati,Hilang)')
+            .not('status_transaksi', 'eq', 'Terdistribusi')
+            .not('status_fisik', 'eq', 'Terdistribusi');
             
         cachedGoats = data || [];
         return cachedGoats;
@@ -38,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const today = new Date().toISOString().split('T')[0];
         const thisMonth = today.substring(0, 7);
         
-        const inCare = data.filter(k => (k.status_kesehatan === 'Sakit' || k.status_kesehatan === 'Perawatan') && k.status_fisik === 'Ada').length;
+        const inCare = data.filter(k => (k.status_kesehatan === 'Sakit' || k.status_kesehatan === 'Perawatan') && k.status_fisik === 'Ada' && k.status_transaksi !== 'Terdistribusi').length;
         const matiMonth = data.filter(k => k.status_fisik === 'Mati' && (k.tgl_keluar || '').startsWith(thisMonth)).length;
         const recoveredMonth = data.filter(k => k.status_kesehatan === 'Sehat' && (k.updated_at || '').startsWith(thisMonth)).length;
 
@@ -68,6 +70,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filter = document.getElementById('selHealthStatus')?.value || 'all';
 
         let filtered = goats.filter(item => {
+            // Exclude already distributed goats
+            if (item.status_transaksi === 'Terdistribusi' || item.status_fisik === 'Terdistribusi') return false;
+
             const matchSearch = (item.no_tali || '').toLowerCase().includes(term) || 
                                (item.batch || '').toLowerCase().includes(term) ||
                                (item.catatan_keluar || '').toLowerCase().includes(term);
