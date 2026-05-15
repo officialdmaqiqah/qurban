@@ -736,7 +736,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     fromF += 1000;
                 }
 
-                console.log(`[MegaSync] Memproses ${trxs.length} Transaksi & ${allFins.length} Keuangan...`);
+                console.log(`[NuclearReset] Memproses ${trxs.length} Transaksi & ${allFins.length} Keuangan...`);
                 let updatedTrxCount = 0;
 
                 for (const trx of trxs) {
@@ -764,8 +764,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         };
                     }).sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
 
-                    // Hitung Ulang Nominal
-                    const newTotalPaid = rebuiltHistory.reduce((sum, item) => {
+                    // Hitung Ulang Nominal (START FROM ZERO - NUCLEAR)
+                    let calculatedPaid = rebuiltHistory.reduce((sum, item) => {
                         const isIncome = item.tipe === 'pemasukan';
                         const cat = (item.category || '').toLowerCase();
                         const desc = (item.keterangan || '').toLowerCase();
@@ -783,19 +783,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                         return sum;
                     }, 0);
 
-                    // ATURAN KESELAMATAN (SAFETY FIRST)
-                    let finalPaid = trx.total_paid || 0;
-                    if (newTotalPaid > finalPaid) {
-                        finalPaid = newTotalPaid; 
-                    } else if (newTotalPaid < finalPaid && logs.some(l => l.includes('-'))) {
-                        finalPaid = newTotalPaid; 
-                    } else if (newTotalPaid === 0 && logs.length === 0) {
-                        finalPaid = trx.total_paid || 0; 
-                    } else if (logs.length > 0) {
-                        finalPaid = newTotalPaid; // Jika ada history tapi lebih kecil, percayakan history
+                    // JANGAN BOLEH NEGATIF
+                    if (calculatedPaid < 0) calculatedPaid = 0;
+
+                    // Khusus data lama yang tidak ada di keuangan:
+                    // Jika di DB ada saldo tapi di hitungan 0 (karena tidak ada history), 
+                    // dan saldonya POSITIF, kita PERTAHANKAN.
+                    // Jika saldonya NEGATIF, kita RESET ke 0.
+                    let finalPaid = calculatedPaid;
+                    if (calculatedPaid === 0 && logs.length === 0) {
+                        finalPaid = Math.max(0, trx.total_paid || 0);
                     }
 
-                    // Simpan Audit untuk klik detail
+                    // Simpan Audit
                     window._AUDIT_LOGS = window._AUDIT_LOGS || {};
                     window._AUDIT_LOGS[trx.id] = { deal: trx.total_deal, paid: finalPaid, items: logs };
 
