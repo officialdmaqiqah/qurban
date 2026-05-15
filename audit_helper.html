@@ -1,58 +1,88 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Audit Opex Detail</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Perbaikan Data - Qurban Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: white; padding: 40px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 600px; margin: auto; }
+        h1 { color: #38bdf8; margin-top: 0; }
+        .item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .btn { background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 20px; font-size: 1rem; }
+        .btn:hover { background: #2563eb; }
+        #log { margin-top: 20px; font-family: monospace; font-size: 0.8rem; color: #94a3b8; max-height: 200px; overflow-y: auto; border-top: 1px solid #334155; padding-top: 10px; }
+    </style>
 </head>
 <body>
-    <div id="results">Loading...</div>
+    <div class="card">
+        <h1>🛠️ Perbaikan Data Saldo</h1>
+        <p>Halaman ini akan memaksa transaksi berikut menjadi LUNAS:</p>
+        <div id="list">
+            <div class="item"><span>TRX00030</span> <span id="status-TRX00030">Menunggu...</span></div>
+            <div class="item"><span>TRX00031</span> <span id="status-TRX00031">Menunggu...</span></div>
+            <div class="item"><span>TRX00023</span> <span id="status-TRX00023">Menunggu...</span></div>
+        </div>
+        <button class="btn" onclick="startFix()">Mulai Perbaikan Sekarang!</button>
+        <div id="log"></div>
+    </div>
+
     <script>
         const supabaseUrl = 'https://juscihvfmgibmrhmclab.supabase.co';
         const supabaseKey = 'sb_publishable_K6phM9DpcT4aqm1nvXdkYA_h9N1fQTQ';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey); // FIXED SYNTAX
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function audit() {
-            const { data: fin } = await supabase.from('keuangan').select('*');
-            if(!fin) { document.getElementById('results').innerHTML = 'No data'; return; }
-
-            const start = new Date('2026-01-01');
-            const end = new Date('2026-12-31');
-
-            const opexItems = fin.filter(f => {
-                const dt = new Date(f.tanggal);
-                return dt >= start && dt <= end && f.tipe === 'pengeluaran' && 
-                       f.kategori !== 'Bayar Supplier' && 
-                       f.kategori !== 'Pelunasan Supplier' && 
-                       f.kategori !== 'Kerugian (Mati/Hilang)';
-            });
-
-            let totalOpex = 0;
-            const byChannel = {};
-
-            opexItems.forEach(f => {
-                const nom = parseFloat(f.nominal || 0);
-                totalOpex += nom;
-                const chan = f.channel || 'Tunai';
-                if(!byChannel[chan]) byChannel[chan] = 0;
-                byChannel[chan] += nom;
-            });
-
-            let html = '<h2>Total Opex in Laba Rugi: ' + totalOpex.toLocaleString('id-ID') + '</h2>';
-            html += '<h3>Breakdown by Channel:</h3><ul>';
-            Object.keys(byChannel).forEach(c => {
-                html += `<li>${c}: Rp ${byChannel[c].toLocaleString('id-ID')}</li>`;
-            });
-            html += '</ul>';
-
-            html += '<h3>Full Transaction List (Opex Only):</h3><table border="1"><tr><th>Tgl</th><th>Kat</th><th>Nom</th><th>Channel</th><th>Ket</th></tr>';
-            opexItems.sort((a,b) => new Date(a.tgl) - new Date(b.tgl)).forEach(f => {
-                html += `<tr><td>${f.tanggal}</td><td>${f.kategori}</td><td>${f.nominal}</td><td>${f.channel}</td><td>${f.keterangan}</td></tr>`;
-            });
-            html += '</table>';
-            
-            document.getElementById('results').innerHTML = html;
+        function log(msg) {
+            const div = document.getElementById('log');
+            div.innerHTML += `<div>> ${msg}</div>`;
+            div.scrollTop = div.scrollHeight;
         }
-        audit();
+
+        async function startFix() {
+            log("Memulai koneksi ke database...");
+            const ids = ['TRX00030', 'TRX00031', 'TRX00023'];
+            
+            for (const id of ids) {
+                const statusEl = document.getElementById(`status-${id}`);
+                statusEl.innerHTML = '⚡ Memproses...';
+                log(`Mencari data ${id}...`);
+
+                try {
+                    // 1. Ambil data asli (Menyebutkan kolom agar tidak kena RLS select *)
+                    const { data: trx, error: fetchErr } = await supabase.from('transaksi').select('id, total_deal').eq('id', id).maybeSingle();
+                    
+                    if (fetchErr) throw fetchErr;
+                    if (!trx) {
+                        statusEl.innerHTML = '❌ Tidak Ditemukan';
+                        log(`[${id}] Data tidak ditemukan di tabel transaksi.`);
+                        continue;
+                    }
+
+                    log(`[${id}] Ditemukan. Harga: ${trx.total_deal}. Memulai update...`);
+
+                    // 2. Update status jadi Lunas (total_paid = total_deal)
+                    const { error: upErr } = await supabase.from('transaksi').update({
+                        total_paid: trx.total_deal,
+                        total_overpaid: 0,
+                        updated_at: new Date().toISOString()
+                    }).eq('id', id);
+
+                    if (upErr) throw upErr;
+
+                    statusEl.innerHTML = '✅ BERHASIL';
+                    log(`[${id}] Sukses diperbarui menjadi lunas.`);
+                } catch (err) {
+                    statusEl.innerHTML = '⚠️ ERROR';
+                    log(`[${id}] Gagal: ${err.message}`);
+                    if (err.message.includes('403') || err.code === '42501') {
+                        log("!!! ERROR 403: Database menolak akses update. Izin RLS bermasalah.");
+                    }
+                }
+            }
+            log("Pekerjaan selesai.");
+            alert("Selesai! Silakan cek kembali di aplikasi utama om.");
+        }
     </script>
 </body>
 </html>
