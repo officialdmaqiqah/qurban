@@ -72,8 +72,12 @@ export const syncAllBalances = async () => {
                         if (fId === tId) reason = "ID MATCH (PASTI)";
                         else if (fId && fId !== tId) return false;
                         else if (fDesc.includes(tId.toLowerCase())) reason = "ID DI KETERANGAN";
-                        else if (rawName.length >= 5 && (fDesc === rawName || fDesc.includes('bayar ' + rawName) || fDesc.includes('lunas ' + rawName))) reason = "NAMA LENGKAP (STRICT)";
-                        // HAPUS POTONGAN NAMA UNTUK MENGHINDARI GHOST PAYMENT
+                        else if (rawName.length >= 5 && (fDesc === rawName || fDesc.includes('bayar ' + rawName) || fDesc.includes('lunas ' + rawName))) {
+                            // Cek apakah ada ID TRX lain yang disebut di keterangan
+                            const otherTrxMatch = fDesc.match(/trx\d+/g);
+                            if (otherTrxMatch && !otherTrxMatch.includes(tId.toLowerCase())) return false;
+                            reason = "NAMA LENGKAP (STRICT)";
+                        }
                         
                         if (reason) {
                             f._matchReason = reason;
@@ -95,7 +99,7 @@ export const syncAllBalances = async () => {
                         const isGarbage = cat.includes('sulam') || cat.includes('tumbal') || 
                                           fDesc.includes('sulam') || fDesc.includes('tumbal') ||
                                           cat.includes('komisi') || cat.includes('karkas') ||
-                                          cat === 'titipan dana agen';
+                                          cat.includes('titipan');
 
                         if (h.tipe === 'pemasukan') {
                             if (isGarbage) return sum;
