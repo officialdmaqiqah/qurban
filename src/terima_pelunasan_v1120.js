@@ -49,6 +49,76 @@ export const getBankAccounts = async () => {
     return data?.val || [];
 };
 
+export const syncOneTrx = async (trxId) => {
+    try {
+        window.showToast(`Sedang memperbaiki saldo ${trxId}...`, "info");
+        const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
+        if (!trx) return window.showAlert("Order tidak ditemukan", "danger");
+
+        const { data: allFins } = await supabase.from('keuangan').select('*').or(`related_trx_id.eq.${trxId},keterangan.ilike.%${trxId}%`);
+        
+        const rawName = (trx.customer?.nama || '').toLowerCase().trim();
+        
+        const history = (allFins || []).filter(f => {
+            const fId = (f.related_trx_id || '').toUpperCase();
+            const fDesc = (f.keterangan || '').toLowerCase();
+            const fCat = (f.kategori || '').toLowerCase();
+            
+            let reason = "";
+            if (fId === trxId.toUpperCase()) reason = "ID MATCH (PASTI)";
+            else if (fDesc.includes(trxId.toLowerCase())) reason = "ID DI KETERANGAN";
+            else if (rawName.length >= 8 && fDesc.includes(rawName)) {
+                const otherTrxMatch = fDesc.match(/trx\d+/g);
+                if (otherTrxMatch && !otherTrxMatch.includes(trxId.toLowerCase())) return false;
+                reason = "NAMA LENGKAP (STRICT)";
+            }
+            
+            if (reason) {
+                f._matchReason = reason;
+                return true;
+            }
+            return false;
+        }).map(f => ({
+            id: f.id, tgl: f.tanggal,
+            nominal: f.tipe === 'pengeluaran' ? -Math.abs(f.nominal) : Math.abs(f.nominal),
+            category: f.kategori, tipe: f.tipe, channel: f.channel, keterangan: f.keterangan || '',
+            reason: f._matchReason
+        }));
+
+        let total = history.reduce((sum, h) => {
+            const cat = (h.category || '').toLowerCase();
+            const fDesc = (h.keterangan || '').toLowerCase();
+            
+            const isGarbage = cat.includes('sulam') || cat.includes('tumbal') || 
+                              fDesc.includes('sulam') || fDesc.includes('tumbal') ||
+                              cat.includes('komisi') || cat.includes('karkas') ||
+                              cat.includes('titipan') || cat.includes('tabungan') ||
+                              cat.includes('operasional') || cat.includes('biaya') ||
+                              (h.tipe === 'pemasukan' && cat.includes('kelebihan'));
+
+            if (h.tipe === 'pemasukan') {
+                if (isGarbage) return sum;
+                return sum + h.nominal;
+            } else {
+                const isRefund = cat.includes('refund') || cat.includes('pengembalian') || cat.includes('kelebihan') ||
+                                 fDesc.includes('refund') || fDesc.includes('pengembalian') || fDesc.includes('kelebihan');
+                if (isRefund) return sum + h.nominal; 
+                return sum;
+            }
+        }, 0);
+
+        await supabase.from('transaksi').update({
+            total_paid: total,
+            total_overpaid: Math.max(0, total - (trx.total_deal || 0)),
+            history_bayar: history
+        }).eq('id', trxId);
+
+        window.showAlert(`Saldo ${trxId} berhasil diperbaiki!`, "success", () => window.location.reload());
+    } catch (err) {
+        window.showAlert("Gagal: " + err.message, "danger");
+    }
+};
+
 export const syncAllBalances = async () => {
     return new Promise((resolve) => {
         window.showConfirm(`🚀 <b>JALANKAN MEGA-SYNC v11.20?</b><br><br>Sistem akan menghitung ulang semua saldo dari nol (Sistem Anti-Ganda Aktif).`, async () => {
@@ -99,7 +169,8 @@ export const syncAllBalances = async () => {
                         const isGarbage = cat.includes('sulam') || cat.includes('tumbal') || 
                                           fDesc.includes('sulam') || fDesc.includes('tumbal') ||
                                           cat.includes('komisi') || cat.includes('karkas') ||
-                                          cat.includes('titipan') || 
+                                          cat.includes('titipan') || cat.includes('tabungan') ||
+                                          cat.includes('operasional') || cat.includes('biaya') ||
                                           (h.tipe === 'pemasukan' && cat.includes('kelebihan'));
 
                         if (h.tipe === 'pemasukan') {
@@ -286,6 +357,7 @@ const createOrderRow = (t, type) => {
 // Auto-run for non-module usage or simple script inclusion
 if (typeof window !== 'undefined') {
     window.syncAllBalances = syncAllBalances;
+    window.syncOneTrx = syncOneTrx;
     window.renderList = renderList;
 }
 
@@ -345,6 +417,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="info-card"><div class="label">Pernah Bayar</div><div class="value" style="cursor:pointer;" onclick="window.showAuditDetail('${trx.id}')">${window.formatRp(trx.total_paid)}</div></div>
                     <div class="info-card" style="background:rgba(245,158,11,0.05);"><div class="label" style="color:var(--warning);">SISA TAGIHAN</div><div class="value" style="color:var(--warning); font-size:1.5rem;">${window.formatRp(sisa)}</div></div>
                 `;
+                
+                // Add Targeted Sync Button
+                const syncBtnDiv = document.createElement('div');
+                syncBtnDiv.style = "margin-top:10px; text-align:right;";
+                syncBtnDiv.innerHTML = `<button class="btn btn-sm" style="background:rgba(59,130,246,0.1); color:var(--primary); border:1px solid var(--primary); font-size:0.65rem;" onclick="window.syncOneTrx('${trx.id}')">🔄 Sinkronkan Saldo Order Ini</button>`;
+                gridInfoOrder.appendChild(syncBtnDiv);
             }
             
             const listHistoriPay = document.getElementById('listHistoriPay');
