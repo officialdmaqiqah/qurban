@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isAgen = userRole === 'agen' && !isYahya;
     console.log('[Audit Debug] Role:', userRole, 'isAdmin:', isAdmin);
     
-    if (isAdmin) {
+    if (isAdmin || userRole === 'agen') {
         const btnAudit = document.getElementById('btnAuditData');
         if (btnAudit) {
             btnAudit.style.display = 'block';
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- DATA AUDIT & REPAIR LOGIC ---
     async function runDataAudit() {
-        if (!isAdmin) return;
+        if (!isAdmin && userRole !== 'agen') return;
         
         try {
             showToast('Memulai Audit Data Stok...', 'info');
