@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId);
     const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
     const isAgen = userRole === 'agen' && !isYahya;
+    console.log('[Audit Debug] Role:', userRole, 'isAdmin:', isAdmin);
     
     if (isAdmin) {
         const btnAudit = document.getElementById('btnAuditData');
