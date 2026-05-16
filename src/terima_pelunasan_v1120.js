@@ -492,15 +492,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const oldOver = (trx.total_overpaid || 0);
             const oldPaid = (trx.total_paid || 0);
-            const deal = (trx.total_deal || 0);
 
-            let fromOver = Math.min(nominal, oldOver);
-            let remaining = nominal - fromOver;
-            let fromPaid = Math.min(remaining, Math.max(0, oldPaid - deal));
+            const updatedHistory = [...(trx.history_bayar || []), { 
+                payId: refId, 
+                tgl, 
+                nominal: -Math.abs(nominal), 
+                channel: finalChannel, 
+                category: 'Pengembalian Dana',
+                reason: 'MANUAL REFUND'
+            }];
 
             await supabase.from('transaksi').update({ 
-                total_overpaid: Math.max(0, oldOver - fromOver), 
-                total_paid: Math.max(0, oldPaid - fromPaid) 
+                total_overpaid: Math.max(0, oldOver - nominal), 
+                total_paid: Math.max(0, oldPaid - nominal),
+                history_bayar: updatedHistory
             }).eq('id', trx.id);
 
             await supabase.from('keuangan').insert([{ 
