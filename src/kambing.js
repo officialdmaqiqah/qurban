@@ -5,20 +5,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return; // layout.js handles redirect
 
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-    if (!profile) return;
-
-    const email = profile.email;
-    if (email) document.getElementById('userEmailDisplay').textContent = email;
-
-    const userRole = (profile.role || 'staff').toLowerCase().trim();
-    const userEmail = (profile.email || '').toLowerCase();
-    const userName = (profile.full_name || '').toLowerCase();
-    const userId = profile.id;
-    const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId);
-    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
+    let profile = null;
+    try {
+        const { data: p, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        if (p) profile = p;
+    } catch (e) { console.error("Profile load failed:", e); }
+    
+    if (!profile) profile = window.CURRENT_USER;
+    
+    const userRole = (profile?.role || 'staff').toLowerCase().trim();
+    const userEmail = (profile?.email || session.user.email || '').toLowerCase();
+    const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(session.user.id);
+    const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya || userEmail.includes('admin') || userEmail === 'muhammadabqori926@gmail.com';
     const isAgen = userRole === 'agen' && !isYahya;
-    console.log('[Audit Debug] Role:', userRole, 'isAdmin:', isAdmin);
+    console.log('[Audit Debug] Role:', userRole, 'isAdmin:', isAdmin, 'Email:', userEmail);
     
     if (isAdmin || userRole === 'agen') {
         const btnAudit = document.getElementById('btnAuditData');

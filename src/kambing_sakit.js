@@ -209,8 +209,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         list.innerHTML = '';
         if (eligible) {
             eligible.forEach(k => {
-                const o = document.createElement('option'); o.value = k.no_tali;
-                o.textContent = `No ${k.no_tali} | Batch ${k.batch} | ${k.status_transaksi}`;
+                const o = document.createElement('option'); o.value = k.id;
+                o.textContent = `No ${k.no_tali} | ${k.warna_tali || ''} | Batch ${k.batch} | ${k.status_transaksi}`;
                 list.appendChild(o);
             });
         }
@@ -230,12 +230,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     formSakit?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const noTali = selectTarget.value;
+        const goatId = selectTarget.value;
         const note = document.getElementById('inpCatatan').value;
         const tgl = document.getElementById('inpTglKeluar').value || new Date().toISOString().split('T')[0];
         const stt = document.getElementById('inpTargetStatus').value;
 
-        const { data: goat } = await supabase.from('stok_kambing').select('*').eq('no_tali', noTali).eq('status_fisik', 'Ada').single();
+        const { data: goat } = await supabase.from('stok_kambing').select('*').eq('id', goatId).single();
         if(!goat) return window.showAlert('Kambing tidak ditemukan atau sedang tidak tersedia!', 'warning');
 
         if(goat.status_transaksi === 'Terjual') {
