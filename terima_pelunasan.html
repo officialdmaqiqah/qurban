@@ -433,6 +433,10 @@
                         <span style="color:var(--text-muted);">Konsumen:</span><span id="refundKonsumen" style="font-weight: 300;"></span>
                         <span style="color:var(--text-muted);">Kelebihan Bayar:</span><span id="refundNominal" style="font-weight: 300; color:var(--warning);"></span>
                     </div>
+                    <div style="margin-top:12px; border-top:1px dashed rgba(245,158,11,0.3); padding-top:10px; text-align:center;">
+                        <button type="button" class="btn btn-sm" style="background:var(--primary); color:#000; font-size:0.75rem; font-weight:bold; width:100%; border:none;" onclick="window.syncOneTrx(document.getElementById('refundTrxId').textContent)">🔄 Perbaiki Saldo Order Ini</button>
+                        <p style="font-size:0.65rem; color:var(--text-muted); margin-top:5px; line-height:1.2;">Klik ini jika Anda sudah refund tapi datanya masih muncul "nyangkut" di sini.</p>
+                    </div>
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
                     <div class="form-group" style="margin-bottom:0;">
