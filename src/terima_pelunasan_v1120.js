@@ -439,6 +439,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    const inpChannelRefund = document.getElementById('inpChannelRefund');
+    if (inpChannelRefund) {
+        inpChannelRefund.addEventListener('change', async () => {
+            const containerRekRefund = document.getElementById('containerRekRefund');
+            const inpRekIdRefund = document.getElementById('inpRekIdRefund');
+            if (inpChannelRefund.value === 'Transfer Bank') {
+                const reks = await window.getBankAccounts ? await window.getBankAccounts() : await getBankAccounts();
+                if (containerRekRefund) containerRekRefund.style.display = 'block';
+                if (inpRekIdRefund) {
+                    inpRekIdRefund.innerHTML = '<option value="">-- Pilih Rekening --</option>';
+                    reks.forEach(r => {
+                        const o = document.createElement('option');
+                        o.value = r.id;
+                        o.textContent = `${r.bank} - ${r.norek} (${r.an})`;
+                        inpRekIdRefund.appendChild(o);
+                    });
+                }
+            } else {
+                if (containerRekRefund) containerRekRefund.style.display = 'none';
+            }
+        });
+    }
+
     window.openRefundModal = (trx) => {
         const modal = document.getElementById('modalRefundKelebihan');
         if (!modal) return;
@@ -459,7 +482,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const nominal = window.parseNum(document.getElementById('inpNominalRefund').value);
             const tgl = document.getElementById('inpTglRefund').value;
             const chan = document.getElementById('inpChannelRefund').value;
+            const rekSelect = document.getElementById('inpRekIdRefund');
             const refId = 'REF-' + Date.now().toString().slice(-6);
+
+            let finalChannel = chan;
+            if (chan === 'Transfer Bank' && rekSelect && rekSelect.value) {
+                finalChannel = `TF ${rekSelect.options[rekSelect.selectedIndex].textContent}`;
+            }
 
             const oldOver = (trx.total_overpaid || 0);
             const oldPaid = (trx.total_paid || 0);
@@ -480,7 +509,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tanggal: tgl, 
                 kategori: 'Pengembalian Dana', 
                 nominal, 
-                channel: chan, 
+                channel: finalChannel, 
                 related_trx_id: trx.id,
                 keterangan: `Refund Kelebihan ${trx.id} - ${trx.customer?.nama}`
             }]);
