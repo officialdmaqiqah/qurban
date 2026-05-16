@@ -377,11 +377,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     else if (relGoatId && category === 'Kerugian (Mati/Hilang)') {
                         // Rollback Status Kambing Mati -> Sakit
-                        await supabase.from('stok_kambing').update({
-                            status_kesehatan: 'Sakit', status_fisik: 'Ada', status_transaksi: 'Tersedia',
-                            tgl_keluar: null, catatan_keluar: null,
+                        const { data: goat } = await supabase.from('stok_kambing').select('*').eq('id', relGoatId).single();
+                        const history = goat?.status_history || [];
+                        history.push({
+                            date: new Date().toISOString(),
+                            user: profile.email || 'system',
+                            action: 'Rollback Loss (Finance)'
+                        });
+
+                        const updates = {
+                            status_kesehatan: 'Sakit', 
+                            status_fisik: 'Ada', 
+                            status_history: history,
+                            tgl_keluar: null, 
+                            catatan_keluar: null,
                             updated_at: new Date().toISOString()
-                        }).eq('id', relGoatId);
+                        };
+
+                        if (goat?.transaction_id) {
+                            updates.status_transaksi = 'Terjual';
+                        } else {
+                            updates.status_transaksi = 'Tersedia';
+                            updates.transaction_id = null;
+                        }
+
+                        await supabase.from('stok_kambing').update(updates).eq('id', relGoatId);
                     }
 
                     // 3. Hapus Record Keuangan Utama

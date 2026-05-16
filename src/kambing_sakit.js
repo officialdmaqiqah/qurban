@@ -173,9 +173,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                  }, null, "Catatan Tindakan", "Misal: Sakit parah tidak tertolong");
             } else {
                 // Sembuh
+                const history = currentGoat.status_history || [];
+                history.push({
+                    date: upDate,
+                    user: profile.email || 'system',
+                    action: 'Recovered (Sehat)',
+                    old_status: currentGoat.status_kesehatan
+                });
+
                 updates.status_kesehatan = 'Sehat';
                 updates.tgl_keluar = null;
                 updates.catatan_keluar = null;
+                updates.status_history = history;
+
+                if (currentGoat.transaction_id) {
+                    updates.status_transaksi = 'Terjual';
+                } else {
+                    updates.status_transaksi = 'Tersedia';
+                    updates.transaction_id = null;
+                }
                 await supabase.from('stok_kambing').update(updates).eq('id', id);
             }
 
@@ -207,9 +223,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnCancelModal')?.addEventListener('click', closeModal);
 
     const modalKomp = document.getElementById('modalKompensasi');
-    const closeKomp = () => modalKomp?.classList.remove('active');
-    document.getElementById('btnCloseKomp')?.addEventListener('click', closeKomp);
-    document.getElementById('btnSkipKomp')?.addEventListener('click', closeKomp);
+    const closeKomp = () => modalKomp?.classList.add('active'); // Added to be consistent
+    const closeKompInternal = () => modalKomp?.classList.remove('active');
+    document.getElementById('btnCloseKomp')?.addEventListener('click', closeKompInternal);
+    document.getElementById('btnSkipKomp')?.addEventListener('click', closeKompInternal);
 
     formSakit?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -228,10 +245,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!conf) return;
         }
 
+        const history = goat.status_history || [];
+        history.push({
+            date: new Date().toISOString(),
+            user: profile.email || 'system',
+            action: `Marked as ${stt}`,
+            note: note
+        });
+
         const { error } = await supabase.from('stok_kambing').update({ 
             status_kesehatan: stt, 
             tgl_keluar: tgl, 
             catatan_keluar: note,
+            status_history: history,
             updated_at: new Date().toISOString()
         }).eq('id', goat.id);
 
@@ -296,15 +322,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.rollbackStatus = async (id, noTali) => {
         window.showConfirm(`Batalkan status Kambing <b>${noTali}</b>?<br><br><small>Status akan kembali ke <b>Sakit</b> dan seluruh catatan keuangan kerugian/kompensasi terkait akan <b>DIHAPUS</b>.</small>`, async () => {
             try {
-                // 1. Kembalikan Status Stok
-                await supabase.from('stok_kambing').update({
+                const currentGoat = cachedGoats.find(g => g.id === id);
+                const history = currentGoat?.status_history || [];
+                history.push({
+                    date: new Date().toISOString(),
+                    user: profile.email || 'system',
+                    action: 'Rollback Status (Sakit)'
+                });
+
+                const updates = {
                     status_kesehatan: 'Sakit',
                     status_fisik: 'Ada',
-                    status_transaksi: 'Tersedia',
+                    status_history: history,
                     tgl_keluar: null,
                     catatan_keluar: null,
                     updated_at: new Date().toISOString()
-                }).eq('id', id);
+                };
+
+                if (currentGoat?.transaction_id) {
+                    updates.status_transaksi = 'Terjual';
+                } else {
+                    updates.status_transaksi = 'Tersedia';
+                    updates.transaction_id = null;
+                }
+
+                await supabase.from('stok_kambing').update(updates).eq('id', id);
 
                 // 2. Hapus Data Keuangan Terkait (Loss & Kompensasi)
                 const { error: delErr } = await supabase.from('keuangan')

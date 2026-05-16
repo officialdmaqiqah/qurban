@@ -103,15 +103,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     window.rollbackMati = async (id) => {
-        showConfirm('Kembalikan status kambing menjadi sehat/tersedia?', async () => {
-             await supabase.from('stok_kambing').update({ 
+         showConfirm('Kembalikan status kambing menjadi sehat/tersedia?', async () => {
+             const goat = cachedGoats.find(g => g.id === id);
+             const history = goat?.status_history || [];
+             history.push({
+                 date: new Date().toISOString(),
+                 user: profile.email || 'system',
+                 action: 'Rollback Status (Mati/Hilang)'
+             });
+
+             const updates = { 
                 status_kesehatan: 'Sehat', 
                 status_fisik: 'Ada', 
-                status_transaksi: 'Tersedia', 
+                status_history: history,
                 tgl_keluar: null, 
                 catatan_keluar: null,
                 updated_at: new Date().toISOString()
-             }).eq('id', id);
+             };
+
+             if (goat?.transaction_id) {
+                updates.status_transaksi = 'Terjual';
+             } else {
+                updates.status_transaksi = 'Tersedia';
+                updates.transaction_id = null;
+             }
+
+             await supabase.from('stok_kambing').update(updates).eq('id', id);
              
              await supabase.from('keuangan').delete().eq('related_goat_id', id).in('kategori', ['Kerugian (Mati/Hilang)', 'Kompensasi Supplier']);
              
@@ -170,8 +187,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             updates.status_transaksi = updates.status_kesehatan;
         } else {
             updates.status_fisik = 'Hilang';
-            updates.status_transaksi = 'Hilang';
-        }
+        const history = goat.status_history || [];
+        history.push({
+            date: new Date().toISOString(),
+            user: profile.email || 'system',
+            action: `Marked as ${stt.toUpperCase()}`,
+            note: note
+        });
+        updates.status_history = history;
 
         await supabase.from('stok_kambing').update(updates).eq('id', goat.id);
         

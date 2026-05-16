@@ -18,6 +18,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isYahya = ['15a3372c-87ae-4f0b-8d3b-fc11ccc2b0e1', '7cba5bb4-6a49-4cf9-8006-1a3e88c51ece'].includes(userId);
     const isAdmin = ['admin', 'office', 'staf', 'operator'].includes(userRole) || isYahya;
     const isAgen = userRole === 'agen' && !isYahya;
+    
+    if (isAdmin) {
+        const btnAudit = document.getElementById('btnAuditData');
+        if (btnAudit) {
+            btnAudit.style.display = 'block';
+            btnAudit.onclick = () => runDataAudit();
+        }
+    }
 
     window.isRestricted = function(perm) {
         if (isAdmin) return false;
@@ -76,6 +84,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modalKambing = document.getElementById('modalKambing');
     const formKambing = document.getElementById('formKambing');
     const inpLokasi = document.getElementById('inpLokasi');
+
+    // --- DATA AUDIT & REPAIR LOGIC ---
+    async function runDataAudit() {
+        if (!isAdmin) return;
+        
+        try {
+            showToast('Memulai Audit Data Stok...', 'info');
+            const { data: ghosts, error } = await supabase
+                .from('stok_kambing')
+                .select('id, no_tali, status_transaksi, transaction_id')
+                .eq('status_transaksi', 'Tersedia')
+                .not('transaction_id', 'is', null);
+            
+            if (error) throw error;
+            
+            if (!ghosts || ghosts.length === 0) {
+                return showAlert('Audit Selesai: Tidak ditemukan ketidakkonsistenan data stok.', 'success');
+            }
+            
+            const listStr = ghosts.map(g => `• No.${g.no_tali} (${g.transaction_id})`).join('<br>');
+            showConfirm(`<b>Ditemukan ${ghosts.length} record "hantu":</b><br>${listStr}<br><br>Sistem akan memvalidasi apakah transaksi tersebut valid atau harus dibersihkan. Lanjutkan?`, async () => {
+                let fixedCount = 0;
+                let soldCount = 0;
+                
+                for (const g of ghosts) {
+                    // Check if transaction exists
+                    const { data: trx } = await supabase.from('transaksi').select('id').eq('id', g.transaction_id).maybeSingle();
+                    
+                    if (trx) {
+                        // Transaction exists! Status should be 'Terjual'
+                        await supabase.from('stok_kambing').update({ status_transaksi: 'Terjual' }).eq('id', g.id);
+                        soldCount++;
+                    } else {
+                        // Transaction doesn't exist! Clear the ghost ID
+                        await supabase.from('stok_kambing').update({ transaction_id: null }).eq('id', g.id);
+                        fixedCount++;
+                    }
+                }
+                
+                showAlert(`<b>Perbaikan Selesai!</b><br>• ${soldCount} kambing dikoreksi menjadi 'Terjual'<br>• ${fixedCount} kambing dibersihkan 'transaction_id'-nya.`, 'success', () => renderTable());
+            }, null, 'Audit & Perbaikan Data', 'Ya, Perbaiki Semua');
+            
+        } catch (err) {
+            console.error('Audit failed:', err);
+            showAlert('Gagal menjalankan audit: ' + err.message, 'danger');
+        }
+    }
+    window.runDataAudit = runDataAudit;
 
     let currentSort = { column: 'no_tali', direction: 'asc' };
 

@@ -204,9 +204,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                  }, null, "Catatan");
             } else {
                 // Sembuh
+                const history = currentGoat.status_history || [];
+                history.push({
+                    date: upDate,
+                    user: profile.email || 'system',
+                    action: 'Recovered (Sehat)',
+                    old_status: currentGoat.status_kesehatan
+                });
+
                 updates.status_kesehatan = 'Sehat';
                 updates.status_fisik = 'Ada';
-                updates.status_transaksi = 'Tersedia';
+                
+                // Smart Recovery: If already sold, stay sold.
+                if (currentGoat.transaction_id) {
+                    updates.status_transaksi = 'Terjual';
+                    // Do NOT nullify transaction_id!
+                } else {
+                    updates.status_transaksi = 'Tersedia';
+                    updates.transaction_id = null;
+                }
+                
+                updates.status_history = history;
+
                 await supabase.from('stok_kambing').update(updates).eq('id', id);
                 window.showToast('Kambing kembali Sehat!', 'success');
                 await loadData(true);
@@ -249,10 +268,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.rollbackStatus = async (id, noTali) => {
         window.showConfirm(`Kembalikan <b>${noTali}</b> ke status Sakit?<br><small>Menghapus data kerugian terkait.</small>`, async () => {
-            await supabase.from('stok_kambing').update({
-                status_kesehatan: 'Sakit', status_fisik: 'Ada', status_transaksi: 'Tersedia',
-                tgl_keluar: null, catatan_keluar: null
-            }).eq('id', id);
+            const history = currentGoat.status_history || [];
+            history.push({
+                date: new Date().toISOString(),
+                user: profile.email || 'system',
+                action: 'Rollback to Sakit',
+                old_status: currentGoat.status_kesehatan
+            });
+
+            const updates = {
+                status_kesehatan: 'Sakit', 
+                status_fisik: 'Ada', 
+                status_history: history,
+                tgl_keluar: null, 
+                catatan_keluar: null,
+                updated_at: new Date().toISOString()
+            };
+
+            // Smart Recovery in Rollback
+            if (currentGoat.transaction_id) {
+                updates.status_transaksi = 'Terjual';
+            } else {
+                updates.status_transaksi = 'Tersedia';
+                updates.transaction_id = null;
+            }
+
+            await supabase.from('stok_kambing').update(updates).eq('id', id);
 
             await supabase.from('keuangan').delete().eq('related_goat_id', id).in('kategori', ['Kerugian (Mati/Hilang)', 'Kompensasi Supplier']);
             
