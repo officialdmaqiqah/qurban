@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        let omzet = 0, hpp = 0, komisi = 0, saving = 0, totalPaidFinance = 0, penjualanKarkas = 0;
+        let omzet = 0, hpp = 0, komisi = 0, saving = 0, totalPaidFinance = 0, penjualanKarkas = 0, penjualanKohe = 0, pendapatanLain = 0;
         
         // 4.1 PENJUALAN & HPP
         (trxDbAll || []).forEach(t => {
@@ -240,33 +240,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 } else if (f.tipe === 'pemasukan') {
                     // SINKRONISASI PEMBAYARAN (Piutang)
-                    const isSalesPayment = katLine.includes('jual') || katLine.includes('lunas') || katLine.includes('dp') || katLine.includes('order');
+                    const isSalesPayment = (katLine.includes('jual') || katLine.includes('lunas') || katLine.includes('dp') || katLine.includes('order')) 
+                        && !katLine.includes('karkas') && !katLine.includes('kohe') && !katLine.includes('pupuk');
                     
                     if (isSalesPayment) {
-                        // Jika pembayaran terhubung ke Transaksi Musim Ini, hitung (abaikan tanggal bayar, misal DP 2025 untuk 2026)
                         if (f.related_trx_id && seasonTrxIds.includes(f.related_trx_id)) {
                             totalPaidInFinance += nom;
-                        } 
-                        // Jika tidak terhubung tapi terjadi di Musim Ini, hitung sebagai fallback
-                        else if (isInSeason) {
+                        } else if (isInSeason) {
                             totalPaidInFinance += nom;
                         }
                     }
 
-                    // Kompensasi Supplier (Hanya jika di musim ini)
-                    if (isInSeason && katLine.includes('kompensasi')) {
-                        deadKomp += nom;
-                    }
-                    // Penjualan Karkas: diakui sebagai pendapatan sampingan
-                    if (isInSeason && katLine === 'penjualan karkas') {
-                        penjualanKarkas += nom;
+                    if (isInSeason) {
+                        if (katLine.includes('kompensasi')) {
+                            deadKomp += nom;
+                        } else if (katLine.includes('karkas')) {
+                            penjualanKarkas += nom;
+                        } else if (katLine.includes('kohe') || katLine.includes('pupuk')) {
+                            penjualanKohe += nom;
+                        } else if (katLine.includes('pendapatan') || katLine.includes('lain-lain')) {
+                            pendapatanLain += nom;
+                        }
                     }
                 }
             }
         });
 
         const deadLossNet = deadLossRaw - deadKomp;
-        const netProfit = omzet + penjualanKarkas - hpp - komisi - operatingExpenses - deadLossNet - saving - internalTransfers;
+        const netProfit = omzet + penjualanKarkas + penjualanKohe + pendapatanLain - hpp - komisi - operatingExpenses - deadLossNet - saving - internalTransfers;
         const piutang = omzet - totalPaidInFinance;
         const totalProfitSales = omzet - hpp - komisi - saving;
         const unitsSold = countTerjual + countDistribusi;
