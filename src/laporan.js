@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!body) return 0;
         body.innerHTML = '';
 
-        let omzet = 0, hpp = 0, komisi = 0, saving = 0, penjualanKarkas = 0;
+        let omzet = 0, hpp = 0, komisi = 0, saving = 0, penjualanKarkas = 0, penjualanKohe = 0, pendapatanLain = 0;
         const savingDetails = [];
 
         trxs.filter(t => {
@@ -177,10 +177,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else if (f.tipe === 'pemasukan') {
                     if (katLine.includes('kompensasi')) {
                         deadKomp += nom;
-                    }
-                    // Penjualan Karkas: diakui sebagai pendapatan sampingan
-                    if (katLine === 'penjualan karkas') {
+                    } else if (katLine.includes('karkas')) {
                         penjualanKarkas += nom;
+                    } else if (katLine.includes('kohe') || katLine.includes('pupuk')) {
+                        penjualanKohe += nom;
+                    } else if (katLine.includes('pendapatan') || katLine.includes('lain-lain')) {
+                        pendapatanLain += nom;
                     }
                 }
             }
@@ -192,9 +194,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         addRow('Total Omzet Penjualan Kambing', omzet, 'text-premium');
         if (penjualanKarkas > 0) addRow('(+) Penjualan Karkas', penjualanKarkas, 'text-success');
-        addRow('Total Pendapatan', omzet + penjualanKarkas, 'row-total text-premium');
+        if (penjualanKohe > 0) addRow('(+) Penjualan Kohe/Pupuk', penjualanKohe, 'text-success');
+        if (pendapatanLain > 0) addRow('(+) Pendapatan Lain-lain', pendapatanLain, 'text-success');
+        const totalPendapatan = omzet + penjualanKarkas + penjualanKohe + pendapatanLain;
+        addRow('Total Pendapatan', totalPendapatan, 'row-total text-premium');
         addRow('(-) HPP (Harga Nota)', -hpp, 'text-muted');
-        addRow('LABA KOTOR', omzet + penjualanKarkas - hpp, 'row-total text-premium');
+        addRow('LABA KOTOR', totalPendapatan - hpp, 'row-total text-premium');
         addRow('(-) Komisi Agen', -komisi);
         
         // Breakdown Opex
@@ -241,7 +246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        const netProfit = omzet + penjualanKarkas - hpp - komisi - opex - deadLossNet - saving - internalTransfers;
+        const netProfit = totalPendapatan - hpp - komisi - opex - deadLossNet - saving - internalTransfers;
         addRow('LABA BERSIH', netProfit, 'row-grand-total text-premium');
         return netProfit;
     };

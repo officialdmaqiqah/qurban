@@ -107,9 +107,12 @@ export const syncOneTrx = async (trxId) => {
             }
         }, 0);
 
+        const finalPaid = Math.min(total, trx.total_deal || 0);
+        const finalOverpaid = Math.max(0, total - (trx.total_deal || 0));
+
         await supabase.from('transaksi').update({
-            total_paid: total,
-            total_overpaid: Math.max(0, total - (trx.total_deal || 0)),
+            total_paid: finalPaid,
+            total_overpaid: finalOverpaid,
             history_bayar: history
         }).eq('id', trxId);
 
@@ -188,10 +191,11 @@ export const syncAllBalances = async () => {
                         }
                     }, 0);
 
-                    let finalPaid = total;
+                    let finalPaid = Math.min(total, trx.total_deal || 0);
+                    let finalOverpaid = Math.max(0, total - (trx.total_deal || 0));
                     await supabase.from('transaksi').update({
                         total_paid: finalPaid,
-                        total_overpaid: Math.max(0, finalPaid - (trx.total_deal || 0)),
+                        total_overpaid: finalOverpaid,
                         history_bayar: history
                     }).eq('id', trx.id);
                 }
@@ -580,9 +584,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 reason: 'MANUAL REFUND'
             }];
 
+            const deductOverpaid = Math.min(nominal, oldOver);
+            const deductPaid = nominal - deductOverpaid;
+
             await supabase.from('transaksi').update({ 
-                total_overpaid: Math.max(0, oldOver - nominal), 
-                total_paid: Math.max(0, oldPaid - nominal),
+                total_overpaid: Math.max(0, oldOver - deductOverpaid), 
+                total_paid: Math.max(0, oldPaid - deductPaid),
                 history_bayar: updatedHistory
             }).eq('id', trx.id);
 
