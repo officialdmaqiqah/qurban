@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tanggal: tgl,
                 kategori: 'Pemakaian Titipan Agen',
                 nominal,
-                channel: 'Sistem',
+                channel: 'Saldo Titipan Agen',
                 agen_name: trx.agen.nama,
                 related_trx_id: trxId,
                 keterangan: `Pemakaian saldo otomatis untuk ${trxId} - ${trx.customer?.nama}`
@@ -629,7 +629,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tanggal: tgl,
                     kategori: 'Titipan Dana Agen',
                     nominal,
-                    channel: 'Sistem',
+                    channel: 'Saldo Titipan Agen',
                     agen_name: trx.agen.nama,
                     related_trx_id: trx.id,
                     keterangan: `Pengembalian refund ke saldo otomatis untuk ${trx.id}`
@@ -705,7 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tanggal: window.getLocalDate ? window.getLocalDate() : '2026-05-19',
                     kategori: 'Pemakaian Titipan Agen',
                     nominal: 1200000,
-                    channel: 'Sistem',
+                    channel: 'Saldo Titipan Agen',
                     agen_name: 'Bana',
                     related_trx_id: 'TRX00084',
                     keterangan: 'Pemakaian saldo otomatis untuk TRX00084 (Perbaikan Sistem)'

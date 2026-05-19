@@ -260,29 +260,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    // ONE-TIME AUTO-FIX FOR BANA TRX00084
-    if (!localStorage.getItem('fixed_bana_1200_dep')) {
+    // ONE-TIME AUTO-FIX FOR BANA TRX00084 V2
+    if (!localStorage.getItem('fixed_bana_v2_1200')) {
         setTimeout(async () => {
             try {
-                const depId = 'DEP-' + Date.now().toString().slice(-6) + '-FIX';
+                // Hapus transaksi salah dengan channel Sistem
+                await supabase.from('keuangan').delete().eq('channel', 'Sistem');
+
+                // Insert ulang pemotongan yang benar dengan channel Saldo Titipan Agen
+                const depId = 'DEP-' + Date.now().toString().slice(-6) + '-V2';
                 const { error } = await supabase.from('keuangan').insert([{
                     id: depId,
                     tipe: 'pengeluaran',
                     tanggal: window.getLocalDate ? window.getLocalDate() : '2026-05-19',
                     kategori: 'Pemakaian Titipan Agen',
                     nominal: 1200000,
-                    channel: 'Sistem',
+                    channel: 'Saldo Titipan Agen',
                     agen_name: 'Bana',
                     related_trx_id: 'TRX00084',
-                    keterangan: 'Pemakaian saldo otomatis untuk TRX00084 (Perbaikan Sistem)'
+                    keterangan: 'Pemakaian saldo otomatis untuk TRX00084 (Perbaikan Sistem V2)'
                 }]);
                 if (!error) {
-                    localStorage.setItem('fixed_bana_1200_dep', 'true');
-                    console.log('Auto-fix untuk saldo Bana 1.200.000 berhasil dijalankan.');
+                    localStorage.setItem('fixed_bana_v2_1200', 'true');
+                    console.log('Auto-fix V2 berhasil dijalankan.');
                     if (typeof refreshData === 'function') refreshData();
                 }
             } catch (e) {
-                console.error('Gagal menjalankan auto-fix:', e);
+                console.error('Gagal menjalankan auto-fix V2:', e);
             }
         }, 2000);
     }
