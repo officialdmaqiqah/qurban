@@ -339,21 +339,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Run silently in background
     setTimeout(autoHealAgentBalances, 3000);
 
-    // Explicit Button for user (Universal Fix)
-    const btnFixBana = document.getElementById('btnFixBana');
-    if (btnFixBana) {
-        btnFixBana.addEventListener('click', async () => {
-            btnFixBana.disabled = true;
-            btnFixBana.innerText = 'Memperbaiki...';
-            try {
-                await supabase.from('keuangan').delete().eq('channel', 'Sistem');
-                await autoHealAgentBalances();
-                window.showAlert(`Perbaikan dan Sinkronisasi Selesai!`, 'success', () => window.location.reload());
-            } catch(e) {
-                window.showAlert('Gagal: ' + e.message, 'danger');
-                btnFixBana.disabled = false;
-                btnFixBana.innerText = '🔧 FIX BANA';
-            }
-        });
-    }
 });
