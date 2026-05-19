@@ -288,6 +288,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (e) {
                 console.error('Gagal menjalankan auto-fix V2:', e);
             }
+        }, 2000);
+    }
+
     // UNIVERSAL AUTO-HEAL LOOP
     async function autoHealAgentBalances() {
         try {
