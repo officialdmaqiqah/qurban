@@ -260,37 +260,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    // ONE-TIME AUTO-FIX FOR BANA TRX00084 V2
-    if (!localStorage.getItem('fixed_bana_v2_1200')) {
-        setTimeout(async () => {
-            try {
-                // Hapus transaksi salah dengan channel Sistem
-                await supabase.from('keuangan').delete().eq('channel', 'Sistem');
-
-                // Insert ulang pemotongan yang benar dengan channel Saldo Titipan Agen
-                const depId = 'DEP-' + Date.now().toString().slice(-6) + '-V2';
-                const { error } = await supabase.from('keuangan').insert([{
-                    id: depId,
-                    tipe: 'pengeluaran',
-                    tanggal: window.getLocalDate ? window.getLocalDate() : '2026-05-19',
-                    kategori: 'Pemakaian Titipan Agen',
-                    nominal: 1200000,
-                    channel: 'Saldo Titipan Agen',
-                    agen_name: 'Bana',
-                    related_trx_id: 'TRX00084',
-                    keterangan: 'Pemakaian saldo otomatis untuk TRX00084 (Perbaikan Sistem V2)'
-                }]);
-                if (!error) {
-                    localStorage.setItem('fixed_bana_v2_1200', 'true');
-                    console.log('Auto-fix V2 berhasil dijalankan.');
-                    if (typeof refreshData === 'function') refreshData();
-                }
-            } catch (e) {
-                console.error('Gagal menjalankan auto-fix V2:', e);
-            }
-        }, 2000);
-    }
-
     // UNIVERSAL AUTO-HEAL LOOP
     async function autoHealAgentBalances() {
         try {
@@ -305,8 +274,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .eq('channel', 'Saldo Titipan Agen')
                 .eq('kategori', 'Pemakaian Titipan Agen');
 
-            let fixedCount = 0;
+            // --- 1. CLEANUP ALL DUPLICATES ---
+            const pemakaianGrouped = {};
+            (allPemakaian || []).forEach(m => {
+                if (!m.related_trx_id) return;
+                if (!pemakaianGrouped[m.related_trx_id]) pemakaianGrouped[m.related_trx_id] = [];
+                pemakaianGrouped[m.related_trx_id].push(m);
+            });
 
+            let duplicateIdsToDelete = [];
+            Object.keys(pemakaianGrouped).forEach(trxId => {
+                const arr = pemakaianGrouped[trxId];
+                if (arr.length > 1) {
+                    // Keep the first one, delete the rest
+                    const toDelete = arr.slice(1).map(x => x.id);
+                    duplicateIdsToDelete.push(...toDelete);
+                }
+            });
+
+            if (duplicateIdsToDelete.length > 0) {
+                await supabase.from('keuangan').delete().in('id', duplicateIdsToDelete);
+                console.log('[Auto-Heal] Cleaned up general duplicates:', duplicateIdsToDelete);
+                // remove them from our memory array so we don't trip over them
+                duplicateIdsToDelete.forEach(id => {
+                    const idx = allPemakaian.findIndex(m => m.id === id);
+                    if (idx !== -1) allPemakaian.splice(idx, 1);
+                });
+            }
+
+            // --- 2. CREATE MISSING PAIRS ---
+            let fixedCount = 0;
             for (const p of (allPelunasan || [])) {
                 if (p.kategori === 'Pelunasan Order' && p.tipe === 'pemasukan' && p.related_trx_id) {
                     const hasPasangan = allPemakaian.some(m => m.related_trx_id === p.related_trx_id);
