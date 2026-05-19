@@ -290,4 +290,44 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }, 2000);
     }
+
+    // Explicit Button for user
+    const btnFixBana = document.getElementById('btnFixBana');
+    if (btnFixBana) {
+        btnFixBana.addEventListener('click', async () => {
+            btnFixBana.disabled = true;
+            btnFixBana.innerText = 'Memperbaiki...';
+            try {
+                // Wipe any old "Sistem" ones again just in case
+                await supabase.from('keuangan').delete().eq('channel', 'Sistem');
+                // Check if already inserted
+                const { data: existing } = await supabase.from('keuangan')
+                    .select('*')
+                    .eq('channel', 'Saldo Titipan Agen')
+                    .eq('related_trx_id', 'TRX00084')
+                    .eq('kategori', 'Pemakaian Titipan Agen');
+                
+                if (!existing || existing.length === 0) {
+                    const depId = 'DEP-' + Date.now().toString().slice(-6) + '-FIXMANUAL';
+                    const { error } = await supabase.from('keuangan').insert([{
+                        id: depId,
+                        tipe: 'pengeluaran',
+                        tanggal: window.getLocalDate ? window.getLocalDate() : '2026-05-19',
+                        kategori: 'Pemakaian Titipan Agen',
+                        nominal: 1200000,
+                        channel: 'Saldo Titipan Agen',
+                        agen_name: 'Bana',
+                        related_trx_id: 'TRX00084',
+                        keterangan: 'Pemakaian saldo untuk TRX00084 (Perbaikan Manual)'
+                    }]);
+                    if (error) throw error;
+                }
+                window.showAlert('Perbaikan Selesai! Kotak Sistem telah dihapus dan saldo Titipan telah dipotong.', 'success', () => window.location.reload());
+            } catch(e) {
+                window.showAlert('Gagal: ' + e.message, 'danger');
+                btnFixBana.disabled = false;
+                btnFixBana.innerText = '🔧 FIX BANA';
+            }
+        });
+    }
 });

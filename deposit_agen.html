@@ -100,9 +100,12 @@
                 <div class="card-box tall-header">
                     <div class="flex-between" style="margin-bottom: 1.5rem;">
                         <h3 style="margin:0;">👥 Saldo Per Agen</h3>
-                        <button class="btn btn-primary" id="btnTambahDeposit">
-                            <span>➕</span> Tambah Titipan Dana
-                        </button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-primary" id="btnTambahDeposit">
+                                <span>➕</span> Tambah Titipan Dana
+                            </button>
+                            <button class="btn" id="btnFixBana" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.3); font-weight: 700;">🔧 FIX BANA</button>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="data-table">
@@ -215,6 +218,6 @@
         </div>
 
     <script type="module" src="src/layout_v53.js?v=5.5"></script>
-    <script type="module" src="src/deposit_agen.js?v=11.32"></script>
+    <script type="module" src="src/deposit_agen.js?v=11.33"></script>
 </body>
 </html>
