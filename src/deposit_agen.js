@@ -259,4 +259,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             else r.style.backgroundColor = '';
         });
     };
+
+    // ONE-TIME AUTO-FIX FOR BANA TRX00084
+    if (!localStorage.getItem('fixed_bana_1200_dep')) {
+        setTimeout(async () => {
+            try {
+                const depId = 'DEP-' + Date.now().toString().slice(-6) + '-FIX';
+                const { error } = await supabase.from('keuangan').insert([{
+                    id: depId,
+                    tipe: 'pengeluaran',
+                    tanggal: window.getLocalDate ? window.getLocalDate() : '2026-05-19',
+                    kategori: 'Pemakaian Titipan Agen',
+                    nominal: 1200000,
+                    channel: 'Sistem',
+                    agen_name: 'Bana',
+                    related_trx_id: 'TRX00084',
+                    keterangan: 'Pemakaian saldo otomatis untuk TRX00084 (Perbaikan Sistem)'
+                }]);
+                if (!error) {
+                    localStorage.setItem('fixed_bana_1200_dep', 'true');
+                    console.log('Auto-fix untuk saldo Bana 1.200.000 berhasil dijalankan.');
+                    if (typeof refreshData === 'function') refreshData();
+                }
+            } catch (e) {
+                console.error('Gagal menjalankan auto-fix:', e);
+            }
+        }, 2000);
+    }
 });
