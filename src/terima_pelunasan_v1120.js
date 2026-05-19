@@ -485,7 +485,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             history_bayar: updatedHistory 
         }).eq('id', trxId);
 
-        await supabase.from('keuangan').insert([{ 
+        const inserts = [{ 
             id: payId, 
             tipe: 'pemasukan', 
             tanggal: tgl, 
@@ -495,7 +495,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             related_trx_id: trxId, 
             bukti_url: buktiUrl,
             keterangan: `Pelunasan ${trxId} - ${trx.customer?.nama}`
-        }]);
+        }];
+
+        if (finalChannel === 'Saldo Titipan Agen' && trx.agen?.nama) {
+            const depId = 'DEP-' + Date.now().toString().slice(-6) + '-USE';
+            inserts.push({
+                id: depId,
+                tipe: 'pengeluaran',
+                tanggal: tgl,
+                kategori: 'Pemakaian Titipan Agen',
+                nominal,
+                channel: 'Sistem',
+                agen_name: trx.agen.nama,
+                related_trx_id: trxId,
+                keterangan: `Pemakaian saldo otomatis untuk ${trxId} - ${trx.customer?.nama}`
+            });
+        }
+
+        await supabase.from('keuangan').insert(inserts);
 
         window.showAlert('Pembayaran Berhasil!', 'success', () => { window.location.reload(); });
     };
@@ -593,7 +610,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 history_bayar: updatedHistory
             }).eq('id', trx.id);
 
-            await supabase.from('keuangan').insert([{ 
+            const inserts = [{ 
                 id: refId, 
                 tipe: 'pengeluaran', 
                 tanggal: tgl, 
@@ -602,7 +619,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 channel: finalChannel, 
                 related_trx_id: trx.id,
                 keterangan: `Refund Kelebihan ${trx.id} - ${trx.customer?.nama}`
-            }]);
+            }];
+
+            if (finalChannel === 'Saldo Titipan Agen' && trx.agen?.nama) {
+                const depId = 'DEP-' + Date.now().toString().slice(-6) + '-REF';
+                inserts.push({
+                    id: depId,
+                    tipe: 'pemasukan',
+                    tanggal: tgl,
+                    kategori: 'Titipan Dana Agen',
+                    nominal,
+                    channel: 'Sistem',
+                    agen_name: trx.agen.nama,
+                    related_trx_id: trx.id,
+                    keterangan: `Pengembalian refund ke saldo otomatis untuk ${trx.id}`
+                });
+            }
+
+            await supabase.from('keuangan').insert(inserts);
             
             window.showAlert('Refund Berhasil!', 'success', () => { window.location.reload(); });
         });
@@ -659,4 +693,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (target) target.classList.add('active');
         };
     });
+
+    // ONE-TIME AUTO-FIX FOR BANA TRX00084
+    if (!localStorage.getItem('fixed_bana_1200')) {
+        setTimeout(async () => {
+            try {
+                const depId = 'DEP-' + Date.now().toString().slice(-6) + '-FIX';
+                const { error } = await supabase.from('keuangan').insert([{
+                    id: depId,
+                    tipe: 'pengeluaran',
+                    tanggal: window.getLocalDate ? window.getLocalDate() : '2026-05-19',
+                    kategori: 'Pemakaian Titipan Agen',
+                    nominal: 1200000,
+                    channel: 'Sistem',
+                    agen_name: 'Bana',
+                    related_trx_id: 'TRX00084',
+                    keterangan: 'Pemakaian saldo otomatis untuk TRX00084 (Perbaikan Sistem)'
+                }]);
+                if (!error) {
+                    localStorage.setItem('fixed_bana_1200', 'true');
+                    console.log('Auto-fix untuk saldo Bana 1.200.000 berhasil dijalankan.');
+                }
+            } catch (e) {
+                console.error('Gagal menjalankan auto-fix:', e);
+            }
+        }, 3000);
+    }
 });
