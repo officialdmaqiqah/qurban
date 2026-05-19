@@ -301,6 +301,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.handleEdit = async (id) => {
             const { data: item } = await supabase.from('keuangan').select('*').eq('id', id).single();
             if(!item) return;
+
+            if (item.kategori === 'Pemakaian Titipan Agen' && item.keterangan?.includes('otomatis')) {
+                window.showAlert('Dilarang mengedit riwayat potong saldo otomatis secara manual.', 'danger');
+                return;
+            }
+
             formKeuangan.reset();
             window.editingId = item.id;
             modalTitle.textContent = 'Edit Transaksi';
@@ -335,6 +341,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     const category = (item.kategori || '').trim();
                     const relTrxId = item.related_trx_id;
+                    
+                    if (category === 'Pemakaian Titipan Agen' && item.keterangan?.includes('otomatis')) {
+                        window.showAlert('Dilarang menghapus riwayat potong saldo otomatis secara langsung. Silakan hapus transaksi Pelunasan Order utamanya, dan potongan ini akan ikut terhapus otomatis.', 'danger');
+                        return;
+                    }
+
                     const relGoatId = item.related_goat_id;
 
                     // 2. Logika Rollback Berdasarkan Kategori
@@ -362,6 +374,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 history_bayar: updatedHistory,
                                 updated_at: new Date().toISOString()
                             }).eq('id', relTrxId);
+                        }
+
+                        // Jika ini menggunakan channel Saldo Titipan Agen, hapus juga potongannya
+                        if (item.channel === 'Saldo Titipan Agen') {
+                            await supabase.from('keuangan').delete()
+                                .eq('related_trx_id', relTrxId)
+                                .eq('kategori', category === 'Pelunasan Order' ? 'Pemakaian Titipan Agen' : 'Titipan Dana Agen');
                         }
                     } 
                     else if (relTrxId && category === 'Komisi Agen') {

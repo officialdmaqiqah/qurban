@@ -288,8 +288,56 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (e) {
                 console.error('Gagal menjalankan auto-fix V2:', e);
             }
-        }, 2000);
+    // UNIVERSAL AUTO-HEAL LOOP
+    async function autoHealAgentBalances() {
+        try {
+            // 1. Ambil semua Pemasukan dari Saldo Titipan Agen (Pelunasan Order & Refund)
+            const { data: allPelunasan } = await supabase.from('keuangan')
+                .select('*')
+                .eq('channel', 'Saldo Titipan Agen')
+                .in('tipe', ['pemasukan', 'pengeluaran']); 
+
+            const { data: allPemakaian } = await supabase.from('keuangan')
+                .select('*')
+                .eq('channel', 'Saldo Titipan Agen')
+                .eq('kategori', 'Pemakaian Titipan Agen');
+
+            let fixedCount = 0;
+
+            for (const p of (allPelunasan || [])) {
+                if (p.kategori === 'Pelunasan Order' && p.tipe === 'pemasukan' && p.related_trx_id) {
+                    const hasPasangan = allPemakaian.some(m => m.related_trx_id === p.related_trx_id);
+                    if (!hasPasangan) {
+                        const { data: trx } = await supabase.from('transaksi').select('agen').eq('id', p.related_trx_id).single();
+                        const agenName = trx?.agen?.nama || 'Bana'; 
+
+                        const depId = 'DEP-' + Date.now().toString().slice(-6) + '-' + p.related_trx_id.slice(-4);
+                        await supabase.from('keuangan').insert([{
+                            id: depId,
+                            tipe: 'pengeluaran',
+                            tanggal: p.tanggal,
+                            kategori: 'Pemakaian Titipan Agen',
+                            nominal: p.nominal,
+                            channel: 'Saldo Titipan Agen',
+                            agen_name: agenName,
+                            related_trx_id: p.related_trx_id,
+                            keterangan: `Pemakaian saldo otomatis untuk ${p.related_trx_id} (Auto-Heal)`
+                        }]);
+                        fixedCount++;
+                    }
+                }
+            }
+            if (fixedCount > 0) {
+                console.log(`[Auto-Heal] Fixed ${fixedCount} missing agent deductions.`);
+                if (typeof refreshData === 'function') refreshData();
+            }
+        } catch(e) {
+            console.error('[Auto-Heal] Error:', e);
+        }
     }
+
+    // Run silently in background
+    setTimeout(autoHealAgentBalances, 3000);
 
     // Explicit Button for user (Universal Fix)
     const btnFixBana = document.getElementById('btnFixBana');
@@ -298,50 +346,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnFixBana.disabled = true;
             btnFixBana.innerText = 'Memperbaiki...';
             try {
-                // Wipe any old "Sistem" ones again just in case
                 await supabase.from('keuangan').delete().eq('channel', 'Sistem');
-
-                // 1. Ambil semua Pemasukan dari Saldo Titipan Agen (Pelunasan Order & Refund)
-                const { data: allPelunasan } = await supabase.from('keuangan')
-                    .select('*')
-                    .eq('channel', 'Saldo Titipan Agen')
-                    .in('tipe', ['pemasukan', 'pengeluaran']); // We only care about pemasukan Pelunasan
-
-                const { data: allPemakaian } = await supabase.from('keuangan')
-                    .select('*')
-                    .eq('channel', 'Saldo Titipan Agen')
-                    .eq('kategori', 'Pemakaian Titipan Agen');
-
-                let fixedCount = 0;
-
-                // Cek setiap Pelunasan Order
-                for (const p of (allPelunasan || [])) {
-                    if (p.kategori === 'Pelunasan Order' && p.tipe === 'pemasukan' && p.related_trx_id) {
-                        // Apakah sudah ada pasangannya?
-                        const hasPasangan = allPemakaian.some(m => m.related_trx_id === p.related_trx_id);
-                        if (!hasPasangan) {
-                            // Ambil agen name dari table transaksi
-                            const { data: trx } = await supabase.from('transaksi').select('agen').eq('id', p.related_trx_id).single();
-                            const agenName = trx?.agen?.nama || 'Bana'; // Fallback to Bana
-
-                            const depId = 'DEP-' + Date.now().toString().slice(-6) + '-' + p.related_trx_id.slice(-4);
-                            await supabase.from('keuangan').insert([{
-                                id: depId,
-                                tipe: 'pengeluaran',
-                                tanggal: p.tanggal,
-                                kategori: 'Pemakaian Titipan Agen',
-                                nominal: p.nominal,
-                                channel: 'Saldo Titipan Agen',
-                                agen_name: agenName,
-                                related_trx_id: p.related_trx_id,
-                                keterangan: `Pemakaian saldo otomatis untuk ${p.related_trx_id} (Perbaikan Otomatis)`
-                            }]);
-                            fixedCount++;
-                        }
-                    }
-                }
-
-                window.showAlert(`Perbaikan Selesai! ${fixedCount} transaksi yang nyangkut telah diperbaiki.`, 'success', () => window.location.reload());
+                await autoHealAgentBalances();
+                window.showAlert(`Perbaikan dan Sinkronisasi Selesai!`, 'success', () => window.location.reload());
             } catch(e) {
                 window.showAlert('Gagal: ' + e.message, 'danger');
                 btnFixBana.disabled = false;
