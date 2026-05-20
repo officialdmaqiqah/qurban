@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const sortedEntries = Object.entries(balances)
                         .filter(([name]) => {
                             const low = name.toLowerCase();
-                            return !low.includes('non kas') && !low.includes('non-kas');
+                            return !low.includes('non kas') && !low.includes('non-kas') && !low.includes('titipan');
                         })
                         .sort(([nameA], [nameB]) => {
                             const getPriority = (name) => {
