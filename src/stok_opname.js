@@ -54,11 +54,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!tableBody) return;
         tableBody.innerHTML = '';
         
-        const term = (searchInput.value || '').toLowerCase();
-        let filtered = goats.filter(k => 
-            (k.no_tali || '').toLowerCase().includes(term) || 
-            (k.batch || '').toLowerCase().includes(term)
-        ).sort((a,b) => parseInt(a.no_tali) - parseInt(b.no_tali));
+        const term = (searchInput.value || '').trim().toLowerCase();
+        let filtered = goats;
+        if (term) {
+            const isNumeric = /^\d+$/.test(term);
+            filtered = goats.filter(k => {
+                if (isNumeric) {
+                    const kNoTali = (k.no_tali || '').trim();
+                    return parseInt(kNoTali) === parseInt(term) || kNoTali.toLowerCase() === term;
+                } else {
+                    return (k.no_tali || '').toLowerCase().includes(term) || 
+                           (k.batch || '').toLowerCase().includes(term);
+                }
+            });
+        }
+        filtered.sort((a,b) => parseInt(a.no_tali) - parseInt(b.no_tali));
 
         // Stats calculation
         const todayStr = new Date().toISOString().split('T')[0];
