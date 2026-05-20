@@ -545,6 +545,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             ); 
         }
 
+        // 4b. Apply Label Printed Filter
+        const filterLabel = document.getElementById('selFilterLabel')?.value || 'semua';
+        if (filterLabel !== 'semua') {
+            trx = trx.filter(t => {
+                const items = t.items || [];
+                if (items.length === 0) return filterLabel === 'belum';
+                const allPrinted = items.every(it => it.label_printed === true);
+                if (filterLabel === 'sudah') return allPrinted;
+                if (filterLabel === 'belum') return !allPrinted;
+                return true;
+            });
+        }
+
         // 5. Sort
         trx.sort((a, b) => { 
             let vA, vB;
@@ -574,6 +587,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 case 'tglAntar':
                     vA = a.delivery?.tgl || '';
                     vB = b.delivery?.tgl || '';
+                    break;
+                case 'labelPrinted':
+                    const aAllPrinted = (a.items || []).length > 0 && (a.items || []).every(it => it.label_printed === true);
+                    const bAllPrinted = (b.items || []).length > 0 && (b.items || []).every(it => it.label_printed === true);
+                    vA = aAllPrinted ? 1 : 0;
+                    vB = bAllPrinted ? 1 : 0;
                     break;
                 case 'id':
                 default:
@@ -1411,6 +1430,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         inpGlobalSearch.addEventListener('input', debounce(() => {
             renderTable();
         }, 300));
+    }
+
+    const selFilterLabel = document.getElementById('selFilterLabel');
+    if (selFilterLabel) {
+        selFilterLabel.addEventListener('change', () => {
+            renderTable();
+        });
     }
 
     // --- BULK ACTION & PRINT LABEL LOGIC ---

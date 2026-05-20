@@ -295,6 +295,14 @@
                             <label class="form-label">Pencarian Transaksi</label>
                             <input type="text" id="inpSearch" class="form-control" placeholder="Cari ID TRX, Nama Konsumen, Agen...">
                         </div>
+                        <div style="width:220px; min-width:180px;">
+                            <label class="form-label">Status Cetak Label</label>
+                            <select id="selFilterLabel" class="form-control">
+                                <option value="semua">🏷️ Semua Status</option>
+                                <option value="belum">❌ Belum Dicetak</option>
+                                <option value="sudah">✅ Sudah Dicetak</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="data-table">
@@ -306,7 +314,7 @@
                                     <th class="sort-header" data-column="customer">Konsumen &amp; WA ↕️</th>
                                     <th>Alamat &amp; Tujuan</th>
                                     <th class="sort-header" data-column="tglAntar">Tgl Antar / Tipe ↕️</th>
-                                    <th>Items</th>
+                                    <th class="sort-header" data-column="labelPrinted">Items / Label ↕️</th>
                                     <th class="sort-header" data-column="totalDeal">Total Deal ↕️</th>
                                     <th class="sort-header" data-column="totalPaid">DP Dibayar ↕️</th>
                                     <th class="sort-header" data-column="sisa">Sisa Tagihan ↕️</th>
