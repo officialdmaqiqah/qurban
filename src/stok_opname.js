@@ -73,9 +73,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tr = document.createElement('tr');
             if(isChecked) tr.style.background = 'rgba(16, 185, 129, 0.08)';
             
+            const photoUrl = item.foto_fisik || item.foto_thumb || item.foto_nota_url;
+            const directUrl = photoUrl ? window.getDirectDriveLink(photoUrl) : null;
+            const noTaliHtml = directUrl 
+                ? `<div class="clickable-no-tali" data-url="${directUrl}" style="font-weight:700; color:var(--primary); font-size:1.1rem; cursor:pointer; text-decoration:underline; display:inline-flex; align-items:center; gap:4px;" title="Klik untuk Lihat Foto Kambing">
+                     ${item.no_tali} 🖼️
+                   </div>`
+                : `<div style="font-weight:700; color:var(--text-muted); font-size:1.1rem;" title="Tidak ada foto">
+                     ${item.no_tali}
+                   </div>`;
+
             tr.innerHTML = `
                 <td class="sticky-col">
-                    <div style="font-weight:700; color:var(--primary); font-size:1.1rem;">${item.no_tali}</div>
+                    ${noTaliHtml}
                     <div style="font-size:0.75rem; color:var(--text-muted);">${item.warna_tali || '-'}</div>
                 </td>
                 <td>${item.batch}</td>
@@ -96,6 +106,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
             `;
             tableBody.appendChild(tr);
+        });
+
+        // Event Listeners for photo viewer
+        document.querySelectorAll('.clickable-no-tali').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = e.currentTarget.getAttribute('data-url');
+                if (window.viewPhoto) {
+                    window.viewPhoto(url);
+                } else {
+                    window.open(url, '_blank');
+                }
+            });
         });
 
         // Event Listeners for inline actions
