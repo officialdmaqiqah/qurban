@@ -98,8 +98,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${noTaliHtml}
                     <div style="font-size:0.75rem; color:var(--text-muted);">${item.warna_tali || '-'}</div>
                 </td>
-                <td>${item.batch}</td>
-                <td>${formatTgl(item.tgl_masuk)}</td>
                 <td>${item.sex || '-'}</td>
                 <td>
                     <select class="form-control select-opname" data-id="${item.id}" style="font-size:0.85rem; ${isChecked?'border-color:var(--success)':''}">
