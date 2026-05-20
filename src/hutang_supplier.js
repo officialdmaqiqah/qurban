@@ -478,6 +478,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('selStatusHutang')?.addEventListener('change', renderTable);
     document.getElementById('selSupplier')?.addEventListener('change', renderTable);
     document.getElementById('btnCancelModal')?.addEventListener('click', () => modalBayar.classList.remove('active'));
+    document.getElementById('btnCloseModal')?.addEventListener('click', () => modalBayar.classList.remove('active'));
 
     document.getElementById('btnBayarGlobal')?.addEventListener('click', async () => {
         const { goats } = await loadData();
@@ -486,10 +487,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (suppliers.length === 0) return window.showAlert('Tidak ada data supplier ditemukan.', 'warning');
         
         let targetSupplier = suppliers[0];
-        if (suppliers.length > 1) {
-            // Jika lebih dari satu, minta pilih atau tampilkan prompt sederhana
-            // Untuk saat ini kita ambil yang pertama atau biarkan user memilih di modal jika kita tambah dropdown
-            targetSupplier = suppliers[0]; 
+        const selVal = document.getElementById('selSupplier')?.value;
+        
+        if (selVal && selVal !== 'all') {
+            targetSupplier = selVal;
+        } else if (suppliers.length > 1) {
+            return window.showAlert('Silakan filter / pilih Supplier di atas tabel terlebih dahulu sebelum melakukan Pembayaran Global.', 'warning');
         }
 
         // Hitung total sisa hutang supplier ini untuk suggestion nominal
