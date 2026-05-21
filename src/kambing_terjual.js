@@ -280,6 +280,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const TIPE_BERHAK_KOMISI_UPPER = ['MARKETING KANDANG', 'RESELLER'];
 
     const formatTgl = (iso) => { if(!iso) return '-'; const p = iso.split('-'); return p.length >= 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso; };
+    const formatTglHari = (iso) => {
+        if (!iso) return '-';
+        try {
+            const p = iso.split('-');
+            if (p.length < 3) return iso;
+            const date = new Date(iso + 'T00:00:00');
+            if (isNaN(date.getTime())) return `${p[2]}/${p[1]}/${p[0]}`;
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = [
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            ];
+            return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+        } catch (e) {
+            const p = iso.split('-');
+            return p.length >= 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
+        }
+    };
     const formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v || 0);
     const formatNum = (v) => new Intl.NumberFormat('id-ID').format(v || 0);
     const parseNum = (s) => { if(!s) return 0; return parseFloat(String(s).replace(/[^0-9]/g, '')) || 0; };
@@ -731,7 +749,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </td>
                 <td><small>${t.delivery?.alamat?.kec || '-'}, ${t.delivery?.alamat?.kab || '-'}</small></td>
-                <td><strong>${formatTgl(t.delivery?.tgl)}</strong><br><small>${t.delivery?.tipe || '-'}</small></td>
+                <td><strong>${formatTglHari(t.delivery?.tgl)}</strong><br><small>${t.delivery?.tipe || '-'}</small></td>
                 <td>${itemsHtml}</td>
                 <td style="font-weight:700;">${formatRp(t.total_deal)}</td>
                 <td style="font-weight:700; color:var(--success);">${formatRp(t.total_paid || 0)}</td>
@@ -1021,7 +1039,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         maps: newTrx.customer?.alamat?.maps || '-',
                         wa_konsumen: newTrx.customer?.wa1 || '-', 
                         nama_agen: newTrx.agen?.nama || '-', 
-                        jadwal: formatTgl(newTrx.delivery?.tgl),
+                        jadwal: `*${formatTglHari(newTrx.delivery?.tgl)}*`,
                         komisi: formatRp(calculatedKomisi)
                     };
                     
@@ -1857,7 +1875,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 maps: trx.customer?.alamat?.maps || '-',
                 wa_konsumen: trx.customer?.wa1 || '-',
                 nama_agen: trx.agen?.nama || '-',
-                jadwal: formatTgl(trx.delivery?.tgl)
+                jadwal: `*${formatTglHari(trx.delivery?.tgl)}*`
             };
 
             // 5. Muat konfigurasi WA & olah template sesuai tipe pengiriman
