@@ -155,6 +155,21 @@ export const parseWaTemplate = async (template, data = {}) => {
         msg = msg.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), val);
     }
 
+    // Support Spintax (e.g. {Halo|Assalamu'alaikum|Selamat Pagi})
+    const parseSpintax = (text) => {
+        const spintaxRegex = /\{([^{}]+)\}/g;
+        let match;
+        let result = text;
+        while ((match = spintaxRegex.exec(result)) !== null) {
+            const options = match[1].split('|');
+            const randomOption = options[Math.floor(Math.random() * options.length)];
+            result = result.substring(0, match.index) + randomOption + result.substring(match.index + match[0].length);
+            spintaxRegex.lastIndex = 0;
+        }
+        return result;
+    };
+    msg = parseSpintax(msg);
+
     return msg;
 };
 window.parseWaTemplate = parseWaTemplate;
