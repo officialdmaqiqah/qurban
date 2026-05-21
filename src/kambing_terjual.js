@@ -749,7 +749,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </td>
                 <td><small>${t.delivery?.alamat?.kec || '-'}, ${t.delivery?.alamat?.kab || '-'}</small></td>
-                <td><strong>${formatTglHari(t.delivery?.tgl)}</strong><br><small>${t.delivery?.tipe || '-'}</small></td>
+                <td><strong>${formatTglHari(t.delivery?.tgl)}</strong><br><small>${t.delivery?.tipe || '-'}</small>${t.delivery?.info ? `<div style="font-size:0.7rem; color:var(--warning); margin-top:4px; font-style:italic; max-width:150px; white-space:normal; word-wrap:break-word;">📌 ${t.delivery.info}</div>` : ''}</td>
                 <td>${itemsHtml}</td>
                 <td style="font-weight:700;">${formatRp(t.total_deal)}</td>
                 <td style="font-weight:700; color:var(--success);">${formatRp(t.total_paid || 0)}</td>
@@ -902,7 +902,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tipe: matchedAgen?.tipe || fallbackTipe 
                 },
                 customer: { nama: document.getElementById('inpCustNama').value, wa1: document.getElementById('inpCustWA1').value, wa2: document.getElementById('inpCustWA2').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' }, status_konfirmasi: document.getElementById('inpCustStatusKonfirmasi')?.value || 'Belum Dikonfirmasi' },
-                delivery: { tipe: document.getElementById('inpDeliveryTipe').value, tgl: document.getElementById('inpDeliveryTgl').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
+                delivery: { tipe: document.getElementById('inpDeliveryTipe').value, tgl: document.getElementById('inpDeliveryTgl').value, info: document.getElementById('inpDeliveryInfo')?.value || '', alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 items: currentCart, total_deal: total, 
                 total_paid: Math.min(paidNow + (window.existingInstallmentsTotal || 0), total),
                 total_overpaid: Math.max(0, (paidNow + (window.existingInstallmentsTotal || 0)) - total),
@@ -1272,6 +1272,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('inpDeliveryTipe').value = trx.delivery.tipe || 'diantar';
         document.getElementById('inpDeliveryTgl').value = trx.delivery.tgl || '';
+        const inpDeliveryInfo = document.getElementById('inpDeliveryInfo');
+        if (inpDeliveryInfo) {
+            inpDeliveryInfo.value = trx.delivery?.info || '';
+        }
         
         inpAgenId.value = `${trx.agen.nama} - ${trx.agen.tipe || 'Agen'}`;
         await handleAgenChange();
@@ -1493,6 +1497,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Google Maps': addr.maps || '-',
                         'Tgl Deli': t.delivery?.tgl || '',
                         'Tipe Deli': t.delivery?.tipe || '',
+                        'Informasi Tambahan': t.delivery?.info || '',
                         'No Tali': it.noTali || dbGoat?.no_tali || '',
                         'Jenis Kelamin': dbGoat?.sex || it.sex || 'Jantan',
                         'Warna Tali': warnaActual,
