@@ -1909,7 +1909,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // 5. Muat konfigurasi WA & olah template sesuai tipe pengiriman
             const config = await window.getWaConfig();
-            const templateCust = trx.delivery?.tipe === 'ambil_sendiri' ? config.templateOrderDM : config.templateOrderNormal;
+            const templateCust = trx.delivery?.tipe === 'ambil_sendiri' 
+                ? (config.templateKonfirmasiAmbil || config.templateOrderDM) 
+                : (config.templateKonfirmasiKirim || config.templateOrderNormal);
             const msgCust = await window.parseWaTemplate(templateCust, commonData);
 
             // 6. Jalankan Pengiriman
