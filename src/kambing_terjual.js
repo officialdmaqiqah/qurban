@@ -287,6 +287,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(inpTglOrder) inpTglOrder.value = window.getLocalDate();
         if(inpTotalBayarAwal) inpTotalBayarAwal.value = '';
         
+        const inpCustStatusKonfirmasi = document.getElementById('inpCustStatusKonfirmasi');
+        if (inpCustStatusKonfirmasi) inpCustStatusKonfirmasi.value = 'Belum Dikonfirmasi';
+        
         // Auto-clean WA
         if (window.setupAutoCleanWA) {
             window.setupAutoCleanWA('inpCustWA1');
@@ -611,6 +614,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         trx.forEach(t => {
             const hasPendingEdit = editReqs.find(r => r.trx_id === t.id);
             const sisa = (t.total_deal || 0) - (t.total_paid || 0);
+            const sohibulList = (t.items || []).map(it => it.namaSohibul).filter(Boolean).join(', ') || '-';
             const itemsHtml = `<div style="display:flex; flex-wrap:wrap; gap:6px;">` + (t.items || []).map(item => { 
                 const kMeta = kambingDb.find(k => k.id === item.goatId); 
                 let badgeColor = 'var(--primary)';
@@ -647,7 +651,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${hasPendingEdit ? '<div class="status-pill status-review" style="margin-top:5px; transform: scale(0.85); origin: left center;">⏳ Review</div>' : ''}
                 </td>
                 <td>${t.agen?.nama || '-'}<br><small>${t.agen?.tipe || 'Agen'}</small></td>
-                <td><strong>${t.customer?.nama || '-'}</strong><br><small>WA: ${t.customer?.wa1 || '-'}</small></td>
+                <td>
+                    <strong>${t.customer?.nama || '-'}</strong>
+                    <div style="margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">WA: ${t.customer?.wa1 || '-'}</span>
+                        ${t.customer?.wa1 ? `
+                            <button class="btn btn-sm btn-wa-konfirmasi" data-id="${t.id}" style="padding: 2px 6px; font-size: 0.7rem; background: #25D366; border: none; color: white; display: inline-flex; align-items: center; gap: 4px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" title="Kirim WA Konfirmasi">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle;"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.625 1.451 5.403.002 9.803-4.394 9.806-9.799.002-2.592-1.002-5.029-2.828-6.858C16.425 2.12 13.999.918 11.41.916 6.008.916 1.61 5.31 1.608 10.71c-.001 1.516.402 3.001 1.168 4.316l-.993 3.628 3.714-.974zm12.39-7.234c-.308-.154-1.82-.9-2.102-1.002-.283-.102-.49-.153-.696.154-.205.308-.795 1.002-.974 1.205-.18.204-.359.227-.667.073-.308-.154-1.302-.48-2.48-1.532-.917-.818-1.536-1.83-1.716-2.138-.18-.308-.019-.475.135-.629.139-.138.308-.359.462-.539.154-.18.205-.308.308-.513.102-.205.051-.385-.026-.539-.077-.154-.696-1.677-.954-2.3-.25-.602-.505-.519-.696-.529-.18-.009-.385-.01-.59-.01-.205 0-.539.077-.82.385-.283.308-1.078 1.051-1.078 2.564 0 1.513 1.102 2.974 1.256 3.179.154.205 2.167 3.31 5.249 4.639.733.316 1.305.505 1.751.646.737.234 1.407.2 1.938.12.593-.089 1.82-.743 2.077-1.461.256-.718.256-1.333.18-1.461-.077-.128-.282-.205-.59-.359z"/></svg>
+                                <span>WA</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div style="font-size: 0.75rem; margin-top: 4px; display: flex; align-items: center; gap: 4px; color: var(--text-muted);">
+                        <span>Sohibul:</span>
+                        <strong style="color: var(--text-main);">${sohibulList}</strong>
+                    </div>
+                    <div style="margin-top: 6px;">
+                        <select class="form-control select-status-konfirmasi" data-id="${t.id}" style="width: 140px; height: 28px; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); font-weight: 500; cursor: pointer;">
+                            <option value="Belum Dikonfirmasi" ${t.customer?.status_konfirmasi === 'Belum Dikonfirmasi' || !t.customer?.status_konfirmasi ? 'selected' : ''}>❌ Belum Konfirmasi</option>
+                            <option value="Baru Sebatas WA" ${t.customer?.status_konfirmasi === 'Baru Sebatas WA' ? 'selected' : ''}>💬 Sebatas WA</option>
+                            <option value="Sudah Ditelpon" ${t.customer?.status_konfirmasi === 'Sudah Ditelpon' ? 'selected' : ''}>📞 Sudah Ditelpon</option>
+                            <option value="Terkonfirmasi" ${t.customer?.status_konfirmasi === 'Terkonfirmasi' ? 'selected' : ''}>✅ Terkonfirmasi</option>
+                        </select>
+                    </div>
+                </td>
                 <td><small>${t.delivery?.alamat?.kec || '-'}, ${t.delivery?.alamat?.kab || '-'}</small></td>
                 <td><strong>${formatTgl(t.delivery?.tgl)}</strong><br><small>${t.delivery?.tipe || '-'}</small></td>
                 <td>${itemsHtml}</td>
@@ -797,7 +824,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     nama: matchedAgen?.nama || dropdownVal.split(' - ')[0], 
                     tipe: matchedAgen?.tipe || fallbackTipe 
                 },
-                customer: { nama: document.getElementById('inpCustNama').value, wa1: document.getElementById('inpCustWA1').value, wa2: document.getElementById('inpCustWA2').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
+                customer: { nama: document.getElementById('inpCustNama').value, wa1: document.getElementById('inpCustWA1').value, wa2: document.getElementById('inpCustWA2').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' }, status_konfirmasi: document.getElementById('inpCustStatusKonfirmasi')?.value || 'Belum Dikonfirmasi' },
                 delivery: { tipe: document.getElementById('inpDeliveryTipe').value, tgl: document.getElementById('inpDeliveryTgl').value, alamat: { kab: inpCustKab.value, kec: inpCustKec.value, desa: document.getElementById('inpCustDesa').value, jalan: document.getElementById('inpCustAlamatJalan').value, maps: document.getElementById('inpMapsLink')?.value || '' } },
                 items: currentCart, total_deal: total, 
                 total_paid: Math.min(paidNow + (window.existingInstallmentsTotal || 0), total),
@@ -1150,6 +1177,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('inpCustNama').value = trx.customer.nama || '';
         document.getElementById('inpCustWA1').value = trx.customer.wa1 || '';
         document.getElementById('inpCustWA2').value = trx.customer.wa2 || '';
+        
+        const inpCustStatusKonfirmasiModal = document.getElementById('inpCustStatusKonfirmasi');
+        if (inpCustStatusKonfirmasiModal) inpCustStatusKonfirmasiModal.value = trx.customer.status_konfirmasi || 'Belum Dikonfirmasi';
         
         inpCustKab.value = trx.customer.alamat.kab || '';
         inpCustKab.dispatchEvent(new Event('change'));
@@ -1639,6 +1669,179 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnCetakLabel) {
         btnCetakLabel.addEventListener('click', () => {
             window.printLabels();
+        });
+    }
+
+    // ==========================================
+    // CUSTOMER CONFIRMATION & WHATSAPP ENGINE
+    // ==========================================
+
+    window.updateStatusKonfirmasi = async (trxId, newStatus) => {
+        try {
+            const { data: trx, error: fetchErr } = await supabase
+                .from('transaksi')
+                .select('customer')
+                .eq('id', trxId)
+                .single();
+            
+            if (fetchErr) throw fetchErr;
+            if (!trx) throw new Error("Transaksi tidak ditemukan.");
+
+            const updatedCustomer = {
+                ...trx.customer,
+                status_konfirmasi: newStatus
+            };
+
+            const { error: updateErr } = await supabase
+                .from('transaksi')
+                .update({ customer: updatedCustomer })
+                .eq('id', trxId);
+
+            if (updateErr) throw updateErr;
+
+            window.showToast('Status konfirmasi diperbarui!', 'success');
+        } catch (err) {
+            console.error('Update status gagal:', err);
+            window.showAlert('Gagal memperbarui status: ' + err.message, 'danger');
+        }
+    };
+
+    window.sendWaKonfirmasiCustomer = async (trxId) => {
+        try {
+            // 1. Ambil data Transaksi
+            const { data: trx, error: trxErr } = await supabase
+                .from('transaksi')
+                .select('*')
+                .eq('id', trxId)
+                .single();
+            if (trxErr) throw trxErr;
+            if (!trx) throw new Error("Transaksi tidak ditemukan.");
+
+            if (!trx.customer?.wa1) {
+                window.showAlert('Nomor WA Konsumen tidak tersedia untuk pesanan ini.', 'warning');
+                return;
+            }
+
+            // 2. Ambil Foto Kambing
+            const goatIds = (trx.items || []).map(it => it.goatId);
+            let fotoStr = '-';
+            if (goatIds.length > 0) {
+                const { data: goatsData } = await supabase
+                    .from('stok_kambing')
+                    .select('id, foto_fisik')
+                    .in('id', goatIds);
+
+                if (goatsData && goatsData.length > 0) {
+                    fotoStr = goatsData
+                        .filter(g => g.foto_fisik)
+                        .map(g => typeof window.getDirectDriveLink === 'function' ? window.getDirectDriveLink(g.foto_fisik) : g.foto_fisik)
+                        .join('\n') || '-';
+                }
+            }
+
+            // 3. Ambil Detail Rekening Bank
+            const reks = await getRekeningDb();
+            const rekStr = (reks || [])
+                .filter(r => !(r.bank || '').toLowerCase().includes('bsi'))
+                .map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`)
+                .join('\n') || '-';
+
+            // 4. Susun Rincian
+            const itemsStr = (trx.items || []).map(it => `• No.${it.noTali} (${it.warnaTali || '-'})`).join('\n');
+            const sohibulStr = (trx.items || []).map(it => `• ${it.noTali}: ${it.namaSohibul || '-'}`).join('\n');
+            const historyStr = (trx.history_bayar || []).length > 0
+                ? (trx.history_bayar || []).map((h, idx) => `• ${formatTgl(h.tgl)}: ${formatRp(h.nominal)} (${idx === 0 ? 'DP' : 'Angsuran'})`).join('\n')
+                : `• Belum ada pembayaran`;
+
+            const alamatStr = [
+                trx.customer?.alamat?.jalan,
+                trx.customer?.alamat?.desa,
+                trx.customer?.alamat?.kec,
+                trx.customer?.alamat?.kab
+            ].filter(Boolean).join(', ') || '-';
+
+            const commonData = {
+                judul: '*KONFIRMASI PESANAN QURBAN* 🐑',
+                nama: trx.customer?.nama || '-',
+                id: trx.id,
+                tgl: formatTgl(trx.tgl_trx),
+                total: formatRp(trx.total_deal),
+                dp: formatRp(trx.total_paid || 0),
+                history: historyStr,
+                sisa: formatRp((trx.total_deal || 0) - (trx.total_paid || 0)),
+                items: itemsStr,
+                sohibul: sohibulStr,
+                foto: fotoStr,
+                rekening: rekStr,
+                info_agen: trx.agen?.nama || '-',
+                alamat: alamatStr,
+                maps: trx.customer?.alamat?.maps || '-',
+                wa_konsumen: trx.customer?.wa1 || '-',
+                nama_agen: trx.agen?.nama || '-',
+                jadwal: formatTgl(trx.delivery?.tgl)
+            };
+
+            // 5. Muat konfigurasi WA & olah template sesuai tipe pengiriman
+            const config = await window.getWaConfig();
+            const templateCust = trx.delivery?.tipe === 'ambil_sendiri' ? config.templateOrderDM : config.templateOrderNormal;
+            const msgCust = await window.parseWaTemplate(templateCust, commonData);
+
+            // 6. Jalankan Pengiriman
+            const res = await window.sendWa(trx.customer.wa1, msgCust);
+            
+            if (res.success) {
+                window.showToast('✅ WA Konfirmasi berhasil dikirim!', 'success');
+                // Otomatis ubah status menjadi "Baru Sebatas WA"
+                await window.updateStatusKonfirmasi(trxId, 'Baru Sebatas WA');
+                
+                // Sinkronkan pilihan dropdown di layar
+                const dropdown = document.querySelector(`.select-status-konfirmasi[data-id="${trxId}"]`);
+                if (dropdown) dropdown.value = 'Baru Sebatas WA';
+            } else {
+                window.showConfirm(`Gagal mengirim WA otomatis: ${res.msg}\n\nIngin kirim manual via WhatsApp Web?`, () => {
+                    window.open(res.link, '_blank');
+                    // Tawarkan untuk mengubah status menjadi "Baru Sebatas WA" secara manual
+                    window.showConfirm('Apakah Anda ingin menandai pesanan ini sebagai "Sebatas WA"?', async () => {
+                        await window.updateStatusKonfirmasi(trxId, 'Baru Sebatas WA');
+                        const dropdown = document.querySelector(`.select-status-konfirmasi[data-id="${trxId}"]`);
+                        if (dropdown) dropdown.value = 'Baru Sebatas WA';
+                    });
+                }, null, 'Pemberitahuan WA', 'Kirim Manual', 'btn-primary');
+            }
+        } catch (err) {
+            console.error('Kirim WA gagal:', err);
+            window.showAlert('Gagal mengirim konfirmasi: ' + err.message, 'danger');
+        }
+    };
+
+    // Pasang Event Delegation pada body tabel
+    if (tableBody) {
+        tableBody.addEventListener('change', async (e) => {
+            if (e.target.classList.contains('select-status-konfirmasi')) {
+                const trxId = e.target.dataset.id;
+                const newStatus = e.target.value;
+                
+                e.target.disabled = true;
+                await window.updateStatusKonfirmasi(trxId, newStatus);
+                e.target.disabled = false;
+            }
+        });
+
+        tableBody.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.btn-wa-konfirmasi');
+            if (btn) {
+                e.stopPropagation();
+                const trxId = btn.dataset.id;
+                
+                btn.disabled = true;
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '⏳...';
+                
+                await window.sendWaKonfirmasiCustomer(trxId);
+                
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
         });
     }
 
