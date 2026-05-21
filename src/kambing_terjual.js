@@ -11,6 +11,46 @@ const BB_REGIONS = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const getStatusColorStyle = (status) => {
+        switch (status) {
+            case 'Baru Sebatas WA':
+                return {
+                    bg: '#fef08a',
+                    color: '#713f12',
+                    border: '#eab308'
+                };
+            case 'Sudah Ditelpon':
+                return {
+                    bg: '#3b82f6',
+                    color: '#ffffff',
+                    border: '#2563eb'
+                };
+            case 'Terkonfirmasi':
+                return {
+                    bg: '#22c55e',
+                    color: '#ffffff',
+                    border: '#16a34a'
+                };
+            case 'Belum Dikonfirmasi':
+            default:
+                return {
+                    bg: '#cbd5e1',
+                    color: '#0f172a',
+                    border: '#94a3b8'
+                };
+        }
+    };
+
+    const applySelectStatusStyle = (selectEl) => {
+        if (!selectEl) return;
+        const val = selectEl.value;
+        const styleObj = getStatusColorStyle(val);
+        selectEl.style.backgroundColor = styleObj.bg;
+        selectEl.style.color = styleObj.color;
+        selectEl.style.borderColor = styleObj.border;
+    };
+    window.applySelectStatusStyle = applySelectStatusStyle;
+
     // 1. Check Session & Profile
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return; // layout.js handles redirect
@@ -288,7 +328,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(inpTotalBayarAwal) inpTotalBayarAwal.value = '';
         
         const inpCustStatusKonfirmasi = document.getElementById('inpCustStatusKonfirmasi');
-        if (inpCustStatusKonfirmasi) inpCustStatusKonfirmasi.value = 'Belum Dikonfirmasi';
+        if (inpCustStatusKonfirmasi) {
+            inpCustStatusKonfirmasi.value = 'Belum Dikonfirmasi';
+            applySelectStatusStyle(inpCustStatusKonfirmasi);
+        }
         
         // Auto-clean WA
         if (window.setupAutoCleanWA) {
@@ -561,6 +604,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
+        // 4c. Apply Status Konfirmasi Filter
+        const filterKonfirmasi = document.getElementById('selFilterKonfirmasi')?.value || 'semua';
+        if (filterKonfirmasi !== 'semua') {
+            trx = trx.filter(t => {
+                const status = t.customer?.status_konfirmasi || 'Belum Dikonfirmasi';
+                return status === filterKonfirmasi;
+            });
+        }
+
         // 5. Sort
         trx.sort((a, b) => { 
             let vA, vB;
@@ -615,6 +667,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const hasPendingEdit = editReqs.find(r => r.trx_id === t.id);
             const sisa = (t.total_deal || 0) - (t.total_paid || 0);
             const sohibulList = (t.items || []).map(it => it.namaSohibul).filter(Boolean).join(', ') || '-';
+            const statusKonf = t.customer?.status_konfirmasi || 'Belum Dikonfirmasi';
+            const colors = getStatusColorStyle(statusKonf);
+            const selectStyle = `width: 140px; height: 28px; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: ${colors.bg}; border: 1px solid ${colors.border}; color: ${colors.color}; font-weight: 600; cursor: pointer; transition: all 0.2s;`;
             const itemsHtml = `<div style="display:flex; flex-wrap:wrap; gap:6px;">` + (t.items || []).map(item => { 
                 const kMeta = kambingDb.find(k => k.id === item.goatId); 
                 let badgeColor = 'var(--primary)';
@@ -667,11 +722,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <strong style="color: var(--text-main);">${sohibulList}</strong>
                     </div>
                     <div style="margin-top: 6px;">
-                        <select class="form-control select-status-konfirmasi" data-id="${t.id}" style="width: 140px; height: 28px; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); font-weight: 500; cursor: pointer;">
-                            <option value="Belum Dikonfirmasi" ${t.customer?.status_konfirmasi === 'Belum Dikonfirmasi' || !t.customer?.status_konfirmasi ? 'selected' : ''}>❌ Belum Konfirmasi</option>
-                            <option value="Baru Sebatas WA" ${t.customer?.status_konfirmasi === 'Baru Sebatas WA' ? 'selected' : ''}>💬 Sebatas WA</option>
-                            <option value="Sudah Ditelpon" ${t.customer?.status_konfirmasi === 'Sudah Ditelpon' ? 'selected' : ''}>📞 Sudah Ditelpon</option>
-                            <option value="Terkonfirmasi" ${t.customer?.status_konfirmasi === 'Terkonfirmasi' ? 'selected' : ''}>✅ Terkonfirmasi</option>
+                        <select class="form-control select-status-konfirmasi" data-id="${t.id}" style="${selectStyle}">
+                            <option style="background-color: #cbd5e1; color: #0f172a;" value="Belum Dikonfirmasi" ${statusKonf === 'Belum Dikonfirmasi' ? 'selected' : ''}>❌ Belum Konfirmasi</option>
+                            <option style="background-color: #fef08a; color: #713f12;" value="Baru Sebatas WA" ${statusKonf === 'Baru Sebatas WA' ? 'selected' : ''}>💬 Sebatas WA</option>
+                            <option style="background-color: #3b82f6; color: #ffffff;" value="Sudah Ditelpon" ${statusKonf === 'Sudah Ditelpon' ? 'selected' : ''}>📞 Sudah Ditelpon</option>
+                            <option style="background-color: #22c55e; color: #ffffff;" value="Terkonfirmasi" ${statusKonf === 'Terkonfirmasi' ? 'selected' : ''}>✅ Terkonfirmasi</option>
                         </select>
                     </div>
                 </td>
@@ -1179,7 +1234,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('inpCustWA2').value = trx.customer.wa2 || '';
         
         const inpCustStatusKonfirmasiModal = document.getElementById('inpCustStatusKonfirmasi');
-        if (inpCustStatusKonfirmasiModal) inpCustStatusKonfirmasiModal.value = trx.customer.status_konfirmasi || 'Belum Dikonfirmasi';
+        if (inpCustStatusKonfirmasiModal) {
+            inpCustStatusKonfirmasiModal.value = trx.customer.status_konfirmasi || 'Belum Dikonfirmasi';
+            applySelectStatusStyle(inpCustStatusKonfirmasiModal);
+        }
         
         inpCustKab.value = trx.customer.alamat.kab || '';
         inpCustKab.dispatchEvent(new Event('change'));
@@ -1422,6 +1480,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Total Nota': idx === 0 ? (parseFloat(t.total_deal) || 0) : 0,
                         'Total DP/Bayar': idx === 0 ? (parseFloat(t.total_paid) || 0) : 0,
                         'Sisa Tagihan Nota': idx === 0 ? (parseFloat(sisa) || 0) : 0,
+                        'Status Konfirmasi': t.customer?.status_konfirmasi || 'Belum Dikonfirmasi',
                         'Status Komisi': t.komisi?.status || ''
                     });
                 });
@@ -1466,6 +1525,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (selFilterLabel) {
         selFilterLabel.addEventListener('change', () => {
             renderTable();
+        });
+    }
+
+    const selFilterKonfirmasi = document.getElementById('selFilterKonfirmasi');
+    if (selFilterKonfirmasi) {
+        selFilterKonfirmasi.addEventListener('change', () => {
+            renderTable();
+        });
+    }
+
+    const inpCustStatusKonfirmasi = document.getElementById('inpCustStatusKonfirmasi');
+    if (inpCustStatusKonfirmasi) {
+        inpCustStatusKonfirmasi.addEventListener('change', () => {
+            applySelectStatusStyle(inpCustStatusKonfirmasi);
         });
     }
 
@@ -1796,7 +1869,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Sinkronkan pilihan dropdown di layar
                 const dropdown = document.querySelector(`.select-status-konfirmasi[data-id="${trxId}"]`);
-                if (dropdown) dropdown.value = 'Baru Sebatas WA';
+                if (dropdown) {
+                    dropdown.value = 'Baru Sebatas WA';
+                    applySelectStatusStyle(dropdown);
+                }
             } else {
                 window.showConfirm(`Gagal mengirim WA otomatis: ${res.msg}\n\nIngin kirim manual via WhatsApp Web?`, () => {
                     window.open(res.link, '_blank');
@@ -1804,7 +1880,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     window.showConfirm('Apakah Anda ingin menandai pesanan ini sebagai "Sebatas WA"?', async () => {
                         await window.updateStatusKonfirmasi(trxId, 'Baru Sebatas WA');
                         const dropdown = document.querySelector(`.select-status-konfirmasi[data-id="${trxId}"]`);
-                        if (dropdown) dropdown.value = 'Baru Sebatas WA';
+                        if (dropdown) {
+                            dropdown.value = 'Baru Sebatas WA';
+                            applySelectStatusStyle(dropdown);
+                        }
                     });
                 }, null, 'Pemberitahuan WA', 'Kirim Manual', 'btn-primary');
             }
@@ -1820,6 +1899,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.target.classList.contains('select-status-konfirmasi')) {
                 const trxId = e.target.dataset.id;
                 const newStatus = e.target.value;
+                
+                applySelectStatusStyle(e.target);
                 
                 e.target.disabled = true;
                 await window.updateStatusKonfirmasi(trxId, newStatus);
