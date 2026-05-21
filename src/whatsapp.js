@@ -9,7 +9,7 @@ const WA_DEFAULT_CONFIG = {
     sender: '6285335150001',
     footer: 'Kandang DM Aqiqah - Berkah & Amanah',
     templateLunas: "*DM AQIQAH & QURBAN*\n_Berkah, Amanah & Sesuai Syariat_\n==========================\n\nAssalamu’alaikum Warahmatullahi Wabarakatuh,\n\nBapak/Ibu *[[NAMA]]*, Alhamdulillah kami telah mengonfirmasi penerimaan dana pembayaran Anda dengan rincian berikut:\n\n📌 *INFORMASI PEMBAYARAN*\nNo. Transaksi: *[[ID]]*\nTgl Pembayaran: [[TGL]]\nNominal Masuk: *[[NOMINAL]]*\n\n📊 *STATUS TAGIHAN*\nSisa Tagihan: *[[SISA]]*\n\nJazakumullah Khairan Katsiran.\nSemoga harta yang dikeluarkan mendapat ganti keberkahan dari Allah SWT. Aamiin.\n\nWassalamu’alaikum Warahmatullahi Wabarakatuh.\n\n[[FOOTER]]",
-    templateOrderNormal: "*KONFIRMASI PENGIRIMAN HEWAN QURBAN* 🐑\n==================================\n\nAssalamu’alaikum Wr. Wb. Bapak/Ibu *[[NAMA]]*,\n\nKami dari Daarul Mahabbah Qurban ingin mengonfirmasi ulang rencana pengantaran hewan qurban Anda dengan rincian berikut:\n\n📌 *DETAIL PENGIRIMAN*\n- *No. Transaksi*: [[ID]]\n- *Jadwal Antar*: [[JADWAL]]\n- *Alamat Tujuan*: [[ALAMAT]]\n- *Google Maps*: [[MAPS]]\n\n🐐 *RINCIAN HEWAN & SOHIBUL*\n[[ITEMS]]\n\n*Nama Sohibul Qurban:*\n[[SOHIBUL]]\n\n🖼️ *Foto Fisik Hewan*:\n[[FOTO]]\n\nMohon dicek kembali alamat dan jadwal di atas. Jika sudah sesuai, silakan balas pesan ini agar tim kami segera menjadwalkannya. Terima kasih!\n\n[[FOOTER]]",
+    templateOrderNormal: "[[JUDUL]]\n_Berkah, Amanah & Sesuai Syariat_\n==========================\n\nAssalamu’alaikum Warahmatullahi Wabarakatuh,\n\nJazakumullah Khairan Katsiran Bapak/Ibu *[[NAMA]]* atas kepercayaannya.\n\n📌 *Info Transaksi*\nNo. Transaksi: *[[ID]]*\nTanggal: [[TGL]]\n\n👤 *Data Penerima*\nNama: [[NAMA]]\nAlamat Antar: [[ALAMAT]]\nMaps: [[MAPS]]\n\n👤 *Data Sohibul*\n[[SOHIBUL]]\n\n🐐 *Rincian Hewan*\n[[ITEMS]]\n\n🖼️ *Link Foto Hewan*\n[[FOTO]]\n\n💰 *Pembayaran*\nHarga Deal: *[[TOTAL]]*\n[[HISTORY]]\n*Sisa Tagihan: [[SISA]]*\n\n📅 *Jadwal Pengantaran*\n[[JADWAL]]\n\n💳 *Info Pembayaran Resmi:*\n[[REKENING]]\n\n📞 *Info Agen Pendamping:*\n[[INFO_AGEN]]\n\nSemoga Allah SWT menerima amal ibadah qurban Bapak/Ibu sekeluarga dan memberikan keberkahan yang melimpah. Aamiin.\n\n*DM Aqiqah Team*\n[[FOOTER]]",
     templateOrderDM: "*DM AQIQAH & QURBAN*\n_Berkah, Amanah & Sesuai Syariat_\n==========================\n\nAssalamu’alaikum Warahmatullahi Wabarakatuh,\n\nJazakumullah Khairan Katsiran Bapak/Ibu *[[NAMA]]* atas kepercayaannya.\n\n📌 *Info Transaksi*\nNo. Transaksi: *[[ID]]*\nTanggal: [[TGL]]\n\n👤 *Data Penerima*\nNama: [[NAMA]]\nAlamat Antar: [[ALAMAT]]\nMaps: [[MAPS]]\n\n👤 *Data Sohibul*\n[[SOHIBUL]]\n\n🐐 *Rincian Hewan*\n[[ITEMS]]\n\n🖼️ *Link Foto Hewan*\n[[FOTO]]\n\n📅 *Jadwal Pengantaran*\n[[JADWAL]]\n\n📞 *Info Agen Pendamping:*\n[[INFO_AGEN]]\n\nSemoga Allah SWT menerima amal ibadah qurban Bapak/Ibu sekeluarga dan memberikan keberkahan yang melimpah. Aamiin.\n\n*DM Aqiqah Team*\n[[FOOTER]]",
     templateAgentNormal: "[[JUDUL]]\n==========================\n\nBismillah\nHi *[[NAMA_AGEN]]*!\n\nAlhamdulillah, rincian Transaksi Qurban atas nama Anda telah dicatat/diperbarui.\n\nBerikut detail penjualannya:\n\n📌 *Info Transaksi*\nNo. Transaksi: *[[ID]]*\nTanggal: [[TGL]]\n\n👤 *Data Penerima*\nNama: [[NAMA]]\nAlamat Antar: [[ALAMAT]]\nNo WA: [[WA_KONSUMEN]]\nMaps: [[MAPS]]\n\n👤 *Data Sohibul*\n[[SOHIBUL]]\n\n🐐 *Rincian Hewan*\n[[ITEMS]]\n\n🖼️ *Link Foto Hewan*\n[[FOTO]]\n\n💰 *Pembayaran*\nHarga Deal: *[[TOTAL]]*\n[[HISTORY]]\n*Sisa Tagihan: [[SISA]]*\n\n💰 *Estimasi Komisi:*\n[[KOMISI]]\n\n📅 *Jadwal Pengantaran*\n[[JADWAL]]\n\nTerima Kasih Atas Dedikasinya. Mari Kita Sukseskan Musim Qurban Tahun Ini Bersama-Sama!\n\n*DM Aqiqah Management*\n[[FOOTER]]",
     templateAgentDM: "*NOTIFIKASI PENJUALAN BARU!* 🚀\n==========================\n\nBismillah\nHi *[[NAMA_AGEN]]*!\n\nAlhamdulillah, satu lagi Transaksi Qurban Berhasil dicatat atas nama Anda. Terus semangat menebar manfaat!\n\nBerikut detail penjualannya:\n\n📌 *Info Transaksi*\nNo. Transaksi: *[[ID]]*\nTanggal: [[TGL]]\n\n👤 *Data Penerima*\nNama: [[NAMA]]\nAlamat Antar: [[ALAMAT]]\nNo WA: [[WA_KONSUMEN]]\nMaps: [[MAPS]]\n\n👤 *Data Sohibul*\n[[SOHIBUL]]\n\n🐐 *Rincian Hewan*\n[[ITEMS]]\n\n🖼️ *Link Foto Hewan*\n[[FOTO]]\n\n💰 *Pembayaran*\nHarga Deal: *[[TOTAL]]*\nDP Dibayar: [[DP]]\n*Sisa Tagihan: [[SISA]]*\n\n📅 *Jadwal Pengantaran*\n[[JADWAL]]\n\nTerima Kasih Atas Dedikasinya. Mari Kita Sukseskan Musim Qurban Tahun Ini Bersama-Sama!\n\n*DM Aqiqah Management*\n[[FOOTER]]",
@@ -76,7 +76,7 @@ export const getWaConfig = async () => {
         config.templateAuditDaily = WA_DEFAULT_CONFIG.templateAuditDaily;
         configPatched = true;
     }
-    if (config.templateOrderNormal && (config.templateOrderNormal.includes("💰 Pembayaran") || config.templateOrderNormal.includes("Harga Deal") || config.templateOrderNormal.includes("Sisa Tagihan") || !config.templateOrderNormal.includes("Sohibul Qurban"))) {
+    if (config.templateOrderNormal && (!config.templateOrderNormal.includes("💰 Pembayaran") || !config.templateOrderNormal.includes("Jazakumullah Khairan Katsiran") || config.templateOrderNormal.includes("KONFIRMASI PENGIRIMAN"))) {
         config.templateOrderNormal = WA_DEFAULT_CONFIG.templateOrderNormal;
         configPatched = true;
     }
@@ -96,6 +96,12 @@ export const getWaConfig = async () => {
     if (configPatched) {
         localStorage.setItem('QURBAN_WA_CONFIG', JSON.stringify(config));
         console.log('[WA] Old templates patched and updated in Local Cache.');
+        // Sync back to cloud in background
+        supabase.from('master_data').upsert({ id: 'ID-WA_CONFIG', key: 'WA_CONFIG', val: config }, { onConflict: 'key' })
+            .then(({ error }) => {
+                if (!error) console.log('[WA] Cloud config auto-migrated successfully');
+                else console.error('[WA] Cloud config auto-migration failed:', error);
+            });
     }
 
     return config;
