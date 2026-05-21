@@ -230,6 +230,99 @@
         }
         .komisi-badge .label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px; }
         .komisi-badge .value { font-size: 1.1rem; font-weight: 300; color: #f59e0b; }
+
+        /* Confirmation Stats Cards Style */
+        .premium-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: rgba(var(--primary-rgb), 0.2);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .stat-card.belum-konfirmasi::before { background-color: #94a3b8; }
+        .stat-card.sebatas-wa::before { background-color: #eab308; }
+        .stat-card.sudah-telpon::before { background-color: #3b82f6; }
+        .stat-card.terkonfirmasi::before { background-color: #22c55e; }
+
+        .stat-card-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1;
+            margin-top: 0.25rem;
+        }
+
+        /* Light mode overrides for premium look */
+        .light-mode .stat-card {
+            background: #ffffff;
+            border-color: rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        @media (max-width: 1024px) {
+            .premium-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .premium-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+            .stat-card {
+                padding: 1rem 1.25rem;
+                min-height: auto;
+            }
+            .stat-card-value {
+                font-size: 1.75rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -288,6 +381,25 @@
                             <button class="btn" id="btnCetakLabel" style="display:none; background:#a855f7; border:none; color:white;">🏷️ Cetak Label (<span id="selectCount">0</span>)</button>
                             <button class="btn btn-primary" id="btnExportCsv" style="background:#10b981; border:none;">! Export CSV</button>
                             <button class="btn btn-primary" id="btnTambahTerjual" style="display:none;">+ Order Baru</button>
+                        </div>
+                    </div>
+                    <!-- Statistik Konfirmasi Penjualan -->
+                    <div class="premium-grid">
+                        <div class="stat-card belum-konfirmasi">
+                            <div class="stat-card-title">❌ Belum Konfirmasi</div>
+                            <div class="stat-card-value" id="statBelumKonfirmasi">0</div>
+                        </div>
+                        <div class="stat-card sebatas-wa">
+                            <div class="stat-card-title">💬 Sebatas WA</div>
+                            <div class="stat-card-value" id="statSebatasWa">0</div>
+                        </div>
+                        <div class="stat-card sudah-telpon">
+                            <div class="stat-card-title">📞 Sudah Ditelpon</div>
+                            <div class="stat-card-value" id="statSudahDitelpon">0</div>
+                        </div>
+                        <div class="stat-card terkonfirmasi">
+                            <div class="stat-card-title">✅ Terkonfirmasi</div>
+                            <div class="stat-card-value" id="statTerkonfirmasi">0</div>
                         </div>
                     </div>
                     <div style="display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; background:rgba(0,0,0,0.15); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">

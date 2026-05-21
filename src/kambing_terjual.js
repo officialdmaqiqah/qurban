@@ -587,7 +587,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             getKambingDb()
         ]);
         const editReqs = editReqsRes.data || [];
-
         // 3. Apply Filter Role
         if (!isAdmin) { 
             const clean = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
@@ -598,6 +597,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return name === search || id === search || name.includes(search);
             });
         }
+
+        // Calculate statistics based on role-filtered transactions (shows overall count for agent's scope)
+        let countBelum = 0;
+        let countWa = 0;
+        let countTelpon = 0;
+        let countKonfirmasi = 0;
+
+        trx.forEach(t => {
+            const status = t.customer?.status_konfirmasi || 'Belum Dikonfirmasi';
+            if (status === 'Belum Dikonfirmasi') countBelum++;
+            else if (status === 'Baru Sebatas WA') countWa++;
+            else if (status === 'Sudah Ditelpon') countTelpon++;
+            else if (status === 'Terkonfirmasi') countKonfirmasi++;
+        });
+
+        // Update DOM elements
+        const statBelum = document.getElementById('statBelumKonfirmasi');
+        const statWa = document.getElementById('statSebatasWa');
+        const statTelpon = document.getElementById('statSudahDitelpon');
+        const statKonfirmasi = document.getElementById('statTerkonfirmasi');
+
+        if (statBelum) statBelum.textContent = countBelum;
+        if (statWa) statWa.textContent = countWa;
+        if (statTelpon) statTelpon.textContent = countTelpon;
+        if (statKonfirmasi) statKonfirmasi.textContent = countKonfirmasi;
 
         // 4. Apply Search Keyword
         if (keyword) { 
