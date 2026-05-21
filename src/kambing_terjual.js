@@ -45,9 +45,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!selectEl) return;
         const val = selectEl.value;
         const styleObj = getStatusColorStyle(val);
-        selectEl.style.backgroundColor = styleObj.bg;
-        selectEl.style.color = styleObj.color;
-        selectEl.style.borderColor = styleObj.border;
+        selectEl.style.setProperty('background-color', styleObj.bg, 'important');
+        selectEl.style.setProperty('color', styleObj.color, 'important');
+        selectEl.style.setProperty('border-color', styleObj.border, 'important');
     };
     window.applySelectStatusStyle = applySelectStatusStyle;
 
@@ -669,7 +669,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sohibulList = (t.items || []).map(it => it.namaSohibul).filter(Boolean).join(', ') || '-';
             const statusKonf = t.customer?.status_konfirmasi || 'Belum Dikonfirmasi';
             const colors = getStatusColorStyle(statusKonf);
-            const selectStyle = `width: 140px; height: 28px; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: ${colors.bg}; border: 1px solid ${colors.border}; color: ${colors.color}; font-weight: 600; cursor: pointer; transition: all 0.2s;`;
+            const selectStyle = `width: 140px; height: 28px; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: ${colors.bg} !important; border: 1px solid ${colors.border} !important; color: ${colors.color} !important; font-weight: 600; cursor: pointer; transition: all 0.2s;`;
             const itemsHtml = `<div style="display:flex; flex-wrap:wrap; gap:6px;">` + (t.items || []).map(item => { 
                 const kMeta = kambingDb.find(k => k.id === item.goatId); 
                 let badgeColor = 'var(--primary)';
@@ -739,6 +739,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="text-align:right;"><div class="action-btns">${t.komisi?.needs_approval && isAdmin ? `<button class="btn btn-sm" onclick="approveTrx('${t.id}')">✅</button>` : ''}${canEdit ? `<button class="btn btn-sm" onclick="editFullTrx('${t.id}')">✏️</button>` : ''}${isAdmin ? `<button class="btn btn-sm" onclick="rollbackTrx('${t.id}')">🗑️</button>` : ''}</div></td>
             `;
             tableBody.appendChild(tr);
+            const selectEl = tr.querySelector('.select-status-konfirmasi');
+            if (selectEl) {
+                applySelectStatusStyle(selectEl);
+            }
         });
     };
 
@@ -1530,7 +1534,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const selFilterKonfirmasi = document.getElementById('selFilterKonfirmasi');
     if (selFilterKonfirmasi) {
+        applySelectStatusStyle(selFilterKonfirmasi);
         selFilterKonfirmasi.addEventListener('change', () => {
+            applySelectStatusStyle(selFilterKonfirmasi);
             renderTable();
         });
     }
