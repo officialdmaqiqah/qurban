@@ -523,7 +523,7 @@ async function init() {
             const url = await window.processImageUpload(file, 'DISTRIBUSI_FOTO', 'dist_' + Date.now() + '.jpg');
             if(!url) return; // processImageUpload already shows alert on failure
 
-            const { trips } = await loadData();
+            const { trips, goats } = await loadData();
             const tIdx = trips.findIndex(t => t.id === modal._tripId);
             const iIdx = trips[tIdx].items.findIndex(i => i.goatId === modal._goatId);
 
@@ -593,12 +593,29 @@ async function init() {
                         const reks = mdRek?.val || [];
                         const rekStr = reks.filter(r => !(r.bank || '').toLowerCase().includes('bsi')).map(r => `${r.bank} — ${r.norek} (a.n ${r.an})`).join('\n');
 
+                        const warnaTali = item?.warnaTali || goatRec?.warna_tali || '-';
+                        const noTali = item?.noTali || goatRec?.no_tali || '-';
+                        const itemsFormatted = `No. Kambing/Tali: ${noTali} (Tali: ${warnaTali})`;
+
+                        let alamatFormatted = '-';
+                        if (trx?.delivery?.alamat) {
+                            if (typeof trx.delivery.alamat === 'object') {
+                                alamatFormatted = trx.delivery.alamat.alamat || '-';
+                            } else {
+                                alamatFormatted = trx.delivery.alamat;
+                            }
+                        }
+                        if (alamatFormatted === '-' && item?.alamat) {
+                            alamatFormatted = item.alamat;
+                        }
+
                         const commonData = {
                             judul: "*NOTIFIKASI PENGIRIMAN* 🚚",
                             nama: trx.customer?.nama || item?.konsumen || '-',
                             id: trx.id,
                             tgl: new Date().toLocaleDateString('id-ID'),
-                            items: item?.noTali || '-',
+                            items: itemsFormatted,
+                            alamat: alamatFormatted,
                             sisa: trx.is_partial ? '*(Silakan cek nota/kontak agen)*' : formatRp((trx.total_deal || 0) - (trx.total_paid || 0)),
                             nama_agen: trip?.sopirNama || '-',
                             rekening: rekStr || '-',
