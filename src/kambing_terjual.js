@@ -1161,8 +1161,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 category: f.kategori
             })) || [];
 
-            // Hapus record DP lama dan Komisi lama dari keuangan agar tidak duplikat saat diinsert ulang di performSave
-            await supabase.from('keuangan').delete().eq('related_trx_id', trxId).in('kategori', ['Jual Kambing', 'Komisi Agen']);
+            // Hapus record DP lama dari keuangan agar tidak duplikat saat diinsert ulang di performSave
+            // JANGAN hapus Komisi Agen ketika editing (keepInstallments = true) karena pencairan komisi diatur dari menu komisi.
+            await supabase.from('keuangan').delete().eq('related_trx_id', trxId).eq('kategori', 'Jual Kambing');
         }
         await supabase.from('transaksi').delete().eq('id', trxId);
     };
@@ -1270,9 +1271,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.editFullTrx = async (trxId) => {
         const { data: trx } = await supabase.from('transaksi').select('*').eq('id', trxId).single();
         if(!trx) return;
+        await initForm();
         window.editingTrxId = trx.id;
         window.existingKomisiState = trx.komisi || null;
-        await initForm();
         
         if (inpTglOrder) inpTglOrder.value = trx.tgl_trx || window.getLocalDate();
         document.getElementById('inpCustNama').value = trx.customer.nama || '';
