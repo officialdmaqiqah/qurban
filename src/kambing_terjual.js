@@ -630,7 +630,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 (t.id || '').toLowerCase().includes(keyword) || 
                 (t.customer?.nama || '').toLowerCase().includes(keyword) || 
                 (t.agen?.nama || '').toLowerCase().includes(keyword) || 
-                (t.customer?.wa1 || '').toLowerCase().includes(keyword)
+                (t.customer?.wa1 || '').toLowerCase().includes(keyword) ||
+                (t.items || []).some(it => (it.namaSohibul || '').toLowerCase().includes(keyword))
             ); 
         }
 
