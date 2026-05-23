@@ -246,17 +246,33 @@ async function init() {
                     ${t.items.map(i => {
                         const isItemDone = i.status === 'Terdistribusi';
                         const currentGoatId = i.goatId || i.id;
+                        const g = cachedGoats.find(x => x.id === currentGoatId);
+                        const warnaTali = i.warnaTali || g?.warna_tali || '-';
                         return `
                         <div class="trip-item" style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
                             <div style="max-width:70%;">
-                                <div style="font-weight:700; color:var(--primary); font-size:0.95rem; letter-spacing:0.02em;">${i.noTali}</div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span class="trip-goat-notali" onclick="window.viewGoatPhoto('${currentGoatId}', '${i.noTali}')" style="font-weight:700; color:var(--primary); font-size:0.95rem; letter-spacing:0.02em; cursor:pointer; text-decoration:underline; display:inline-flex; align-items:center; gap:4px;" title="Lihat Foto Fisik Sebelum Pengiriman">
+                                        🐐 No. ${i.noTali}
+                                    </span>
+                                    <span class="badge-tali" style="font-size:0.7rem; padding:2px 8px; border-radius:4px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-main);">
+                                        🪢 Tali: ${warnaTali}
+                                    </span>
+                                </div>
                                 <div style="font-size:0.8rem; color:var(--text-main); font-weight:500; margin: 2px 0;">${i.konsumen}</div>
                                 <div style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8;">📍 ${i.alamat}</div>
                             </div>
                             <div style="text-align:right; display:flex; align-items:center; gap:8px; justify-content:flex-end;">
                                 ${isItemDone ? `
-                                    <span style="color:var(--success); font-size:1.1rem;">✅</span>
-                                    <button class="btn btn-sm" onclick="window.rollbackItemDist('${t.id}','${currentGoatId}')" style="color:var(--text-muted); background:transparent; border:none; padding:4px; cursor:pointer; font-size:0.9rem;" title="Reset / Batal Tuntas">↩️</button>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        ${i.buktiUrl ? `
+                                            <button class="btn btn-sm" onclick="window.viewPhoto('${i.buktiUrl}')" style="width:30px; height:30px; border-radius:4px; padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.1); cursor:pointer; display:flex; align-items:center; justify-content:center;" title="Lihat Bukti Pengantaran">
+                                                <img src="${window.getDirectDriveLink(i.buktiUrl)}" style="width:100%; height:100%; object-fit:cover;">
+                                            </button>
+                                        ` : ''}
+                                        <span style="color:var(--success); font-size:1.1rem;">✅</span>
+                                        <button class="btn btn-sm" onclick="window.rollbackItemDist('${t.id}','${currentGoatId}')" style="color:var(--text-muted); background:transparent; border:none; padding:4px; cursor:pointer; font-size:0.9rem;" title="Reset / Batal Tuntas">↩️</button>
+                                    </div>
                                 ` : `
                                     ${showAdminTools ? `<button class="btn btn-sm" onclick="window.removeItemFromTrip('${t.id}','${currentGoatId}')" style="color:var(--danger); background:transparent; border:none; padding:4px; opacity:0.6; cursor:pointer; font-size:0.9rem;" title="Keluarkan dari Trip">❌</button>` : ''}
                                     <button class="btn btn-sm btn-shimmer" onclick="window.openLaporDist('${t.id}','${currentGoatId}','${i.konsumen}')" style="background:var(--primary); padding:6px 14px; font-size:0.75rem; border-radius:8px; border:none; box-shadow:0 4px 10px var(--primary-transparent);">📷</button>
@@ -443,6 +459,15 @@ async function init() {
     };
 
 
+
+    window.viewGoatPhoto = (goatId, noTali) => {
+        const g = cachedGoats.find(x => x.id === goatId);
+        const url = g?.foto_fisik || g?.foto_nota_url;
+        if (!url) {
+            return window.showToast(`Foto fisik kambing No. ${noTali} belum diunggah.`, 'warning');
+        }
+        window.viewPhoto(url);
+    };
 
     window.openLaporDist = (tripId, goatId, nama) => {
         const modal = document.getElementById('modalLaporTuntas');
@@ -802,7 +827,7 @@ async function init() {
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-konsumen="${trx?.customer?.nama}" data-alamat="${trx?.delivery?.alamat?.alamat || '-'}" data-wa="${trx?.customer?.wa1 || ''}" data-trxid="${k.transaction_id || ''}" data-agenwa="${agenWa}" data-agennama="${agenName}"></td>
+                    <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-warna="${k.warna_tali || '-'}" data-konsumen="${trx?.customer?.nama}" data-alamat="${trx?.delivery?.alamat?.alamat || '-'}" data-wa="${trx?.customer?.wa1 || ''}" data-trxid="${k.transaction_id || ''}" data-agenwa="${agenWa}" data-agennama="${agenName}"></td>
                     <td>${idx + 1}</td>
                     <td class="sticky-col">
                         <div style="font-weight:700; color:var(--primary);">${k.no_tali}</div>
@@ -864,6 +889,7 @@ async function init() {
             items: Array.from(selected).map(cb => ({
                 goatId: cb.dataset.id, 
                 noTali: cb.dataset.notali, 
+                warnaTali: cb.dataset.warna || '-',
                 konsumen: cb.dataset.konsumen, 
                 alamat: cb.dataset.alamat,
                 customerWa: cb.dataset.wa,
@@ -986,15 +1012,19 @@ async function init() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${t.items.map((i, idx) => `
+                    ${t.items.map((i, idx) => {
+                        const currentGoatId = i.goatId || i.id;
+                        const g = cachedGoats.find(x => x.id === currentGoatId);
+                        const warnaTali = i.warnaTali || g?.warna_tali || '-';
+                        return `
                         <tr>
                             <td>${idx + 1}</td>
-                            <td>${i.noTali}</td>
+                            <td>${i.noTali} (${warnaTali})</td>
                             <td>${i.konsumen}</td>
                             <td>${i.alamat}</td>
                             <td>${i.status || 'Pengiriman'}</td>
                         </tr>
-                    `).join('')}
+                    `;}).join('')}
                 </tbody>
             </table>
             <div class="sj-footer">
