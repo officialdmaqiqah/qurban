@@ -4,6 +4,32 @@ async function init() {
     console.log('%c >> DISTRIBUSI SYSTEM: v1.1 << ', 'background: #222; color: #bada55; font-weight: bold;');
     
     // 0. Immediate UI Wiring (Before any Async calls to ensure modal can always close)
+    window.selectedGoatIds = new Set();
+    
+    const tableBodySelection = document.getElementById('tableBodySelection');
+    if (tableBodySelection) {
+        tableBodySelection.addEventListener('click', (e) => {
+            if (e.target.classList.contains('goat-checkbox')) {
+                if (typeof window.updateGoatSelectionUI === 'function') {
+                    window.updateGoatSelectionUI();
+                }
+            }
+        });
+    }
+
+    const checkAllGoats = document.getElementById('checkAllGoats');
+    if (checkAllGoats) {
+        checkAllGoats.addEventListener('change', (e) => {
+            const checked = e.target.checked;
+            document.querySelectorAll('.goat-checkbox').forEach(cb => {
+                cb.checked = checked;
+            });
+            if (typeof window.updateGoatSelectionUI === 'function') {
+                window.updateGoatSelectionUI();
+            }
+        });
+    }
+
     const modalTrip = document.getElementById('modalTrip');
     const closeModal = () => {
         if(modalTrip) modalTrip.classList.remove('active');
@@ -75,7 +101,7 @@ async function init() {
 
     const getTrips = async () => { const { data } = await supabase.from('master_data').select('val').eq('key', 'TRIPS').single(); return data?.val || []; };
     const containerTrip = document.getElementById('containerTrip');
-    const tableBodySelection = document.getElementById('tableBodySelection');
+    // tableBodySelection is already declared at the top of init()
     
     let cachedTrips = [];
     let cachedGoats = [];
@@ -822,9 +848,36 @@ async function init() {
 
         tableBodySelection.innerHTML = '';
         
-        if(eligible.length === 0) {
-            tableBodySelection.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">Tidak ada kambing terjual yang menunggu kirim.</td></tr>';
-        }
+        window.selectedGoatIds.clear();
+        const checkAllGoats = document.getElementById('checkAllGoats');
+        if (checkAllGoats) checkAllGoats.checked = false;
+
+        window.updateGoatSelectionUI = () => {
+            // Sync Set with current visible checkboxes in the DOM
+            document.querySelectorAll('.goat-checkbox').forEach(cb => {
+                if (cb.dataset.id) {
+                    if (cb.checked) {
+                        window.selectedGoatIds.add(cb.dataset.id);
+                    } else {
+                        window.selectedGoatIds.delete(cb.dataset.id);
+                    }
+                }
+            });
+
+            const count = window.selectedGoatIds.size;
+            const elCount = document.getElementById('summarizedTripCount');
+            if (elCount) elCount.textContent = `${count} Ekor Kambing`;
+
+            const checkAllGoatsEl = document.getElementById('checkAllGoats');
+            if (checkAllGoatsEl) {
+                const visibleCheckboxes = document.querySelectorAll('.goat-checkbox');
+                if (visibleCheckboxes.length > 0) {
+                    checkAllGoatsEl.checked = Array.from(visibleCheckboxes).every(cb => cb.checked);
+                } else {
+                    checkAllGoatsEl.checked = false;
+                }
+            }
+        };
 
         const renderTable = () => {
             const search = document.getElementById('inpSearchGoat')?.value.toLowerCase() || '';
@@ -851,7 +904,7 @@ async function init() {
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-warna="${k.warna_tali || '-'}" data-konsumen="${trx?.customer?.nama}" data-alamat="${trx?.delivery?.alamat?.alamat || '-'}" data-wa="${trx?.customer?.wa1 || ''}" data-trxid="${k.transaction_id || ''}" data-agenwa="${agenWa}" data-agennama="${agenName}"></td>
+                    <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-warna="${k.warna_tali || '-'}" data-konsumen="${trx?.customer?.nama || ''}" data-alamat="${trx?.delivery?.alamat?.alamat || '-'}" data-wa="${trx?.customer?.wa1 || ''}" data-trxid="${k.transaction_id || ''}" data-agenwa="${agenWa}" data-agennama="${agenName}" ${window.selectedGoatIds.has(k.id) ? 'checked' : ''}></td>
                     <td>${idx + 1}</td>
                     <td class="sticky-col">
                         <div style="font-weight:700; color:var(--primary);">${k.no_tali}</div>
@@ -866,28 +919,33 @@ async function init() {
                 tableBodySelection.appendChild(tr);
             });
 
-            // Update Count
-            document.querySelectorAll('.goat-checkbox').forEach(cb => {
-                cb.addEventListener('change', () => {
-                    const count = document.querySelectorAll('.goat-checkbox:checked').length;
-                    const elCount = document.getElementById('summarizedTripCount');
-                    if(elCount) elCount.textContent = `${count} Ekor Kambing`;
-                });
-            });
+            updateGoatSelectionUI();
         };
 
         renderTable();
-        document.getElementById('inpSearchGoat')?.addEventListener('input', renderTable);
-        selKab?.addEventListener('change', renderTable);
-        selAgen?.addEventListener('change', renderTable);
 
-        document.getElementById('checkAllGoats')?.addEventListener('change', (e) => {
-            const checked = e.target.checked;
-            document.querySelectorAll('.goat-checkbox').forEach(cb => {
-                cb.checked = checked;
-                cb.dispatchEvent(new Event('change'));
-            });
-        });
+        // Clone inputs to completely prevent duplicate event listeners on open
+        const inpSearchGoat = document.getElementById('inpSearchGoat');
+        if (inpSearchGoat) {
+            const cloned = inpSearchGoat.cloneNode(true);
+            inpSearchGoat.parentNode.replaceChild(cloned, inpSearchGoat);
+            cloned.addEventListener('input', renderTable);
+            cloned.value = '';
+        }
+
+        if (selKab) {
+            const cloned = selKab.cloneNode(true);
+            selKab.parentNode.replaceChild(cloned, selKab);
+            cloned.addEventListener('change', renderTable);
+            cloned.value = '';
+        }
+
+        if (selAgen) {
+            const cloned = selAgen.cloneNode(true);
+            selAgen.parentNode.replaceChild(cloned, selAgen);
+            cloned.addEventListener('change', renderTable);
+            cloned.value = '';
+        }
         
         modalTrip.classList.add('active');
         document.getElementById('inpTripTgl').value = new Date().toISOString().split('T')[0];
@@ -896,13 +954,41 @@ async function init() {
 
     document.getElementById('formTrip')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const selected = document.querySelectorAll('.goat-checkbox:checked');
-        if(!selected.length) return showAlert('Pilih minimal 1 kambing!', 'warning');
+        
+        if (!window.selectedGoatIds || window.selectedGoatIds.size === 0) {
+            return showAlert('Pilih minimal 1 kambing!', 'warning');
+        }
 
         const isSembelih = document.getElementById('modalTrip').dataset.mode === 'sembelih';
         const { trips, goats, trxs } = await loadData();
         const tripId = (isSembelih ? 'SMB-' : 'TRP-') + Date.now().toString().slice(-6);
         
+        const selectedItems = [];
+        for (const goatId of window.selectedGoatIds) {
+            const k = goats.find(g => g.id === goatId);
+            if (!k) continue;
+
+            const trx = trxs.find(t => t.id === k.transaction_id);
+            const agenName = (typeof trx?.agen === 'object' ? trx?.agen?.nama : trx?.agen) || trx?.agen_nama || '';
+            const matchedAgen = (window._cachedAgens || []).find(a => a.nama === agenName);
+            const agenWa = matchedAgen?.wa || '';
+
+            selectedItems.push({
+                goatId: k.id, 
+                noTali: k.no_tali, 
+                warnaTali: k.warna_tali || '-',
+                konsumen: trx?.customer?.nama || '-', 
+                alamat: trx?.delivery?.alamat?.alamat || '-',
+                customerWa: trx?.customer?.wa1 || '',
+                transactionId: k.transaction_id || '',
+                agenWa: agenWa,
+                agenNama: agenName,
+                status: isSembelih ? 'Terdistribusi' : 'Pengiriman',
+                tglDistribusi: isSembelih ? new Date().toISOString() : null,
+                buktiUrl: isSembelih ? 'SEM_KANDANG' : null
+            });
+        }
+
         const newTrip = {
             id: tripId,
             sopirNama: document.getElementById('inpTripSopir').value,
@@ -910,20 +996,7 @@ async function init() {
             tglKirim: document.getElementById('inpTripTgl').value,
             status: isSembelih ? 'Selesai' : 'Pengiriman',
             note: document.getElementById('inpTripNote').value,
-            items: Array.from(selected).map(cb => ({
-                goatId: cb.dataset.id, 
-                noTali: cb.dataset.notali, 
-                warnaTali: cb.dataset.warna || '-',
-                konsumen: cb.dataset.konsumen, 
-                alamat: cb.dataset.alamat,
-                customerWa: cb.dataset.wa,
-                transactionId: cb.dataset.trxid,
-                agenWa: cb.dataset.agenwa,
-                agenNama: cb.dataset.agennama,
-                status: isSembelih ? 'Terdistribusi' : 'Pengiriman',
-                tglDistribusi: isSembelih ? new Date().toISOString() : null,
-                buktiUrl: isSembelih ? 'SEM_KANDANG' : null
-            }))
+            items: selectedItems
         };
         
         try {
