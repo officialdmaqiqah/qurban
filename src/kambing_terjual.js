@@ -1606,6 +1606,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const selectCount = document.getElementById('selectCount');
 
     function updateSelectionUI() {
+        // Sync Set with current visible checkboxes in the DOM
+        document.querySelectorAll('.trx-checkbox').forEach(cb => {
+            if (cb.dataset.id) {
+                if (cb.checked) {
+                    selectedTrxIds.add(cb.dataset.id);
+                } else {
+                    selectedTrxIds.delete(cb.dataset.id);
+                }
+            }
+        });
+
         const checkedCount = selectedTrxIds.size;
         if (selectCount) selectCount.textContent = checkedCount;
         if (btnCetakLabel) btnCetakLabel.style.display = checkedCount > 0 ? 'inline-block' : 'none';
@@ -1624,11 +1635,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         checkAll.addEventListener('change', () => {
             document.querySelectorAll('.trx-checkbox').forEach(cb => {
                 cb.checked = checkAll.checked;
-                if (checkAll.checked) {
-                    selectedTrxIds.add(cb.dataset.id);
-                } else {
-                    selectedTrxIds.delete(cb.dataset.id);
-                }
             });
             updateSelectionUI();
         });
@@ -1636,11 +1642,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('trx-checkbox')) {
-            if (e.target.checked) {
-                selectedTrxIds.add(e.target.dataset.id);
-            } else {
-                selectedTrxIds.delete(e.target.dataset.id);
-            }
             updateSelectionUI();
         }
     });
