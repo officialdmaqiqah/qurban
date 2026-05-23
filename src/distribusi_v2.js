@@ -999,12 +999,12 @@ async function init() {
                             let currentMsg = header;
                             
                             items.forEach((item, index) => {
-                                const itemStr = `Nama Konsumen : ${item.konsumen}\n` +
+                                const itemStr = `Nama Konsumen : *${item.konsumen}*\n` +
                                                 `Alamat antar : ${item.alamat}\n` +
                                                 `No WA 1 : ${item.wa1}\n` +
                                                 `No WA 2 : ${item.wa2}\n` +
                                                 `Google Maps : ${item.maps}\n` +
-                                                `No Kambing /Tali : ${item.noTali} (Tali: ${item.warnaTali})\n` +
+                                                `No Kambing /Tali : *${item.noTali}* (Tali: *${item.warnaTali}*)\n` +
                                                 `Link Foto Kambing : ${item.fotoFisik}\n` +
                                                 `Keterangan : ${item.note}\n\n`;
                                                 
