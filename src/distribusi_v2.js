@@ -976,7 +976,7 @@ async function init() {
                             const wa2 = trx?.customer?.wa2 || '-';
                             const mapsLink = trx?.customer?.alamat?.maps || trx?.delivery?.alamat?.maps || '-';
                             const fotoKambing = goatRec?.foto_fisik || '-';
-                            const noteKeterangan = trx?.notes || '-';
+                            const noteKeterangan = trx?.delivery?.info || trx?.notes || '-';
                             
                             return {
                                 konsumen: customerName,
