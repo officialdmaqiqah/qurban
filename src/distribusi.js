@@ -893,7 +893,7 @@ import { supabase } from './supabase.js';
         if(!selected.length) return showAlert('Pilih minimal 1 kambing!', 'warning');
 
         const isSembelih = document.getElementById('modalTrip').dataset.mode === 'sembelih';
-        const { trips } = await loadData();
+        const { trips, goats, trxs } = await loadData();
         const tripId = (isSembelih ? 'SMB-' : 'TRP-') + Date.now().toString().slice(-6);
         
         const newTrip = {
@@ -923,6 +923,128 @@ import { supabase } from './supabase.js';
             trips.push(newTrip);
             showToast('Menyimpan data...', 'info');
             await saveTrips(trips);
+
+            // If NOT sembelih, notify driver with complete trip details
+            if (!isSembelih) {
+                try {
+                    const chosenSopirName = newTrip.sopirNama;
+                    let sopirWa = '';
+                    if (chosenSopirName) {
+                        const { data: sops } = await supabase.from('master_data').select('val').eq('key', 'SOPIR').single();
+                        const listSopir = sops?.val || [];
+                        const sopirObj = listSopir.find(s => s.nama?.trim().toLowerCase() === chosenSopirName.toLowerCase());
+                        sopirWa = sopirObj?.wa || '';
+                        
+                        if (!sopirWa) {
+                            const { data: profs } = await supabase.from('profiles').select('*').eq('role', 'sopir');
+                            const matchedProf = profs?.find(p => p.full_name?.trim().toLowerCase() === chosenSopirName.toLowerCase());
+                            sopirWa = matchedProf?.wa || '';
+                        }
+                    }
+
+                    if (sopirWa) {
+                        console.log('[WA Driver] Sopir found:', chosenSopirName, 'WA:', sopirWa);
+                        
+                        // Compile detailed information for each item in the trip
+                        const tripItemsWithDetails = newTrip.items.map(item => {
+                            const goatRec = goats.find(g => g.id === item.goatId);
+                            const trxId = item.transactionId || goatRec?.transaction_id;
+                            const trx = trxs.find(t => t.id === trxId);
+                            
+                            const customerName = trx?.customer?.nama || item.konsumen || '-';
+                            
+                            // Build clear full address
+                            let rawAlamat = '-';
+                            if (trx?.delivery?.alamat) {
+                                if (typeof trx.delivery.alamat === 'object') {
+                                    rawAlamat = trx.delivery.alamat.alamat || '-';
+                                } else {
+                                    rawAlamat = trx.delivery.alamat;
+                                }
+                            }
+                            if (rawAlamat === '-' && item.alamat) {
+                                rawAlamat = item.alamat;
+                            }
+                            if (rawAlamat === '-' && trx?.customer?.alamat) {
+                                const ad = trx.customer.alamat;
+                                rawAlamat = [ad.jalan, ad.desa, ad.kec, ad.kab].filter(Boolean).join(', ') || '-';
+                            }
+                            
+                            const wa1 = trx?.customer?.wa1 || item.customerWa || '-';
+                            const wa2 = trx?.customer?.wa2 || '-';
+                            const mapsLink = trx?.customer?.alamat?.maps || trx?.delivery?.alamat?.maps || '-';
+                            const fotoKambing = goatRec?.foto_fisik || '-';
+                            const noteKeterangan = trx?.notes || '-';
+                            
+                            return {
+                                konsumen: customerName,
+                                alamat: rawAlamat,
+                                wa1: wa1,
+                                wa2: wa2,
+                                maps: mapsLink,
+                                noTali: item.noTali,
+                                warnaTali: item.warnaTali || goatRec?.warna_tali || '-',
+                                fotoFisik: fotoKambing,
+                                note: noteKeterangan
+                            };
+                        });
+
+                        // Helper to divide into safe chunk messages
+                        const buildWaMessages = (tripId, sopirNama, nopol, tglKirim, items) => {
+                            const header = `*DAFTAR DISTRIBUSI KAMBING*\n==========================\n*ID TRIP:* ${tripId}\n*Sopir:* ${sopirNama}\n*Nopol:* ${nopol || '-'}\n*Tgl Kirim:* ${new Date(tglKirim).toLocaleDateString('id-ID')}\n==========================\n\n`;
+                            
+                            let messages = [];
+                            let currentMsg = header;
+                            
+                            items.forEach((item, index) => {
+                                const itemStr = `Nama Konsumen : ${item.konsumen}\n` +
+                                                `Alamat antar : ${item.alamat}\n` +
+                                                `No WA 1 : ${item.wa1}\n` +
+                                                `No WA 2 : ${item.wa2}\n` +
+                                                `Google Maps : ${item.maps}\n` +
+                                                `No Kambing /Tali : ${item.noTali} (Tali: ${item.warnaTali})\n` +
+                                                `Link Foto Kambing : ${item.fotoFisik}\n` +
+                                                `Keterangan : ${item.note}\n\n`;
+                                                
+                                if (currentMsg.length + itemStr.length > 3500) {
+                                    messages.push(currentMsg.trim());
+                                    currentMsg = `*DAFTAR DISTRIBUSI KAMBING (Sambungan)*\n==========================\n*ID TRIP:* ${tripId}\n==========================\n\n` + itemStr;
+                                } else {
+                                    currentMsg += itemStr;
+                                }
+                            });
+                            
+                            if (currentMsg && currentMsg !== header) {
+                                messages.push(currentMsg.trim());
+                            }
+                            
+                            return messages;
+                        };
+
+                        const waMsgs = buildWaMessages(newTrip.id, newTrip.sopirNama, newTrip.nopol, newTrip.tglKirim, tripItemsWithDetails);
+                        
+                        // Send messages sequentially
+                        for (let i = 0; i < waMsgs.length; i++) {
+                            console.log(`[WA Driver] Sending message ${i+1}/${waMsgs.length} to driver...`);
+                            const res = await window.sendWa(sopirWa, waMsgs[i]);
+                            if (res.success) {
+                                console.log(`[WA Driver] Message ${i+1} sent successfully.`);
+                            } else {
+                                console.warn(`[WA Driver] Message ${i+1} failed:`, res.msg);
+                                if (window.showConfirm) {
+                                    window.showConfirm(`Gagal mengirim daftar trip ke Sopir via WA Otomatis: ${res.msg}\n\nKirim manual lewat WA Web/App?`, () => {
+                                        window.open(res.link, '_blank');
+                                    }, null, 'WA Sopir Gagal', 'Kirim Manual', 'btn-primary');
+                                }
+                            }
+                        }
+                    } else {
+                        console.warn('[WA Driver] Driver WA not found or empty, skipping driver notification.');
+                    }
+                } catch (waErr) {
+                    console.error('[WA Driver] Error while preparing driver notification:', waErr);
+                }
+            }
 
             if (isSembelih) {
                 console.log('Slaughtering goats:', selected.length);
