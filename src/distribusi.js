@@ -730,6 +730,11 @@ import { supabase } from './supabase.js';
             document.getElementById('inpTripNote').value = '';
         }
 
+        const containerWaCheckbox = document.getElementById('containerKirimWaCheckbox');
+        if (containerWaCheckbox) containerWaCheckbox.style.display = isSembelih ? 'none' : 'block';
+        const chkKirimWaSopir = document.getElementById('chkKirimWaSopir');
+        if (chkKirimWaSopir) chkKirimWaSopir.checked = !isSembelih;
+
         const containerInternal = document.getElementById('containerInternalPrice');
         if (containerInternal) containerInternal.style.display = isSembelih ? 'block' : 'none';
         const inpInternal = document.getElementById('inpInternalPrice');
@@ -924,8 +929,9 @@ import { supabase } from './supabase.js';
             showToast('Menyimpan data...', 'info');
             await saveTrips(trips);
 
-            // If NOT sembelih, notify driver with complete trip details
-            if (!isSembelih) {
+            // If NOT sembelih and checkbox is checked, notify driver with complete trip details
+            const shouldNotifySopir = document.getElementById('chkKirimWaSopir')?.checked;
+            if (!isSembelih && shouldNotifySopir) {
                 try {
                     const chosenSopirName = newTrip.sopirNama;
                     let sopirWa = '';
@@ -934,12 +940,6 @@ import { supabase } from './supabase.js';
                         const listSopir = sops?.val || [];
                         const sopirObj = listSopir.find(s => s.nama?.trim().toLowerCase() === chosenSopirName.toLowerCase());
                         sopirWa = sopirObj?.wa || '';
-                        
-                        if (!sopirWa) {
-                            const { data: profs } = await supabase.from('profiles').select('*').eq('role', 'sopir');
-                            const matchedProf = profs?.find(p => p.full_name?.trim().toLowerCase() === chosenSopirName.toLowerCase());
-                            sopirWa = matchedProf?.wa || '';
-                        }
                     }
 
                     if (sopirWa) {
