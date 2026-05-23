@@ -11,6 +11,7 @@ const BB_REGIONS = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const selectedTrxIds = new Set();
     const getStatusColorStyle = (status) => {
         switch (status) {
             case 'Baru Sebatas WA':
@@ -741,7 +742,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const canEdit = isAdmin || isOwner;
 
             tr.innerHTML = `
-                <td style="text-align:center;"><input type="checkbox" class="trx-checkbox" data-id="${t.id}" style="width:16px; height:16px; cursor:pointer;"></td>
+                <td style="text-align:center;"><input type="checkbox" class="trx-checkbox" data-id="${t.id}" ${selectedTrxIds.has(t.id) ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;"></td>
                 <td>
                     <div style="font-weight:700;">${t.id}</div>
                     <div style="font-size:0.75rem;">${formatTgl(t.tgl_trx)}</div>
@@ -786,6 +787,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 applySelectStatusStyle(selectEl);
             }
         });
+        if (typeof updateSelectionUI === 'function') {
+            updateSelectionUI();
+        }
     };
 
     window.viewBuktiPhoto = (srcUrl) => {
@@ -1601,23 +1605,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnCetakLabel = document.getElementById('btnCetakLabel');
     const selectCount = document.getElementById('selectCount');
 
-    const updateSelectionUI = () => {
-        const checked = document.querySelectorAll('.trx-checkbox:checked');
-        if (selectCount) selectCount.textContent = checked.length;
-        if (btnCetakLabel) btnCetakLabel.style.display = checked.length > 0 ? 'inline-block' : 'none';
-    };
+    function updateSelectionUI() {
+        const checkedCount = selectedTrxIds.size;
+        if (selectCount) selectCount.textContent = checkedCount;
+        if (btnCetakLabel) btnCetakLabel.style.display = checkedCount > 0 ? 'inline-block' : 'none';
+        
+        if (checkAll) {
+            const visibleCheckboxes = document.querySelectorAll('.trx-checkbox');
+            if (visibleCheckboxes.length > 0) {
+                checkAll.checked = Array.from(visibleCheckboxes).every(cb => cb.checked);
+            } else {
+                checkAll.checked = false;
+            }
+        }
+    }
 
     if (checkAll) {
         checkAll.addEventListener('change', () => {
-            document.querySelectorAll('.trx-checkbox').forEach(cb => cb.checked = checkAll.checked);
+            document.querySelectorAll('.trx-checkbox').forEach(cb => {
+                cb.checked = checkAll.checked;
+                if (checkAll.checked) {
+                    selectedTrxIds.add(cb.dataset.id);
+                } else {
+                    selectedTrxIds.delete(cb.dataset.id);
+                }
+            });
             updateSelectionUI();
         });
     }
 
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('trx-checkbox')) {
+            if (e.target.checked) {
+                selectedTrxIds.add(e.target.dataset.id);
+            } else {
+                selectedTrxIds.delete(e.target.dataset.id);
+            }
             updateSelectionUI();
-            if (!e.target.checked && checkAll) checkAll.checked = false;
         }
     });
 
@@ -1655,7 +1679,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         try {
             // 1. Ambil ID yang dicentang
-            const selectedIds = Array.from(document.querySelectorAll('.trx-checkbox:checked')).map(cb => cb.dataset.id);
+            const selectedIds = Array.from(selectedTrxIds);
             if (selectedIds.length === 0) {
                 return window.showToast('Pilih setidaknya satu transaksi!', 'warning');
             }
@@ -1700,6 +1724,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const updatedItems = (trx.items || []).map(it => ({ ...it, label_printed: true }));
                 await supabase.from('transaksi').update({ items: updatedItems }).eq('id', trx.id);
             }
+            selectedTrxIds.clear();
+            updateSelectionUI();
             setTimeout(() => renderTable(), 500);
 
             // 6. Tulis HTML Akhir
