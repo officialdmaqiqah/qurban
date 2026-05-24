@@ -1473,6 +1473,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let trxs = [...trxsRaw];
             
+            // Sort by Transaction ID (A-Z / natural sort)
+            trxs.sort((a, b) => {
+                const idA = String(a.id || '').toUpperCase();
+                const idB = String(b.id || '').toUpperCase();
+                return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+            });
+            
             // Apply filtering logic (same as renderTable)
             if (!isAdmin) {
                 const linkedAgen = profile?.permissions?.linkedAgen || '';
