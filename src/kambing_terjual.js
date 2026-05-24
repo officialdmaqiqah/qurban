@@ -1510,6 +1510,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const allGoats = await getKambingDb();
             const goatMap = new Map(allGoats.map(g => [g.id, g]));
 
+            const formatDateDMY = (iso) => {
+                if (!iso) return '';
+                const p = iso.split('-');
+                return p.length >= 3 ? `${p[2]}-${p[1]}-${p[0]}` : iso;
+            };
+
             trxs.forEach(t => {
                 const sisa = (t.total_deal || 0) - (t.total_paid || 0);
                 // Pecah data per item (kambing)
@@ -1524,7 +1530,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     exportData.push({
                         'ID VLOOKUP': `${t.id}-${idx + 1}`,
                         'ID Transaksi': t.id,
-                        'Tgl Transaksi': t.tgl_trx,
+                        'Tgl Transaksi': formatDateDMY(t.tgl_trx),
                         'Agen': t.agen?.nama || '-',
                         'Customer': t.customer?.nama || '-',
                         'WA 1': t.customer?.wa1 || '',
@@ -1534,7 +1540,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Kecamatan': addr.kec || '-',
                         'Kabupaten': addr.kab || '-',
                         'Google Maps': addr.maps || '-',
-                        'Tgl Deli': t.delivery?.tgl || '',
+                        'Tgl Deli': formatDateDMY(t.delivery?.tgl),
                         'Tipe Deli': t.delivery?.tipe || '',
                         'Informasi Tambahan': t.delivery?.info || '',
                         'No Tali': it.noTali || dbGoat?.no_tali || '',
