@@ -1515,6 +1515,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const fullAddress = `${addr.jalan || ''}, ${addr.desa || ''}, ${addr.kec || ''}, ${addr.kab || ''}`.replace(/^, |, $/g, '').replace(/, , /g, ', ');
                     
                     exportData.push({
+                        'ID VLOOKUP': `${t.id}-${idx + 1}`,
                         'ID Transaksi': t.id,
                         'Tgl Transaksi': t.tgl_trx,
                         'Agen': t.agen?.nama || '-',
