@@ -364,7 +364,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(imgPreviewDP) imgPreviewDP.src = '';
         window.existingBuktiUrl = null;
         window.existingKomisiState = null; // Reset komisi state
-        
+        window.existingInstallmentsHistory = [];
+        window.existingInstallmentsTotal = 0;
         
         window.setupMoneyMask(inpTotalBayarAwal);
         window.setupMoneyMask(inpNominalLunas);
