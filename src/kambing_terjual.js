@@ -1553,6 +1553,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Total DP/Bayar': idx === 0 ? (parseFloat(t.total_paid) || 0) : 0,
                         'Sisa Tagihan Nota': idx === 0 ? (parseFloat(sisa) || 0) : 0,
                         'Status Konfirmasi': t.customer?.status_konfirmasi || 'Belum Dikonfirmasi',
+                        'Status Fisik': dbGoat?.status_fisik || '-',
                         'Status Komisi': t.komisi?.status || ''
                     });
                 });
