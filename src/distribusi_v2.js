@@ -1203,8 +1203,7 @@ async function init() {
         const printArea = document.getElementById('printArea');
         printArea.innerHTML = `
             <div class="sj-header">
-                <h2>DAARUL MAHABBAH QURBAN</h2>
-                <div class="sj-title">SURAT JALAN / TRIP PENGIRIMAN</div>
+                <div class="sj-title">SURAT JALAN PENGIRIMAN KAMBING</div>
             </div>
             <div class="sj-body">
                 <div>
