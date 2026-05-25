@@ -338,9 +338,15 @@
                     </div>
                 </div>
 
-                <div class="tab-header" style="display:flex; gap:2rem; margin-bottom:1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <button class="tab-btn active" id="tabAktif">🚀 Antrean Pengiriman</button>
-                    <button class="tab-btn" id="tabHistori">📜 Histori Distribusi</button>
+                <div class="tab-header" style="display:flex; gap:2rem; margin-bottom:1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                    <div style="display:flex; gap:2rem;">
+                        <button class="tab-btn active" id="tabAktif">🚀 Antrean Pengiriman</button>
+                        <button class="tab-btn" id="tabHistori">📜 Histori Distribusi</button>
+                    </div>
+                    <div style="position:relative; width: 320px; margin-bottom: 0.5rem;">
+                        <input type="text" id="inpSearchMain" class="form-control" placeholder="Cari Nama, Sohibul, No Tali, Tali..." style="padding-left: 40px; border-radius: 12px; height: 42px; font-size: 0.85rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main);">
+                        <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); opacity:0.4; font-size: 0.9rem;">🔍</span>
+                    </div>
                 </div>
 
                 <div class="trip-grid" id="containerTrip">

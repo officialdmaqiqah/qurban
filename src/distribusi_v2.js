@@ -192,28 +192,56 @@ async function init() {
     };
     
     async function renderTrips() {
-        const { trips, goats } = await loadData();
+        const { trips, goats, trxs } = await loadData();
+        const activeGoats = goats && goats.length > 0 ? goats : cachedGoats;
+        const activeTrxs = trxs && trxs.length > 0 ? trxs : cachedTransactions;
+
         const role = (profile?.role || '').toLowerCase();
         const isSopir = role === 'sopir';
         const isYahya = (profile?.full_name || '').toLowerCase().includes('yahya');
         const showAdminTools = !isSopir || isYahya;
+
+        const searchInput = document.getElementById('inpSearchMain');
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
         console.log('[Role Debug] User:', profile?.full_name, '| Role:', profile?.role, '| ShowTools:', showAdminTools);
         
         // --- STUCK GOAT DETECTION (Unlinked Distribution) ---
         const goatIdsInTrips = new Set();
         trips.forEach(t => (t.items || []).forEach(i => goatIdsInTrips.add(i.goatId)));
-        const stuckGoats = goats.filter(k => (k.status_transaksi === 'Terdistribusi' || k.status_fisik === 'Disembelih') && !goatIdsInTrips.has(k.id));
+        const stuckGoats = activeGoats.filter(k => (k.status_transaksi === 'Terdistribusi' || k.status_fisik === 'Disembelih') && !goatIdsInTrips.has(k.id));
         
         const filteredTrips = trips.filter(t => {
             if(isSopir && (t.sopirNama||'').toLowerCase() !== (profile.full_name||'').toLowerCase()) return false;
             
-            if (currentTab === 'aktif') return t.status === 'Pengiriman';
-            if (currentTab === 'histori') return t.status === 'Selesai';
-            return true;
+            if (currentTab === 'aktif' && t.status !== 'Pengiriman') return false;
+            if (currentTab === 'histori' && t.status !== 'Selesai') return false;
+
+            if (!query) return true;
+
+            if (t.id.toLowerCase().includes(query)) return true;
+            if ((t.sopirNama || '').toLowerCase().includes(query)) return true;
+            if ((t.nopol || '').toLowerCase().includes(query)) return true;
+            if ((t.note || '').toLowerCase().includes(query)) return true;
+
+            return (t.items || []).some(i => {
+                const currentGoatId = i.goatId || i.id;
+                const g = activeGoats.find(x => x.id === currentGoatId);
+                const warnaTali = i.warnaTali || g?.warna_tali || '';
+                const transactionId = i.transactionId || g?.transaction_id;
+                const trx = activeTrxs.find(x => x.id === transactionId);
+                const itemInTrx = trx ? (trx.items || []).find(it => it.goatId === currentGoatId) : null;
+                const namaSohibul = itemInTrx?.namaSohibul || '';
+
+                return i.noTali.toLowerCase().includes(query) ||
+                       warnaTali.toLowerCase().includes(query) ||
+                       i.konsumen.toLowerCase().includes(query) ||
+                       (i.alamat || '').toLowerCase().includes(query) ||
+                       namaSohibul.toLowerCase().includes(query);
+            });
         }).sort((a,b) => new Date(b.tglKirim) - new Date(a.tglKirim));
 
-        updateStatsDist(trips, goats);
+        updateStatsDist(trips, activeGoats);
 
         containerTrip.innerHTML = '';
 
@@ -272,10 +300,22 @@ async function init() {
                     ${t.items.map(i => {
                         const isItemDone = i.status === 'Terdistribusi';
                         const currentGoatId = i.goatId || i.id;
-                        const g = cachedGoats.find(x => x.id === currentGoatId);
+                        const g = activeGoats.find(x => x.id === currentGoatId);
                         const warnaTali = i.warnaTali || g?.warna_tali || '-';
+                        const transactionId = i.transactionId || g?.transaction_id;
+                        const trx = activeTrxs.find(x => x.id === transactionId);
+                        const itemInTrx = trx ? (trx.items || []).find(it => it.goatId === currentGoatId) : null;
+                        const namaSohibul = itemInTrx?.namaSohibul || '';
+
+                        const isMatch = !query || 
+                            i.noTali.toLowerCase().includes(query) ||
+                            warnaTali.toLowerCase().includes(query) ||
+                            i.konsumen.toLowerCase().includes(query) ||
+                            (i.alamat || '').toLowerCase().includes(query) ||
+                            namaSohibul.toLowerCase().includes(query);
+
                         return `
-                        <div class="trip-item" style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <div class="trip-item" style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); ${isMatch ? '' : 'opacity: 0.25; filter: grayscale(80%);'}">
                             <div style="max-width:70%;">
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <span class="trip-goat-notali" onclick="window.viewGoatPhoto('${currentGoatId}', '${i.noTali}')" style="font-weight:700; color:var(--primary); font-size:0.95rem; letter-spacing:0.02em; cursor:pointer; text-decoration:underline; display:inline-flex; align-items:center; gap:4px;" title="Lihat Foto Fisik Sebelum Pengiriman">
@@ -285,7 +325,9 @@ async function init() {
                                         🪢 Tali: ${warnaTali}
                                     </span>
                                 </div>
-                                <div style="font-size:0.8rem; color:var(--text-main); font-weight:500; margin: 2px 0;">${i.konsumen}</div>
+                                <div style="font-size:0.8rem; color:var(--text-main); font-weight:500; margin: 2px 0;">
+                                    ${i.konsumen} ${namaSohibul ? `<span style="font-size:0.75rem; color:var(--primary); font-weight:600; margin-left:5px;">(Sohibul: ${namaSohibul})</span>` : ''}
+                                </div>
                                 <div style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8;">📍 ${i.alamat}</div>
                             </div>
                             <div style="text-align:right; display:flex; align-items:center; gap:8px; justify-content:flex-end;">
@@ -305,7 +347,8 @@ async function init() {
                                 `}
                             </div>
                         </div>
-                    `;}).join('')}
+                        `;
+                    }).join('')}
                 </div>
                 <div class="trip-footer" style="padding-top:0.5rem; justify-content:space-between;">
                      <div style="display:flex; gap:8px;">
@@ -1408,6 +1451,10 @@ async function init() {
                 showAlert('Gagal sinkron: ' + err.message, 'danger');
             }
         }, null, 'Sync Stok', 'Ya, Sinkron Sekarang', 'btn-warning');
+    });
+
+    document.getElementById('inpSearchMain')?.addEventListener('input', () => {
+        renderTrips();
     });
 
     window.setupMoneyMask('inpInternalPrice');
