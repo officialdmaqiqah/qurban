@@ -785,9 +785,9 @@ async function init() {
         }
 
         const containerWaCheckbox = document.getElementById('containerKirimWaCheckbox');
-        if (containerWaCheckbox) containerWaCheckbox.style.display = (isSembelih || isEdit) ? 'none' : 'block';
+        if (containerWaCheckbox) containerWaCheckbox.style.display = isSembelih ? 'none' : 'block';
         const chkKirimWaSopir = document.getElementById('chkKirimWaSopir');
-        if (chkKirimWaSopir) chkKirimWaSopir.checked = !isSembelih && !isEdit;
+        if (chkKirimWaSopir) chkKirimWaSopir.checked = !isSembelih;
 
         const containerInternal = document.getElementById('containerInternalPrice');
         if (containerInternal) containerInternal.style.display = isSembelih ? 'block' : 'none';
