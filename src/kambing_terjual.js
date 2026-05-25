@@ -1149,8 +1149,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             await supabase.from('keuangan').delete().eq('related_trx_id', trxId);
             window.existingInstallmentsTotal = 0;
         } else {
-            // Hanya ambil nominal cicilan (Pelunasan Order & Refund), abaikan DP (Jual Kambing) karena DP akan diinput ulang/diedit
-            const { data: fin } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId).neq('kategori', 'Jual Kambing');
+            // Hapus record DP lama dari keuangan agar tidak duplikat saat diinsert ulang di performSave.
+            // DP lama bisa berupa 'Jual Kambing' (pemasukan) dan 'Pemakaian Titipan Agen' (pengeluaran) untuk DP.
+            // JANGAN hapus Komisi Agen ketika editing (keepInstallments = true) karena pencairan komisi diatur dari menu komisi.
+            await supabase.from('keuangan').delete().eq('related_trx_id', trxId).eq('kategori', 'Jual Kambing');
+            await supabase.from('keuangan').delete().eq('related_trx_id', trxId).eq('kategori', 'Pemakaian Titipan Agen').ilike('keterangan', '%untuk DP Order%');
+
+            // Hanya ambil nominal cicilan (Pelunasan Order & Refund), abaikan DP (Jual Kambing & Pemakaian Titipan DP) karena DP akan diinput ulang/diedit
+            const { data: fin } = await supabase.from('keuangan').select('*').eq('related_trx_id', trxId);
             window.existingInstallmentsTotal = fin?.reduce((s,f) => {
                 const isRefund = f.tipe === 'pengeluaran' && f.kategori !== 'Komisi Agen';
                 if (f.tipe === 'pemasukan' && f.kategori === 'Pelunasan Order') return s + parseFloat(f.nominal);
@@ -1166,10 +1172,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 buktiUrl: f.bukti_url,
                 category: f.kategori
             })) || [];
-
-            // Hapus record DP lama dari keuangan agar tidak duplikat saat diinsert ulang di performSave
-            // JANGAN hapus Komisi Agen ketika editing (keepInstallments = true) karena pencairan komisi diatur dari menu komisi.
-            await supabase.from('keuangan').delete().eq('related_trx_id', trxId).eq('kategori', 'Jual Kambing');
         }
         await supabase.from('transaksi').delete().eq('id', trxId);
     };
