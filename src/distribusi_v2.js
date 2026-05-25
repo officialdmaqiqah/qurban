@@ -308,7 +308,12 @@ async function init() {
                     `;}).join('')}
                 </div>
                 <div class="trip-footer" style="padding-top:0.5rem; justify-content:space-between;">
-                     <button class="btn btn-sm" onclick="window.printTrip('${t.id}')" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid rgba(255,255,255,0.1); border-radius:6px;">🖨️</button>
+                     <div style="display:flex; gap:8px;">
+                         <button class="btn btn-sm" onclick="window.printTrip('${t.id}')" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid rgba(255,255,255,0.1); border-radius:6px;" title="Cetak Surat Jalan">🖨️</button>
+                         ${showAdminTools && !isDone ? `
+                             <button class="btn btn-sm" onclick="window.editTrip('${t.id}')" style="background:rgba(255,255,255,0.05); color:var(--primary); border:1px solid rgba(255,255,255,0.1); border-radius:6px;" title="Edit Rencana Trip">✏️ Edit</button>
+                         ` : ''}
+                     </div>
                      <div style="display:flex; gap:8px;">
                         ${showAdminTools ? `
                             <button class="btn btn-sm" onclick="window.rollbackDistribution('${t.id}')" style="color:var(--danger); background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); border-radius:6px; font-size:0.7rem;" title="Batalkan Semua & Kembalikan ke Antrean">↩️ Batal Trip</button>
@@ -735,14 +740,35 @@ async function init() {
     document.getElementById('btnBuatTrip')?.addEventListener('click', () => openTripModal(false));
     document.getElementById('btnSembelih')?.addEventListener('click', () => openTripModal(true));
 
-    async function openTripModal(isSembelih = false) {
+    window.editTrip = (id) => openTripModal(false, id);
+
+    async function openTripModal(isSembelih = false, editTripId = null) {
         const modal = document.getElementById('modalTrip');
-        modal.dataset.mode = isSembelih ? 'sembelih' : 'kirim';
+        const isEdit = !!editTripId;
+        
+        modal.dataset.mode = isEdit ? 'edit' : (isSembelih ? 'sembelih' : 'kirim');
+        if (isEdit) {
+            modal.dataset.tripId = editTripId;
+        } else {
+            modal.removeAttribute('data-trip-id');
+        }
         
         // Update Modal Title & Button
         const title = modal.querySelector('.modal-title');
         const submitBtn = document.getElementById('btnSimpanTrip');
-        if (isSembelih) {
+        
+        const { trips, goats, trxs } = await loadData();
+        const t = isEdit ? trips.find(x => x.id === editTripId) : null;
+
+        if (isEdit && t) {
+            title.textContent = `Edit Trip Distribusi: ${editTripId}`;
+            submitBtn.textContent = '💾 Simpan Perubahan';
+            submitBtn.style.background = ''; // default primary
+            document.getElementById('inpTripSopir').value = t.sopirNama || '';
+            document.getElementById('inpTripNopol').value = t.nopol || '';
+            document.getElementById('inpTripTgl').value = t.tglKirim || '';
+            document.getElementById('inpTripNote').value = t.note || '';
+        } else if (isSembelih) {
             title.textContent = 'Proses Sembelih di Kandang';
             submitBtn.textContent = '🔪 Konfirmasi Sembelih & Tuntas';
             submitBtn.style.background = '#6366f1';
@@ -759,16 +785,15 @@ async function init() {
         }
 
         const containerWaCheckbox = document.getElementById('containerKirimWaCheckbox');
-        if (containerWaCheckbox) containerWaCheckbox.style.display = isSembelih ? 'none' : 'block';
+        if (containerWaCheckbox) containerWaCheckbox.style.display = (isSembelih || isEdit) ? 'none' : 'block';
         const chkKirimWaSopir = document.getElementById('chkKirimWaSopir');
-        if (chkKirimWaSopir) chkKirimWaSopir.checked = !isSembelih;
+        if (chkKirimWaSopir) chkKirimWaSopir.checked = !isSembelih && !isEdit;
 
         const containerInternal = document.getElementById('containerInternalPrice');
         if (containerInternal) containerInternal.style.display = isSembelih ? 'block' : 'none';
         const inpInternal = document.getElementById('inpInternalPrice');
         if (inpInternal) inpInternal.value = '';
 
-        const { goats, trxs } = await loadData();
         const { data: sops } = await supabase.from('master_data').select('val').eq('key', 'SOPIR').single();
         const { data: driverAccounts } = await supabase.from('profiles').select('full_name').eq('role', 'sopir');
         
@@ -826,12 +851,13 @@ async function init() {
             });
         }
 
-        const eligible = goats.filter(k => k.status_transaksi === 'Terjual');
+        const currentTripGoatIds = (isEdit && t) ? new Set((t.items || []).map(i => i.goatId)) : new Set();
+        const eligible = goats.filter(k => k.status_transaksi === 'Terjual' || currentTripGoatIds.has(k.id));
 
         // Populate Filters
-        const kabs = [...new Set(eligible.map(k => trxs.find(t => t.id === k.transaction_id)?.delivery?.alamat?.kab || ''))].filter(Boolean).sort();
+        const kabs = [...new Set(eligible.map(k => trxs.find(tx => tx.id === k.transaction_id)?.delivery?.alamat?.kab || ''))].filter(Boolean).sort();
         const agens = [...new Set(eligible.map(k => {
-            const trx = trxs.find(t => t.id === k.transaction_id);
+            const trx = trxs.find(tx => tx.id === k.transaction_id);
             return (typeof trx?.agen === 'object' ? trx?.agen?.nama : trx?.agen) || trx?.agen_nama || '';
         }))].filter(Boolean).sort();
 
@@ -849,6 +875,10 @@ async function init() {
         tableBodySelection.innerHTML = '';
         
         window.selectedGoatIds.clear();
+        if (isEdit && t) {
+            (t.items || []).forEach(item => window.selectedGoatIds.add(item.goatId));
+        }
+        
         const checkAllGoats = document.getElementById('checkAllGoats');
         if (checkAllGoats) checkAllGoats.checked = false;
 
@@ -887,7 +917,7 @@ async function init() {
             tableBodySelection.innerHTML = '';
             
             const filtered = eligible.filter(k => {
-                const trx = trxs.find(t => t.id === k.transaction_id);
+                const trx = trxs.find(tx => tx.id === k.transaction_id);
                 const txt = (k.no_tali + ' ' + (trx?.customer?.nama || '') + ' ' + (trx?.delivery?.alamat?.kab || '')).toLowerCase();
                 const matchSearch = txt.includes(search);
                 const matchKab = !fKab || trx?.delivery?.alamat?.kab === fKab;
@@ -897,7 +927,7 @@ async function init() {
             });
 
             filtered.forEach((k, idx) => {
-                const trx = trxs.find(t => t.id === k.transaction_id);
+                const trx = trxs.find(tx => tx.id === k.transaction_id);
                 const agenName = (typeof trx?.agen === 'object' ? trx?.agen?.nama : trx?.agen) || trx?.agen_nama || '';
                 const matchedAgen = (window._cachedAgens || []).find(a => a.nama === agenName);
                 const agenWa = matchedAgen?.wa || '';
@@ -948,8 +978,13 @@ async function init() {
         }
         
         modalTrip.classList.add('active');
-        document.getElementById('inpTripTgl').value = new Date().toISOString().split('T')[0];
-        document.getElementById('summarizedTripCount').textContent = '0 Ekor Kambing';
+        if (isEdit && t) {
+            document.getElementById('inpTripTgl').value = t.tglKirim || new Date().toISOString().split('T')[0];
+            document.getElementById('summarizedTripCount').textContent = `${window.selectedGoatIds.size} Ekor Kambing`;
+        } else {
+            document.getElementById('inpTripTgl').value = new Date().toISOString().split('T')[0];
+            document.getElementById('summarizedTripCount').textContent = '0 Ekor Kambing';
+        }
     }
 
     document.getElementById('formTrip')?.addEventListener('submit', async (e) => {
@@ -959,12 +994,26 @@ async function init() {
             return showAlert('Pilih minimal 1 kambing!', 'warning');
         }
 
-        const isSembelih = document.getElementById('modalTrip').dataset.mode === 'sembelih';
+        const modalTrip = document.getElementById('modalTrip');
+        const modalMode = modalTrip.dataset.mode;
+        const isEdit = modalMode === 'edit';
+        const isSembelih = modalMode === 'sembelih';
         const { trips, goats, trxs } = await loadData();
-        const tripId = (isSembelih ? 'SMB-' : 'TRP-') + Date.now().toString().slice(-6);
         
+        const tripId = isEdit ? modalTrip.dataset.tripId : ((isSembelih ? 'SMB-' : 'TRP-') + Date.now().toString().slice(-6));
+        
+        const tIndex = isEdit ? trips.findIndex(x => x.id === tripId) : -1;
+        const existingTrip = isEdit ? trips[tIndex] : null;
+
         const selectedItems = [];
         for (const goatId of window.selectedGoatIds) {
+            // Preserving existing items state if editing
+            const existingItem = existingTrip ? existingTrip.items.find(it => it.goatId === goatId) : null;
+            if (existingItem) {
+                selectedItems.push(existingItem);
+                continue;
+            }
+
             const k = goats.find(g => g.id === goatId);
             if (!k) continue;
 
@@ -989,18 +1038,38 @@ async function init() {
             });
         }
 
-        const newTrip = {
+        // Handle items that were REMOVED from the trip during editing
+        if (isEdit && existingTrip) {
+            const removedItems = existingTrip.items.filter(it => !window.selectedGoatIds.has(it.goatId));
+            for (const rit of removedItems) {
+                if (rit.status === 'Terdistribusi') {
+                    // Revert status in Supabase back to 'Terjual' and physical status 'Ada'
+                    await supabase.from('stok_kambing').update({ 
+                        status_transaksi: 'Terjual', 
+                        status_fisik: 'Ada',
+                        updated_at: new Date().toISOString()
+                    }).eq('id', rit.goatId);
+                }
+            }
+        }
+
+        const tripData = {
             id: tripId,
             sopirNama: document.getElementById('inpTripSopir').value,
             nopol: document.getElementById('inpTripNopol').value,
             tglKirim: document.getElementById('inpTripTgl').value,
-            status: isSembelih ? 'Selesai' : 'Pengiriman',
+            status: isSembelih ? 'Selesai' : (selectedItems.every(i => i.status === 'Terdistribusi') ? 'Selesai' : 'Pengiriman'),
             note: document.getElementById('inpTripNote').value,
             items: selectedItems
         };
         
         try {
-            trips.push(newTrip);
+            if (isEdit && tIndex !== -1) {
+                trips[tIndex] = tripData;
+            } else {
+                trips.push(tripData);
+            }
+
             showToast('Menyimpan data...', 'info');
             await saveTrips(trips);
 
@@ -1008,7 +1077,7 @@ async function init() {
             const shouldNotifySopir = document.getElementById('chkKirimWaSopir')?.checked;
             if (!isSembelih && shouldNotifySopir) {
                 try {
-                    const chosenSopirName = newTrip.sopirNama;
+                    const chosenSopirName = tripData.sopirNama;
                     let sopirWa = '';
                     if (chosenSopirName) {
                         const { data: sops } = await supabase.from('master_data').select('val').eq('key', 'SOPIR').single();
@@ -1021,7 +1090,7 @@ async function init() {
                         console.log('[WA Driver] Sopir found:', chosenSopirName, 'WA:', sopirWa);
                         
                         // Compile detailed information for each item in the trip
-                        const tripItemsWithDetails = newTrip.items.map(item => {
+                        const tripItemsWithDetails = tripData.items.map(item => {
                             const goatRec = goats.find(g => g.id === item.goatId);
                             const trxId = item.transactionId || goatRec?.transaction_id;
                             const trx = trxs.find(t => t.id === trxId);
@@ -1066,7 +1135,7 @@ async function init() {
 
                         // Helper to divide into safe chunk messages
                         const buildWaMessages = (tripId, sopirNama, nopol, tglKirim, items) => {
-                            const header = `*DAFTAR DISTRIBUSI KAMBING*\n==========================\n*ID TRIP:* ${tripId}\n*Sopir:* ${sopirNama}\n*Nopol:* ${nopol || '-'}\n*Tgl Kirim:* ${new Date(tglKirim).toLocaleDateString('id-ID')}\n==========================\n\n`;
+                            const header = `*DAFTAR DISTRIBUSI KAMBING${isEdit ? ' (UPDATE)' : ''}*\n==========================\n*ID TRIP:* ${tripId}\n*Sopir:* ${sopirNama}\n*Nopol:* ${nopol || '-'}\n*Tgl Kirim:* ${new Date(tglKirim).toLocaleDateString('id-ID')}\n==========================\n\n`;
                             
                             let messages = [];
                             let currentMsg = header;
@@ -1096,7 +1165,7 @@ async function init() {
                             return messages;
                         };
 
-                        const waMsgs = buildWaMessages(newTrip.id, newTrip.sopirNama, newTrip.nopol, newTrip.tglKirim, tripItemsWithDetails);
+                        const waMsgs = buildWaMessages(tripData.id, tripData.sopirNama, tripData.nopol, tripData.tglKirim, tripItemsWithDetails);
                         
                         // Send messages sequentially
                         for (let i = 0; i < waMsgs.length; i++) {
@@ -1122,13 +1191,13 @@ async function init() {
             }
 
             if (isSembelih) {
-                console.log('Slaughtering goats:', selected.length);
+                console.log('Slaughtering goats:', selectedItems.length);
                 const internalPriceVal = window.parseNum(document.getElementById('inpInternalPrice')?.value || 0);
                 
                 const updates = [];
                 const financeEntries = [];
 
-                for (const item of newTrip.items) {
+                for (const item of tripData.items) {
                     // 1. Update Goat Status
                     updates.push(supabase.from('stok_kambing').update({
                         status_transaksi: 'Terdistribusi',
@@ -1149,7 +1218,7 @@ async function init() {
                                 financeEntries.push({
                                     id: 'ADJ-' + Date.now().toString().slice(-6) + '-' + item.noTali,
                                     tipe: 'pengeluaran',
-                                    tanggal: newTrip.tglKirim,
+                                    tanggal: tripData.tglKirim,
                                     kategori: 'Internal Transfer / Aqiqah',
                                     nominal: diff,
                                     keterangan: `Penyesuaian Harga Internal Aqiqah - No Tali ${item.noTali} (Trx ${trx.id})`,
@@ -1176,7 +1245,7 @@ async function init() {
             }
 
             modalTrip.classList.remove('active');
-            showToast(isSembelih ? `✅ ${selected.length} Kambing disembelih & tuntas!` : `Trip ${newTrip.id} diaktifkan!`, 'success');
+            showToast(isSembelih ? `✅ ${selectedItems.length} Kambing disembelih & tuntas!` : (isEdit ? `Trip ${tripData.id} diperbarui!` : `Trip ${tripData.id} diaktifkan!`), 'success');
             
             if (isSembelih) {
                 currentTab = 'histori';
