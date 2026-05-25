@@ -1193,9 +1193,12 @@ async function init() {
     });
 
     window.printTrip = async (id) => {
-        const { trips } = await loadData();
+        const { trips, goats, trxs } = await loadData();
         const t = trips.find(x => x.id === id);
         if(!t) return;
+
+        const activeGoats = goats && goats.length > 0 ? goats : cachedGoats;
+        const activeTrxs = trxs && trxs.length > 0 ? trxs : cachedTransactions;
 
         const printArea = document.getElementById('printArea');
         printArea.innerHTML = `
@@ -1218,25 +1221,55 @@ async function init() {
             <table class="sj-table">
                 <thead>
                     <tr>
-                        <th>NO</th>
-                        <th>NO TALI</th>
-                        <th>KONSUMEN</th>
-                        <th>ALAMAT TUJUAN</th>
-                        <th>STATUS</th>
+                        <th style="width: 4%; text-align: center;">NO</th>
+                        <th style="width: 10%;">NO TALI</th>
+                        <th style="width: 12%;">KONSUMEN</th>
+                        <th style="width: 12%;">NAMA SOHIBUL</th>
+                        <th style="width: 22%;">ALAMAT TUJUAN</th>
+                        <th style="width: 10%;">DESA/DUSUN</th>
+                        <th style="width: 10%;">KECAMATAN</th>
+                        <th style="width: 10%;">NO WA 1</th>
+                        <th style="width: 10%;">NO WA 2</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${t.items.map((i, idx) => {
                         const currentGoatId = i.goatId || i.id;
-                        const g = cachedGoats.find(x => x.id === currentGoatId);
+                        const g = activeGoats.find(x => x.id === currentGoatId);
                         const warnaTali = i.warnaTali || g?.warna_tali || '-';
+                        const transactionId = i.transactionId || g?.transaction_id;
+                        const trx = activeTrxs.find(x => x.id === transactionId);
+                        
+                        const itemInTrx = trx ? (trx.items || []).find(it => it.goatId === currentGoatId) : null;
+                        const namaSohibul = itemInTrx?.namaSohibul || '-';
+                        
+                        const addr = trx?.delivery?.alamat || trx?.customer?.alamat || {};
+                        let alamatJalan = '-';
+                        let desaDusun = '-';
+                        let kecamatan = '-';
+                        
+                        if (typeof addr === 'object') {
+                            alamatJalan = addr.jalan || addr.alamat || i.alamat || '-';
+                            desaDusun = addr.desa || '-';
+                            kecamatan = addr.kec || '-';
+                        } else if (typeof addr === 'string') {
+                            alamatJalan = addr;
+                        }
+                        
+                        const wa1 = trx?.customer?.wa1 || i.customerWa || '-';
+                        const wa2 = trx?.customer?.wa2 || '-';
+
                         return `
                         <tr>
-                            <td>${idx + 1}</td>
-                            <td>${i.noTali} (${warnaTali})</td>
+                            <td style="text-align: center;">${idx + 1}</td>
+                            <td><strong>${i.noTali}</strong><br><span style="color: #666; font-size: 9px;">(${warnaTali})</span></td>
                             <td>${i.konsumen}</td>
-                            <td>${i.alamat}</td>
-                            <td>${i.status || 'Pengiriman'}</td>
+                            <td><strong>${namaSohibul}</strong></td>
+                            <td>${alamatJalan}</td>
+                            <td>${desaDusun}</td>
+                            <td>${kecamatan}</td>
+                            <td>${wa1}</td>
+                            <td>${wa2}</td>
                         </tr>
                     `;}).join('')}
                 </tbody>
