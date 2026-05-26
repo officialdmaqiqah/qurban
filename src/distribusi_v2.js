@@ -673,14 +673,7 @@ async function init() {
                         const noTali = item?.noTali || goatRec?.no_tali || '-';
                         const itemsFormatted = `No. Kambing/Tali: ${noTali} (Tali: ${warnaTali})`;
 
-                        let alamatFormatted = '-';
-                        if (trx?.delivery?.alamat) {
-                            if (typeof trx.delivery.alamat === 'object') {
-                                alamatFormatted = trx.delivery.alamat.alamat || '-';
-                            } else {
-                                alamatFormatted = trx.delivery.alamat;
-                            }
-                        }
+                        let alamatFormatted = window.formatTrxAddress(trx);
                         if (alamatFormatted === '-' && item?.alamat) {
                             alamatFormatted = item.alamat;
                         }
@@ -984,7 +977,7 @@ async function init() {
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-warna="${k.warna_tali || '-'}" data-konsumen="${trx?.customer?.nama || ''}" data-alamat="${trx?.delivery?.alamat?.alamat || '-'}" data-wa="${trx?.customer?.wa1 || ''}" data-trxid="${k.transaction_id || ''}" data-agenwa="${agenWa}" data-agennama="${agenName}" ${window.selectedGoatIds.has(k.id) ? 'checked' : ''}></td>
+                    <td><input type="checkbox" class="goat-checkbox" data-id="${k.id}" data-notali="${k.no_tali}" data-warna="${k.warna_tali || '-'}" data-konsumen="${trx?.customer?.nama || ''}" data-alamat="${window.formatTrxAddress(trx)}" data-wa="${trx?.customer?.wa1 || ''}" data-trxid="${k.transaction_id || ''}" data-agenwa="${agenWa}" data-agennama="${agenName}" ${window.selectedGoatIds.has(k.id) ? 'checked' : ''}></td>
                     <td>${idx + 1}</td>
                     <td class="sticky-col">
                         <div style="font-weight:700; color:var(--primary);">${k.no_tali}</div>
@@ -1077,7 +1070,7 @@ async function init() {
                 noTali: k.no_tali, 
                 warnaTali: k.warna_tali || '-',
                 konsumen: trx?.customer?.nama || '-', 
-                alamat: trx?.delivery?.alamat?.alamat || '-',
+                alamat: window.formatTrxAddress(trx),
                 customerWa: trx?.customer?.wa1 || '',
                 transactionId: k.transaction_id || '',
                 agenWa: agenWa,

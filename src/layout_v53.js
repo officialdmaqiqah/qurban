@@ -895,3 +895,25 @@ window.processImageUpload = async function(file, folderName, fileName) {
     }
 };
 
+window.formatTrxAddress = function(trx) {
+    if (!trx) return '-';
+    let rawAlamat = '-';
+    if (trx.delivery?.alamat) {
+        if (typeof trx.delivery.alamat === 'object') {
+            const ad = trx.delivery.alamat;
+            rawAlamat = [ad.jalan, ad.desa, ad.kec, ad.kab].filter(Boolean).join(', ') || ad.alamat || '-';
+        } else {
+            rawAlamat = trx.delivery.alamat;
+        }
+    }
+    if (rawAlamat === '-' && trx.customer?.alamat) {
+        if (typeof trx.customer.alamat === 'object') {
+            const ad = trx.customer.alamat;
+            rawAlamat = [ad.jalan, ad.desa, ad.kec, ad.kab].filter(Boolean).join(', ') || ad.alamat || '-';
+        } else {
+            rawAlamat = trx.customer.alamat;
+        }
+    }
+    return rawAlamat;
+};
+
