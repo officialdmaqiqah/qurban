@@ -339,7 +339,7 @@ import { supabase } from './supabase.js';
 
     window.deleteTrip = async (id) => {
         showConfirm(`Hapus rekaman trip ${id}? Data stok tidak akan berubah. Gunakan 'Batalkan' jika ingin mengembalikan status kambing.`, async () => {
-            const { trips } = await loadData();
+            const { trips } = await loadData(true);
             const filtered = trips.filter(t => t.id !== id);
             await saveTrips(filtered);
             showToast(`Trip ${id} dihapus.`);
@@ -352,7 +352,7 @@ import { supabase } from './supabase.js';
         showConfirm(`Batalkan distribusi ${id}? Status kambing akan dikembalikan menjadi 'Terjual' & 'Ada'.`, async () => {
             try {
                 showToast('Membatalkan distribusi...', 'info');
-                const { trips } = await loadData();
+                const { trips } = await loadData(true);
                 const trip = trips.find(t => t.id === id);
                 if (!trip) throw new Error("Trip tidak ditemukan.");
 
@@ -382,7 +382,7 @@ import { supabase } from './supabase.js';
         showConfirm(`Reset status kambing yang tersangkut? Kambing akan kembali ke antrean 'Menunggu Kirim'.`, async () => {
             try {
                 showToast('Mereset status kambing...', 'info');
-                const { goats, trips } = await loadData();
+                const { goats, trips } = await loadData(true);
                 const goatIdsInTrips = new Set();
                 trips.forEach(t => (t.items || []).forEach(i => goatIdsInTrips.add(i.goatId)));
                 const stuckGoats = goats.filter(k => (k.status_transaksi === 'Terdistribusi' || k.status_fisik === 'Disembelih') && !goatIdsInTrips.has(k.id));
@@ -409,7 +409,7 @@ import { supabase } from './supabase.js';
         showConfirm(`Batalkan status tuntas untuk kambing ini? Foto bukti akan dihapus dan Anda bisa melapor ulang.`, async () => {
             try {
                 showToast('Mereset status item...', 'info');
-                const { trips } = await loadData();
+                const { trips } = await loadData(true);
                 const tIdx = trips.findIndex(t => t.id === tripId);
                 if (tIdx === -1) return;
                 const iIdx = trips[tIdx].items.findIndex(i => i.goatId === goatId);
@@ -448,7 +448,7 @@ import { supabase } from './supabase.js';
         showConfirm(`Keluarkan kambing ini dari trip? Status akan kembali menjadi 'Menunggu Kirim'.`, async () => {
             try {
                 showToast('Mengeluarkan item...', 'info');
-                const { trips } = await loadData();
+                const { trips } = await loadData(true);
                 const tIdx = trips.findIndex(t => t.id === tripId);
                 if (tIdx === -1) return;
                 
@@ -548,7 +548,7 @@ import { supabase } from './supabase.js';
             const url = await window.processImageUpload(file, 'DISTRIBUSI_FOTO', 'dist_' + Date.now() + '.jpg');
             if(!url) return; // processImageUpload already shows alert on failure
 
-            const { trips, goats } = await loadData();
+            const { trips, goats } = await loadData(true);
             const tIdx = trips.findIndex(t => t.id === modal._tripId);
             const iIdx = trips[tIdx].items.findIndex(i => i.goatId === modal._goatId);
 
@@ -568,8 +568,11 @@ import { supabase } from './supabase.js';
                         updated_at: new Date().toISOString()
                     }).eq('id', modal._goatId);
 
-                    console.log('[WA Debug] Memulai proses notifikasi untuk GoatID:', modal._goatId);
-                
+            const shouldNotify = document.getElementById('chkKirimWaLapor')?.checked !== false;
+            
+            if (shouldNotify) {
+                console.log('[WA Debug] Memulai proses notifikasi untuk GoatID:', modal._goatId);
+                try {
                     const currentTrips = (await loadData()).trips;
                     const trip = currentTrips.find(t => t.id === modal._tripId);
                     const item = trip?.items.find(i => i.goatId === modal._goatId);
@@ -716,11 +719,15 @@ import { supabase } from './supabase.js';
                 } catch (waErr) {
                     console.warn('Opsi notifikasi WA gagal:', waErr);
                 }
+            } else {
+                console.log('[WA Debug] Skip notifikasi WA atas permintaan user.');
+                window.showToast('Foto berhasil disimpan tanpa mengirim notifikasi WA.', 'success');
+            }
                 
-                modal.classList.remove('active');
-                showToast('✅ Distribusi tuntas!', 'success');
-                await loadData(true);
-                renderTrips();
+            modal.classList.remove('active');
+            showToast('✅ Distribusi tuntas!', 'success');
+            await loadData(true);
+            renderTrips();
 
             } catch (err) {
                 showAlert('Gagal: ' + err.message, 'danger');
@@ -955,8 +962,11 @@ import { supabase } from './supabase.js';
             return showAlert('Pilih minimal 1 kambing!', 'warning');
         }
 
-        const isSembelih = document.getElementById('modalTrip').dataset.mode === 'sembelih';
-        const { trips, goats, trxs } = await loadData();
+        const modalTrip = document.getElementById('modalTrip');
+        const modalMode = modalTrip.dataset.mode;
+        const isEdit = modalMode === 'edit';
+        const isSembelih = modalMode === 'sembelih';
+        const { trips, goats, trxs } = await loadData(true);
         const tripId = (isSembelih ? 'SMB-' : 'TRP-') + Date.now().toString().slice(-6);
         
         const selectedItems = [];

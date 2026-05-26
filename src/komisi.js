@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
         modal._trxId = id; modal._nom = t.komisi.nominal; modal.classList.add('active');
-        document.getElementById('inpTglBayarKomisi').value = new Date().toISOString().split('T')[0];
+        document.getElementById('inpTglBayarKomisi').value = window.getLocalDate();
     };
 
     document.getElementById('btnKonfirmasiBayar')?.addEventListener('click', async () => {
