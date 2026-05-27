@@ -43,13 +43,13 @@ function initEvents() {
 
     // Modal Close
     document.getElementById('mdlFbCloseBtn').addEventListener('click', () => {
-        document.getElementById('modalFbDetailOverlay').classList.remove('active');
+        document.getElementById('modalFbDetailOverlay').style.display = 'none';
     });
     
     // Close modal when clicking overlay bg
     document.getElementById('modalFbDetailOverlay').addEventListener('click', (e) => {
         if (e.target.id === 'modalFbDetailOverlay') {
-            document.getElementById('modalFbDetailOverlay').classList.remove('active');
+            document.getElementById('modalFbDetailOverlay').style.display = 'none';
         }
     });
 }
@@ -333,7 +333,7 @@ function showFeedbackDetails(id) {
         catatan.style.opacity = '0.5';
     }
 
-    overlay.classList.add('active');
+    overlay.style.display = 'flex';
 }
 
 // Ekspor Data ke CSV
