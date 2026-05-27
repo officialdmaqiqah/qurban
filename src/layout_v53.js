@@ -693,6 +693,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 else nav.appendChild(mapLink);
             }
 
+            // Always ensure Hasil Survey exists for Admin
+            if (!nav.querySelector('a[href="hasil_survey.html"]')) {
+                const surveyLink = document.createElement('a');
+                surveyLink.href = 'hasil_survey.html';
+                surveyLink.className = 'nav-item';
+                surveyLink.style.cssText = 'color:#10b981 !important; font-weight:600; background:rgba(16,185,129,0.1); border:1px solid #10b981; margin-top:5px;';
+                surveyLink.innerHTML = '📋 Hasil Survey';
+                const lapLink = Array.from(nav.querySelectorAll('.nav-item')).find(a => a.href.includes('laporan.html'));
+                if (lapLink) lapLink.after(surveyLink);
+                else nav.appendChild(surveyLink);
+            }
+
             // 3. FORCE VISIBILITY for all items
             nav.querySelectorAll('.nav-item').forEach(item => {
                 item.style.setProperty('display', 'flex', 'important');
