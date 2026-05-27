@@ -42,8 +42,8 @@ const ASPECTS = {
         },
         {
             key: 'komisi',
-            title: 'Transparansi & Ketepatan Komisi',
-            desc: 'Menilai transparansi pembagian porsi, ketepatan nominal, dan kecepatan pencairan/pembayaran komisi.'
+            title: 'Transparansi & Perhitungan Komisi',
+            desc: 'Menilai transparansi pencatatan, ketepatan perhitungan komisi hasil penjualan sesuai skema kemitraan yang disepakati, serta kelancaran proses pencairannya.'
         },
         {
             key: 'koordinasi',

@@ -11,7 +11,7 @@ const ASPECT_NAMES = {
     // Agen
     'aplikasi': 'Akses Informasi Stok & Harga',
     'marketing': 'Kualitas Dukungan Marketing',
-    'komisi': 'Transparansi & Ketepatan Komisi',
+    'komisi': 'Transparansi & Perhitungan Komisi',
     'koordinasi': 'Kerjasama & Respon Tim Kandang',
     'stok': 'Kualitas Stok Hewan Kurban',
     'konsumen': 'Kepuasan Konsumen Agen'
