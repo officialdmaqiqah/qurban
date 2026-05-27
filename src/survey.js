@@ -32,8 +32,8 @@ const ASPECTS = {
     'Agen': [
         {
             key: 'aplikasi',
-            title: 'Kemudahan Aplikasi Pemesanan',
-            desc: 'Menilai stabilitas, kecepatan, dan kemudahan portal manajemen qurban untuk mendaftarkan orderan.'
+            title: 'Akses Informasi Stok & Harga',
+            desc: 'Menilai kemudahan dan kestabilan aplikasi untuk memantau ketersediaan stok kurban yang belum laku dan kejelasan harga kandang.'
         },
         {
             key: 'marketing',

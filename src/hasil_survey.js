@@ -9,7 +9,7 @@ const ASPECT_NAMES = {
     'transaksi': 'Administrasi & Kemudahan Transaksi',
     'pengiriman': 'Ketepatan & Keamanan Pengiriman',
     // Agen
-    'aplikasi': 'Kemudahan Aplikasi Pemesanan',
+    'aplikasi': 'Akses Informasi Stok & Harga',
     'marketing': 'Kualitas Dukungan Marketing',
     'komisi': 'Transparansi & Ketepatan Komisi',
     'koordinasi': 'Kerjasama & Respon Tim Kandang',
