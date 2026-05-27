@@ -678,6 +678,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
                     <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
                     <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;">📊 LAPORAN</a>
+                    <a href="hasil_survey.html" class="nav-item" style="color:#10b981 !important; font-weight:600; background:rgba(16,185,129,0.1); border:1px solid #10b981; margin-top:5px;">📋 Hasil Survey</a>
                 `;
             }
 

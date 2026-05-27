@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Hasil Survey Kepuasan | DMQ System</title>
+    
+    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Modern Glassmorphic / Dashboard widgets style */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary);
+        }
+
+        .stat-icon.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .stat-icon.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.775rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: var(--text-main);
+            font-family: var(--font-family);
+        }
+
+        /* Aspect breakdown widgets */
+        .chart-layout-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .chart-layout-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .aspect-chart-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 1rem;
+        }
+
+        .chart-title {
+            font-family: var(--font-family);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bar-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+        }
+
+        .bar-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .bar-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.825rem;
+        }
+
+        .bar-title {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .bar-value {
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .bar-track {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            width: 0%;
+            transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Filter layout */
+        .filter-panel {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .filter-grid {
+                grid-template-columns: 2fr 1fr 1fr auto;
+            }
+        }
+
+        .form-control-filter {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            background-color: var(--bg-input);
+            border: 1.5px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+
+        .form-control-filter:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: rgba(30, 41, 59, 0.9);
+        }
+
+        .btn-export {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--primary);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 10px;
+            padding: 0.7rem 1.25rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-export:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow-green);
+            transform: translateY(-2px);
+        }
+
+        /* Review Speech bubble style for card feedbacks */
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .feedback-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .feedback-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .feedback-card:hover {
+            border-color: rgba(16, 185, 129, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .feedback-user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .fb-user-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .fb-user-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .fb-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .fb-badge.sohibul {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary);
+        }
+
+        .fb-badge.agen {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .fb-rating-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .fb-body {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-main);
+            background: rgba(255,255,255,0.01);
+            border: 1px dashed rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            position: relative;
+            flex-grow: 1;
+        }
+
+        .fb-body.empty {
+            color: var(--text-muted);
+            font-style: italic;
+            opacity: 0.6;
+        }
+
+        .fb-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.725rem;
+            color: var(--text-muted);
+        }
+
+        .loading-overlay-fb {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+            width: 100%;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            gap: 8px;
+        }
+
+        .expand-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 2px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .expand-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* Detail Modal popup */
+        .modal-fb-detail {
+            max-width: 500px !important;
+            padding: 2rem !important;
+        }
+
+        .modal-aspect-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+            font-size: 0.85rem;
+        }
+
+        .modal-aspect-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        
+        <!-- Sidebar (Hardcoded for Guaranteed Visibility v10.9) -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header" id="sidebarHeaderWrapper">
+                <div class="sidebar-logo">
+                    <span style="font-weight: 600;">Daarul Mahabbah Qurban</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"> Dashboard Keuangan</a>
+                <div class="nav-header">📁 DATA STOCK</div>
+                <a href="kambing.html" class="nav-item">&bull; Master Data</a>
+                <a href="kambing_masuk.html" class="nav-item">&bull; Kambing Masuk</a>
+                <a href="kambing_terjual.html" class="nav-item">&bull; Kambing Terjual</a>
+                <a href="kesehatan.html" class="nav-item">🏥 Kambing Sakit/Mati</a>
+                <a href="stok_opname.html" class="nav-item">&bull; Stok Opname</a>
+                <a href="distribusi.html" class="nav-item">&bull; Distribusi</a>
+                <a href="pemetaan_kandang.html" class="nav-item">&bull; Pemetaan Kandang</a>
+                <div class="nav-header">💰 DATA FINANCE</div>
+                <a href="keuangan.html" class="nav-item">&bull; Pencatatan Keuangan</a>
+                <a href="deposit_agen.html" class="nav-item">&bull; Titipan Dana Agen</a>
+                <a href="terima_pelunasan.html" class="nav-item">&bull; Pelunasan Order</a>
+                <a href="hutang_supplier.html" class="nav-item">&bull; Pelunasan Supplier</a>
+                <a href="komisi.html" class="nav-item">&bull; Komisi Agen</a>
+                <a href="laporan.html" class="nav-item" style="color:#a855f7 !important; font-weight:600; background:rgba(168,85,247,0.1); border:1px solid #a855f7; margin-top:5px;">📊 LAPORAN</a>
+                <a href="hasil_survey.html" class="nav-item active" style="color:#10b981 !important; font-weight:600; background:rgba(16,185,129,0.1); border:1px solid #10b981; margin-top:5px;">📋 Hasil Survey</a>
+            </nav>
+            <div style="padding: 1.5rem; font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; margin-top: auto;">
+                <div>System Version: <span style="color:var(--primary); font-weight:700;">v10.9</span></div>
+                <div style="margin-top: 0.25rem;">Developed by <span style="color:var(--primary); font-weight:700;">Yoex</span> ✨</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">📋 Laporan Survey Kepuasan</div>
+                <div class="user-menu" id="topbarUserMenu">
+                    <span id="userEmailDisplay" style="color: var(--text-muted); font-size: 0.875rem; margin-right: 15px;">Admin</span>
+                    <!-- Theme, Settings, & Logout injected automatically by layout_v53.js -->
+                </div>
+            </header>
+            
+            <div class="content-area">
+                
+                <!-- 1. KPI Stats Summary Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Responden</div>
+                            <div class="stat-value" id="valTotalRes">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon warning"><i class="fa-solid fa-star"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Kepuasan Rata-rata</div>
+                            <div class="stat-value" id="valAvgRating">0.00</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon info"><i class="fa-solid fa-user-heart"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Sohibul Qurban</div>
+                            <div class="stat-value" id="valSohibulCount">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-handshake"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Mitra Agen</div>
+                            <div class="stat-value" id="valAgenCount">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Detailed Rating Charts by Aspect (Double Column) -->
+                <div class="chart-layout-grid">
+                    
+                    <!-- Chart 1: Sohibul Qurban Aspects -->
+                    <div class="aspect-chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">
+                                <i class="fa-solid fa-user-heart" style="color:var(--primary);"></i>
+                                Aspek Kepuasan Sohibul Qurban (Konsumen)
+                            </div>
+                            <span class="badge badge-success" id="valChartSohibulTotal">0 Respon</span>
+                        </div>
+                        <div class="bar-container" id="chartSohibulContainer">
+                            <!-- JS progress bars injected here -->
+                            <div style="opacity: 0.5; text-align: center; padding: 2rem;">Memuat data aspek...</div>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Agen Aspects -->
+                    <div class="aspect-chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">
+                                <i class="fa-solid fa-handshake" style="color:#3b82f6;"></i>
+                                Aspek Kepuasan Mitra Agen (Reseller)
+                            </div>
+                            <span class="badge" style="background:rgba(59, 130, 246, 0.1); color:#3b82f6;" id="valChartAgenTotal">0 Respon</span>
+                        </div>
+                        <div class="bar-container" id="chartAgenContainer">
+                            <!-- JS progress bars injected here -->
+                            <div style="opacity: 0.5; text-align: center; padding: 2rem;">Memuat data aspek...</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 3. Filter Bar Panel -->
+                <div class="filter-panel">
+                    <div class="filter-grid">
+                        <div>
+                            <input type="text" id="inpFilterSearch" class="form-control-filter" placeholder="Cari nama, wilayah, atau isi ulasan...">
+                        </div>
+                        <div>
+                            <select id="inpFilterRole" class="form-control-filter">
+                                <option value="">-- Semua Tipe Pengisi --</option>
+                                <option value="Sohibul Qurban">Sohibul Qurban (Konsumen)</option>
+                                <option value="Agen">Mitra Agen</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="inpFilterScore" class="form-control-filter">
+                                <option value="">-- Semua Rating Rata-rata --</option>
+                                <option value="excellent">Sangat Baik (4.50 - 5.00)</option>
+                                <option value="good">Baik (3.50 - 4.49)</option>
+                                <option value="fair">Cukup (2.50 - 3.49)</option>
+                                <option value="poor">Kurang (Di Bawah 2.50)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button id="btnExportCSV" class="btn-export">
+                                <i class="fa-solid fa-file-excel"></i>
+                                Ekspor CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Ulasan Cards / Feedbacks Grid -->
+                <div class="feedback-grid" id="feedbackGrid">
+                    <div class="loading-overlay-fb" id="feedbackLoading">
+                        <span class="spinner"></span> Sinkronisasi feedback survey...
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden Export Table Helper -->
+    <table id="hiddenExportTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Tanggal</th>
+                <th>Tipe Responden</th>
+                <th>Nama</th>
+                <th>Alamat</th>
+                <th>Rating Rata-rata</th>
+                <th>Rincian Rating Per Aspek</th>
+                <th>Ulasan Essay</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay-custom" id="modalFbDetailOverlay">
+        <div class="modal-custom modal-fb-detail">
+            <div class="modal-custom-header">
+                <div class="modal-custom-icon" style="background:rgba(245, 158, 11, 0.1); color:var(--warning);">
+                    <i class="fa-solid fa-star-sharp-half-stroke"></i>
+                </div>
+                <div class="modal-custom-title" id="mdlFbTitle">Rincian Rating</div>
+            </div>
+            <div class="modal-custom-body" style="padding-top: 1rem;">
+                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight:700; margin-bottom: 1rem;">Skor Penilaian Per Aspek</div>
+                <div id="mdlFbAspectsList">
+                    <!-- Aspect scores list rendered here -->
+                </div>
+                
+                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight:700; margin-top: 1.5rem; margin-bottom: 0.75rem;">Ulasan Lengkap</div>
+                <div id="mdlFbCatatan" style="font-size: 0.875rem; line-height: 1.5; color: var(--text-main); background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px 16px; min-height: 80px; word-break: break-word;"></div>
+            </div>
+            <div class="modal-custom-footer" style="margin-top: 1.5rem;">
+                <button class="btn btn-primary" id="mdlFbCloseBtn">TUTUP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System core layout script -->
+    <script type="module" src="src/layout_v53.js"></script>
+    <!-- Page script -->
+    <script type="module" src="src/hasil_survey.js"></script>
+</body>
+</html>

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Survey Kepuasan Pelayanan Kurban - Daarul Mahabbah</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: rgba(22, 30, 49, 0.7);
+            --bg-input: #1e293b;
+            --primary: #10b981;
+            --primary-rgb: 16, 185, 129;
+            --primary-hover: #059669;
+            --primary-light: rgba(16, 185, 129, 0.15);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --warning: #f59e0b;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --font-main: 'Inter', sans-serif;
+            --font-heading: 'Plus Jakarta Sans', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 45%);
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .survey-container {
+            width: 100%;
+            max-width: 650px;
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .survey-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 3rem 2.5rem;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 100px rgba(16, 185, 129, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (max-width: 480px) {
+            .survey-card {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Border top glow effect */
+        .survey-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #059669, #10b981, #34d399);
+        }
+
+        .survey-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo-wrapper {
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            position: relative;
+        }
+
+        .logo-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid rgba(16, 185, 129, 0.2);
+            background: #111;
+            padding: 2px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            transition: var(--transition);
+        }
+
+        .logo-img:hover {
+            transform: scale(1.05) rotate(5deg);
+            border-color: var(--primary);
+        }
+
+        .survey-header h1 {
+            font-family: var(--font-heading);
+            font-size: 1.85rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            line-height: 1.25;
+            background: linear-gradient(135deg, #ffffff 60%, #a7f3d0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .survey-header p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            display: block;
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Role Selector cards */
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .role-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+        }
+
+        .role-card:hover {
+            background: rgba(16, 185, 129, 0.03);
+            border-color: rgba(16, 185, 129, 0.4);
+            transform: translateY(-4px);
+        }
+
+        .role-card.active {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .role-icon {
+            font-size: 1.75rem;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .role-card.active .role-icon {
+            color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .role-name {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .role-card.active .role-name {
+            color: var(--text-main);
+        }
+
+        /* Checked badge */
+        .role-card::after {
+            content: '\f058';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            color: var(--primary);
+            font-size: 1rem;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: var(--transition);
+        }
+
+        .role-card.active::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Identity info styles */
+        .identity-box {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+
+        .identity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .identity-title {
+            font-family: var(--font-heading);
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        /* Toggle switch styling */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toggle-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .toggle-container:hover .toggle-label {
+            color: var(--text-main);
+        }
+
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            position: relative;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: white;
+            top: 2px;
+            left: 2px;
+            transition: var(--transition);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-container.active .toggle-switch {
+            background-color: var(--primary);
+        }
+
+        .toggle-container.active .toggle-switch::before {
+            left: 22px;
+        }
+
+        .toggle-container.active .toggle-label {
+            color: var(--primary);
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            transition: var(--transition);
+        }
+
+        @media (min-width: 500px) {
+            .input-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background-color: var(--bg-input);
+            border: 1.5px solid transparent;
+            border-radius: 10px;
+            color: var(--text-main);
+            font-family: var(--font-main);
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+            background-color: rgba(30, 41, 59, 0.8);
+        }
+
+        .form-control::placeholder {
+            color: #475569;
+        }
+
+        /* Rating Aspect Area */
+        .aspects-container {
+            margin-bottom: 2.5rem;
+        }
+
+        .aspect-row {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: var(--transition);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .aspect-row:hover {
+            border-color: rgba(16, 185, 129, 0.2);
+            background: rgba(255, 255, 255, 0.025);
+            transform: translateX(4px);
+        }
+
+        .aspect-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .aspect-title {
+            font-family: var(--font-heading);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .aspect-desc {
+            font-size: 0.775rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .rating-box {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-top: 4px;
+        }
+
+        .stars {
+            display: flex;
+            gap: 6px;
+        }
+
+        .star {
+            font-size: 1.75rem;
+            color: rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.15s ease;
+        }
+
+        .star:hover {
+            transform: scale(1.2);
+        }
+
+        .star.hovered {
+            color: rgba(245, 158, 11, 0.5);
+        }
+
+        .star.selected {
+            color: var(--warning);
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+        }
+
+        .rating-text {
+            font-size: 0.825rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            min-width: 80px;
+            transition: var(--transition);
+        }
+
+        .rating-text.active {
+            color: var(--warning);
+        }
+
+        /* Textarea essay */
+        .essay-textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        /* Submit Button */
+        .btn-submit-survey {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 1.1rem;
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            font-weight: 800;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+            transition: var(--transition);
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .btn-submit-survey:hover {
+            background: linear-gradient(135deg, #34d399, #10b981);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-submit-survey:active {
+            transform: translateY(1px);
+        }
+
+        .btn-submit-survey:disabled {
+            background: #1e293b;
+            color: #475569;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Success screen overlays */
+        .success-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem 1rem;
+            animation: zoomIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .checkmark-wrapper {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            border: 3px solid rgba(16, 185, 129, 0.2);
+            position: relative;
+        }
+
+        .checkmark-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            animation: bounce 1.2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .success-screen h2 {
+            font-family: var(--font-heading);
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+
+        .success-screen p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 400px;
+            margin-bottom: 2rem;
+        }
+
+        .btn-home {
+            padding: 0.75rem 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-weight: 600;
+            border-radius: 10px;
+            transition: var(--transition);
+        }
+
+        .btn-home:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s ease-in-out infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="survey-container">
+        <div class="survey-card">
+            
+            <!-- FORM BLOCK -->
+            <div id="surveyFormBlock">
+                <div class="survey-header">
+                    <div class="logo-wrapper">
+                        <img src="src/assets/logo_dm_qurban.png" class="logo-img" alt="Daarul Mahabbah Logo">
+                    </div>
+                    <h1>Survey Kepuasan Pelayanan</h1>
+                    <p>Bantu kami mengevaluasi dan meningkatkan mutu pelayanan kurban Kandang Daarul Mahabbah musim ini.</p>
+                </div>
+                
+                <form id="surveyForm" onsubmit="return false;">
+                    
+                    <!-- 1. Tipe Responden Selector -->
+                    <div class="form-group">
+                        <label class="form-label">Saya Mengisi Survey Sebagai</label>
+                        <div class="role-selector">
+                            <div class="role-card active" data-role="Sohibul Qurban">
+                                <i class="fa-solid fa-user-heart role-icon"></i>
+                                <span class="role-name">Sohibul Qurban</span>
+                            </div>
+                            <div class="role-card" data-role="Agen">
+                                <i class="fa-solid fa-handshake role-icon"></i>
+                                <span class="role-name">Mitra Agen</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 2. Informasi Identitas -->
+                    <div class="identity-box">
+                        <div class="identity-header">
+                            <span class="identity-title">📝 Informasi Identitas</span>
+                            <div class="toggle-container" id="anonToggle">
+                                <div class="toggle-switch"></div>
+                                <span class="toggle-label">Hamba Allah (Anonim)</span>
+                            </div>
+                        </div>
+                        <div class="input-grid" id="identityInputs">
+                            <div>
+                                <input type="text" id="inpNama" class="form-control" placeholder="Nama Lengkap Anda" required>
+                            </div>
+                            <div>
+                                <input type="text" id="inpAlamat" class="form-control" placeholder="Kota / Wilayah Tempat Tinggal" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 3. Aspek Rating Dinamis -->
+                    <div class="form-group">
+                        <label class="form-label" id="ratingSectionLabel">⭐ Penilaian Aspek Pelayanan</label>
+                        <div class="aspects-container" id="aspectsContainer">
+                            <!-- JS will inject aspects here dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- 4. Essay / Saran Tertulis -->
+                    <div class="form-group">
+                        <label class="form-label" for="inpEssay">✍️ Kritik, Saran, & Pesan Tambahan</label>
+                        <textarea id="inpEssay" class="form-control essay-textarea" placeholder="Tuliskan ulasan, saran, masukan perbaikan, atau kesan-kesan Anda di sini secara bebas... (Sangat dihargai)"></textarea>
+                    </div>
+                    
+                    <!-- Submit button -->
+                    <button type="submit" class="btn-submit-survey" id="btnSubmit">
+                        <span>Kirim Penilaian</span>
+                    </button>
+                    
+                </form>
+            </div>
+            
+            <!-- SUCCESS BLOCK -->
+            <div id="surveySuccessBlock" class="success-screen">
+                <div class="checkmark-wrapper">
+                    <i class="fa-solid fa-circle-check checkmark-icon"></i>
+                </div>
+                <h2>Jazakumullah Khairan!</h2>
+                <p>Terima kasih banyak atas waktu dan penilaian berharga yang Anda berikan. Masukan Anda sangat berarti untuk menyempurnakan amanah pelayanan kurban di masa mendatang.</p>
+                <a href="index.html" class="btn-home">Kembali ke Beranda</a>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Load Supabase & Logic module -->
+    <script type="module" src="src/survey.js"></script>
+</body>
+</html>
