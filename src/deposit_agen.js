@@ -31,6 +31,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnCloseModal) btnCloseModal.onclick = () => modalDeposit.classList.remove('active');
     if (btnCancelModal) btnCancelModal.onclick = () => modalDeposit.classList.remove('active');
 
+    // Modal Detail Rekap Agen close buttons
+    const modalDetailAgen = document.getElementById('modalDetailAgen');
+    const btnCloseDetailModal = document.getElementById('btnCloseDetailModal');
+    const btnCloseDetailModal2 = document.getElementById('btnCloseDetailModal2');
+    
+    if (btnCloseDetailModal) btnCloseDetailModal.onclick = () => modalDetailAgen.classList.remove('active');
+    if (btnCloseDetailModal2) btnCloseDetailModal2.onclick = () => modalDetailAgen.classList.remove('active');
+
     if (inpChannel) {
         inpChannel.onchange = async () => {
             if (inpChannel.value === 'Transfer Bank') {
@@ -134,17 +142,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function refreshData() {
         try {
-            const { data: keuangan, error: errK } = await supabase.from('keuangan').select('*').order('tanggal', { ascending: false });
-            if (errK) throw errK;
+            // Fetch Keuangan & Transaksi parallelly for efficiency
+            const [respK, respT] = await Promise.all([
+                supabase.from('keuangan').select('*').order('tanggal', { ascending: false }),
+                supabase.from('transaksi').select('*')
+            ]);
+            
+            if (respK.error) throw respK.error;
+            if (respT.error) throw respT.error;
+            
+            const keuangan = respK.data || [];
+            const transaksi = respT.data || [];
 
             const agens = await getAgens();
             
             const depKats = ['Titipan Dana Agen', 'Pemakaian Titipan Agen', 'Penarikan Titipan Agen'];
-            const depRows = (keuangan || []).filter(f => depKats.includes(f.kategori));
+            const depRows = keuangan.filter(f => depKats.includes(f.kategori));
 
             const balances = {};
-            agens.forEach(a => { balances[a.nama] = { in: 0, out: 0, balance: 0 }; });
+            agens.forEach(a => { 
+                balances[a.nama] = { in: 0, out: 0, balance: 0, tagihan: 0, outstandingOrders: [] }; 
+            });
 
+            // Calculate deposit balance
             let totalIn = 0;
             let totalOut = 0;
 
@@ -152,33 +172,62 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const name = f.agen_name || '';
                 const nom = parseFloat(f.nominal) || 0;
                 
-                if (f.kategori === 'Titipan Dana Agen') {
-                    if (f.tipe === 'pemasukan') {
-                        if (balances[name]) balances[name].in += nom;
-                        totalIn += nom;
+                if (balances[name]) {
+                    if (f.kategori === 'Titipan Dana Agen') {
+                        if (f.tipe === 'pemasukan') {
+                            balances[name].in += nom;
+                            totalIn += nom;
+                        } else {
+                            balances[name].out += nom;
+                            totalOut += nom;
+                        }
                     } else {
-                        if (balances[name]) balances[name].out += nom;
+                        balances[name].out += nom;
                         totalOut += nom;
                     }
-                } else {
-                    if (balances[name]) balances[name].out += nom;
-                    totalOut += nom;
+                }
+            });
+
+            // Calculate accumulated outstanding bills per agent
+            let totalTagihanGlobal = 0;
+            transaksi.forEach(trx => {
+                const sisa = (trx.total_deal || 0) - (trx.total_paid || 0);
+                if (sisa > 0) {
+                    const agentName = trx.agen?.nama || '';
+                    if (agentName && balances[agentName]) {
+                        balances[agentName].tagihan += sisa;
+                        balances[agentName].outstandingOrders.push({
+                            id: trx.id,
+                            customer: trx.customer?.nama || '-',
+                            deal: trx.total_deal || 0,
+                            paid: trx.total_paid || 0,
+                            sisa: sisa
+                        });
+                        totalTagihanGlobal += sisa;
+                    }
                 }
             });
 
             tableBodySaldo.innerHTML = '';
             Object.keys(balances).forEach(name => {
                 const b = balances[name];
-                if (b.in === 0 && b.out === 0) return;
+                // Show agent if they have EITHER deposit transactions OR outstanding bills
+                if (b.in === 0 && b.out === 0 && b.tagihan === 0) return;
                 
                 const tr = document.createElement('tr');
+                const saldoAktif = b.in - b.out;
+                
+                // Styling based on balance vs tagihan
+                const tagihanStyle = b.tagihan > 0 ? 'color:#ef4444; font-weight:700;' : 'color:var(--text-muted); opacity:0.5;';
+                
                 tr.innerHTML = `
                     <td><strong>${name}</strong></td>
                     <td class="text-right text-success">${window.formatRp(b.in)}</td>
                     <td class="text-right text-danger">${window.formatRp(b.out)}</td>
-                    <td class="text-right font-bold">${window.formatRp(b.in - b.out)}</td>
+                    <td class="text-right font-bold" style="color: ${saldoAktif > 0 ? '#10b981' : ''}">${window.formatRp(saldoAktif)}</td>
+                    <td class="text-right" style="${tagihanStyle}">${window.formatRp(b.tagihan)}</td>
                     <td class="text-right">
-                        <button class="btn btn-sm btn-detail-agen" data-name="${name}" title="Detail Riwayat">🔍</button>
+                        <button class="btn btn-sm btn-detail-agen btn-primary" data-name="${name}" style="font-size: 0.7rem; padding: 4px 8px; border-radius: 6px;">📊 Detail</button>
                     </td>
                 `;
                 tableBodySaldo.appendChild(tr);
@@ -188,7 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 btn.onclick = () => window.viewAgentHistory(btn.getAttribute('data-name'));
             });
 
-            if (tableBodySaldo.innerHTML === '') tableBodySaldo.innerHTML = '<tr><td colspan="5" class="text-center">Belum ada saldo titipan.</td></tr>';
+            if (tableBodySaldo.innerHTML === '') tableBodySaldo.innerHTML = '<tr><td colspan="6" class="text-center">Belum ada data agen aktif.</td></tr>';
 
             tableBodyRiwayat.innerHTML = '';
             depRows.forEach(f => {
@@ -217,6 +266,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             statsTotalTitipan.textContent = window.formatRp(totalIn);
             statsTotalTerpakai.textContent = window.formatRp(totalOut);
             statsTotalAktif.textContent = window.formatRp(totalIn - totalOut);
+            
+            const statsTotalTagihan = document.getElementById('statsTotalTagihan');
+            if (statsTotalTagihan) statsTotalTagihan.textContent = window.formatRp(totalTagihanGlobal);
+            
+            // Save calculated data globally for modal view
+            window._cachedAgentBalances = balances;
+            window._cachedAgentDepHistory = depRows;
+
         } catch (e) {
             console.error("Gagal Memuat Data:", e);
             window.showToast("Gagal memuat data terbaru", "danger");
@@ -252,12 +309,69 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     window.viewAgentHistory = function(name) {
-        window.showToast('Filter: ' + name);
-        const rows = tableBodyRiwayat.querySelectorAll('tr');
-        rows.forEach(r => {
-            if (r.children[1].textContent === name) r.style.backgroundColor = 'rgba(var(--primary-rgb), 0.1)';
-            else r.style.backgroundColor = '';
-        });
+        const balances = window._cachedAgentBalances || {};
+        const depHistory = window._cachedAgentDepHistory || [];
+        
+        const b = balances[name] || { in: 0, out: 0, balance: 0, tagihan: 0, outstandingOrders: [] };
+        const saldoAktif = b.in - b.out;
+        
+        // 1. Populate summary cards
+        document.getElementById('detailAgenName').textContent = name;
+        document.getElementById('detailSaldoAktif').textContent = window.formatRp(saldoAktif);
+        document.getElementById('detailTagihanAkumulasi').textContent = window.formatRp(b.tagihan);
+        
+        const netValue = saldoAktif - b.tagihan;
+        const netEl = document.getElementById('detailKombinasiNet');
+        netEl.textContent = window.formatRp(netValue);
+        if (netValue > 0) {
+            netEl.style.color = '#10b981'; // Green
+        } else if (netValue < 0) {
+            netEl.style.color = '#ef4444'; // Red
+        } else {
+            netEl.style.color = '';
+        }
+
+        // 2. Populate Outstanding Orders
+        const tableBodyOrders = document.getElementById('tableBodyDetailOrders');
+        tableBodyOrders.innerHTML = '';
+        if (b.outstandingOrders.length === 0) {
+            tableBodyOrders.innerHTML = '<tr><td colspan="5" class="text-center" style="padding:20px;">Tidak ada tagihan berjalan. Semua lunas! 🎉</td></tr>';
+        } else {
+            b.outstandingOrders.forEach(o => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${o.id}</strong></td>
+                    <td>${o.customer}</td>
+                    <td class="text-right">${window.formatRp(o.deal)}</td>
+                    <td class="text-right text-success">${window.formatRp(o.paid)}</td>
+                    <td class="text-right text-danger font-bold">${window.formatRp(o.sisa)}</td>
+                `;
+                tableBodyOrders.appendChild(tr);
+            });
+        }
+
+        // 3. Populate Deposit History
+        const tableBodyHist = document.getElementById('tableBodyDetailHistory');
+        tableBodyHist.innerHTML = '';
+        const agentDeps = depHistory.filter(f => f.agen_name === name);
+        if (agentDeps.length === 0) {
+            tableBodyHist.innerHTML = '<tr><td colspan="4" class="text-center" style="padding:20px;">Tidak ada riwayat deposit.</td></tr>';
+        } else {
+            agentDeps.forEach(f => {
+                const tr = document.createElement('tr');
+                const isOut = f.kategori !== 'Titipan Dana Agen' || f.tipe === 'pengeluaran';
+                tr.innerHTML = `
+                    <td>${f.tanggal}</td>
+                    <td><span class="badge ${isOut ? 'badge-danger' : 'badge-success'}">${f.kategori}</span></td>
+                    <td><small>${f.keterangan || '-'}</small></td>
+                    <td class="text-right font-bold ${isOut ? 'text-danger' : 'text-success'}">${isOut ? '-' : '+'}${window.formatRp(f.nominal)}</td>
+                `;
+                tableBodyHist.appendChild(tr);
+            });
+        }
+
+        // 4. Open Modal
+        document.getElementById('modalDetailAgen').classList.add('active');
     };
 
     // UNIVERSAL AUTO-HEAL LOOP

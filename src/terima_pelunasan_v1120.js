@@ -64,6 +64,15 @@ export const syncOneTrx = async (trxId) => {
             const fDesc = (f.keterangan || '').toLowerCase();
             const fCat = (f.kategori || '').toLowerCase();
             
+            // EXCLUDE non-payment categories (garbage/deposit)
+            const isGarbage = fCat.includes('sulam') || fCat.includes('tumbal') || 
+                              fDesc.includes('sulam') || fDesc.includes('tumbal') ||
+                              fCat.includes('komisi') || fCat.includes('karkas') ||
+                              fCat.includes('titipan') || fCat.includes('tabungan') ||
+                              fCat.includes('operasional') || fCat.includes('biaya') ||
+                              (f.tipe === 'pemasukan' && fCat.includes('kelebihan'));
+            if (isGarbage) return false;
+
             let reason = "";
             if (fId === trxId.toUpperCase()) reason = "ID MATCH (PASTI)";
             else if (fDesc.includes(trxId.toLowerCase())) reason = "ID DI KETERANGAN";
@@ -141,6 +150,15 @@ export const syncAllBalances = async () => {
                         const fDesc = (f.keterangan || '').toLowerCase();
                         const fCat = (f.kategori || '').toLowerCase();
                         
+                        // EXCLUDE non-payment categories (garbage/deposit)
+                        const isGarbage = fCat.includes('sulam') || fCat.includes('tumbal') || 
+                                          fDesc.includes('sulam') || fDesc.includes('tumbal') ||
+                                          fCat.includes('komisi') || fCat.includes('karkas') ||
+                                          fCat.includes('titipan') || fCat.includes('tabungan') ||
+                                          fCat.includes('operasional') || fCat.includes('biaya') ||
+                                          (f.tipe === 'pemasukan' && fCat.includes('kelebihan'));
+                        if (isGarbage) return false;
+
                         let reason = "";
                         if (fId === tId) reason = "ID MATCH (PASTI)";
                         else if (fId && fId !== tId) return false;

@@ -95,6 +95,11 @@
                         <div class="premium-value" id="statsTotalAktif">Rp 0</div>
                         <div class="premium-icon-box">✨</div>
                     </div>
+                    <div class="premium-card amber">
+                        <div class="premium-label">Tagihan Akumulasi Agen</div>
+                        <div class="premium-value" id="statsTotalTagihan">Rp 0</div>
+                        <div class="premium-icon-box">📋</div>
+                    </div>
                 </div>
 
                 <div class="card-box tall-header">
@@ -111,14 +116,15 @@
                             <thead>
                                 <tr>
                                     <th>Nama Agen</th>
-                                    <th class="text-right">Total Masuk</th>
+                                    <th class="text-right">Total Masuk (Deposit)</th>
                                     <th class="text-right">Total Pakai/Tarik</th>
-                                    <th class="text-right">Saldo Saat Ini</th>
+                                    <th class="text-right">Saldo Deposit Aktif</th>
+                                    <th class="text-right" style="color: var(--warning);">Tagihan Akumulasi</th>
                                     <th class="text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBodySaldoAgen">
-                                <tr><td colspan="5" class="text-center">Memuat data...</td></tr>
+                                <tr><td colspan="6" class="text-center">Memuat data...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -215,6 +221,82 @@
                 </form>
             </div>
         </div>
+
+    <!-- MODAL DETAIL REKAP AGEN -->
+    <div class="modal-overlay" id="modalDetailAgen">
+        <div class="modal-content" style="max-width: 800px; width: 90%;">
+            <div class="modal-header flex-between">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.25rem;">📊 Rekap Keuangan Agen: <span id="detailAgenName" style="color: var(--primary);">Bana</span></h3>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Informasi detail saldo deposit dan tagihan berjalan</div>
+                </div>
+                <button class="btn-close" id="btnCloseDetailModal">&times;</button>
+            </div>
+            <div class="modal-body" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; max-height: 70vh; overflow-y: auto;">
+                
+                <!-- Summary Card Row -->
+                <div class="status-grid premium-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 0;">
+                    <div class="premium-card rose" style="min-height: 80px; padding: 10px 15px; border-radius:12px;">
+                        <div class="premium-label" style="font-size: 0.55rem; margin-bottom: 2px;">Saldo Deposit Aktif</div>
+                        <div class="premium-value" id="detailSaldoAktif" style="font-size: 1.1rem; font-weight: 700; color: #10b981;">Rp 0</div>
+                    </div>
+                    <div class="premium-card amber" style="min-height: 80px; padding: 10px 15px; border-radius:12px;">
+                        <div class="premium-label" style="font-size: 0.55rem; margin-bottom: 2px;">Tagihan Akumulasi</div>
+                        <div class="premium-value" id="detailTagihanAkumulasi" style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">Rp 0</div>
+                    </div>
+                    <div class="premium-card indigo" style="min-height: 80px; padding: 10px 15px; border-radius:12px;">
+                        <div class="premium-label" style="font-size: 0.55rem; margin-bottom: 2px;">Kombinasi Bersih (Net)</div>
+                        <div class="premium-value" id="detailKombinasiNet" style="font-size: 1.1rem; font-weight: 700;">Rp 0</div>
+                    </div>
+                </div>
+
+                <!-- Section: Active Orders & Bills -->
+                <div class="card-box" style="padding: 1.25rem; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 0; text-align:left;">
+                    <h4 style="margin: 0 0 1rem 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">📋 Daftar Order Outstanding (Belum Lunas)</h4>
+                    <div class="table-responsive">
+                        <table class="data-table" style="font-size: 0.8rem; margin: 0;">
+                            <thead>
+                                <tr>
+                                    <th>ID Order</th>
+                                    <th>Konsumen</th>
+                                    <th class="text-right">Total Deal</th>
+                                    <th class="text-right">Terbayar</th>
+                                    <th class="text-right" style="color: var(--warning);">Sisa Tagihan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyDetailOrders">
+                                <tr><td colspan="5" class="text-center">Tidak ada tagihan berjalan.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section: Deposit History -->
+                <div class="card-box" style="padding: 1.25rem; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 0; text-align:left;">
+                    <h4 style="margin: 0 0 1rem 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">📜 Riwayat Transaksi Deposit</h4>
+                    <div class="table-responsive">
+                        <table class="data-table" style="font-size: 0.8rem; margin: 0;">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Kategori</th>
+                                    <th>Keterangan</th>
+                                    <th class="text-right">Nominal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyDetailHistory">
+                                <tr><td colspan="4" class="text-center">Tidak ada riwayat deposit.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <button type="button" class="btn btn-primary btn-block" id="btnCloseDetailModal2">Tutup Rekap</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="src/layout_v53.js?v=5.5"></script>
     <script type="module" src="src/deposit_agen.js?v=11.34"></script>
