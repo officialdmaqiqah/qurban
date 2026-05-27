@@ -461,6 +461,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (document.getElementById('inpNominalBayar')) document.getElementById('inpNominalBayar').value = window.formatNum(sisa);
             if (document.getElementById('boxInfoOrder')) document.getElementById('boxInfoOrder').style.display = 'block'; 
             if (document.getElementById('formBayar')) document.getElementById('formBayar').style.display = 'block';
+
+            // Refresh Saldo Titipan if channel is Saldo Titipan Agen
+            const inpChannelBayar = document.getElementById('inpChannelBayar');
+            if (inpChannelBayar && inpChannelBayar.value === 'Saldo Titipan Agen') {
+                inpChannelBayar.dispatchEvent(new Event('change'));
+            }
         });
     }
 
@@ -543,12 +549,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         inpChannelBayar.addEventListener('change', async () => {
             const containerRekBayar = document.getElementById('containerRekBayar');
             const inpRekIdBayar = document.getElementById('inpRekIdBayar');
+            const infoSaldoTitipan = document.getElementById('infoSaldoTitipan');
+            const valSaldoTitipan = document.getElementById('valSaldoTitipan');
+            
+            // Hide by default
+            if (infoSaldoTitipan) infoSaldoTitipan.style.display = 'none';
+
             if(inpChannelBayar.value === 'Transfer Bank') {
                 const reks = await getBankAccounts();
                 if (containerRekBayar) containerRekBayar.style.display = 'block';
                 if (inpRekIdBayar) {
                     inpRekIdBayar.innerHTML = '<option value="">-- Pilih --</option>';
                     reks.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = `${r.bank} - ${r.norek} (${r.an})`; inpRekIdBayar.appendChild(o); });
+                }
+            } else if (inpChannelBayar.value === 'Saldo Titipan Agen') {
+                if (containerRekBayar) containerRekBayar.style.display = 'none';
+                
+                const selOrder = document.getElementById('selOrder');
+                const trxId = selOrder ? selOrder.value : '';
+                if (trxId) {
+                    if (valSaldoTitipan) valSaldoTitipan.textContent = 'Memuat...';
+                    if (infoSaldoTitipan) infoSaldoTitipan.style.display = 'block';
+
+                    const { data: trx } = await supabase.from('transaksi').select('agen').eq('id', trxId).single();
+                    const agenName = trx?.agen?.nama || '';
+                    if (agenName) {
+                        const { data: fins } = await supabase.from('keuangan').select('nominal, tipe, kategori').eq('agen_name', agenName);
+                        let saldo = 0;
+                        (fins || []).forEach(f => {
+                            const nom = parseFloat(f.nominal) || 0;
+                            const isDepositIn = f.kategori === 'Titipan Dana Agen' && f.tipe === 'pemasukan';
+                            const isDepositOut = ['Pemakaian Titipan Agen', 'Penarikan Titipan Agen'].includes(f.kategori) || (f.kategori === 'Titipan Dana Agen' && f.tipe === 'pengeluaran');
+                            if (isDepositIn) saldo += nom;
+                            else if (isDepositOut) saldo -= nom;
+                        });
+                        if (valSaldoTitipan) valSaldoTitipan.textContent = window.formatRp ? window.formatRp(saldo) : `Rp ${saldo.toLocaleString('id-ID')}`;
+                    } else {
+                        if (valSaldoTitipan) valSaldoTitipan.textContent = 'Rp 0 (Tanpa Agen)';
+                    }
+                } else {
+                    window.showAlert ? window.showAlert('Pilih Order Terlebih Dahulu', 'warning') : alert('Pilih Order Terlebih Dahulu');
+                    inpChannelBayar.value = 'Tunai';
                 }
             } else {
                 if (containerRekBayar) containerRekBayar.style.display = 'none';
