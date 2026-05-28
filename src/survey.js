@@ -79,6 +79,7 @@ const selectedRatings = {}; // format: { hewan: 5, kandang: 4, ... }
 document.addEventListener('DOMContentLoaded', () => {
     initElements();
     renderAspects();
+    loadBusinessLogo();
 });
 
 function initElements() {
@@ -279,5 +280,20 @@ async function handleFormSubmit(e) {
         
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = originalBtnText;
+    }
+}
+
+// Mengambil foto logo identitas bisnis dari master_data PROFILE di Supabase
+async function loadBusinessLogo() {
+    try {
+        const { data, error } = await supabase.from('master_data').select('val').eq('key', 'PROFILE').single();
+        if (!error && data && data.val && data.val.logo) {
+            const logoImg = document.querySelector('.logo-img');
+            if (logoImg) {
+                logoImg.src = data.val.logo;
+            }
+        }
+    } catch (e) {
+        console.warn("Gagal memuat logo profil bisnis secara dinamis:", e);
     }
 }
