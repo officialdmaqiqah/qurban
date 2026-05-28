@@ -141,20 +141,21 @@ function syncRoleFormState() {
     if (formContent) formContent.style.display = 'block';
     
     if (currentRole === 'Agen') {
-        // Hamba Allah / Anonim tidak diperkenankan untuk Agen agar akuntabel
-        isAnonymous = false;
-        if (anonToggleWrapper) anonToggleWrapper.style.display = 'none';
-        
         if (!loggedInUser) {
+            // Tampilkan switcher Hamba Allah (Anonim) untuk Mitra Non-Login
+            if (anonToggleWrapper) anonToggleWrapper.style.display = 'flex';
             if (inpNama) {
                 inpNama.disabled = false; // Izinkan input nama manual untuk agen eksternal/tidak terdaftar
                 inpNama.style.background = '';
                 inpNama.style.cursor = '';
-                if (inpNama.value === 'Hamba Allah') {
+                if (inpNama.value === 'Hamba Allah' && !isAnonymous) {
                     inpNama.value = '';
                 }
             }
         } else {
+            // Sembunyikan switcher Hamba Allah & kunci nama jika sudah login otomatis
+            isAnonymous = false;
+            if (anonToggleWrapper) anonToggleWrapper.style.display = 'none';
             if (inpNama) {
                 inpNama.value = loggedInUser.full_name;
                 inpNama.disabled = true; // Kunci input nama
@@ -200,7 +201,6 @@ function initElements() {
     const inpAlamat = document.getElementById('inpAlamat');
 
     anonToggle.addEventListener('click', () => {
-        if (currentRole === 'Agen') return; // Cegah anonim untuk Agen
         isAnonymous = !isAnonymous;
         if (isAnonymous) {
             anonToggle.classList.add('active');
