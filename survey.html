@@ -610,6 +610,11 @@
                     
                     <!-- Form Content Wrapper for conditional display -->
                     <div id="surveyFormContent">
+                        <!-- Friendly Login Tip for unregistered/registered agents -->
+                        <div id="surveyLoginTip" style="display: none; padding: 0.85rem 1.25rem; background: rgba(16, 185, 129, 0.05); border: 1px dashed rgba(16, 185, 129, 0.2); border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.8rem; line-height: 1.4; color: var(--text-muted);">
+                            ℹ️ <strong>Tips Mitra:</strong> Jika Anda sudah memiliki akun, silakan <a href="login.html?redirect=survey.html?role=agen" style="color: var(--primary); font-weight: 700; text-decoration: none;">Login di sini</a> agar Nama Anda terisi otomatis.
+                        </div>
+
                         <!-- 2. Informasi Identitas -->
                         <div class="identity-box">
                             <div class="identity-header">
@@ -647,18 +652,6 @@
                         <button type="submit" class="btn-submit-survey" id="btnSubmit">
                             <span>Kirim Penilaian</span>
                         </button>
-                    </div>
-
-                    <!-- Login Prompt for Agents (Hidden by default) -->
-                    <div id="surveyLoginPrompt" style="display: none; padding: 2rem 1.5rem; background: rgba(16, 185, 129, 0.03); border: 1.5px dashed rgba(16, 185, 129, 0.2); border-radius: var(--radius-lg); margin-top: 1rem; text-align: center; animation: fadeIn 0.4s ease-out;">
-                        <div style="font-size: 2.5rem; margin-bottom: 1.25rem; color: var(--primary);">🔐</div>
-                        <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Akses Khusus Mitra Terverifikasi</h3>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; max-width: 380px; margin: 0 auto 1.5rem;">
-                            Pengisian kuesioner khusus Mitra Marketing/Reseller memerlukan login akun terdaftar agar penilaian Anda tercatat secara resmi & akuntabel.
-                        </p>
-                        <a href="login.html?redirect=survey.html?role=agen" class="btn-submit-survey" style="display: inline-flex; width: auto; padding: 0.75rem 2rem; font-size: 0.9rem; text-decoration: none; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2);">
-                            Login ke Dashboard Mitra
-                        </a>
                     </div>
                 </form>
             </div>

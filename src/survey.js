@@ -134,9 +134,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Menyelaraskan status form sesuai pilihan peran
 function syncRoleFormState() {
     const formContent = document.getElementById('surveyFormContent');
-    const loginPrompt = document.getElementById('surveyLoginPrompt');
+    const loginTip = document.getElementById('surveyLoginTip');
     const anonToggleWrapper = document.getElementById('anonToggle');
     const inpNama = document.getElementById('inpNama');
+    
+    // Form isi selalu tampil
+    if (formContent) formContent.style.display = 'block';
     
     if (currentRole === 'Agen') {
         // Hamba Allah / Anonim tidak diperkenankan untuk Agen agar akuntabel
@@ -144,13 +147,19 @@ function syncRoleFormState() {
         if (anonToggleWrapper) anonToggleWrapper.style.display = 'none';
         
         if (!loggedInUser) {
-            // Sembunyikan isian form & tampilkan perintah login
-            if (formContent) formContent.style.display = 'none';
-            if (loginPrompt) loginPrompt.style.display = 'block';
+            // Tampilkan tip login opsional di bagian atas form
+            if (loginTip) loginTip.style.display = 'block';
+            if (inpNama) {
+                inpNama.disabled = false; // Izinkan input nama manual untuk agen eksternal/tidak terdaftar
+                inpNama.style.background = '';
+                inpNama.style.cursor = '';
+                if (inpNama.value === 'Hamba Allah') {
+                    inpNama.value = '';
+                }
+            }
         } else {
-            // Tampilkan isian form & kunci nama sesuai akun loginnya
-            if (formContent) formContent.style.display = 'block';
-            if (loginPrompt) loginPrompt.style.display = 'none';
+            // Sembunyikan tip login & kunci nama agen yang login otomatis
+            if (loginTip) loginTip.style.display = 'none';
             if (inpNama) {
                 inpNama.value = loggedInUser.full_name;
                 inpNama.disabled = true; // Kunci input nama
@@ -159,10 +168,9 @@ function syncRoleFormState() {
             }
         }
     } else {
-        // Sohibul Qurban (Konsumen): Tampilkan normal & aktifkan anonim switcher
+        // Sohibul Qurban (Konsumen): Aktifkan anonim switcher & sembunyikan tip login
         if (anonToggleWrapper) anonToggleWrapper.style.display = 'flex';
-        if (formContent) formContent.style.display = 'block';
-        if (loginPrompt) loginPrompt.style.display = 'none';
+        if (loginTip) loginTip.style.display = 'none';
         
         if (inpNama) {
             inpNama.disabled = false;
