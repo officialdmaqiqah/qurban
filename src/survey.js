@@ -74,13 +74,107 @@ const RATING_LABELS = {
 
 let currentRole = 'Sohibul Qurban';
 let isAnonymous = false;
+let loggedInUser = null;
 const selectedRatings = {}; // format: { hewan: 5, kandang: 4, ... }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Cek Sesi Akun Login (Mitra)
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+            const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', session.user.id).single();
+            if (profile) {
+                loggedInUser = profile;
+                console.log('[Survey] Mitra terverifikasi login:', loggedInUser.full_name);
+            }
+        }
+    } catch (e) {
+        console.warn("Gagal mengambil sesi login:", e);
+    }
+
     initElements();
+    
+    // 2. Cek Parameter URL untuk Kunci Peran
+    const urlParams = new URLSearchParams(window.location.search);
+    const roleParam = urlParams.get('role');
+    
+    if (roleParam === 'sohibul') {
+        currentRole = 'Sohibul Qurban';
+        // Sembunyikan selektor peran sepenuhnya
+        const roleSelectorGroup = document.querySelector('.role-selector')?.closest('.form-group');
+        if (roleSelectorGroup) roleSelectorGroup.style.display = 'none';
+        
+        // Ubah judul agar presisi
+        const headerTitle = document.querySelector('.survey-header h1');
+        if (headerTitle) headerTitle.innerHTML = 'Survey Kepuasan Sohibul Qurban';
+    } else if (roleParam === 'agen' || roleParam === 'marketing' || roleParam === 'reseller') {
+        currentRole = 'Agen';
+        // Sembunyikan selektor peran sepenuhnya
+        const roleSelectorGroup = document.querySelector('.role-selector')?.closest('.form-group');
+        if (roleSelectorGroup) roleSelectorGroup.style.display = 'none';
+        
+        // Ubah judul agar presisi
+        const headerTitle = document.querySelector('.survey-header h1');
+        if (headerTitle) headerTitle.innerHTML = 'Survey Kepuasan Mitra Marketing/Reseller';
+        
+        // Tandai aktif pada card di memori
+        const agenCard = document.querySelector('.role-card[data-role="Agen"]');
+        const sohibulCard = document.querySelector('.role-card[data-role="Sohibul Qurban"]');
+        if (agenCard && sohibulCard) {
+            sohibulCard.classList.remove('active');
+            agenCard.classList.add('active');
+        }
+    }
+
     renderAspects();
+    syncRoleFormState();
     loadBusinessLogo();
 });
+
+// Menyelaraskan status form sesuai pilihan peran
+function syncRoleFormState() {
+    const formContent = document.getElementById('surveyFormContent');
+    const loginPrompt = document.getElementById('surveyLoginPrompt');
+    const anonToggleWrapper = document.getElementById('anonToggle');
+    const inpNama = document.getElementById('inpNama');
+    
+    if (currentRole === 'Agen') {
+        // Hamba Allah / Anonim tidak diperkenankan untuk Agen agar akuntabel
+        isAnonymous = false;
+        if (anonToggleWrapper) anonToggleWrapper.style.display = 'none';
+        
+        if (!loggedInUser) {
+            // Sembunyikan isian form & tampilkan perintah login
+            if (formContent) formContent.style.display = 'none';
+            if (loginPrompt) loginPrompt.style.display = 'block';
+        } else {
+            // Tampilkan isian form & kunci nama sesuai akun loginnya
+            if (formContent) formContent.style.display = 'block';
+            if (loginPrompt) loginPrompt.style.display = 'none';
+            if (inpNama) {
+                inpNama.value = loggedInUser.full_name;
+                inpNama.disabled = true; // Kunci input nama
+                inpNama.style.background = 'rgba(255, 255, 255, 0.02)';
+                inpNama.style.cursor = 'not-allowed';
+            }
+        }
+    } else {
+        // Sohibul Qurban (Konsumen): Tampilkan normal & aktifkan anonim switcher
+        if (anonToggleWrapper) anonToggleWrapper.style.display = 'flex';
+        if (formContent) formContent.style.display = 'block';
+        if (loginPrompt) loginPrompt.style.display = 'none';
+        
+        if (inpNama) {
+            inpNama.disabled = false;
+            inpNama.style.background = '';
+            inpNama.style.cursor = '';
+            // Reset nama jika bukan anonim
+            if (inpNama.value === 'Hamba Allah' && !isAnonymous) {
+                inpNama.value = '';
+            }
+        }
+    }
+}
 
 function initElements() {
     // 1. Selector Peran (Role Selector)
@@ -91,8 +185,9 @@ function initElements() {
             card.classList.add('active');
             currentRole = card.dataset.role;
             
-            // Re-render aspek
+            // Render aspek & selaraskan status form
             renderAspects();
+            syncRoleFormState();
         });
     });
 
@@ -103,6 +198,7 @@ function initElements() {
     const inpAlamat = document.getElementById('inpAlamat');
 
     anonToggle.addEventListener('click', () => {
+        if (currentRole === 'Agen') return; // Cegah anonim untuk Agen
         isAnonymous = !isAnonymous;
         if (isAnonymous) {
             anonToggle.classList.add('active');

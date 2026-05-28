@@ -608,44 +608,58 @@
                         </div>
                     </div>
                     
-                    <!-- 2. Informasi Identitas -->
-                    <div class="identity-box">
-                        <div class="identity-header">
-                            <span class="identity-title">📝 Informasi Identitas</span>
-                            <div class="toggle-container" id="anonToggle">
-                                <div class="toggle-switch"></div>
-                                <span class="toggle-label">Hamba Allah (Anonim)</span>
+                    <!-- Form Content Wrapper for conditional display -->
+                    <div id="surveyFormContent">
+                        <!-- 2. Informasi Identitas -->
+                        <div class="identity-box">
+                            <div class="identity-header">
+                                <span class="identity-title">📝 Informasi Identitas</span>
+                                <div class="toggle-container" id="anonToggle">
+                                    <div class="toggle-switch"></div>
+                                    <span class="toggle-label">Hamba Allah (Anonim)</span>
+                                </div>
+                            </div>
+                            <div class="input-grid" id="identityInputs">
+                                <div>
+                                    <input type="text" id="inpNama" class="form-control" placeholder="Nama Lengkap Anda" required>
+                                </div>
+                                <div>
+                                    <input type="text" id="inpAlamat" class="form-control" placeholder="Kota / Wilayah Tempat Tinggal" required>
+                                </div>
                             </div>
                         </div>
-                        <div class="input-grid" id="identityInputs">
-                            <div>
-                                <input type="text" id="inpNama" class="form-control" placeholder="Nama Lengkap Anda" required>
-                            </div>
-                            <div>
-                                <input type="text" id="inpAlamat" class="form-control" placeholder="Kota / Wilayah Tempat Tinggal" required>
+                        
+                        <!-- 3. Aspek Rating Dinamis -->
+                        <div class="form-group">
+                            <label class="form-label" id="ratingSectionLabel">⭐ Penilaian Aspek Pelayanan</label>
+                            <div class="aspects-container" id="aspectsContainer">
+                                <!-- JS will inject aspects here dynamically -->
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- 3. Aspek Rating Dinamis -->
-                    <div class="form-group">
-                        <label class="form-label" id="ratingSectionLabel">⭐ Penilaian Aspek Pelayanan</label>
-                        <div class="aspects-container" id="aspectsContainer">
-                            <!-- JS will inject aspects here dynamically -->
+                        
+                        <!-- 4. Essay / Saran Tertulis -->
+                        <div class="form-group">
+                            <label class="form-label" for="inpEssay">✍️ Kritik, Saran, & Pesan Tambahan</label>
+                            <textarea id="inpEssay" class="form-control essay-textarea" placeholder="Tuliskan ulasan, saran, masukan perbaikan, atau kesan-kesan Anda di sini secara bebas... (Sangat dihargai)"></textarea>
                         </div>
+                        
+                        <!-- Submit button -->
+                        <button type="submit" class="btn-submit-survey" id="btnSubmit">
+                            <span>Kirim Penilaian</span>
+                        </button>
                     </div>
-                    
-                    <!-- 4. Essay / Saran Tertulis -->
-                    <div class="form-group">
-                        <label class="form-label" for="inpEssay">✍️ Kritik, Saran, & Pesan Tambahan</label>
-                        <textarea id="inpEssay" class="form-control essay-textarea" placeholder="Tuliskan ulasan, saran, masukan perbaikan, atau kesan-kesan Anda di sini secara bebas... (Sangat dihargai)"></textarea>
+
+                    <!-- Login Prompt for Agents (Hidden by default) -->
+                    <div id="surveyLoginPrompt" style="display: none; padding: 2rem 1.5rem; background: rgba(16, 185, 129, 0.03); border: 1.5px dashed rgba(16, 185, 129, 0.2); border-radius: var(--radius-lg); margin-top: 1rem; text-align: center; animation: fadeIn 0.4s ease-out;">
+                        <div style="font-size: 2.5rem; margin-bottom: 1.25rem; color: var(--primary);">🔐</div>
+                        <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Akses Khusus Mitra Terverifikasi</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; max-width: 380px; margin: 0 auto 1.5rem;">
+                            Pengisian kuesioner khusus Mitra Marketing/Reseller memerlukan login akun terdaftar agar penilaian Anda tercatat secara resmi & akuntabel.
+                        </p>
+                        <a href="login.html?redirect=survey.html?role=agen" class="btn-submit-survey" style="display: inline-flex; width: auto; padding: 0.75rem 2rem; font-size: 0.9rem; text-decoration: none; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2);">
+                            Login ke Dashboard Mitra
+                        </a>
                     </div>
-                    
-                    <!-- Submit button -->
-                    <button type="submit" class="btn-submit-survey" id="btnSubmit">
-                        <span>Kirim Penilaian</span>
-                    </button>
-                    
                 </form>
             </div>
             
