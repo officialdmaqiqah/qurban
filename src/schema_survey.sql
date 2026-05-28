@@ -24,7 +24,7 @@ ALTER TABLE public.survey_kepuasan ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public insert survey" ON public.survey_kepuasan
     FOR INSERT WITH CHECK (true);
 
--- Kebijakan B: Hanya izinkan user dengan role admin/staff/office/operator atau email tertentu untuk melihat hasil survey (Select)
+-- Kebijakan B: Hanya izinkan user dengan role admin/staff/office/operator atau akun tertentu (termasuk Husni dan Wawan) untuk melihat hasil survey (Select)
 CREATE POLICY "Allow authenticated admins select survey" ON public.survey_kepuasan
     FOR SELECT USING (
         EXISTS (
@@ -32,7 +32,8 @@ CREATE POLICY "Allow authenticated admins select survey" ON public.survey_kepuas
             WHERE profiles.id = auth.uid()
             AND (
                 profiles.role IN ('admin', 'office', 'staf', 'operator') 
-                OR profiles.email IN ('husnimm@gmail.com', 'yahya@example.com')
+                OR LOWER(profiles.email) IN ('husnidm', 'wse82', 'husnimm@gmail.com', 'yahya@example.com')
+                OR profiles.id IN ('9327abcb-7328-494e-be55-d6ad773e452c', '30348fa8-b8f3-4503-a2f7-b87191633738')
             )
         )
     );

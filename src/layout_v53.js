@@ -523,6 +523,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.isAdmin = isAdmin; // Export to window for other scripts
         allowedMenus = profile.allowed_menus || [];
         
+        // Survey Viewer access for Husni (Husnidm) and Wawan (WSE82)
+        const isSurveyViewer = isAdmin || ['husnidm', 'wse82'].includes(userEmail) || ['9327abcb-7328-494e-be55-d6ad773e452c', '30348fa8-b8f3-4503-a2f7-b87191633738'].includes(userId);
+        window.isSurveyViewer = isSurveyViewer;
+        
         if (!isAdmin) {
             const rawPage = window.location.pathname.split('/').pop() || 'index.html';
             const currentPage = rawPage.replace('.html', '');
@@ -530,6 +534,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Normalize allowedMenus for comparison
             const allowedMenusBase = (allowedMenus || []).map(m => m.replace('.html', ''));
+            if (isSurveyViewer) {
+                allowedMenusBase.push('hasil_survey');
+            }
             
             // Check if current page is allowed
             if (!publicPages.includes(currentPage) && !allowedMenusBase.includes(currentPage)) {
@@ -723,6 +730,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                     item.classList.add('active');
                 }
             });
+        }
+    }
+
+    // --- RENDER SIDEBAR SURVEY LINK FOR NON-ADMIN SURVEY VIEWERS ---
+    if (!isAdmin && isSurveyViewer) {
+        const nav = document.querySelector('.sidebar-nav');
+        if (nav && !nav.querySelector('a[href="hasil_survey.html"]')) {
+            const surveyLink = document.createElement('a');
+            surveyLink.href = 'hasil_survey.html';
+            surveyLink.className = 'nav-item';
+            surveyLink.style.cssText = 'color:#10b981 !important; font-weight:600; background:rgba(16,185,129,0.1); border:1px solid #10b981; margin-top:5px;';
+            surveyLink.innerHTML = '📋 Hasil Survey';
+            const lapLink = Array.from(nav.querySelectorAll('.nav-item')).find(a => a.href.includes('laporan.html'));
+            if (lapLink) {
+                lapLink.after(surveyLink);
+            } else {
+                nav.appendChild(surveyLink);
+            }
+            
+            surveyLink.style.setProperty('display', 'flex', 'important');
+            surveyLink.style.setProperty('opacity', '1', 'important');
+            surveyLink.style.setProperty('visibility', 'visible', 'important');
+            if (window.location.pathname.includes('hasil_survey.html')) {
+                surveyLink.classList.add('active');
+            }
         }
     }
 }
