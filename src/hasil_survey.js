@@ -220,7 +220,7 @@ function renderFeedbackCards() {
     filteredSurveyData.forEach(d => {
         const isSohibul = d.tipe_responden === 'Sohibul Qurban';
         const roleBadgeClass = isSohibul ? 'fb-badge sohibul' : 'fb-badge agen';
-        const roleIconHtml = isSohibul ? '<i class="fa-solid fa-user-heart"></i>' : '<i class="fa-solid fa-handshake"></i>';
+        const roleIconHtml = isSohibul ? '<i class="fa-solid fa-circle-user"></i>' : '<i class="fa-solid fa-handshake"></i>';
         
         // Format Nama & Wilayah
         const displayNama = d.nama || 'Hamba Allah';
