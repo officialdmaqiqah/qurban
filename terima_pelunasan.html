@@ -356,6 +356,7 @@
                                 ⚠️ Kelebihan Bayar
                                 <span id="badgeOverpaidCount" style="background:var(--warning); color:#000000; font-size:0.65rem; padding:2px 6px; border-radius:10px; margin-left:5px; display:none;">0</span>
                             </button>
+                            <button class="tab-btn" data-tab="global">⚖️ Pelunasan Global Agen</button>
                         </div>
 
                         <div class="tab-content active" id="tabUnpaid">
@@ -388,6 +389,133 @@
                                     </thead>
                                     <tbody id="tableBodyOverpaid"></tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-content" id="tabGlobal">
+                            <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
+                                <div class="form-group" style="margin-bottom:0.5rem; max-width:400px;">
+                                    <label class="form-label" style="font-weight:600;">⚖️ Pilih Mitra Marketing / Reseller</label>
+                                    <select id="selGlobalAgen" class="form-control" style="font-size:0.95rem; font-weight:600; color:var(--primary); height:45px; border-color:var(--primary);">
+                                        <option value="">-- Pilih Agen --</option>
+                                    </select>
+                                </div>
+                                <div id="containerGlobalSummary" style="display:none; margin-top:1.25rem;">
+                                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+                                        <div class="info-card" style="padding:1rem; border-radius:8px; border:1px solid rgba(251,191,36,0.3); background:rgba(251,191,36,0.02);">
+                                            <div class="label" style="font-size:0.75rem; color:var(--text-muted); font-weight:bold;">1. TOTAL KELEBIHAN DANA</div>
+                                            <div class="value" id="valGlobalTotalOverpaid" style="color:var(--warning); font-size:1.4rem; font-weight:700;">Rp 0</div>
+                                            <div style="font-size:0.65rem; color:var(--text-muted); margin-top:4px;">Kelebihan bayar dari order surplus</div>
+                                        </div>
+                                        <div class="info-card" style="padding:1rem; border-radius:8px; border:1px solid rgba(239,68,68,0.3); background:rgba(239,68,68,0.02);">
+                                            <div class="label" style="font-size:0.75rem; color:var(--text-muted); font-weight:bold;">2. TOTAL SISA TAGIHAN</div>
+                                            <div class="value" id="valGlobalTotalDeficit" style="color:var(--danger); font-size:1.4rem; font-weight:700;">Rp 0</div>
+                                            <div style="font-size:0.65rem; color:var(--text-muted); margin-top:4px;">Kekurangan bayar dari order defisit</div>
+                                        </div>
+                                        <div class="info-card" style="padding:1rem; border-radius:8px; border:1px solid var(--primary); background:rgba(var(--primary-rgb),0.02);">
+                                            <div class="label" style="font-size:0.75rem; color:var(--primary); font-weight:bold;">3. SISA BERSIH (NET BARS)</div>
+                                            <div class="value" id="valGlobalNetDeficit" style="color:var(--primary); font-size:1.6rem; font-weight:700;">Rp 0</div>
+                                            <div style="font-size:0.65rem; color:var(--text-muted); margin-top:4px;">Jumlah bersih wajib bayar (Tagihan - Kelebihan)</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Panel Tombol Aksi Massal -->
+                                    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:1.5rem; background:rgba(16,185,129,0.03); border:1px dashed var(--success); padding:1rem; border-radius:10px; align-items:center;">
+                                        <div style="font-size:0.8rem; flex:1; min-width:200px;">
+                                            <b style="color:var(--success);">💡 Otomatisasi Alur Pengurangan Saldo:</b><br>
+                                            <span style="font-size:0.75rem; color:var(--text-muted);">Pindahkan semua kelebihan dana virtual ke Saldo Titipan Agen, lalu gunakan saldo tersebut untuk memotong sisa tagihan pesanan lain secara otomatis dalam satu klik!</span>
+                                        </div>
+                                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                            <button id="btnGlobalMoveOverpaid" class="btn" style="background:var(--warning); color:#000000; border:none; padding:8px 16px; font-size:0.8rem; font-weight:600; border-radius:6px; cursor:pointer;">
+                                                1. Pindahkan Kelebihan Dana (Surplus)
+                                            </button>
+                                            <button id="btnGlobalOffsetDeficit" class="btn" style="background:var(--success); color:#ffffff; border:none; padding:8px 16px; font-size:0.8rem; font-weight:600; border-radius:6px; cursor:pointer;">
+                                                2. Potong Tagihan Massal (Offset)
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;" class="form-2col">
+                                        <!-- Tabel Kiri: Order Surplus -->
+                                        <div>
+                                            <h4 style="margin-bottom:0.75rem; color:var(--warning); display:flex; justify-content:space-between; align-items:center;">
+                                                <span>💸 1. Order Surplus (Kelebihan)</span>
+                                                <span style="font-size:0.7rem; font-weight:normal;" class="badge badge-warning" id="lblGlobalSurplusCount">0 Order</span>
+                                            </h4>
+                                            <div class="table-responsive" style="max-height:350px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px;">
+                                                <table class="data-table" style="margin:0;">
+                                                    <thead style="position:sticky; top:0; background:var(--bg-card); z-index:10;">
+                                                        <tr>
+                                                            <th>Order ID</th>
+                                                            <th>Konsumen</th>
+                                                            <th>Kelebihan</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="tableBodyGlobalSurplus"></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <!-- Tabel Kanan: Order Defisit -->
+                                        <div>
+                                            <h4 style="margin-bottom:0.75rem; color:var(--danger); display:flex; justify-content:space-between; align-items:center;">
+                                                <span>📋 2. Order Defisit (Tagihan)</span>
+                                                <span style="font-size:0.7rem; font-weight:normal;" class="badge badge-danger" id="lblGlobalDeficitCount">0 Order</span>
+                                            </h4>
+                                            <div class="table-responsive" style="max-height:350px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px;">
+                                                <table class="data-table" style="margin:0;">
+                                                    <thead style="position:sticky; top:0; background:var(--bg-card); z-index:10;">
+                                                        <tr>
+                                                            <th>Order ID</th>
+                                                            <th>Konsumen</th>
+                                                            <th>Sisa Tagihan</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="tableBodyGlobalDeficit"></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Panel Pembayaran Kas Bersih Massal -->
+                                    <div id="panelGlobalNetPay" style="display:none; margin-top:2rem; padding-top:1.5rem; border-top:1px dashed var(--border-color);">
+                                        <h3 style="margin-bottom:1rem; color:var(--primary); display:flex; align-items:center; gap:8px;">💰 Pelunasan Sisa Bersih Secara Massal (Net)</h3>
+                                        <div style="background:rgba(var(--primary-rgb),0.03); border:1px solid var(--primary); padding:1.25rem; border-radius:12px;">
+                                            <div class="form-2col" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                                                <div class="form-group" style="margin-bottom:0">
+                                                    <label class="form-label">Nominal Setoran Bersih (Rp)</label>
+                                                    <input type="text" id="inpGlobalNetNominal" class="form-control" placeholder="0" style="font-size:1.15rem; font-weight:600; color:var(--success);">
+                                                    <div style="font-size:0.65rem; color:var(--text-muted); margin-top:4px;">Masukkan jumlah uang fisik/transfer yang diterima dari agen untuk melunasi sisa bersihnya.</div>
+                                                </div>
+                                                <div class="form-group" style="margin-bottom:0">
+                                                    <label class="form-label">Channel Pembayaran</label>
+                                                    <select id="inpGlobalNetChannel" class="form-control">
+                                                        <option value="Tunai">💵 Tunai</option>
+                                                        <option value="Transfer Bank">🏦 Transfer Bank</option>
+                                                        <option value="QRIS">📱 QRIS</option>
+                                                        <option value="Lainnya">Lainnya</option>
+                                                    </select>
+                                                    <div id="containerGlobalNetRek" style="display:none; margin-top:0.5rem;">
+                                                        <label class="form-label" style="font-size:0.7rem; color:var(--primary);">💳 Rekening Tujuan</label>
+                                                        <select id="inpGlobalNetRekId" class="form-control" style="font-size:0.8rem;"></select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-2col" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                                                <div class="form-group" style="margin-bottom:0">
+                                                    <label class="form-label">Tanggal Pembayaran</label>
+                                                    <input type="date" id="inpGlobalNetTgl" class="form-control">
+                                                </div>
+                                                <div class="form-group" style="margin-bottom:0">
+                                                    <label class="form-label">📸 Bukti Bayar (Opsional)</label>
+                                                    <input type="file" id="inpGlobalNetBukti" class="form-control" accept="image/*" style="font-size:0.8rem;">
+                                                </div>
+                                            </div>
+                                            <button id="btnGlobalNetPaySubmit" class="btn btn-primary" style="width:100%; font-size:1rem; padding:0.85rem; color:#ffffff; font-weight:bold; margin-top:0.5rem;">
+                                                🚀 Eksekusi Pelunasan Massal & Distribusikan Dana
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -453,6 +581,7 @@
                     <select id="inpChannelRefund" class="form-control">
                         <option value="Tunai">💵 Tunai</option>
                         <option value="Transfer Bank">🏦 Transfer Bank</option>
+                        <option value="Saldo Titipan Agen">💰 Saldo Titipan Agen</option>
                         <option value="Kas Operasional">🏷️ Kas Operasional</option>
                         <option value="Lainnya">🧩 Lainnya</option>
                     </select>

@@ -381,6 +381,395 @@ if (typeof window !== 'undefined') {
     window.syncAllBalances = syncAllBalances;
     window.syncOneTrx = syncOneTrx;
     window.renderList = renderList;
+
+    // --- FITUR PELUNASAN GLOBAL AGEN ---
+    window.renderGlobalTab = async () => {
+        const selGlobalAgen = document.getElementById('selGlobalAgen');
+        const containerGlobalSummary = document.getElementById('containerGlobalSummary');
+        const valGlobalTotalOverpaid = document.getElementById('valGlobalTotalOverpaid');
+        const valGlobalTotalDeficit = document.getElementById('valGlobalTotalDeficit');
+        const valGlobalNetDeficit = document.getElementById('valGlobalNetDeficit');
+        const tableBodyGlobalSurplus = document.getElementById('tableBodyGlobalSurplus');
+        const tableBodyGlobalDeficit = document.getElementById('tableBodyGlobalDeficit');
+        const lblGlobalSurplusCount = document.getElementById('lblGlobalSurplusCount');
+        const lblGlobalDeficitCount = document.getElementById('lblGlobalDeficitCount');
+        const panelGlobalNetPay = document.getElementById('panelGlobalNetPay');
+
+        if (!selGlobalAgen) return;
+        const agenName = selGlobalAgen.value;
+        if (!agenName) {
+            if (containerGlobalSummary) containerGlobalSummary.style.display = 'none';
+            return;
+        }
+
+        // Ambil data transaksi milik agen tersebut
+        const { data: trxs, error } = await supabase.from('transaksi').select('*').ilike('agen->>nama', agenName);
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        // Filter order surplus (kelebihan) & defisit (tagihan)
+        const surplusOrders = (trxs || []).filter(t => {
+            const over1 = Math.floor(t.total_overpaid || 0);
+            const over2 = Math.floor(t.total_paid || 0) - Math.floor(t.total_deal || 0);
+            return over1 > 1000 || over2 > 1000;
+        });
+
+        const deficitOrders = (trxs || []).filter(t => {
+            const sisa = (t.total_deal || 0) - (t.total_paid || 0);
+            return sisa > 1000;
+        }).sort((a,b) => new Date(a.tgl_trx) - new Date(b.tgl_trx));
+
+        // Kalkulasi total
+        const totalOverpaid = surplusOrders.reduce((s, t) => s + Math.max(t.total_overpaid || 0, (t.total_paid || 0) - (t.total_deal || 0)), 0);
+        const totalDeficit = deficitOrders.reduce((s, t) => s + ((t.total_deal || 0) - (t.total_paid || 0)), 0);
+        const netDeficit = Math.max(0, totalDeficit - totalOverpaid);
+
+        // Update UI
+        if (valGlobalTotalOverpaid) valGlobalTotalOverpaid.textContent = window.formatRp ? window.formatRp(totalOverpaid) : `Rp ${totalOverpaid.toLocaleString('id-ID')}`;
+        if (valGlobalTotalDeficit) valGlobalTotalDeficit.textContent = window.formatRp ? window.formatRp(totalDeficit) : `Rp ${totalDeficit.toLocaleString('id-ID')}`;
+        if (valGlobalNetDeficit) valGlobalNetDeficit.textContent = window.formatRp ? window.formatRp(netDeficit) : `Rp ${netDeficit.toLocaleString('id-ID')}`;
+
+        if (lblGlobalSurplusCount) lblGlobalSurplusCount.textContent = `${surplusOrders.length} Order`;
+        if (lblGlobalDeficitCount) lblGlobalDeficitCount.textContent = `${deficitOrders.length} Order`;
+
+        // Render Tabel Surplus
+        if (tableBodyGlobalSurplus) {
+            tableBodyGlobalSurplus.innerHTML = surplusOrders.length === 0 ? '<tr><td colspan="3" style="text-align:center; padding:15px; color:var(--text-muted);">Tidak ada order surplus</td></tr>' : '';
+            surplusOrders.forEach(t => {
+                const tr = document.createElement('tr');
+                const over = Math.max(t.total_overpaid || 0, (t.total_paid || 0) - (t.total_deal || 0));
+                tr.innerHTML = `
+                    <td style="font-weight:700; color:var(--primary);">${t.id}</td>
+                    <td>${t.customer?.nama || '-'}</td>
+                    <td style="font-weight:700; color:var(--warning);">${window.formatRp ? window.formatRp(over) : `Rp ${over.toLocaleString('id-ID')}`}</td>
+                `;
+                tableBodyGlobalSurplus.appendChild(tr);
+            });
+        }
+
+        // Render Tabel Defisit
+        if (tableBodyGlobalDeficit) {
+            tableBodyGlobalDeficit.innerHTML = deficitOrders.length === 0 ? '<tr><td colspan="3" style="text-align:center; padding:15px; color:var(--text-muted);">Tidak ada order defisit</td></tr>' : '';
+            deficitOrders.forEach(t => {
+                const tr = document.createElement('tr');
+                const sisa = (t.total_deal || 0) - (t.total_paid || 0);
+                tr.innerHTML = `
+                    <td style="font-weight:700; color:var(--primary);">${t.id}</td>
+                    <td>${t.customer?.nama || '-'}</td>
+                    <td style="font-weight:700; color:var(--danger);">${window.formatRp ? window.formatRp(sisa) : `Rp ${sisa.toLocaleString('id-ID')}`}</td>
+                `;
+                tableBodyGlobalDeficit.appendChild(tr);
+            });
+        }
+
+        if (containerGlobalSummary) containerGlobalSummary.style.display = 'block';
+
+        if (panelGlobalNetPay) {
+            panelGlobalNetPay.style.display = netDeficit > 1000 ? 'block' : 'none';
+            const inpGlobalNetNominal = document.getElementById('inpGlobalNetNominal');
+            if (inpGlobalNetNominal) inpGlobalNetNominal.value = window.formatNum ? window.formatNum(netDeficit) : netDeficit;
+        }
+    };
+
+    window.eksekusiPindahkanKelebihanMassal = async () => {
+        const selGlobalAgen = document.getElementById('selGlobalAgen');
+        if (!selGlobalAgen) return;
+        const agenName = selGlobalAgen.value;
+        if (!agenName) return window.showAlert("Pilih Agen terlebih dahulu!", "warning");
+
+        window.showConfirm(`Pindahkan semua kelebihan dana virtual milik <b>${agenName}</b> ke Saldo Titipan Agen?`, async () => {
+            try {
+                window.showToast("Memindahkan saldo...", "info");
+                
+                const { data: trxs } = await supabase.from('transaksi').select('*').ilike('agen->>nama', agenName);
+                const surplusOrders = (trxs || []).filter(t => {
+                    const over1 = Math.floor(t.total_overpaid || 0);
+                    const over2 = Math.floor(t.total_paid || 0) - Math.floor(t.total_deal || 0);
+                    return over1 > 1000 || over2 > 1000;
+                });
+
+                if (surplusOrders.length === 0) {
+                    return window.showAlert("Tidak ada order surplus yang perlu dipindahkan.", "info");
+                }
+
+                const tgl = window.getLocalDate ? window.getLocalDate() : new Date().toISOString().split('T')[0];
+                const inserts = [];
+
+                for (const trx of surplusOrders) {
+                    const nominal = Math.max(trx.total_overpaid || 0, (trx.total_paid || 0) - (trx.total_deal || 0));
+                    const refId = 'REF-' + Date.now().toString().slice(-6) + '-' + Math.floor(Math.random() * 100);
+                    const depId = 'DEP-' + Date.now().toString().slice(-6) + '-' + Math.floor(Math.random() * 100) + '-REF';
+
+                    const oldOver = (trx.total_overpaid || 0);
+                    const oldPaid = (trx.total_paid || 0);
+                    const updatedHistory = [...(trx.history_bayar || []), { 
+                        payId: refId, 
+                        tgl, 
+                        nominal: -Math.abs(nominal), 
+                        channel: 'Saldo Titipan Agen', 
+                        category: 'Pengembalian Dana',
+                        reason: 'GLOBAL OFFSET REFUND'
+                    }];
+
+                    const deductOverpaid = Math.min(nominal, oldOver);
+                    const deductPaid = nominal - deductOverpaid;
+
+                    await supabase.from('transaksi').update({ 
+                        total_overpaid: Math.max(0, oldOver - deductOverpaid), 
+                        total_paid: Math.max(0, oldPaid - deductPaid),
+                        history_bayar: updatedHistory
+                    }).eq('id', trx.id);
+
+                    inserts.push({ 
+                        id: refId, 
+                        tipe: 'pengeluaran', 
+                        tanggal: tgl, 
+                        kategori: 'Pengembalian Dana', 
+                        nominal, 
+                        channel: 'Saldo Titipan Agen', 
+                        related_trx_id: trx.id,
+                        keterangan: `Refund Kelebihan (Global Offset) ${trx.id} - ${trx.customer?.nama}`
+                    });
+
+                    inserts.push({
+                        id: depId,
+                        tipe: 'pemasukan',
+                        tanggal: tgl,
+                        kategori: 'Titipan Dana Agen',
+                        nominal,
+                        channel: 'Saldo Titipan Agen',
+                        agen_name: agenName,
+                        related_trx_id: trx.id,
+                        keterangan: `Pengembalian refund ke saldo otomatis untuk ${trx.id} (Global Offset)`
+                    });
+                }
+
+                if (inserts.length > 0) {
+                    await supabase.from('keuangan').insert(inserts);
+                }
+
+                window.showAlert("Kelebihan dana berhasil dipindahkan ke Saldo Titipan Agen!", "success", async () => {
+                    await window.renderGlobalTab();
+                    if (window.renderList) await window.renderList();
+                    const rStats = document.getElementById('statJmlBelumLunas');
+                    if (rStats) window.location.reload(); // Reload jika stat elements ada
+                });
+            } catch (e) {
+                console.error(e);
+                window.showAlert("Gagal memindahkan saldo: " + e.message, "danger");
+            }
+        });
+    };
+
+    window.eksekusiPotongTagihanMassal = async () => {
+        const selGlobalAgen = document.getElementById('selGlobalAgen');
+        if (!selGlobalAgen) return;
+        const agenName = selGlobalAgen.value;
+        if (!agenName) return window.showAlert("Pilih Agen terlebih dahulu!", "warning");
+
+        // Hitung total saldo titipan saat ini
+        const { data: fins } = await supabase.from('keuangan').select('nominal, tipe, kategori').eq('agen_name', agenName);
+        let depositBalance = 0;
+        (fins || []).forEach(f => {
+            const nom = parseFloat(f.nominal) || 0;
+            const isDepositIn = f.kategori === 'Titipan Dana Agen' && f.tipe === 'pemasukan';
+            const isDepositOut = ['Pemakaian Titipan Agen', 'Penarikan Titipan Agen'].includes(f.kategori) || (f.kategori === 'Titipan Dana Agen' && f.tipe === 'pengeluaran');
+            if (isDepositIn) depositBalance += nom;
+            else if (isDepositOut) depositBalance -= nom;
+        });
+
+        if (depositBalance <= 1000) {
+            return window.showAlert(`Saldo Titipan Agen <b>${agenName}</b> kosong atau kurang untuk pemotongan. Silakan klik tombol <b>1. Pindahkan Kelebihan Dana</b> terlebih dahulu.`, "warning");
+        }
+
+        window.showConfirm(`Gunakan Saldo Titipan Agen <b>${window.formatRp ? window.formatRp(depositBalance) : `Rp ${depositBalance.toLocaleString('id-ID')}`}</b> untuk memotong sisa tagihan secara otomatis?`, async () => {
+            try {
+                window.showToast("Memotong tagihan...", "info");
+                
+                const { data: trxs } = await supabase.from('transaksi').select('*').ilike('agen->>nama', agenName);
+                const deficitOrders = (trxs || []).filter(t => {
+                    const sisa = (t.total_deal || 0) - (t.total_paid || 0);
+                    return sisa > 1000;
+                }).sort((a, b) => new Date(a.tgl_trx) - new Date(b.tgl_trx));
+
+                if (deficitOrders.length === 0) {
+                    return window.showAlert("Tidak ada sisa tagihan order yang perlu dipotong.", "info");
+                }
+
+                const tgl = window.getLocalDate ? window.getLocalDate() : new Date().toISOString().split('T')[0];
+                const inserts = [];
+                let remainingDeposit = depositBalance;
+
+                for (const trx of deficitOrders) {
+                    if (remainingDeposit <= 1000) break;
+
+                    const sisa = (trx.total_deal || 0) - (trx.total_paid || 0);
+                    const allocatePay = Math.min(remainingDeposit, sisa);
+
+                    const payId = 'PAY-' + Date.now().toString().slice(-6) + '-' + Math.floor(Math.random() * 100);
+                    const depId = 'DEP-' + Date.now().toString().slice(-6) + '-' + Math.floor(Math.random() * 100) + '-USE';
+
+                    const updatedHistory = [...(trx.history_bayar || []), { 
+                        payId, 
+                        tgl, 
+                        nominal: allocatePay, 
+                        channel: 'Saldo Titipan Agen', 
+                        category: 'Pelunasan Order',
+                        reason: 'GLOBAL OFFSET PAYMENT'
+                    }];
+
+                    await supabase.from('transaksi').update({ 
+                        total_paid: trx.total_paid + allocatePay, 
+                        total_overpaid: trx.total_overpaid || 0,
+                        history_bayar: updatedHistory
+                    }).eq('id', trx.id);
+
+                    inserts.push({ 
+                        id: payId, 
+                        tipe: 'pemasukan', 
+                        tanggal: tgl, 
+                        kategori: 'Pelunasan Order', 
+                        nominal: allocatePay, 
+                        channel: 'Saldo Titipan Agen', 
+                        related_trx_id: trx.id, 
+                        keterangan: `Pelunasan Global Offset ${trx.id} - ${trx.customer?.nama}`
+                    });
+
+                    inserts.push({
+                        id: depId,
+                        tipe: 'pengeluaran',
+                        tanggal: tgl,
+                        kategori: 'Pemakaian Titipan Agen',
+                        nominal: allocatePay,
+                        channel: 'Saldo Titipan Agen',
+                        agen_name: agenName,
+                        related_trx_id: trx.id,
+                        keterangan: `Pemakaian saldo otomatis (Global Offset) untuk ${trx.id} - ${trx.customer?.nama}`
+                    });
+
+                    remainingDeposit -= allocatePay;
+                }
+
+                if (inserts.length > 0) {
+                    await supabase.from('keuangan').insert(inserts);
+                }
+
+                const usedStr = window.formatRp ? window.formatRp(depositBalance - remainingDeposit) : `Rp ${(depositBalance - remainingDeposit).toLocaleString('id-ID')}`;
+                window.showAlert(`Tagihan berhasil dipotong menggunakan Saldo Titipan! Saldo yang digunakan: <b>${usedStr}</b>`, "success", async () => {
+                    await window.renderGlobalTab();
+                    if (window.renderList) await window.renderList();
+                    const rStats = document.getElementById('statJmlBelumLunas');
+                    if (rStats) window.location.reload();
+                });
+            } catch (e) {
+                console.error(e);
+                window.showAlert("Gagal memotong tagihan: " + e.message, "danger");
+            }
+        });
+    };
+
+    window.eksekusiBayarMassalSisa = async () => {
+        const selGlobalAgen = document.getElementById('selGlobalAgen');
+        if (!selGlobalAgen) return;
+        const agenName = selGlobalAgen.value;
+        if (!agenName) return window.showAlert("Pilih Agen terlebih dahulu!", "warning");
+
+        const inpGlobalNetNominal = document.getElementById('inpGlobalNetNominal');
+        const inpGlobalNetChannel = document.getElementById('inpGlobalNetChannel');
+        const inpGlobalNetRekId = document.getElementById('inpGlobalNetRekId');
+        const inpGlobalNetTgl = document.getElementById('inpGlobalNetTgl');
+        const inpGlobalNetBukti = document.getElementById('inpGlobalNetBukti');
+
+        const nominalInput = window.parseNum ? window.parseNum(inpGlobalNetNominal.value) : parseFloat(inpGlobalNetNominal.value.replace(/[^0-9.-]+/g,"") || 0);
+        const chan = inpGlobalNetChannel.value;
+        const tgl = inpGlobalNetTgl.value || (window.getLocalDate ? window.getLocalDate() : new Date().toISOString().split('T')[0]);
+        
+        if (nominalInput <= 0) return window.showAlert("Masukkan nominal setoran yang valid!", "warning");
+
+        let finalChannel = chan;
+        if(chan === 'Transfer Bank' && inpGlobalNetRekId.value) {
+            finalChannel = `TF ${inpGlobalNetRekId.options[inpGlobalNetRekId.selectedIndex].textContent}`;
+        }
+
+        const amtStr = window.formatRp ? window.formatRp(nominalInput) : `Rp ${nominalInput.toLocaleString('id-ID')}`;
+        window.showConfirm(`Eksekusi pelunasan massal sebesar <b>${amtStr}</b> untuk melunasi tagihan bersih milik <b>${agenName}</b>?`, async () => {
+            try {
+                window.showToast("Mendistribusikan dana...", "info");
+
+                let buktiUrl = null;
+                if(inpGlobalNetBukti?.files.length > 0) { 
+                    const b64 = await compressImage(inpGlobalNetBukti.files[0]); 
+                    buktiUrl = await uploadToGDrive(b64, 'BUKTI_GLOBAL_PAY'); 
+                }
+
+                const { data: trxs } = await supabase.from('transaksi').select('*').ilike('agen->>nama', agenName);
+                const deficitOrders = (trxs || []).filter(t => {
+                    const sisa = (t.total_deal || 0) - (t.total_paid || 0);
+                    return sisa > 1000;
+                }).sort((a, b) => new Date(a.tgl_trx) - new Date(b.tgl_trx));
+
+                if (deficitOrders.length === 0) {
+                    return window.showAlert("Tidak ada sisa tagihan order yang perlu dilunasi.", "info");
+                }
+
+                const inserts = [];
+                let remainingPay = nominalInput;
+
+                for (const trx of deficitOrders) {
+                    if (remainingPay <= 1000) break;
+
+                    const sisa = (trx.total_deal || 0) - (trx.total_paid || 0);
+                    const allocatePay = Math.min(remainingPay, sisa);
+                    const over = Math.max(0, allocatePay - sisa);
+
+                    const payId = 'PAY-' + Date.now().toString().slice(-6) + '-' + Math.floor(Math.random() * 100);
+
+                    const updatedHistory = [...(trx.history_bayar || []), { 
+                        payId, 
+                        tgl, 
+                        nominal: allocatePay, 
+                        channel: finalChannel, 
+                        buktiUrl,
+                        category: 'Pelunasan Order',
+                        reason: 'GLOBAL NET PAYMENT'
+                    }];
+
+                    await supabase.from('transaksi').update({ 
+                        total_paid: trx.total_paid + allocatePay, 
+                        total_overpaid: (trx.total_overpaid || 0) + over,
+                        history_bayar: updatedHistory
+                    }).eq('id', trx.id);
+
+                    inserts.push({ 
+                        id: payId, 
+                        tipe: 'pemasukan', 
+                        tanggal: tgl, 
+                        kategori: 'Pelunasan Order', 
+                        nominal: allocatePay, 
+                        channel: finalChannel, 
+                        related_trx_id: trx.id, 
+                        bukti_url: buktiUrl,
+                        keterangan: `Pelunasan Global Net ${trx.id} - ${trx.customer?.nama}`
+                    });
+
+                    remainingPay -= allocatePay;
+                }
+
+                if (inserts.length > 0) {
+                    await supabase.from('keuangan').insert(inserts);
+                }
+
+                window.showAlert("Pelunasan massal sisa bersih sukses dijalankan!", "success", () => {
+                    window.location.reload();
+                });
+            } catch (e) {
+                console.error(e);
+                window.showAlert("Gagal melakukan pelunasan massal: " + e.message, "danger");
+            }
+        });
+    };
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -735,6 +1124,61 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (document.getElementById('btnSyncBalances')) document.getElementById('btnSyncBalances').addEventListener('click', window.syncAllBalances);
 
+    // --- INITIALIZE FITUR GLOBAL ---
+    try {
+        const { data: mData } = await supabase.from('master_data').select('val').eq('key', 'AGENS').single();
+        const agents = mData?.val || [];
+        const selGlobalAgen = document.getElementById('selGlobalAgen');
+        if (selGlobalAgen) {
+            selGlobalAgen.innerHTML = '<option value="">-- Pilih Agen --</option>';
+            agents.filter(a => a.nama).sort((a,b) => a.nama.localeCompare(b.nama)).forEach(a => {
+                const o = document.createElement('option');
+                o.value = a.nama;
+                o.textContent = a.nama;
+                selGlobalAgen.appendChild(o);
+            });
+            selGlobalAgen.addEventListener('change', window.renderGlobalTab);
+        }
+    } catch (err) {
+        console.error("Gagal memuat daftar agen:", err);
+    }
+
+    const btnGlobalMoveOverpaid = document.getElementById('btnGlobalMoveOverpaid');
+    if (btnGlobalMoveOverpaid) btnGlobalMoveOverpaid.onclick = window.eksekusiPindahkanKelebihanMassal;
+
+    const btnGlobalOffsetDeficit = document.getElementById('btnGlobalOffsetDeficit');
+    if (btnGlobalOffsetDeficit) btnGlobalOffsetDeficit.onclick = window.eksekusiPotongTagihanMassal;
+
+    const btnGlobalNetPaySubmit = document.getElementById('btnGlobalNetPaySubmit');
+    if (btnGlobalNetPaySubmit) btnGlobalNetPaySubmit.onclick = window.eksekusiBayarMassalSisa;
+
+    const inpGlobalNetChannel = document.getElementById('inpGlobalNetChannel');
+    if (inpGlobalNetChannel) {
+        inpGlobalNetChannel.addEventListener('change', async () => {
+            const containerGlobalNetRek = document.getElementById('containerGlobalNetRek');
+            const inpGlobalNetRekId = document.getElementById('inpGlobalNetRekId');
+            if (inpGlobalNetChannel.value === 'Transfer Bank') {
+                const reks = await getBankAccounts();
+                if (containerGlobalNetRek) containerGlobalNetRek.style.display = 'block';
+                if (inpGlobalNetRekId) {
+                    inpGlobalNetRekId.innerHTML = '<option value="">-- Pilih Rekening --</option>';
+                    reks.forEach(r => { 
+                        const o = document.createElement('option'); 
+                        o.value = r.id; 
+                        o.textContent = `${r.bank} - ${r.norek} (${r.an})`; 
+                        inpGlobalNetRekId.appendChild(o); 
+                    });
+                }
+            } else {
+                if (containerGlobalNetRek) containerGlobalNetRek.style.display = 'none';
+            }
+        });
+    }
+
+    const today = (window.getLocalDate ? window.getLocalDate() : new Date().toISOString().split('T')[0]);
+    const inpGlobalNetTgl = document.getElementById('inpGlobalNetTgl');
+    if (inpGlobalNetTgl) inpGlobalNetTgl.value = today;
+
     // Initial Load
     await renderStats();
     await renderList();
@@ -750,6 +1194,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const targetId = 'tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1);
             const target = document.getElementById(targetId);
             if (target) target.classList.add('active');
+
+            if (tabId === 'global') {
+                window.renderGlobalTab();
+            }
         };
     });
 
