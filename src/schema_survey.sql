@@ -20,6 +20,10 @@ CREATE TABLE IF NOT EXISTS public.survey_kepuasan (
 ALTER TABLE public.survey_kepuasan ENABLE ROW LEVEL SECURITY;
 
 -- 3. Kebijakan Keamanan (Security Policies)
+-- Hapus kebijakan jika sudah ada sebelumnya agar tidak terjadi error duplikat
+DROP POLICY IF EXISTS "Allow public insert survey" ON public.survey_kepuasan;
+DROP POLICY IF EXISTS "Allow authenticated admins select survey" ON public.survey_kepuasan;
+
 -- Kebijakan A: Izinkan siapa saja (publik) untuk mengirimkan survey (Insert)
 CREATE POLICY "Allow public insert survey" ON public.survey_kepuasan
     FOR INSERT WITH CHECK (true);
@@ -39,4 +43,6 @@ CREATE POLICY "Allow authenticated admins select survey" ON public.survey_kepuas
     );
 
 -- 4. Aktifkan Fitur Realtime (Opsional)
+-- Hapus dari publikasi terlebih dahulu jika sudah terdaftar untuk menghindari error relation
+ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS public.survey_kepuasan;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.survey_kepuasan;
