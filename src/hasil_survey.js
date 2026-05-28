@@ -145,7 +145,7 @@ function renderAspectCharts() {
     chartAgen.innerHTML = '';
 
     if (agenData.length === 0) {
-        chartAgen.innerHTML = '<div style="opacity:0.5; text-align:center; padding:2rem; font-size:0.85rem;">Belum ada respon masuk untuk Mitra Agen.</div>';
+        chartAgen.innerHTML = '<div style="opacity:0.5; text-align:center; padding:2rem; font-size:0.85rem;">Belum ada respon masuk untuk Mitra Marketing/Reseller.</div>';
     } else {
         ASPECT_KEYS_AGEN.forEach(key => {
             const avgScore = calculateAspectAvg(agenData, key);
