@@ -523,8 +523,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.isAdmin = isAdmin; // Export to window for other scripts
         allowedMenus = profile.allowed_menus || [];
         
-        // Survey Viewer access for Husni (Husnidm) and Wawan (WSE82)
-        const isSurveyViewer = isAdmin || ['husnidm', 'wse82'].includes(userEmail) || ['9327abcb-7328-494e-be55-d6ad773e452c', '30348fa8-b8f3-4503-a2f7-b87191633738'].includes(userId);
+        // Survey Viewer access: true if Admin or if 'hasil_survey.html' is checked/allowed in their allowed_menus
+        const isSurveyViewer = isAdmin || (allowedMenus || []).some(m => m.includes('hasil_survey'));
         window.isSurveyViewer = isSurveyViewer;
         
         if (!isAdmin) {

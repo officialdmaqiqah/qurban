@@ -528,6 +528,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             { h: 'hutang_supplier.html', n: 'Hutang ke Supplier' },
             { h: 'komisi.html', n: 'Komisi Agen' },
             { h: 'laporan.html', n: 'LAPORAN' },
+            { h: 'hasil_survey.html', n: 'Hasil Survey' },
             { h: 'pengaturan.html', n: 'Pengaturan' }
         ];
 
