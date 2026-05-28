@@ -42,6 +42,12 @@ CREATE POLICY "Allow authenticated admins select survey" ON public.survey_kepuas
     );
 
 -- 4. Aktifkan Fitur Realtime (Opsional)
--- Hapus dari publikasi terlebih dahulu jika sudah terdaftar untuk menghindari error relation
-ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS public.survey_kepuasan;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.survey_kepuasan;
+-- Menggunakan blok DO untuk mencegah eror jika tabel sudah terdaftar dalam publikasi
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.survey_kepuasan;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Abaikan jika sudah terdaftar
+        NULL;
+END $$;
