@@ -45,6 +45,13 @@
         /* Table Elegance & Desktop Compact Mode */
         .report-section { max-width: 950px; margin: 0 auto; }
         
+        #secLR .table-responsive {
+            max-height: none !important;
+            overflow: visible !important;
+            overflow-x: visible !important;
+            overflow-y: visible !important;
+        }
+        
         .report-table { 
             width: 100%; border-collapse: separate; border-spacing: 0; 
             margin-top: 1rem; font-size: 0.875rem; 
@@ -118,10 +125,6 @@
                 overflow-x: auto; 
                 -webkit-overflow-scrolling: touch;
                 padding-bottom: 0.5rem;
-            }
-            #secLR .table-responsive {
-                overflow-x: visible !important;
-                overflow: visible !important;
             }
 
             .tab-item.active { 
