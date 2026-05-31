@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Breakdown Opex
         addRow('(-) Biaya Operasional (Total)', -opex, 'text-warning');
         Object.keys(opexByChannel).forEach(ch => {
-            addRow(`&nbsp;&nbsp;&nbsp;&nbsp;• via ${ch}`, -opexByChannel[ch], 'text-muted small-text');
+            addRow(`&nbsp;&nbsp;&nbsp;&nbsp;<small>• via ${ch}</small>`, -opexByChannel[ch], 'text-muted');
         });
 
         addRow('(-) Kerugian Kematian (Bruto)', -deadLossRaw);
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const netProfit = netProfitBeforeSaving - saving;
 
         addRow('LABA BERSIH OPERASIONAL KEMITRAAN (TOTAL KAS)', netProfitBeforeSaving, 'row-grand-total text-premium');
-        addRow('&nbsp;&nbsp;• Alokasi Dana Saving (Pengembalian Modal Investor)', -saving, 'text-warning small-text');
+        addRow('&nbsp;&nbsp;<small>• Alokasi Dana Saving (Pengembalian Modal Investor)</small>', -saving, 'text-warning');
         addRow('🏆 LABA BERSIH USAHA SIAP DIBAGI', netProfit, 'row-total text-premium');
         return netProfit;
     };
