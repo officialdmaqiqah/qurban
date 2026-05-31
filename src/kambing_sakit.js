@@ -253,13 +253,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             note: note
         });
 
-        const { error } = await supabase.from('stok_kambing').update({ 
+        const updates = { 
             status_kesehatan: stt, 
             tgl_keluar: tgl, 
             catatan_keluar: note,
             status_history: history,
             updated_at: new Date().toISOString()
-        }).eq('id', goat.id);
+        };
+
+        if (['Mati', 'Disembelih', 'Hilang'].includes(stt)) {
+            updates.status_fisik = stt === 'Hilang' ? 'Hilang' : 'Mati';
+            updates.status_transaksi = stt;
+        }
+
+        const { error } = await supabase.from('stok_kambing').update(updates).eq('id', goat.id);
 
         if(!error) {
             if(window.showToast) window.showToast('Data kambing sakit berhasil diregistrasi!', 'success');

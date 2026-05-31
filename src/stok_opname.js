@@ -175,6 +175,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.btn-quick-dead').forEach(btn => {
             btn.onclick = async (e) => {
                 const id = e.target.dataset.id;
+                const goat = goats.find(g => g.id === id);
+                if (!goat) return;
                 showConfirm('Tandai sebagai Mati/Hilang?', async () => {
                     const h = goat.status_history || [];
                     const upDate = new Date().toISOString();
@@ -183,12 +185,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Update Cache
                     const idx = cachedGoats.findIndex(g => g.id === id);
                     if(idx !== -1) {
-                        cachedGoats[idx] = { ...goat, status_kesehatan: 'Mati', status_fisik: 'Mati', status_history: h, updated_at: upDate };
+                        cachedGoats[idx] = { ...goat, status_kesehatan: 'Mati', status_fisik: 'Mati', status_transaksi: 'Mati', status_history: h, updated_at: upDate };
                     }
 
                     await supabase.from('stok_kambing').update({ 
                         status_kesehatan: 'Mati', 
                         status_fisik: 'Mati',
+                        status_transaksi: 'Mati',
                         status_history: h,
                         updated_at: upDate
                     }).eq('id', id);

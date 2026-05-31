@@ -187,6 +187,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             updates.status_transaksi = updates.status_kesehatan;
         } else {
             updates.status_fisik = 'Hilang';
+            updates.status_transaksi = 'Hilang';
+        }
         const history = goat.status_history || [];
         history.push({
             date: new Date().toISOString(),
