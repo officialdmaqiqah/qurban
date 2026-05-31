@@ -222,7 +222,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dt = new Date(t.tgl_trx || t.tglTrx);
             return dt >= start && dt <= end;
         }).length} transaksi dalam periode ini.</small>` : '';
-        addRow(`(-) Dana Saving (Titipan)${savingStr}`, -saving, 'text-warning');
         
         // Populate Saving Audit Table
         const auditContainer = document.getElementById('containerSavingAudit');
@@ -246,8 +245,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        const netProfit = totalPendapatan - hpp - komisi - opex - deadLossNet - saving - internalTransfers;
-        addRow('LABA BERSIH', netProfit, 'row-grand-total text-premium');
+        const netProfitBeforeSaving = totalPendapatan - hpp - komisi - opex - deadLossNet - internalTransfers;
+        const netProfit = netProfitBeforeSaving - saving;
+
+        addRow('LABA BERSIH OPERASIONAL KEMITRAAN (TOTAL KAS)', netProfitBeforeSaving, 'row-grand-total text-premium');
+        addRow('&nbsp;&nbsp;• Alokasi Dana Saving (Pengembalian Modal Investor)', -saving, 'text-warning small-text');
+        addRow('🏆 LABA BERSIH USAHA SIAP DIBAGI', netProfit, 'row-total text-premium');
         return netProfit;
     };
 
