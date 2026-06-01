@@ -282,6 +282,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.setupMoneyMask('inpNominal');
 
+    const inpJenisCatatan = document.getElementById('inpJenisCatatan');
+    const containerChannelBayar = document.getElementById('containerChannelBayar');
+    const lblNominal = document.getElementById('lblNominal');
+    const alertInfo = document.querySelector('#modalBayar .alert');
+
+    inpJenisCatatan?.addEventListener('change', () => {
+        const val = inpJenisCatatan.value;
+        const supplierName = document.getElementById('inpSupplierName').value;
+        const activeBatch = inpBatchBayar.value;
+
+        if (val === 'Kompensasi Supplier') {
+            containerChannelBayar.style.display = 'none';
+            if (lblNominal) {
+                lblNominal.textContent = 'Nominal Diskon / Potongan';
+                lblNominal.style.color = 'var(--warning)';
+            }
+            if (alertInfo) {
+                alertInfo.className = 'alert alert-info';
+                alertInfo.innerHTML = 'Potongan harga / diskon akan dicatat sebagai penyesuaian non-kas yang langsung mengurangi sisa hutang supplier tanpa memotong saldo kas.';
+            }
+            document.getElementById('inpCatatan').value = `Diskon/potongan pembayaran supplier ${supplierName}${activeBatch ? ' (Batch '+activeBatch+')' : ''}`;
+        } else {
+            containerChannelBayar.style.display = 'block';
+            if (lblNominal) {
+                lblNominal.textContent = 'Nominal Pembayaran';
+                lblNominal.style.color = 'var(--success)';
+            }
+            if (alertInfo) {
+                alertInfo.className = 'alert alert-warning';
+                alertInfo.innerHTML = 'Pembayaran akan otomatis masuk ke <strong>Buku Keuangan</strong> sebagai Pengeluaran.';
+            }
+            document.getElementById('inpCatatan').value = `Bayar supplier ${supplierName}${activeBatch ? ' (Batch '+activeBatch+')' : ''}`;
+        }
+    });
+
     const openBayarModal = async (supplierName, activeBatch, suggestedNominal = 0) => {
         document.getElementById('inpSupplierName').value = supplierName;
         document.getElementById('displaySupplier').value = supplierName;
@@ -297,7 +332,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         document.getElementById('inpNominal').value = window.formatNum(suggestedNominal); // Auto-fill sisa hutang
-        document.getElementById('inpCatatan').value = `Bayar supplier ${supplierName}${activeBatch ? ' (Batch '+activeBatch+')' : ''}`;
+        
+        if (inpJenisCatatan) {
+            inpJenisCatatan.value = 'Bayar Supplier';
+            inpJenisCatatan.dispatchEvent(new Event('change'));
+        } else {
+            document.getElementById('inpCatatan').value = `Bayar supplier ${supplierName}${activeBatch ? ' (Batch '+activeBatch+')' : ''}`;
+        }
+        
         inpChannelBayar.value = 'Tunai'; containerRekBayar.style.display = 'none';
         modalBayar.classList.add('active');
     };
@@ -309,11 +351,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const chan = inpChannelBayar.value;
         const tgl = document.getElementById('inpTglBayar').value;
         const batch = inpBatchBayar.value;
+        const jenis = inpJenisCatatan?.value || 'Bayar Supplier';
+        const ket = document.getElementById('inpCatatan').value;
 
         let finalChan = chan;
-        if(chan === 'Transfer Bank' && inpRekIdBayar.value) finalChan = 'TF ' + inpRekIdBayar.options[inpRekIdBayar.selectedIndex].textContent;
-
-        if(!await checkSaldoCukup(finalChan, nom, finalChan)) return;
+        if (jenis === 'Kompensasi Supplier') {
+            finalChan = 'Non-Kas';
+        } else {
+            if(chan === 'Transfer Bank' && inpRekIdBayar.value) finalChan = 'TF ' + inpRekIdBayar.options[inpRekIdBayar.selectedIndex].textContent;
+            if(!await checkSaldoCukup(finalChan, nom, finalChan)) return;
+        }
 
         let buktiUrl = null;
         if(inpBuktiBayar?.files.length > 0) {
@@ -322,10 +369,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             buktiUrl = await uploadToGDrive(b64, 'PAY_SUPP');
         }
 
-        const id = 'PAY-' + Date.now().toString().slice(-6);
+        const id = (jenis === 'Kompensasi Supplier' ? 'KOMP-' : 'PAY-') + Date.now().toString().slice(-6);
+        const tipe = jenis === 'Kompensasi Supplier' ? 'pemasukan' : 'pengeluaran';
+
         await supabase.from('keuangan').insert([{
-            id, tipe: 'pengeluaran', tanggal: tgl, kategori: 'Bayar Supplier', nominal: nom,
-            keterangan: `Bayar ${nama}${batch ? ' (Batch '+batch+')' : ''}`,
+            id, tipe: tipe, tanggal: tgl, kategori: jenis, nominal: nom,
+            keterangan: ket || (jenis === 'Kompensasi Supplier' ? `Diskon/potongan supplier ${nama}` : `Bayar ${nama}`),
             channel: finalChan, supplier: nama, batch: batch, bukti_url: buktiUrl
         }]);
 

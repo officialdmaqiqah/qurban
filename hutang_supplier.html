@@ -187,6 +187,14 @@
                         Pembayaran akan otomatis masuk ke <strong>Buku Keuangan</strong> sebagai Pengeluaran.
                     </div>
 
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label class="form-label" style="font-weight: 300;">Jenis Catatan</label>
+                        <select id="inpJenisCatatan" class="form-control" style="font-size:0.9rem;" required>
+                            <option value="Bayar Supplier">💸 Pembayaran Cash/Transfer (Bayar Supplier)</option>
+                            <option value="Kompensasi Supplier">🎁 Potongan Harga/Diskon (Kompensasi Supplier)</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 300;">Tujuan Supplier</label>
                         <input type="text" id="displaySupplier" class="form-control" disabled style="font-weight: 300; background:rgba(255,255,255,0.05);">
@@ -206,12 +214,12 @@
                             <input type="date" id="inpTglBayar" class="form-control" required>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label class="form-label" style="color:var(--success); font-weight: 300;">Nominal Pembayaran</label>
+                            <label id="lblNominal" class="form-label" style="color:var(--success); font-weight: 300;">Nominal Pembayaran</label>
                             <input type="text" id="inpNominal" class="form-control money-input" placeholder="Rp 0" required style="font-size:1.1rem; font-weight: 300;">
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-top:1rem;">
+                    <div class="form-group" id="containerChannelBayar" style="margin-top:1rem;">
                         <label class="form-label" style="font-weight: 300; color:var(--primary);">Sumber Modal / Channel</label>
                         <select id="inpChannelBayar" class="form-control" style="font-size:0.9rem;" required>
                             <option value="Tunai">💵 Tunai</option>
