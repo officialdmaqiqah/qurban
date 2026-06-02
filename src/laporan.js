@@ -162,7 +162,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (isNonKas) {
                 if (f.tipe === 'pengeluaran') deadLossRaw += nom;
-                else if (f.tipe === 'pemasukan') deadKomp += nom;
+                else if (f.tipe === 'pemasukan') {
+                    if (katLine.includes('kompensasi')) {
+                        deadKomp += nom;
+                    }
+                }
             } else {
                 if (f.tipe === 'pengeluaran') {
                     const ketLine = (f.keterangan || '').toLowerCase().trim();
@@ -362,7 +366,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // A. HUTANG SUPPLIER
         const totalTagihanSupplier = goats.reduce((s,g) => s + (g.harga_nota || 0), 0);
         const totalSudahBayarSupplier = fin.filter(f => f.kategori === 'Bayar Supplier' || f.kategori === 'Pelunasan Supplier').reduce((s,f) => s + f.nominal, 0);
-        const totalKompensasiSupplier = fin.filter(f => f.kategori === 'Kompensasi Supplier').reduce((s,f) => s + f.nominal, 0);
+        const totalKompensasiSupplier = fin.filter(f => f.kategori === 'Kompensasi Supplier' || f.kategori === 'Diskon Supplier').reduce((s,f) => s + f.nominal, 0);
         const sisaHutangSupplier = totalTagihanSupplier - totalSudahBayarSupplier - totalKompensasiSupplier;
         
         bodyPasiva.innerHTML += `<tr><td>Hutang Supplier</td><td class="text-right">${formatRp(sisaHutangSupplier)}</td></tr>`;
@@ -447,7 +451,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const katLine = (f.kategori || '').toLowerCase().trim();
             if (chan.toLowerCase().includes('non-kas')) {
                 if (f.tipe === 'pengeluaran') deadLossRaw += nom;
-                else if (f.tipe === 'pemasukan') deadKomp += nom;
+                else if (f.tipe === 'pemasukan') {
+                    if (katLine.includes('kompensasi')) {
+                        deadKomp += nom;
+                    }
+                }
             } else if (f.tipe === 'pemasukan' && katLine.includes('kompensasi')) {
                 deadKomp += nom;
             }

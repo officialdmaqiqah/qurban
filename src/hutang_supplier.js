@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const nom = parseFloat(f.nominal) || 0;
                 const bKey = f.batch;
 
-                if(f.tipe === 'pemasukan' && f.kategori === 'Kompensasi Supplier') {
+                if(f.tipe === 'pemasukan' && (f.kategori === 'Kompensasi Supplier' || f.kategori === 'Diskon Supplier')) {
                     supplierStats[sName].totalKomp += nom;
                     if(bKey && supplierStats[sName].batches[bKey]) supplierStats[sName].batches[bKey].komp += nom;
                 }
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const supplierName = document.getElementById('inpSupplierName').value;
         const activeBatch = inpBatchBayar.value;
 
-        if (val === 'Kompensasi Supplier') {
+        if (val === 'Kompensasi Supplier' || val === 'Diskon Supplier') {
             containerChannelBayar.style.display = 'none';
             if (lblNominal) {
                 lblNominal.textContent = 'Nominal Diskon / Potongan';
@@ -300,7 +300,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             if (alertInfo) {
                 alertInfo.className = 'alert alert-info';
-                alertInfo.innerHTML = 'Potongan harga / diskon akan dicatat sebagai penyesuaian non-kas yang langsung mengurangi sisa hutang supplier tanpa memotong saldo kas.';
+                alertInfo.innerHTML = val === 'Diskon Supplier' 
+                    ? 'Diskon supplier akan dicatat sebagai penyesuaian non-kas yang langsung mengurangi sisa hutang supplier tanpa masuk ke bagi hasil Qurban.'
+                    : 'Potongan harga / diskon akan dicatat sebagai penyesuaian non-kas yang langsung mengurangi sisa hutang supplier tanpa memotong saldo kas.';
             }
             document.getElementById('inpCatatan').value = `Diskon/potongan pembayaran supplier ${supplierName}${activeBatch ? ' (Batch '+activeBatch+')' : ''}`;
         } else {
@@ -355,7 +357,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const ket = document.getElementById('inpCatatan').value;
 
         let finalChan = chan;
-        if (jenis === 'Kompensasi Supplier') {
+        if (jenis === 'Kompensasi Supplier' || jenis === 'Diskon Supplier') {
             finalChan = 'Non-Kas';
         } else {
             if(chan === 'Transfer Bank' && inpRekIdBayar.value) finalChan = 'TF ' + inpRekIdBayar.options[inpRekIdBayar.selectedIndex].textContent;
@@ -369,12 +371,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             buktiUrl = await uploadToGDrive(b64, 'PAY_SUPP');
         }
 
-        const id = (jenis === 'Kompensasi Supplier' ? 'KOMP-' : 'PAY-') + Date.now().toString().slice(-6);
-        const tipe = jenis === 'Kompensasi Supplier' ? 'pemasukan' : 'pengeluaran';
+        const id = (jenis === 'Kompensasi Supplier' ? 'KOMP-' : (jenis === 'Diskon Supplier' ? 'DISC-' : 'PAY-')) + Date.now().toString().slice(-6);
+        const tipe = (jenis === 'Kompensasi Supplier' || jenis === 'Diskon Supplier') ? 'pemasukan' : 'pengeluaran';
 
         await supabase.from('keuangan').insert([{
             id, tipe: tipe, tanggal: tgl, kategori: jenis, nominal: nom,
-            keterangan: ket || (jenis === 'Kompensasi Supplier' ? `Diskon/potongan supplier ${nama}` : `Bayar ${nama}`),
+            keterangan: ket || ((jenis === 'Kompensasi Supplier' || jenis === 'Diskon Supplier') ? `Diskon/potongan supplier ${nama}` : `Bayar ${nama}`),
             channel: finalChan, supplier: nama, batch: batch, bukti_url: buktiUrl
         }]);
 
@@ -457,7 +459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(sName && supplierStats[sName]) {
                 const nom = parseFloat(f.nominal) || 0;
                 const bKey = f.batch;
-                if(f.tipe === 'pemasukan' && f.kategori === 'Kompensasi Supplier') {
+                if(f.tipe === 'pemasukan' && (f.kategori === 'Kompensasi Supplier' || f.kategori === 'Diskon Supplier')) {
                     supplierStats[sName].totalKomp += nom;
                     if(bKey && supplierStats[sName].batches[bKey]) supplierStats[sName].batches[bKey].komp += nom;
                 }
@@ -504,7 +506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         csv += '\n\nHISTORI PEMBAYARAN DETAIL\n';
         csv += 'Tanggal;Supplier;Batch;Kategori;Nominal;Metode/Channel;Keterangan\n';
         
-        const payKats = ['Bayar Supplier', 'Kompensasi Supplier'];
+        const payKats = ['Bayar Supplier', 'Kompensasi Supplier', 'Diskon Supplier'];
         const detailedHistory = (finance || []).filter(f => payKats.includes(f.kategori))
                                        .sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
         
@@ -551,7 +553,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const tags = gts.reduce((s, k) => s + (parseFloat(k.harga_nota) || 0), 0);
         const paid = fins.filter(f => (f.supplier || '').trim() === targetSupplier && f.tipe === 'pengeluaran' && f.kategori === 'Bayar Supplier')
                          .reduce((s, f) => s + (parseFloat(f.nominal) || 0), 0);
-        const komp = fins.filter(f => (f.supplier || '').trim() === targetSupplier && f.tipe === 'pemasukan' && f.kategori === 'Kompensasi Supplier')
+        const komp = fins.filter(f => (f.supplier || '').trim() === targetSupplier && f.tipe === 'pemasukan' && (f.kategori === 'Kompensasi Supplier' || f.kategori === 'Diskon Supplier'))
                          .reduce((s, f) => s + (parseFloat(f.nominal) || 0), 0);
         
         openBayarModal(targetSupplier, null, tags - komp - paid);

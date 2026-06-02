@@ -279,7 +279,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if ((f.channel || '').toLowerCase().includes('non-kas')) {
                 if (isInSeason) {
                     if (f.tipe === 'pengeluaran') deadLossRaw += nom;
-                    else if (f.tipe === 'pemasukan') deadKomp += nom;
+                    else if (f.tipe === 'pemasukan') {
+                        if (katLine.includes('kompensasi')) {
+                            deadKomp += nom;
+                        }
+                    }
                 }
             } else {
                 // Logika Kas/Bank Real
