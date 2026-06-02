@@ -182,6 +182,38 @@
                 .section-group { margin-top: 1rem !important; }
                 .comp-bar { margin: 0.5rem 0 !important; height: 6px !important; }
             }
+
+            .toggle-profit-btn {
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: var(--text-main);
+                cursor: pointer;
+                border-radius: 8px;
+                width: 32px;
+                height: 32px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+                padding: 0;
+                margin-left: auto;
+            }
+            .toggle-profit-btn:hover {
+                background: rgba(255, 255, 255, 0.15);
+                transform: scale(1.05);
+            }
+            .light-mode .toggle-profit-btn {
+                background: rgba(0, 0, 0, 0.05);
+                border-color: rgba(0, 0, 0, 0.1);
+            }
+            .light-mode .toggle-profit-btn:hover {
+                background: rgba(0, 0, 0, 0.08);
+            }
+            .toggle-profit-btn svg {
+                width: 18px;
+                height: 18px;
+                stroke: currentColor;
+            }
         </style>
         <script>(function(){const t=localStorage.getItem('QURBAN_THEME')||'light';if(t==='light')document.documentElement.classList.add('light-mode');})();</script>
 </head>
@@ -264,7 +296,11 @@
                                     </div>
                                 </div>
                                 <div class="dashboard-section">
-                                    <div class="section-title"><div class="icon-circle">💎</div><span>Profitabilitas Netto</span></div>
+                                    <div class="section-title">
+                                        <div class="icon-circle">💎</div>
+                                        <span>Profitabilitas Netto</span>
+                                        <button id="toggleProfitBtn" class="toggle-profit-btn" title="Tampilkan/Sembunyikan Nilai Profit"></button>
+                                    </div>
                                     <div class="glass-card" style="background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08), var(--glass-bg));">
                                         <span class="stat-label">Laba Bersih Aktual</span>
                                         <div class="stat-value highlight-green" id="dashProfitRealtime">Rp 0</div>

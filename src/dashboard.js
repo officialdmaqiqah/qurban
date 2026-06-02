@@ -19,6 +19,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (el) el.textContent = val;
     };
 
+    let showProfit = localStorage.getItem('QURBAN_SHOW_PROFIT') === 'true';
+    let currentNetProfit = 0;
+    let currentNetProfitPerEkor = 0;
+    let currentTotalProfitSales = 0;
+    let currentAvgProfit = 0;
+
+    const renderProfitValues = () => {
+        const toggleBtn = document.getElementById('toggleProfitBtn');
+        if (toggleBtn) {
+            if (showProfit) {
+                toggleBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+                toggleBtn.title = "Sembunyikan Nilai Profit";
+            } else {
+                toggleBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+                toggleBtn.title = "Tampilkan Nilai Profit";
+            }
+        }
+
+        const formatVal = (val, isSigned = false) => {
+            if (!showProfit) return 'Rp ***';
+            return (isSigned && val >= 0 ? '+' : '') + formatRp(val);
+        };
+
+        const elNet = document.getElementById('dashProfitRealtime');
+        if (elNet) {
+            elNet.textContent = formatVal(currentNetProfit, true);
+            elNet.classList.remove('highlight-green', 'highlight-rose');
+            elNet.classList.add(currentNetProfit >= 0 ? 'highlight-green' : 'highlight-rose');
+        }
+
+        const elProfitSales = document.getElementById('dashProfitSales');
+        if (elProfitSales) {
+            elProfitSales.textContent = formatVal(currentTotalProfitSales);
+            elProfitSales.classList.remove('highlight-green', 'highlight-rose');
+            elProfitSales.classList.add(currentTotalProfitSales >= 0 ? 'highlight-green' : 'highlight-rose');
+        }
+
+        const elAvgProfit = document.getElementById('dashAvgProfit');
+        if (elAvgProfit) {
+            elAvgProfit.textContent = formatVal(currentAvgProfit);
+        }
+
+        const elNetPerEkor = document.getElementById('dashNetProfitPerEkor');
+        if (elNetPerEkor) {
+            elNetPerEkor.textContent = formatVal(currentNetProfitPerEkor);
+        }
+    };
+
+    const toggleBtn = document.getElementById('toggleProfitBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            showProfit = !showProfit;
+            localStorage.setItem('QURBAN_SHOW_PROFIT', showProfit ? 'true' : 'false');
+            renderProfitValues();
+        });
+    }
+
     const updateDashboard = async () => {
         const [
             { data: goatsDb },
@@ -275,7 +332,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const netProfitPerEkor = unitsSold > 0 ? (netProfit / unitsSold) : 0;
 
         // 5. UPDATE UI
-        setText('dashProfitRealtime', formatRp(netProfit));
+        currentNetProfit = netProfit;
+        currentNetProfitPerEkor = netProfitPerEkor;
+        currentTotalProfitSales = totalProfitSales;
+        currentAvgProfit = avgProfit;
+
         setText('dashOperatingExpenses', formatRp(operatingExpenses));
         setText('dashKerugianMati', formatRp(deadLossNet));
         setText('dashInternalTransfer', formatRp(internalTransfers)); // New ID
@@ -316,24 +377,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('dashTotalKomisiSales').textContent = formatRp(komisi);
         document.getElementById('dashTotalSavingSales').textContent = formatRp(saving);
         
-        const elProfitSales = document.getElementById('dashProfitSales');
-        if (elProfitSales) {
-            elProfitSales.textContent = formatRp(totalProfitSales);
-            elProfitSales.classList.remove('highlight-green', 'highlight-rose');
-            elProfitSales.classList.add(totalProfitSales >= 0 ? 'highlight-green' : 'highlight-rose');
-        }
-        document.getElementById('dashAvgProfit').textContent = formatRp(avgProfit);
+        // Render profit values (will check showProfit state)
+        renderProfitValues();
 
-        // 3. Profitabilitas Statement
-        const elNet = document.getElementById('dashProfitRealtime');
-        if (elNet) {
-            elNet.textContent = (netProfit >= 0 ? '+' : '') + formatRp(netProfit);
-            elNet.classList.remove('highlight-green', 'highlight-rose');
-            elNet.classList.add(netProfit >= 0 ? 'highlight-green' : 'highlight-rose');
-        }
         document.getElementById('dashOperatingExpenses').textContent = formatRp(operatingExpenses);
         document.getElementById('dashKerugianMati').textContent = formatRp(deadLossNet);
-        document.getElementById('dashNetProfitPerEkor').textContent = formatRp(netProfitPerEkor);
 
         // 4. Kas & Likuiditas Statement
         document.getElementById('dashTotalSaldoKas').textContent = formatRp(totalSaldoKasBank);
